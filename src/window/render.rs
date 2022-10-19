@@ -136,8 +136,8 @@ pub fn UpdateWindowParentAndRootLinks(window: *mut ImGuiWindow, flags: ImGuiWind
             window.RootWindow = parent_window.RootWindow;
         }
     }
-    if (parent_window && (flags & ImGuiWindowFlags_Popup))
-        window.RootWindowPopupTree = parent_window.RootWindowPopupTree;
+    if parent_window && (flags & ImGuiWindowFlags_Popup){
+        window.RootWindowPopupTree = parent_window.RootWindowPopupTree;}
     if (parent_window && flag_clear(flags, ImGuiWindowFlags_Modal) && (flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_Popup))) // FIXME: simply use _NoTitleBar ?
         window.RootWindowForTitleBarHighlight = parent_window.RootWindowForTitleBarHighlight;
     while (window.RootWindowForNav.Flags & ImGuiWindowFlags_NavFlattened)

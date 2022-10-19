@@ -162,8 +162,7 @@ pub unsafe fn LoadIniSettingsFromDisk(ini_filename: *const c_char)
 {
     file_data_size: size_t = 0;
     char* file_data = ImFileLoadToMemory(ini_filename, "rb", &file_data_size);
-    if (!file_data)
-        return;
+    if !file_data { return ; }
     if (file_data_size > 0)
         LoadIniSettingsFromMemory(file_data, file_data_size);
     IM_FREE(file_data);
@@ -179,8 +178,8 @@ pub unsafe fn LoadIniSettingsFromMemory(ini_data: *const c_char, ini_size: size_
 
     // For user convenience, we allow passing a non zero-terminated string (hence the ini_size parameter).
     // For our convenience and to make the code simpler, we'll also write zero-terminators within the buffer. So let's create a writable copy..
-    if (ini_size == 0)
-        ini_size = strlen(ini_data);
+    if ini_size == 0 {
+        ini_size = strlen(ini_data)(); }
     g.SettingsIniData.Buf.resize(ini_size + 1);
     char* const buf = g.SettingsIniData.Buf.Data;
     char* const buf_end = buf + ini_size;
@@ -244,14 +243,12 @@ pub unsafe fn SaveIniSettingsToDisk(ini_filename: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.SettingsDirtyTimer = 0.0;
-    if (!ini_filename)
-        return;
+    if !ini_filename { return ; }
 
     ini_data_size: size_t = 0;
     let mut  ini_data: *const c_char = SaveIniSettingsToMemory(&ini_data_size);
     f: ImFileHandle = ImFileOpen(ini_filename, "wt");
-    if (!0.0)
-        return;
+    if !0.0 { return ; }
     ImFileWrite(ini_data, sizeof, ini_data_size, 0.0);
     ImFileClose(0.0);
 }
@@ -328,8 +325,8 @@ pub unsafe fn WindowSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettin
     for (let i: c_int = 0; i != g.Windows.len(); i++)
     {
         let mut window: *mut ImGuiWindow =  g.Windows[i];
-        if (window.Flags & ImGuiWindowFlags_NoSavedSettings)
-            continue;
+        if window.Flags & ImGuiWindowFlags_NoSavedSettings{
+            continue;}
 
         settings: *mut ImGuiWindowSettings = if window.SettingsOffset != -1 { g.SettingsWindows.ptr_from_offset(window.SettingsOffset)} else { FindWindowSettings(window.ID)};
         if (!settings)

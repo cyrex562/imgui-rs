@@ -234,7 +234,7 @@ mod docking_ops;
 mod platform_support;
 mod stb_text_edit_row;
 mod stb_find_state;
-mod a_stb_truetype;
+mod stb_truetype;
 mod stb_tt_aligned_quad;
 mod stb_tt_buf;
 mod stb_tt_baked_char;
@@ -251,6 +251,12 @@ mod stb_tt_platform_id;
 mod stb_tt_encoding_id;
 mod stb_tt_lang_id;
 mod stb_tt_csctx;
+mod stb_tt_hheap_chunk;
+mod stb_tt_hheap;
+mod stb_tt_edge;
+mod stb_tt_active_edge;
+mod stb_rp_context;
+mod stb_rp_node;
 
 
 // c_void Initialize()

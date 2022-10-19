@@ -48,6 +48,7 @@ pub mod rect;
 pub mod find;
 pub mod focus;
 pub mod props;
+mod stb_tt_point;
 
 // Storage for one window
 pub struct ImGuiWindow {

@@ -37,8 +37,7 @@ static GetClipboardTextFn_DefaultImpl: *const c_char
 
 pub unsafe fn SetClipboardTextFn_DefaultImpl(*mut c_void, text: *const c_char)
 {
-    if (!::OpenClipboard(null_mut()))
-        return;
+    if !::OpenClipboard(null_mut()) { return ; }
     let wbuf_length: c_int = ::MultiByteToWideChar(CP_UTF8, 0, text, -1, null_mut(), 0);
     HGLOBAL wbuf_handle = ::GlobalAlloc(GMEM_MOVEABLE, wbuf_length * sizeof(WCHAR));
     if (wbuf_handle == null_mut())
@@ -142,11 +141,10 @@ pub unsafe fn SetPlatformImeDataFn_DefaultImpl(viewport: *mut ImGuiViewport, ImG
     // Notify OS Input Method Editor of text input position
     HWND hwnd = (HWND)viewport.PlatformHandleRaw;
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    if (hwnd == 0)
-        hwnd = (HWND)GetIO().ImeWindowHandle;
+    if hwnd == 0{
+        hwnd = (HWND)GetIO().ImeWindowHandle;}
 // #endif
-    if (hwnd == 0)
-        return;
+    if hwnd == 0 { return ; }
 
     //::ImmAssociateContextEx(hwnd, NULL, data->WantVisible ? IACE_DEFAULT : 0);
     if (HIMC himc = ::ImmGetContext(hwnd))

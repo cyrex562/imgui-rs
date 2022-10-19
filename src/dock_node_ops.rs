@@ -1839,7 +1839,7 @@ pub unsafe fn DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode) {
             // Vec<ImGuiDockNode*> touching_nodes[2];
             let mut touching_nodes: [Vec<*mut ImGuiDockNode>; 2] = [vec![]; 2];
             let min_size: c_float = g.Style.WindowMinSize[axis];
-            resize_limits: c_float[2];
+            resize_limits: [c_float;2];
             resize_limits[0] = node.ChildNodes[0].Pos[axis] + min_size;
             resize_limits[1] = node.ChildNodes[1].Pos[axis] + node.ChildNodes[1].Size[axis] - min_size;
 

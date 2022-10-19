@@ -298,7 +298,7 @@ pub unsafe fn ShowDemoWindow(*mut p_open: bool)
     static let mut show_app_window_titles: bool =  false;
     static let mut show_app_custom_rendering: bool =  false;
 
-    if (show_app_main_menu_bar)       ShowExampleAppMainMenuBar();
+    if show_app_main_menu_bar {        ShowExampleAppMainMenuBar(); }
     if (show_app_dockspace)           ShowExampleAppDockSpace(&show_app_dockspace);     // Process the Docking app first, as explicit DockSpace() nodes needs to be submitted early (read comments near the DockSpace function)
     if (show_app_documents)           ShowExampleAppDocuments(&show_app_documents);     // Process the Document app next, as it may also use a DockSpace()
 
@@ -362,7 +362,7 @@ pub unsafe fn ShowDemoWindow(*mut p_open: bool)
     if (no_bring_to_front)  window_flags |= ImGuiWindowFlags_NoBringToFrontOnFocus;
     if (no_docking)         window_flags |= ImGuiWindowFlags_NoDocking;
     if (unsaved_document)   window_flags |= ImGuiWindowFlags_UnsavedDocument;
-    if (no_close)           p_open= null_mut(); // Don't pass ourto: *mut bool Begin
+    if no_close {            p_open= null_mut()(); }  // Don't pass ourto: *mut bool Begin
 
     // We specify a default position/size in case there's no data in the .ini file.
     // We only do it to make the demo applications a little more welcoming, but typically this isn't required.
@@ -627,12 +627,11 @@ pub unsafe fn ShowDemoWindow(*mut p_open: bool)
 pub unsafe fn ShowDemoWindowWidgets()
 {
     IMGUI_DEMO_MARKER("Widgets");
-    if (!CollapsingHeader("Widgets"))
-        return;
+    if !CollapsingHeader("Widgets") { return ; }
 
     static let mut disable_all: bool =  false; // The Checkbox for that is inside the "Disabled" section at the bottom
-    if (disable_all)
-        BeginDisabled();
+    if disable_all {
+        BeginDisabled(); }
 
     IMGUI_DEMO_MARKER("Widgets/Basic");
     if (TreeNode("Basic"))
@@ -661,8 +660,8 @@ pub unsafe fn ShowDemoWindowWidgets()
         IMGUI_DEMO_MARKER("Widgets/Basic/Buttons (Colored)");
         for (let i: c_int = 0; i < 7; i++)
         {
-            if (i > 0)
-                SameLine();
+            if i > 0 {
+                SameLine(); }
             PushID(i);
             PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(i / 7.0.0, 0.6f, 0.60));
             PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(i / 7.0.0, 0.7f, 0.70f32));
@@ -822,8 +821,8 @@ pub unsafe fn ShowDemoWindowWidgets()
 
             SameLine();
             Button("Button");
-            if (IsItemHovered())
-                SetTooltip("I am a tooltip");
+            if IsItemHovered() {
+                SetTooltip("I am a tooltip")(); }
 
             SameLine();
             Button("Fancy");
@@ -897,8 +896,8 @@ pub unsafe fn ShowDemoWindowWidgets()
             Checkbox("Align label with current X position", &align_label_with_current_x_position);
             Checkbox("Test tree node as drag source", &test_drag_and_drop);
             Text("Hello!");
-            if (align_label_with_current_x_position)
-                Unindent(GetTreeNodeToLabelSpacing());
+            if align_label_with_current_x_position {
+                Unindent(GetTreeNodeToLabelSpacing())(); }
 
             // 'selection_mask' is dumb representation of what may be user-side selection state.
             //  You may retain selection state inside or outside your objects in whatever format you see fit.
@@ -918,8 +917,8 @@ pub unsafe fn ShowDemoWindowWidgets()
                 {
                     // Items 0..2 are Tree Node
                     let mut node_open: bool =  TreeNodeEx(i, node_flags, "Selectable Node %d", i);
-                    if (IsItemClicked() && !IsItemToggledOpen())
-                        node_clicked = i;
+                    if IsItemClicked() && !IsItemToggledOpen() {
+                        node_clicked = i;}
                     if (test_drag_and_drop && BeginDragDropSource())
                     {
                         SetDragDropPayload("_TREENODE", null_mut(), 0);
@@ -939,8 +938,8 @@ pub unsafe fn ShowDemoWindowWidgets()
                     // use BulletText() or advance the cursor by GetTreeNodeToLabelSpacing() and call Text().
                     node_flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen; // ImGuiTreeNodeFlags_Bullet
                     TreeNodeEx(i, node_flags, "Selectable Leaf %d", i);
-                    if (IsItemClicked() && !IsItemToggledOpen())
-                        node_clicked = i;
+                    if IsItemClicked() && !IsItemToggledOpen() {
+                        node_clicked = i;}
                     if (test_drag_and_drop && BeginDragDropSource())
                     {
                         SetDragDropPayload("_TREENODE", null_mut(), 0);
@@ -958,8 +957,8 @@ pub unsafe fn ShowDemoWindowWidgets()
                 else //if (!(selection_mask & (1 << node_clicked))) // Depending on selection behavior you want, may want to preserve selection when clicking on item that is part of the selection
                     selection_mask = (1 << node_clicked);           // Click to single-select
             }
-            if (align_label_with_current_x_position)
-                Indent(GetTreeNodeToLabelSpacing());
+            if align_label_with_current_x_position {
+                Indent(GetTreeNodeToLabelSpacing())(); }
             TreePop();
         }
         TreePop();
@@ -1152,8 +1151,8 @@ pub unsafe fn ShowDemoWindowWidgets()
             tint_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 1.0);           // No tint
             if (ImageButton("", my_tex_id, size, uv0, uv1, bg_col, tint_col))
                 pressed_count += 1;
-            if (i > 0)
-                PopStyleVar();
+            if i > 0 {
+                PopStyleVar(); }
             PopID();
             SameLine();
         }
@@ -1185,12 +1184,12 @@ pub unsafe fn ShowDemoWindowWidgets()
             for (let n: c_int = 0; n < items.len(); n++)
             {
                 let is_selected: bool = (item_current_idx == n);
-                if (Selectable(items[n], is_selected))
-                    item_current_idx = n;
+                if Selectable(items[n], is_selected) {
+                    item_current_idx = n;}
 
                 // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                if (is_selected)
-                    SetItemDefaultFocus();
+                if is_selected {
+                    SetItemDefaultFocus(); }
             }
             EndCombo();
         }
@@ -1226,12 +1225,12 @@ pub unsafe fn ShowDemoWindowWidgets()
             for (let n: c_int = 0; n < items.len(); n++)
             {
                 let is_selected: bool = (item_current_idx == n);
-                if (Selectable(items[n], is_selected))
-                    item_current_idx = n;
+                if Selectable(items[n], is_selected) {
+                    item_current_idx = n;}
 
                 // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                if (is_selected)
-                    SetItemDefaultFocus();
+                if is_selected {
+                    SetItemDefaultFocus(); }
             }
             EndListBox();
         }
@@ -1243,12 +1242,12 @@ pub unsafe fn ShowDemoWindowWidgets()
             for (let n: c_int = 0; n < items.len(); n++)
             {
                 let is_selected: bool = (item_current_idx == n);
-                if (Selectable(items[n], is_selected))
-                    item_current_idx = n;
+                if Selectable(items[n], is_selected) {
+                    item_current_idx = n;}
 
                 // Set the initial focus when opening the combo (scrolling + keyboard navigation focus)
-                if (is_selected)
-                    SetItemDefaultFocus();
+                if is_selected {
+                    SetItemDefaultFocus(); }
             }
             EndListBox();
         }
@@ -1286,8 +1285,8 @@ pub unsafe fn ShowDemoWindowWidgets()
             {
                 buf: [c_char;32];
                 sprintf(buf, "Object %d", n);
-                if (Selectable(buf, selected == n))
-                    selected = n;
+                if Selectable(buf, selected == n) {
+                    selected = n;}
             }
             TreePop();
         }
@@ -1369,8 +1368,8 @@ pub unsafe fn ShowDemoWindowWidgets()
             for (let y: c_int = 0; y < 4; y++)
                 for (let x: c_int = 0; x < 4; x++)
                 {
-                    if (x > 0)
-                        SameLine();
+                    if x > 0 {
+                        SameLine(); }
                     PushID(y * 4 + x);
                     if (Selectable("Sailor", selected[y][x] != 0, 0, ImVec2::new(50, 50)))
                     {
@@ -1384,8 +1383,8 @@ pub unsafe fn ShowDemoWindowWidgets()
                     PopID();
                 }
 
-            if (winning_state)
-                PopStyleVar();
+            if winning_state {
+                PopStyleVar(); }
             TreePop();
         }
         IMGUI_DEMO_MARKER("Widgets/Selectables/Alignment");
@@ -1403,7 +1402,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                     let alignment: ImVec2 = ImVec2::new(x / 2.0.0, y / 2.0);
                     name: [c_char;32];
                     sprintf(name, "(%.1f,%.10f32)", alignment.x, alignment.y);
-                    if (x > 0) SameLine();
+                    if x > 0 {  SameLine(); }
                     PushStyleVar(ImGuiStyleVar_SelectableTextAlign, alignment);
                     Selectable(name, &selected[3 * y + x], ImGuiSelectableFlags_None, ImVec2::new(80, 80));
                     PopStyleVar();
@@ -1451,10 +1450,9 @@ pub unsafe fn ShowDemoWindowWidgets()
             struct TextFilters
             {
                 // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
-                static FilterImGuiLetters: c_int(*mut ImGuiInputTextCallbackData data)
+                pub fn FilterImGuiLetters(*mut ImGuiInputTextCallbackData data) -> c_int
                 {
-                    if (data.EventChar < 256 && strchr("imgui", data.EventChar))
-                        return 0;
+                    if data.EventChar < 256 && strchr("imgui", data.EventChar) { return  0; }
                     return 1;
                 }
             };
@@ -1483,7 +1481,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         {
             struct Funcs
             {
-                static MyCallback: c_int(*mut ImGuiInputTextCallbackData data)
+                pub fn MyCallback(*mut ImGuiInputTextCallbackData data) -> c_int
                 {
                     if (data.EventFlag == ImGuiInputTextFlags_CallbackCompletion)
                     {
@@ -1546,7 +1544,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 "See misc/cpp/imgui_stdlib.h for an implementation of this for std::string.");
             struct Funcs
             {
-                static MyResizeCallback: c_int(*mut ImGuiInputTextCallbackData data)
+                pub fn MyResizeCallback(*mut ImGuiInputTextCallbackData data) -> c_int
                 {
                     if (data.EventFlag == ImGuiInputTextFlags_CallbackResize)
                     {
@@ -1571,8 +1569,8 @@ pub unsafe fn ShowDemoWindowWidgets()
             // Note that because we need to store a terminating zero character, our size/capacity are 1 more
             // than usually reported by a typical string class.
             static Vec<char> my_str;
-            if (my_str.empty())
-                my_str.push(0);
+            if my_str.empty(){
+                my_str.push(0);}
             Funcs::MyInputTextMultiline("##MyStr", &my_str, ImVec2::new(-FLT_MIN, GetTextLineHeight() * 16));
             Text("Data: %p\nSize: %d\nCapacity: %d", my_str.begin(), my_str.size(), my_str.capacity());
             TreePop();
@@ -1645,8 +1643,8 @@ pub unsafe fn ShowDemoWindowWidgets()
                     if (opened[n] && BeginTabItem(names[n], &opened[n], ImGuiTabItemFlags_None))
                     {
                         Text("This is the %s tab!", names[n]);
-                        if (n & 1)
-                            Text("I am an odd tab.");
+                        if n & 1{
+                            Text("I am an odd tab.");}
                         EndTabItem();
                     }
                 EndTabBar();
@@ -1887,8 +1885,8 @@ pub unsafe fn ShowDemoWindowWidgets()
             Text("Current");
             ColorButton("##current", color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2::new(60, 40));
             Text("Previous");
-            if (ColorButton("##previous", backup_color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2::new(60, 40)))
-                color = backup_color;
+            if ColorButton("##previous", backup_color, ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_AlphaPreviewHalf, ImVec2::new(60, 40)) {
+                color = backup_color;}
             Separator();
             Text("Palette");
             for (let n: c_int = 0; n < saved_palette.len(); n++)
@@ -2215,7 +2213,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         PushID("set1");
         for (let i: c_int = 0; i < 7; i++)
         {
-            if (i > 0) SameLine();
+            if i > 0 {  SameLine(); }
             PushID(i);
             PushStyleColor(ImGuiCol_FrameBg, (ImVec4)ImColor::HSV(i / 7.0.0, 0.5, 0.5));
             PushStyleColor(ImGuiCol_FrameBgHovered, (ImVec4)ImColor::HSV(i / 7.0.0, 0.6f, 0.5));
@@ -2236,7 +2234,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         const small_slider_size: ImVec2(18, ((160f32 - (rows - 1) * spacing) / rows));
         for (let nx: c_int = 0; nx < 4; nx++)
         {
-            if (nx > 0) SameLine();
+            if nx > 0 {  SameLine(); }
             BeginGroup();
             for (let ny: c_int = 0; ny < rows; ny++)
             {
@@ -2254,7 +2252,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         PushID("set3");
         for (let i: c_int = 0; i < 4; i++)
         {
-            if (i > 0) SameLine();
+            if i > 0 {  SameLine(); }
             PushID(i);
             PushStyleVar(ImGuiStyleVar_GrabMinSize, 40);
             VSliderFloat("##v", ImVec2::new(40, 160), &values[i], 0.0, 1.0, "%.2f\nsec");
@@ -2403,8 +2401,8 @@ pub unsafe fn ShowDemoWindowWidgets()
         static let mut b: bool =  false;
         staticcol4f: c_float[4] = { 1.0, 0.5, 0.0, 1.0 };
         static str: [c_char;16] = {};
-        if (item_disabled)
-            BeginDisabled(true);
+        if item_disabled {
+            BeginDisabled(true)(); }
         if (item_type == 0) { Text("ITEM: Text"); }                                              // Testing text items with no identifier/interaction
         if (item_type == 1) { ret = Button("ITEM: Button"); }                                    // Testing button
         if (item_type == 2) { PushButtonRepeat(true); ret = Button("ITEM: Button"); PopButtonRepeat(); } // Testing button (with repeater)
@@ -2417,7 +2415,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         if (item_type == 9) { ret = ColorEdit4("ITEM: ColorEdit4", col40f32); }                     // Testing multi-component items (IsItemXXX flags are reported merged)
         if (item_type == 10){ ret = Selectable("ITEM: Selectable"); }                            // Testing selectable item
         if (item_type == 11){ ret = MenuItem("ITEM: MenuItem"); }                                // Testing menu item (they use ImGuiButtonFlags_PressedOnRelease button policy)
-        if (item_type == 12){ ret = TreeNode("ITEM: TreeNode"); if (ret) TreePop(); }     // Testing tree node
+        if (item_type == 12){ ret = TreeNode("ITEM: TreeNode"); if ret {  TreePop(); }  }     // Testing tree node
         if (item_type == 13){ ret = TreeNodeEx("ITEM: TreeNode w/ ImGuiTreeNodeFlags_OpenOnDoubleClick", ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_NoTreePushOnOpen); } // Testing tree node with ImGuiButtonFlags_PressedOnDoubleClick button policy.
         if (item_type == 14){ items: *const c_char[] = { "Apple", "Banana", "Cherry", "Kiwi" }; static let current: c_int = 1; ret = Combo("ITEM: Combo", &current, items, items.len()); }
         if (item_type == 15){ items: *const c_char[] = { "Apple", "Banana", "Cherry", "Kiwi" }; static let current: c_int = 1; ret = ListBox("ITEM: ListBox", &current, items, items.len(), items.len()); }
@@ -2473,8 +2471,8 @@ pub unsafe fn ShowDemoWindowWidgets()
         BulletText(
             "w/ Hovering Delay: None = %d, Fast %d, Normal = %d", hovered_delay_none, hovered_delay_short, hovered_delay_normal);
 
-        if (item_disabled)
-            EndDisabled();
+        if item_disabled {
+            EndDisabled(); }
 
         buf: [c_char;1] = "";
         InputText("unused", buf, buf.len(), ImGuiInputTextFlags_ReadOnly);
@@ -2551,8 +2549,8 @@ pub unsafe fn ShowDemoWindowWidgets()
         BeginChild("child", ImVec2::new(0, 50), true);
         Text("This is another child window for testing the _ChildWindows flag.");
         EndChild();
-        if (embed_all_inside_a_child_window)
-            EndChild();
+        if embed_all_inside_a_child_window {
+            EndChild(); }
 
         // Calling IsItemHovered() after begin returns the hovered status of the title bar.
         // This is useful in particular if you want to create a context menu associated to the title bar of a window.
@@ -2581,8 +2579,8 @@ pub unsafe fn ShowDemoWindowWidgets()
 
     // Demonstrate BeginDisabled/EndDisabled using a checkbox located at the bottom of the section (which is a bit odd:
     // logically we'd have this checkbox at the top of the section, but we don't want this feature to steal that space)
-    if (disable_all)
-        EndDisabled();
+    if disable_all {
+        EndDisabled(); }
 
     IMGUI_DEMO_MARKER("Widgets/Disable Block");
     if (TreeNode("Disable block"))
@@ -2596,8 +2594,7 @@ pub unsafe fn ShowDemoWindowWidgets()
 pub unsafe fn ShowDemoWindowLayout()
 {
     IMGUI_DEMO_MARKER("Layout");
-    if (!CollapsingHeader("Layout & Scrolling"))
-        return;
+    if !CollapsingHeader("Layout & Scrolling") { return ; }
 
     IMGUI_DEMO_MARKER("Layout/Child windows");
     if (TreeNode("Child windows"))
@@ -2821,7 +2818,7 @@ pub unsafe fn ShowDemoWindowLayout()
         static selection: c_int[4] = { 0, 1, 2, 3 };
         for (let i: c_int = 0; i < 4; i++)
         {
-            if (i > 0) SameLine();
+            if i > 0 {  SameLine(); }
             PushID(i);
             ListBox("", &selection[i], items, items.len());
             PopID();
@@ -2849,8 +2846,8 @@ pub unsafe fn ShowDemoWindowLayout()
             Button("Box", button_sz);
             let last_button_x2: c_float =  GetItemRectMax().x;
             let next_button_x2: c_float =  last_button_x2 + style.ItemSpacing.x + button_sz.x; // Expected position if next button was on same line
-            if (n + 1 < buttons_count && next_button_x2 < window_visible_x2)
-                SameLine();
+            if n + 1 < buttons_count && next_button_x2 < window_visible_x2{
+                SameLine();}
             PopID();
         }
 
@@ -2878,8 +2875,8 @@ pub unsafe fn ShowDemoWindowLayout()
             SameLine();
             Button("EEE");
             EndGroup();
-            if (IsItemHovered())
-                SetTooltip("First group hovered");
+            if IsItemHovered() {
+                SetTooltip("First group hovered")(); }
         }
         // Capture the group size and create widgets using the same size
         let size: ImVec2 = GetItemRectSize();
@@ -3050,17 +3047,17 @@ pub unsafe fn ShowDemoWindowLayout()
         SameLine(140); scroll_to_pos |= DragFloat("##pos", &scroll_to_pos_px, 1.0, -10, f32::MAX, "X/Y = %.0.0 px");
         PopItemWidth();
 
-        if (scroll_to_off || scroll_to_pos)
-            enable_track = false;
+        if scroll_to_off || scroll_to_pos {
+            enable_track = false;}
 
         ImGuiStyle& style = GetStyle();
         let child_w: c_float =  (GetContentRegionAvail().x - 4 * style.ItemSpacing.x) / 5;
-        if (child_w < 1.0)
-            child_w = 1.0;
+        if child_w < 1.0{
+            child_w = 1.0;}
         PushID("##VerticalScrolling");
         for (let i: c_int = 0; i < 5; i++)
         {
-            if (i > 0) SameLine();
+            if i > 0 {  SameLine(); }
             BeginGroup();
             names: *const c_char[] = { "Top", "25%", "Center", "75%", "Bottom" };
             TextUnformatted(names[i]);
@@ -3073,8 +3070,8 @@ pub unsafe fn ShowDemoWindowLayout()
                 TextUnformatted("abc");
                 EndMenuBar();
             }
-            if (scroll_to_off)
-                SetScrollY(scroll_to_off_px);
+            if scroll_to_off {
+                SetScrollY(scroll_to_off_px)(); }
             if (scroll_to_pos)
                 SetScrollFromPosY(GetCursorStartPos().y + scroll_to_pos_px, i * 0.250f32);
             if (child_is_visible) // Avoid calling SetScrollHereY when running with culled items
@@ -3115,16 +3112,16 @@ pub unsafe fn ShowDemoWindowLayout()
             child_flags: ImGuiWindowFlags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
             let mut child_id: ImGuiID =  GetID(i);
             let mut child_is_visible: bool =  BeginChild(child_id, ImVec2::new(-100, child_height), true, child_flags);
-            if (scroll_to_off)
-                SetScrollX(scroll_to_off_px);
+            if scroll_to_off {
+                SetScrollX(scroll_to_off_px)(); }
             if (scroll_to_pos)
                 SetScrollFromPosX(GetCursorStartPos().x + scroll_to_pos_px, i * 0.250f32);
             if (child_is_visible) // Avoid calling SetScrollHereY when running with culled items
             {
                 for (let item: c_int = 0; item < 100; item++)
                 {
-                    if (item > 0)
-                        SameLine();
+                    if item > 0 {
+                        SameLine(); }
                     if (enable_track && item == track_item)
                     {
                         TextColored(ImVec4(1, 1, 0, 1), "Item %d", item);
@@ -3166,7 +3163,7 @@ pub unsafe fn ShowDemoWindowLayout()
             let num_buttons: c_int = 10 + ((line & 1) ? line * 9 : line * 3);
             for (let n: c_int = 0; n < num_buttons; n++)
             {
-                if (n > 0) SameLine();
+                if n > 0 {  SameLine(); }
                 PushID(n + line * 1000);
                 num_buf: [c_char;16];
                 sprintf(num_buf, "%d", n);
@@ -3330,8 +3327,8 @@ pub unsafe fn ShowDemoWindowLayout()
 
         for (let n: c_int = 0; n < 3; n++)
         {
-            if (n > 0)
-                SameLine();
+            if n > 0 {
+                SameLine(); }
 
             PushID(n);
             InvisibleButton("##canvas", size);
@@ -3351,19 +3348,19 @@ pub unsafe fn ShowDemoWindowLayout()
             draw_list: *mut ImDrawList = GetWindowDrawList();
             switch (n)
             {
-            case 0:
+            0 =>
                 PushClipRect(p0, p1, true);
                 draw_list.AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
                 draw_list.AddText(text_pos, IM_COL32_WHITE, text_str);
                 PopClipRect();
                 break;
-            case 1:
+            1 =>
                 draw_list.PushClipRect(p0, p1, true);
                 draw_list.AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
                 draw_list.AddText(text_pos, IM_COL32_WHITE, text_str);
                 draw_list.PopClipRect();
                 break;
-            case 2:
+            2 =>
                 let mut clip_rect = ImVec4::new(p0.x, p0.y, p1.x, p1.y); // AddText() takes a ImVec4* here so let's convert.
                 draw_list.AddRectFilled(p0, p1, IM_COL32(90, 90, 120, 255));
                 draw_list.AddText(GetFont(), GetFontSize(), text_pos, IM_COL32_WHITE, text_str, null_mut(), 0.0, &clip_rect);
@@ -3378,8 +3375,7 @@ pub unsafe fn ShowDemoWindowLayout()
 pub unsafe fn ShowDemoWindowPopups()
 {
     IMGUI_DEMO_MARKER("Popups");
-    if (!CollapsingHeader("Popups & Modal windows"))
-        return;
+    if !CollapsingHeader("Popups & Modal windows") { return ; }
 
     // The properties of popups windows are:
     // - They block normal mouse hovering detection outside them. (*)
@@ -3421,8 +3417,8 @@ pub unsafe fn ShowDemoWindowPopups()
             Text("Aquarium");
             Separator();
             for (let i: c_int = 0; i < names.len(); i++)
-                if (Selectable(names[i]))
-                    selected_fish = i;
+                if Selectable(names[i]) {
+                    selected_fish = i;}
             EndPopup();
         }
 
@@ -3441,8 +3437,8 @@ pub unsafe fn ShowDemoWindowPopups()
 
             Separator();
             Text("Tooltip here");
-            if (IsItemHovered())
-                SetTooltip("I am a tooltip over a popup");
+            if IsItemHovered() {
+                SetTooltip("I am a tooltip over a popup")(); }
 
             if (Button("Stacked Popup"))
                 OpenPopup("another popup");
@@ -3717,11 +3713,11 @@ let Name: *const c_char;
             let delta: c_int = 0;
             switch (sort_spec.ColumnUserID)
             {
-            case MyItemColumnID_ID:             delta = (a.ID - b.ID);                break;
-            case MyItemColumnID_Name:           delta = (strcmp(a.Name, b.Name));     break;
-            case MyItemColumnID_Quantity:       delta = (a.Quantity - b.Quantity);    break;
-            case MyItemColumnID_Description:    delta = (strcmp(a.Name, b.Name));     break;
-            default: IM_ASSERT(0); break;
+            MyItemColumnID_ID =>             delta = (a.ID - b.ID);                break;
+            MyItemColumnID_Name =>           delta = (strcmp(a.Name, b.Name));     break;
+            MyItemColumnID_Quantity =>       delta = (a.Quantity - b.Quantity);    break;
+            MyItemColumnID_Description =>    delta = (strcmp(a.Name, b.Name));     break;
+            _ => IM_ASSERT(0); break;
             }
             if (delta > 0)
                 return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? 1 : -1;
@@ -3829,8 +3825,7 @@ pub unsafe fn ShowDemoWindowTables()
 {
     //SetNextItemOpen(true, ImGuiCond_Once);
     IMGUI_DEMO_MARKER("Tables");
-    if (!CollapsingHeader("Tables & Columns"))
-        return;
+    if !CollapsingHeader("Tables & Columns") { return ; }
 
     // Using those as a base value to create width/height that are factor of the size of our font
     let TEXT_BASE_WIDTH: c_float =  CalcTextSize("A").x;
@@ -3839,11 +3834,11 @@ pub unsafe fn ShowDemoWindowTables()
     PushID("Tables");
 
     let open_action: c_int = -1;
-    if (Button("Open all"))
-        open_action = 1;
+    if Button("Open all") {
+        open_action = 1;}
     SameLine();
-    if (Button("Close all"))
-        open_action = 0;
+    if Button("Close all") {
+        open_action = 0;}
     SameLine();
 
     // Options
@@ -3988,8 +3983,8 @@ pub unsafe fn ShowDemoWindowTables()
                     TableSetColumnIndex(column);
                     buf: [c_char;32];
                     sprintf(buf, "Hello %d,%d", column, row);
-                    if (contents_type == CT_Text)
-                        TextUnformatted(buf);
+                    if contents_type == CT_Text {
+                        TextUnformatted(buf)(); }
                     else if (contents_type == CT_FillButton)
                         Button(buf, ImVec2::new(-FLT_MIN, 0.0));
                 }
@@ -4370,12 +4365,12 @@ pub unsafe fn ShowDemoWindowTables()
                 sprintf(label, "Hello %d,%d", column, row);
                 switch (contents_type)
                 {
-                case CT_ShortText:  TextUnformatted(label); break;
-                case CT_LongText:   Text("Some %s text %d,%d\nOver two lines..", column == 0 ? "long" : "longeeer", column, row); break;
-                case CT_ShowWidth:  Text("W: %.1f", GetContentRegionAvail().x); break;
-                case CT_Button:     Button(label); break;
-                case CT_FillButton: Button(label, ImVec2::new(-FLT_MIN, 0.0)); break;
-                case CT_InputText:  SetNextItemWidth(-FLT_MIN); InputText("##", text_buf, text_buf.len()); break;
+                CT_ShortText =>  TextUnformatted(label); break;
+                CT_LongText =>   Text("Some %s text %d,%d\nOver two lines..", column == 0 ? "long" : "longeeer", column, row); break;
+                CT_ShowWidth =>  Text("W: %.1f", GetContentRegionAvail().x); break;
+                CT_Button =>     Button(label); break;
+                CT_FillButton => Button(label, ImVec2::new(-FLT_MIN, 0.0)); break;
+                CT_InputText =>  SetNextItemWidth(-FLT_MIN); InputText("##", text_buf, text_buf.len()); break;
                 }
                 PopID();
             }
@@ -5088,14 +5083,14 @@ pub unsafe fn ShowDemoWindowTables()
             for (let column: c_int = 0; column < COLUMNS_COUNT + 1; column++)
             {
                 PushID(column);
-                if (TableGetColumnFlags(column) & ImGuiTableColumnFlags_IsHovered)
-                    hovered_column = column;
+                if TableGetColumnFlags(column) & ImGuiTableColumnFlags_IsHovered {
+                    hovered_column = column;}
                 if (hovered_column == column && !IsAnyItemHovered() && IsMouseReleased(1))
                     OpenPopup("MyPopup");
                 if (BeginPopup("MyPopup"))
                 {
-                    if (column == COLUMNS_COUNT)
-                        Text("This is a custom popup for unused space after the last column.");
+                    if column == COLUMNS_COUNT{
+                        Text("This is a custom popup for unused space after the last column.");}
                     else
                         Text("This is a custom popup for Column %d", column);
                     if (Button("Close"))
@@ -5413,8 +5408,8 @@ pub unsafe fn ShowDemoWindowTables()
 
             // Sort our data if sort specs have been changed!
             *mut ImGuiTableSortSpecs sorts_specs = TableGetSortSpecs();
-            if (sorts_specs && sorts_specs->SpecsDirty)
-                items_need_sort = true;
+            if sorts_specs && sorts_specs->SpecsDirty {
+                items_need_sort = true;}
             if (sorts_specs && items_need_sort && items.Size > 1)
             {
                 MyItem::s_current_sort_specs = sorts_specs; // Store in variable accessible by the sort function.
@@ -5429,8 +5424,8 @@ pub unsafe fn ShowDemoWindowTables()
             let sorts_specs_using_quantity: bool = (TableGetColumnFlags(3) & ImGuiTableColumnFlags_IsSorted) != 0;
 
             // Show headers
-            if (show_headers)
-                TableHeadersRow();
+            if show_headers {
+                TableHeadersRow(); }
 
             // Show data
             // FIXME-TABLE FIXME-NAV: How we can get decent up/down even though we have the buttons here?
@@ -5460,12 +5455,12 @@ pub unsafe fn ShowDemoWindowTables()
                     TableSetColumnIndex(0);
                     label: [c_char;32];
                     sprintf(label, "%04d", item.ID);
-                    if (contents_type == CT_Text)
-                        TextUnformatted(label);
-                    else if (contents_type == CT_Button)
-                        Button(label);
-                    else if (contents_type == CT_SmallButton)
-                        SmallButton(label);
+                    if contents_type == CT_Text {
+                        TextUnformatted(label)(); }
+                    else if contents_type == CT_Button {
+                        Button(label)(); }
+                    else if contents_type == CT_SmallButton {
+                        SmallButton(label)(); }
                     else if (contents_type == CT_FillButton)
                         Button(label, ImVec2::new(-FLT_MIN, 0.0));
                     else if (contents_type == CT_Selectable || contents_type == CT_SelectableSpanRow)
@@ -5475,8 +5470,8 @@ pub unsafe fn ShowDemoWindowTables()
                         {
                             if (GetIO().KeyCtrl)
                             {
-                                if (item_is_selected)
-                                    selection.find_erase_unsorted(item.ID);
+                                if item_is_selected{
+                                    selection.find_erase_unsorted(item.ID);}
                                 else
                                     selection.push(item.ID);
                             }
@@ -5488,8 +5483,8 @@ pub unsafe fn ShowDemoWindowTables()
                         }
                     }
 
-                    if (TableSetColumnIndex(1))
-                        TextUnformatted(item.Name);
+                    if TableSetColumnIndex(1){
+                        TextUnformatted(item.Name);}
 
                     // Here we demonstrate marking our data set as needing to be sorted again if we modified a quantity,
                     // and we are currently sorting on the column showing the Quantity.
@@ -5508,13 +5503,13 @@ pub unsafe fn ShowDemoWindowTables()
                         Text("%d", item->Quantity);
 
                     TableSetColumnIndex(4);
-                    if (show_wrapped_text)
-                        TextWrapped("Lorem ipsum dolor sit amet");
+                    if show_wrapped_text {
+                        TextWrapped("Lorem ipsum dolor sit amet")(); }
                     else
                         Text("Lorem ipsum dolor sit amet");
 
-                    if (TableSetColumnIndex(5))
-                        Text("1234");
+                    if TableSetColumnIndex(5) {
+                        Text("1234")(); }
 
                     PopID();
                 }
@@ -5547,8 +5542,8 @@ pub unsafe fn ShowDemoWindowTables()
 
     ShowDemoWindowColumns();
 
-    if (disable_indent)
-        PopStyleVar();
+    if disable_indent {
+        PopStyleVar(); }
 }
 
 // Demonstrate old/legacy Columns API!
@@ -5559,8 +5554,7 @@ pub unsafe fn ShowDemoWindowColumns()
     let mut open: bool =  TreeNode("Legacy Columns API");
     SameLine();
     HelpMarker("Columns() is an old API! Prefer using the more flexible and powerful BeginTable() API!");
-    if (!open)
-        return;
+    if !open { return ; }
 
     // Basic columns
     IMGUI_DEMO_MARKER("Columns (legacy API)/Basic");
@@ -5595,8 +5589,8 @@ pub unsafe fn ShowDemoWindowColumns()
         {
             label: [c_char;32];
             sprintf(label, "%04d", i);
-            if (Selectable(label, selected == i, ImGuiSelectableFlags_SpanAllColumns))
-                selected = i;
+            if Selectable(label, selected == i, ImGuiSelectableFlags_SpanAllColumns) {
+                selected = i;}
             let mut hovered: bool =  IsItemHovered();
             NextColumn();
             Text(names[i]); NextColumn();
@@ -5618,8 +5612,8 @@ pub unsafe fn ShowDemoWindowColumns()
         let lines_count: c_int = 3;
         SetNextItemWidth(GetFontSize() * 8);
         DragInt("##columns_count", &columns_count, 0.1f, 2, 10, "%d columns");
-        if (columns_count < 2)
-            columns_count = 2;
+        if columns_count < 2 {
+            columns_count = 2;}
         SameLine();
         Checkbox("horizontal", &h_borders);
         SameLine();
@@ -5627,8 +5621,8 @@ pub unsafe fn ShowDemoWindowColumns()
         Columns(columns_count, null_mut(), v_borders);
         for (let i: c_int = 0; i < columns_count * lines_count; i++)
         {
-            if (h_borders && GetColumnIndex() == 0)
-                Separator();
+            if h_borders && GetColumnIndex() == 0{
+                Separator();}
             Text("%c%c%c", 'a' + i, 'a' + i, 'a' + i);
             Text("Width %.2f", GetColumnWidth());
             Text("Avail %.2f", GetContentRegionAvail().x);
@@ -5638,8 +5632,8 @@ pub unsafe fn ShowDemoWindowColumns()
             NextColumn();
         }
         Columns(1);
-        if (h_borders)
-            Separator();
+        if h_borders {
+            Separator(); }
         TreePop();
     }
 
@@ -5744,8 +5738,8 @@ pub unsafe fn ShowDemoWindowColumns()
                         }
                     }
                     NextColumn();
-                    if (open2)
-                        TreePop();
+                    if open2 {
+                        TreePop(); }
                 }
                 TreePop();
             }
@@ -5895,7 +5889,7 @@ pub unsafe fn ShowDemoWindowMisc()
                 "The value of io.WantCaptureMouse and io.WantCaptureKeyboard are normally set by Dear ImGui "
                 "to instruct your application of how to route inputs. Typically, when a value is true, it means "
                 "Dear ImGui wants the corresponding inputs and we expect the underlying application to ignore them.\n\n"
-                "The most typical case is: when hovering a window, Dear ImGui set io.WantCaptureMouse to true, "
+                "The most typical is => when hovering a window, Dear ImGui set io.WantCaptureMouse to true, "
                 "and underlying application should ignore mouse inputs (in practice there are many and more subtle "
                 "rules leading to how those flags are set).");
 
@@ -5948,18 +5942,18 @@ pub unsafe fn ShowDemoWindowMisc()
             let has_focus: c_int = 0;
             static buf: [c_char;128] = "click on a button to set focus";
 
-            if (focus_1) SetKeyboardFocusHere();
+            if focus_1 {  SetKeyboardFocusHere(); }
             InputText("1", buf, buf.len());
-            if (IsItemActive()) has_focus = 1;
+            if IsItemActive() {  has_focus = 1;}
 
-            if (focus_2) SetKeyboardFocusHere();
+            if focus_2 {  SetKeyboardFocusHere(); }
             InputText("2", buf, buf.len());
-            if (IsItemActive()) has_focus = 2;
+            if IsItemActive() {  has_focus = 2;}
 
             PushAllowKeyboardFocus(false);
-            if (focus_3) SetKeyboardFocusHere();
+            if focus_3 {  SetKeyboardFocusHere(); }
             InputText("3 (tab skip)", buf, buf.len());
-            if (IsItemActive()) has_focus = 3;
+            if IsItemActive() {  has_focus = 3;}
             SameLine(); HelpMarker("Item won't be cycled through when using TAB or Shift+Tab.");
             PopAllowKeyboardFocus();
 
@@ -6028,8 +6022,8 @@ pub unsafe fn ShowDemoWindowMisc()
                 label: [c_char;32];
                 sprintf(label, "Mouse cursor %d: %s", i, mouse_cursors_names[i]);
                 Bullet(); Selectable(label, false);
-                if (IsItemHovered())
-                    SetMouseCursor(i);
+                if IsItemHovered() {
+                    SetMouseCursor(i)(); }
             }
             TreePop();
         }
@@ -6147,9 +6141,9 @@ pub unsafe fn ShowAboutWindow(*mut p_open: bool)
         Text("io.BackendPlatformName: %s", io.BackendPlatformName ? io.BackendPlatformName : "NULL");
         Text("io.BackendRendererName: %s", io.BackendRendererName ? io.BackendRendererName : "NULL");
         Text("io.ConfigFlags: 0x%08X", io.ConfigFlags);
-        if (io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard)        Text(" NavEnableKeyboard");
-        if (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad)         Text(" NavEnableGamepad");
-        if (io.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos)     Text(" NavEnableSetMousePos");
+        if io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard{        Text(" NavEnableKeyboard");}
+        if io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad{         Text(" NavEnableGamepad");}
+        if io.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos{     Text(" NavEnableSetMousePos");}
         if (io.ConfigFlags & ImGuiConfigFlags_NavNoCaptureKeyboard)     Text(" NavNoCaptureKeyboard");
         if (io.ConfigFlags & ImGuiConfigFlags_NoMouse)                  Text(" NoMouse");
         if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)      Text(" NoMouseCursorChange");
@@ -6157,19 +6151,19 @@ pub unsafe fn ShowAboutWindow(*mut p_open: bool)
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)          Text(" ViewportsEnable");
         if (io.ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports)  Text(" DpiEnableScaleViewports");
         if (io.ConfigFlags & ImGuiConfigFlags_DpiEnableScaleFonts)      Text(" DpiEnableScaleFonts");
-        if (io.MouseDrawCursor)                                         Text("io.MouseDrawCursor");
-        if (io.ConfigViewportsNoAutoMerge)                              Text("io.ConfigViewportsNoAutoMerge");
-        if (io.ConfigViewportsNoTaskBarIcon)                            Text("io.ConfigViewportsNoTaskBarIcon");
-        if (io.ConfigViewportsNoDecoration)                             Text("io.ConfigViewportsNoDecoration");
-        if (io.ConfigViewportsNoDefaultParent)                          Text("io.ConfigViewportsNoDefaultParent");
-        if (io.ConfigDockingNoSplit)                                    Text("io.ConfigDockingNoSplit");
-        if (io.ConfigDockingWithShift)                                  Text("io.ConfigDockingWithShift");
-        if (io.ConfigDockingAlwaysTabBar)                               Text("io.ConfigDockingAlwaysTabBar");
-        if (io.ConfigDockingTransparentPayload)                         Text("io.ConfigDockingTransparentPayload");
-        if (io.ConfigMacOSXBehaviors)                                   Text("io.ConfigMacOSXBehaviors");
-        if (io.ConfigInputTextCursorBlink)                              Text("io.ConfigInputTextCursorBlink");
-        if (io.ConfigWindowsResizeFromEdges)                            Text("io.ConfigWindowsResizeFromEdges");
-        if (io.ConfigWindowsMoveFromTitleBarOnly)                       Text("io.ConfigWindowsMoveFromTitleBarOnly");
+        if io.MouseDrawCursor{                                         Text("io.MouseDrawCursor");}
+        if io.ConfigViewportsNoAutoMerge{                              Text("io.ConfigViewportsNoAutoMerge");}
+        if io.ConfigViewportsNoTaskBarIcon{                            Text("io.ConfigViewportsNoTaskBarIcon");}
+        if io.ConfigViewportsNoDecoration{                             Text("io.ConfigViewportsNoDecoration");}
+        if io.ConfigViewportsNoDefaultParent{                          Text("io.ConfigViewportsNoDefaultParent");}
+        if io.ConfigDockingNoSplit{                                    Text("io.ConfigDockingNoSplit");}
+        if io.ConfigDockingWithShift{                                  Text("io.ConfigDockingWithShift");}
+        if io.ConfigDockingAlwaysTabBar{                               Text("io.ConfigDockingAlwaysTabBar");}
+        if io.ConfigDockingTransparentPayload{                         Text("io.ConfigDockingTransparentPayload");}
+        if io.ConfigMacOSXBehaviors{                                   Text("io.ConfigMacOSXBehaviors");}
+        if io.ConfigInputTextCursorBlink{                              Text("io.ConfigInputTextCursorBlink");}
+        if io.ConfigWindowsResizeFromEdges{                            Text("io.ConfigWindowsResizeFromEdges");}
+        if io.ConfigWindowsMoveFromTitleBarOnly{                       Text("io.ConfigWindowsMoveFromTitleBarOnly");}
         if (io.ConfigMemoryCompactTimer >= 0.0)                        Text("io.ConfigMemoryCompactTimer = %.1f", io.ConfigMemoryCompactTimer);
         Text("io.BackendFlags: 0x%08X", io.BackendFlags);
         if (io.BackendFlags & ImGuiBackendFlags_HasGamepad)             Text(" HasGamepad");
@@ -6249,9 +6243,9 @@ pub unsafe fn ShowStyleSelector(label: *const c_char) -> bool
     {
         switch (style_idx)
         {
-        case 0: StyleColorsDark(); break;
-        case 1: StyleColorsLight(); break;
-        case 2: StyleColorsClassic(); break;
+        0 => StyleColorsDark(); break;
+        1 => StyleColorsLight(); break;
+        2 => StyleColorsClassic(); break;
         }
         return true;
     }
@@ -6268,16 +6262,16 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
 
     // Default to using internal storage as reference
     static let mut init: bool =  true;
-    if (init && ref == null_mut())
-        ref_saved_style = style;
+    if init && ref == null_mut() {
+        ref_saved_style = style;}
     init = false;
     if (ref == null_mut())
         ref = &ref_saved_style;
 
     PushItemWidth(GetWindowWidth() * 0.5);
 
-    if (ShowStyleSelector("Colors##Selector"))
-        ref_saved_style = style;
+    if ShowStyleSelector("Colors##Selector") {
+        ref_saved_style = style;}
     ShowFontSelector("Fonts##Selector");
 
     // Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0 or 1.0)
@@ -6353,8 +6347,8 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             static let mut output_only_modified: bool =  true;
             if (Button("Export"))
             {
-                if (output_dest == 0)
-                    LogToClipboard();
+                if output_dest == 0 {
+                    LogToClipboard()(); }
                 else
                     LogToTTY();
                 LogText("ImVec4* colors = GetStyle().Colors;" IM_NEWLINE);
@@ -6449,7 +6443,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             Checkbox("Anti-aliased fill", &style.AntiAliasedFill);
             PushItemWidth(GetFontSize() * 8);
             DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02f, 0.1.0, 10f32, "%.2f");
-            if (style.CurveTessellationTol < 0.100) style.CurveTessellationTol = 0.1.0;
+            if style.CurveTessellationTol < 0.100{ style.CurveTessellationTol = 0.1.0;}
 
             // When editing the "Circle Segment Max Error" value, draw a preview of its effect on auto-tessellated circles.
             DragFloat("Circle Tessellation Max Error", &style.CircleTessellationMaxError , 0.005f, 0.1.0, 5f32, "%.2f", ImGuiSliderFlags_AlwaysClamp);
@@ -6772,8 +6766,8 @@ struct ExampleAppConsole
         // - Split them into same height items would be simpler and facilitate random-seeking into your list.
         // - Consider using manual call to IsRectVisible() and skipping extraneous decoration from your items.
         PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2::new(4, 1)); // Tighten spacing
-        if (copy_to_clipboard)
-            LogToClipboard();
+        if copy_to_clipboard {
+            LogToClipboard(); }
         for (let i: c_int = 0; i < Items.Size; i++)
         {
             let mut  item: *const c_char = Items[i];
@@ -6789,11 +6783,11 @@ struct ExampleAppConsole
             if (has_color)
                 PushStyleColor(ImGuiCol_Text, color);
             TextUnformatted(item);
-            if (has_color)
-                PopStyleColor();
+            if has_color {
+                PopStyleColor(); }
         }
-        if (copy_to_clipboard)
-            LogFinish();
+        if copy_to_clipboard {
+            LogFinish(); }
 
         if (ScrollToBottom || (AutoScroll && GetScrollY() >= GetScrollMaxY()))
             SetScrollHereY(1.0);
@@ -6867,7 +6861,7 @@ struct ExampleAppConsole
     }
 
     // In C++11 you'd be better off using lambdas for this sort of forwarding callbacks
-    static TextEditCallbackStub: c_int(ImGuiInputTextCallbackData* data)
+    pub fn TextEditCallbackStub(ImGuiInputTextCallbackData* data) -> c_int
     {
         ExampleAppConsole* console = (ExampleAppConsole*)data.UserData;
         return console.TextEditCallback(data);
@@ -6878,7 +6872,7 @@ struct ExampleAppConsole
         //AddLog("cursor: %d, selection: %d-%d", data->CursorPos, data->SelectionStart, data->SelectionEnd);
         switch (data.EventFlag)
         {
-        case ImGuiInputTextFlags_CallbackCompletion:
+        ImGuiInputTextFlags_CallbackCompletion =>
             {
                 // Example of TEXT COMPLETION
 
@@ -6916,15 +6910,15 @@ struct ExampleAppConsole
                     // Multiple matches. Complete as much as we can..
                     // So inputing "C"+Tab will complete to "CL" then display "CLEAR" and "CLASSIFY" as matches.
                     let match_len: c_int = (word_end - word_start);
-                    for (;;)
+                    loop
                     {
                         let c: c_int = 0;
                         let mut all_candidates_matches: bool =  true;
                         for (let i: c_int = 0; i < candidates.Size && all_candidates_matches; i++)
                             if (i == 0)
                                 c = toupper(candidates[i][match_len]);
-                            else if (c == 0 || c != toupper(candidates[i][match_len]))
-                                all_candidates_matches = false;
+                            else if c == 0 || c != toupper(candidates[i][match_len]) {
+                                all_candidates_matches = false;}
                         if (!all_candidates_matches)
                             break;
                         match_len+= 1;
@@ -6944,7 +6938,7 @@ struct ExampleAppConsole
 
                 break;
             }
-        case ImGuiInputTextFlags_CallbackHistory:
+        ImGuiInputTextFlags_CallbackHistory =>
             {
                 // Example of HISTORY
                 let prev_history_pos: c_int = HistoryPos;
@@ -7049,10 +7043,10 @@ struct ExampleAppLog
         Separator();
         BeginChild("scrolling", ImVec2::new(0, 0), false, ImGuiWindowFlags_HorizontalScrollbar);
 
-        if (clear)
-            Clear();
-        if (copy)
-            LogToClipboard();
+        if clear {
+            Clear(); }
+        if copy {
+            LogToClipboard(); }
 
         PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2::new(0, 0));
         let mut  buf: *const c_char = Buf.begin();
@@ -7170,8 +7164,8 @@ pub unsafe fn ShowExampleAppLayout(bool* p_open)
                 // FIXME: Good candidate to use ImGuiSelectableFlags_SelectOnNav
                 label: [c_char;128];
                 sprintf(label, "MyObject %d", i);
-                if (Selectable(label, selected == i))
-                    selected = i;
+                if Selectable(label, selected == i) {
+                    selected = i;}
             }
             EndChild();
         }
@@ -7325,11 +7319,11 @@ pub unsafe fn ShowExampleAppLongText(bool* p_open)
     BeginChild("Log");
     switch (test_type)
     {
-    case 0:
+    0 =>
         // Single call to TextUnformatted() with a big buffer
         TextUnformatted(log.begin(), log.end());
         break;
-    case 1:
+    1 =>
         {
             // Multiple calls to Text(), manually coarsely clipped - demonstrate how to use the ImGuiListClipper helper.
             PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2::new(0, 0));
@@ -7341,7 +7335,7 @@ pub unsafe fn ShowExampleAppLongText(bool* p_open)
             PopStyleVar();
             break;
         }
-    case 2:
+    2 =>
         // Multiple calls to Text(), not clipped (slow)
         PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2::new(0, 0));
         for (let i: c_int = 0; i < lines; i++)
@@ -7511,10 +7505,10 @@ pub unsafe fn ShowExampleAppSimpleOverlay(bool* p_open)
         {
             if (MenuItem("Custom",       null_mut(), location == -1)) location = -1;
             if (MenuItem("Center",       null_mut(), location == -2)) location = -2;
-            if (MenuItem("Top-left",     null_mut(), location == 0)) location = 0;
-            if (MenuItem("Top-right",    null_mut(), location == 1)) location = 1;
-            if (MenuItem("Bottom-left",  null_mut(), location == 2)) location = 2;
-            if (MenuItem("Bottom-right", null_mut(), location == 3)) location = 3;
+            if MenuItem("Top-left",     null_mut(), location == 0) {  location = 0;}
+            if MenuItem("Top-right",    null_mut(), location == 1) {  location = 1;}
+            if MenuItem("Bottom-left",  null_mut(), location == 2) {  location = 2;}
+            if MenuItem("Bottom-right", null_mut(), location == 3) {  location = 3;}
             if (p_open && MenuItem("Close")) *p_open = false;
             EndPopup();
         }
@@ -7741,8 +7735,8 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             // Using InvisibleButton() as a convenience 1) it will advance the layout cursor and 2) allows us to use IsItemHovered()/IsItemActive()
             let canvas_p0: ImVec2 = GetCursorScreenPos();      // ImDrawList API uses screen coordinates!
             let canvas_sz: ImVec2 = GetContentRegionAvail();   // Resize canvas to what's available
-            if (canvas_sz.x < 50f32) canvas_sz.x = 50f32;
-            if (canvas_sz.y < 50f32) canvas_sz.y = 50f32;
+            if canvas_sz.x < 50f32{ canvas_sz.x = 50f32;}
+            if canvas_sz.y < 50f32{ canvas_sz.y = 50f32;}
             let canvas_p1: ImVec2 = ImVec2::new(canvas_p0.x + canvas_sz.x, canvas_p0.y + canvas_sz.y);
 
             // Draw border and background color
@@ -7768,8 +7762,8 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             if (adding_line)
             {
                 points.last().unwrap() = mouse_pos_in_canvas;
-                if (!IsMouseDown(ImGuiMouseButton_Left))
-                    adding_line = false;
+                if !IsMouseDown(ImGuiMouseButton_Left) {
+                    adding_line = false;}
             }
 
             // Pan (we use a zero mouse threshold when there's no context menu)
@@ -7909,8 +7903,8 @@ pub unsafe fn ShowExampleAppDockSpace(bool* p_open)
     if (!opt_padding)
         PopStyleVar();
 
-    if (opt_fullscreen)
-        PopStyleVar(2);
+    if opt_fullscreen {
+        PopStyleVar(2)(); }
 
     // Submit the DockSpace
     ImGuiIO& io = GetIO();
@@ -8008,8 +8002,7 @@ let Name: *const c_char;       // Document title
     // Display context menu for the Document
     static c_void DisplayContextMenu(MyDocument* doc)
     {
-        if (!BeginPopupContextItem())
-            return;
+        if !BeginPopupContextItem() { return ; }
 
         buf: [c_char;256];
         sprintf(buf, "Save %s", doc.Name);
@@ -8118,8 +8111,8 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
     for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
     {
         MyDocument* doc = &app.Documents[doc_n];
-        if (doc_n > 0)
-            SameLine();
+        if doc_n > 0 {
+            SameLine(); }
         PushID(doc);
         if (Checkbox(doc.Name, &doc->Open))
             if (!doc->Open)
@@ -8151,8 +8144,8 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
         ImGuiTabBarFlags tab_bar_flags = (opt_fitting_flags) | (opt_reorderable ? ImGuiTabBarFlags_Reorderable : 0);
         if (BeginTabBar("##tabs", tab_bar_flags))
         {
-            if (opt_reorderable)
-                NotifyOfDocumentsClosedElsewhere(app);
+            if opt_reorderable {
+                NotifyOfDocumentsClosedElsewhere(app)(); }
 
             // [DEBUG] Stress tests
             //if ((GetFrameCount() % 30) == 0) docs[1].Open ^= 1;            // [DEBUG] Automatically show/hide a tab. Test various interactions e.g. dragging with this on.

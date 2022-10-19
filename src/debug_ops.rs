@@ -242,8 +242,7 @@ pub unsafe fn RenderViewportsThumbnails()
 pub unsafe fn DebugTextEncoding(str: *const c_char)
 {
     Text("Text: \"%s\"", str);
-    if (!BeginTable("list", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit))
-        return;
+    if !BeginTable("list", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit) { return ; }
     TableSetupColumn("Offset");
     TableSetupColumn("UTF-8");
     TableSetupColumn("Glyph");
@@ -258,8 +257,8 @@ pub unsafe fn DebugTextEncoding(str: *const c_char)
         TableNextColumn();
         for (let byte_index: c_int = 0; byte_index < c_utf8_len; byte_index++)
         {
-            if (byte_index > 0)
-                SameLine();
+            if byte_index > 0 {
+                SameLine(); }
             Text("0x%02X", p[byte_index]);
         }
         TableNextColumn();
@@ -827,8 +826,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
 // [DEBUG] Display contents of Columns
 pub unsafe fn DebugNodeColumns(ImGuiOldColumns* columns)
 {
-    if (!TreeNode((uintptr_t)columns.ID, "Columns Id: 0x%08X, Count: %d, Flags: 0x%04X", columns.ID, columns->Count, columns.Flags))
-        return;
+    if !TreeNode((uintptr_t)columns.ID, "Columns Id: 0x%08X, Count: %d, Flags: 0x%04X", columns.ID, columns->Count, columns.Flags) { return ; }
     BulletText("Width: %.1f (MinX: %.1f, MaxX: %.10f32)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
     for (let column_n: c_int = 0; column_n < columns->Columns.Size; column_n++)
         BulletText("Column %02d: OffsetNorm %.3f (= %.1f px)", column_n, columns->Columns[column_n].OffsetNorm, GetColumnOffsetFromNorm(columns, columns->Columns[column_n].OffsetNorm));
@@ -935,16 +933,15 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
     {
         SameLine();
         TextColored(ImVec4(1.0, 0.4f, 0.4f, 1.0), "CURRENTLY APPENDING"); // Can't display stats for active draw list! (we don't have the data double-buffered)
-        if (node_open)
-            TreePop();
+        if node_open {
+            TreePop(); }
         return;
     }
 
     let mut  fg_draw_list: *mut ImDrawList =  viewport ? GetForegroundDrawList(viewport) : null_mut(); // Render additional visuals into the top-most draw list
     if (is_not_null(window) && IsItemHovered() && fg_draw_list)
         fg_draw_list.AddRect(window.Pos, window.Pos + window.Size, IM_COL32(255, 255, 0, 255));
-    if (!node_open)
-        return;
+    if !node_open { return ; }
 
     if (is_not_null(window) && !window.WasActive)
         TextDisabled("Warning: owning Window is inactive. This DrawList is not being rendered!");
@@ -1054,8 +1051,7 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
     SameLine();
     if (SmallButton("Set as default"))
         GetIO().FontDefault = font;
-    if (!opened)
-        return;
+    if !opened { return ; }
 
     // Display preview text
     PushFont(font);
@@ -1105,8 +1101,8 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
             for (let mut n: c_uint =  0; n < 256; n++)
                 if (font->FindGlyphNoFallback((base + n)))
                     count+= 1;
-            if (count <= 0)
-                continue;
+            if count <= 0 {
+                continue(); }
             if (!TreeNode(base, "U+%04X..U+%04X (%d %s)", base, base + 255, count, count > 1 ? "glyphs" : "glyph"))
                 continue;
 
@@ -1151,8 +1147,7 @@ pub unsafe fn DebugNodeFontGlyph(ImFont*, *const ImFontGlyph glyph)
 // [DEBUG] Display contents of ImGuiStorage
 pub unsafe fn DebugNodeStorage(ImGuiStorage* storage, label: *const c_char)
 {
-    if (!TreeNode(label, "%s: %d entries, %d bytes", label, storage.Data.Size, storage.Data.size_in_bytes()))
-        return;
+    if !TreeNode(label, "%s: %d entries, %d bytes", label, storage.Data.Size, storage.Data.size_in_bytes()) { return ; }
     for (let n: c_int = 0; n < storage.Data.Size; n++)
     {
         const ImGuiStorage::ImGuiStoragePair& p = storage.Data[n];
@@ -1214,7 +1209,7 @@ pub unsafe fn DebugNodeViewport(viewport: *mut ImGuiViewport)
             viewport.Pos.x, viewport.Pos.y, viewport.Size.x, viewport.Size.y,
             viewport.WorkOffsetMin.x, viewport.WorkOffsetMin.y, viewport.WorkOffsetMax.x, viewport.WorkOffsetMax.y,
             viewport.PlatformMonitor, viewport.DpiScale * 100);
-        if (viewport.Idx > 0) { SameLine(); if (SmallButton("Reset Pos")) { viewport.Pos = ImVec2::new(200, 200); viewport.UpdateWorkRect(); if (viewport.Window) viewport.window.Pos = viewport.Pos; } }
+        if (viewport.Idx > 0) { SameLine(); if (SmallButton("Reset Pos")) { viewport.Pos = ImVec2::new(200, 200); viewport.UpdateWorkRect(); if viewport.Window{ viewport.window.Pos = viewport.Pos;} } }
         BulletText("Flags: 0x%04X =%s%s%s%s%s%s%s%s%s%s%s%s", viewport.Flags,
             //(flags & ImGuiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard
             (flags & ImGuiViewportFlags_IsPlatformMonitor) ? " IsPlatformMonitor" : "",
@@ -1252,8 +1247,7 @@ pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
     if (!is_active) { PopStyleColor(); }
     if (IsItemHovered() && is_active)
         GetForegroundDrawList(window).AddRect(window.Pos, window.Pos + window.Size, IM_COL32(255, 255, 0, 255));
-    if (!open)
-        return;
+    if !open { return ; }
 
     if (window.MemoryCompacted)
         TextDisabled("Note: some memory buffers have been compacted/freed.");
@@ -1311,8 +1305,7 @@ pub unsafe fn DebugNodeWindowSettings(settings: *mut ImGuiWindowSettings)
 
 pub unsafe fn DebugNodeWindowsList(Vec<ImGuiWindow*>* windows, label: *const c_char)
 {
-    if (!TreeNode(label, "%s (%d)", label, windows.Size))
-        return;
+    if !TreeNode(label, "%s (%d)", label, windows.Size) { return ; }
     for (let i: c_int = windows.Size - 1; i >= 0; i--) // Iterate front to back
     {
         PushID((*windows)[i]);
@@ -1392,8 +1385,8 @@ pub unsafe fn ShowDebugLogWindow(bool* p_open)
         SetClipboardText(g.DebugLogBuf.c_str());
     BeginChild("##log", ImVec2::new(0.0, 0.0), true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
     TextUnformatted(g.DebugLogBuf.begin(), g.DebugLogBuf.end()); // FIXME-OPT: Could use a line index, but TextUnformatted() has a semi-decent fast path for large text.
-    if (GetScrollY() >= GetScrollMaxY())
-        SetScrollHereY(1.0);
+    if GetScrollY() >= GetScrollMaxY(){
+        SetScrollHereY(1.0);}
     EndChild();
 
     End();
@@ -1408,13 +1401,12 @@ pub unsafe fn UpdateDebugToolItemPicker()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.DebugItemPickerBreakId = 0;
-    if (!g.DebugItemPickerActive)
-        return;
+    if !g.DebugItemPickerActive { return ; }
 
     let mut hovered_id: ImGuiID =  g.HoveredIdPreviousFrame;
     SetMouseCursor(ImGuiMouseCursor_Hand);
-    if (IsKeyPressed(ImGuiKey_Escape))
-        g.DebugItemPickerActive = false;
+    if IsKeyPressed(ImGuiKey_Escape){
+        g.DebugItemPickerActive = false;}
     let change_mapping: bool = g.IO.KeyMods == (ImGuiModFlags_Ctrl | ImGuiModFlags_Shift);
     if (!change_mapping && IsMouseClicked(g.DebugItemPickerMouseButton) && hovered_id)
     {
@@ -1422,8 +1414,8 @@ pub unsafe fn UpdateDebugToolItemPicker()
         g.DebugItemPickerActive = false;
     }
     for (let mouse_button: c_int = 0; mouse_button < 3; mouse_button++)
-        if (change_mapping && IsMouseClicked(mouse_button))
-            g.DebugItemPickerMouseButton = mouse_button;
+        if change_mapping && IsMouseClicked(mouse_button){
+            g.DebugItemPickerMouseButton = mouse_button;}
     SetNextWindowBgAlpha(0.70);
     BeginTooltip();
     Text("HoveredId: 0x%08X", hovered_id);
@@ -1444,8 +1436,7 @@ pub unsafe fn UpdateDebugToolStackQueries()
 
     // Clear hook when stack tool is not visible
     g.DebugHookIdInfo = 0;
-    if (g.FrameCount != tool.LastActiveFrame + 1)
-        return;
+    if g.FrameCount != tool.LastActiveFrame + 1 { return ; }
 
     // Update queries. The steps are: -1: query Stack, >= 0: query each stack item
     // We can only perform 1 ID Info query every frame. This is designed so the GetID() tests are cheap and constant-time
@@ -1456,8 +1447,7 @@ pub unsafe fn UpdateDebugToolStackQueries()
         tool.StackLevel = -1;
         tool.Results.clear();
     }
-    if (query_id == 0)
-        return;
+    if query_id == 0 { return ; }
 
     // Advance to next stack level when we got our result, or after 2 frames (in case we never get a result)
     let stack_level: c_int = tool.StackLevel;
@@ -1476,7 +1466,7 @@ pub unsafe fn UpdateDebugToolStackQueries()
     }
 }
 
-static StackToolFormatLevelInfo: c_int(ImGuiStackTool* tool, n: c_int, format_for_ui: bool, char* buf, buf_size: size_t)
+pub fn StackToolFormatLevelInfo(ImGuiStackTool* tool, n: c_int, format_for_ui: bool, char* buf, buf_size: size_t) -> c_int
 {
     let mut info: *mut ImGuiStackLevelInfo =  &tool.Results[n];
     let mut window: *mut ImGuiWindow =  (info.Desc[0] == 0 && n == 0) ? FindWindowByID(info.ID) : null_mut();
