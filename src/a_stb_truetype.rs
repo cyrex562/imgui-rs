@@ -1527,15 +1527,14 @@ pub fn stbtt_GetCodepointShape(info: *const stbtt_fontinfo, unicode_codepoint: c
    return stbtt_GetGlyphShape(info, stbtt_FindGlyphIndex(info, unicode_codepoint), vertices);
 }
 
-pub fn stbtt_setvertex(v: &_, vertex_type: c_int, x: i32, y: i32, cx: i32, cy: i32)
+pub fn stbtt_setvertex(v: &mut stbtt_vertex, vertex_type: c_int, x: i32, y: i32, cx: i32, cy: i32)
 {
-   v.vertex_type = vertex_type;
+   v.vertex_type = vertex_type as c_uchar;
    v.x = x as stbtt_vertex_type;
    v.y = y as stbtt_vertex_type;
    v.cx = cx as stbtt_vertex_type;
    v.cy = cy as stbtt_vertex_type;
 }
-
 pub fn stbtt__GetGlyfOffset(info: *const stbtt_fontinfo, glyph_index: c_int) -> c_int
 {
    // g1: c_int,g2;
@@ -1599,18 +1598,18 @@ pub fn stbtt__close_shape(vertices: *mut stbtt_vertex, mut num_vertices: c_int, 
 {
    if (start_off) {
       if (was_off) {
-          stbtt_setvertex(&mut vertices[num_vertices], STBTT_vcurve as u8, (cx + scx) >> 1, (cy + scy) >> 1, cx, cy);
+          stbtt_setvertex(&mut vertices[num_vertices], STBTT_vcurve, (cx + scx) >> 1, (cy + scy) >> 1, cx, cy);
           num_vertices += 1;
       }
-      stbtt_setvertex(&mut vertices[num_vertices], STBTT_vcurve as u8, sx, sy, scx, scy);
+      stbtt_setvertex(&mut vertices[num_vertices], STBTT_vcurve, sx, sy, scx, scy);
        num_vertices += 1;
    } else {
       if (was_off) {
-          stbtt_setvertex(&mut vertices[num_vertices], STBTT_vcurve as u8, sx, sy, cx, cy);
+          stbtt_setvertex(&mut vertices[num_vertices], STBTT_vcurve, sx, sy, cx, cy);
           num_vertices += 1;
       }
       else {
-          stbtt_setvertex(&mut vertices[num_vertices], STBTT_vline as u8, sx, sy, 0, 0);
+          stbtt_setvertex(&mut vertices[num_vertices], STBTT_vline, sx, sy, 0, 0);
           num_vertices += 1;
       }
    }

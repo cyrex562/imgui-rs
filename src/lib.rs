@@ -17,17 +17,13 @@ use crate::viewport::ImGuiViewport;
 use crate::viewport_flags::ImGuiViewportFlags_OwnedByApp;
 use crate::viewport_ops::DestroyPlatformWindows;
 
-
-mod a_imgui_cpp;
 mod style;
 mod io;
 mod storage;
 mod text_filter;
-mod imgui_h;
 mod type_defs;
 mod text_buffer;
 mod context;
-mod imgui_internal_h;
 mod window;
 mod platform_io;
 mod vec2;
@@ -112,7 +108,6 @@ mod mod_flags;
 mod popup_flags;
 mod selectable_flags;
 mod slider_flags;
-mod tab_bat_flags;
 mod input_text_flags;
 mod tab_item_flags;
 mod table_column_flags;
