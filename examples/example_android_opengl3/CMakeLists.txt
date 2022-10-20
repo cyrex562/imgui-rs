@@ -11,7 +11,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         ../../src/orig_imgui_single_file.rs
         ../../src/imgui_demo.cpp
         ../../src/draw.rs
-        ../../src/a_tables.rs
+        ../../src/tables.rs
         ../../src/a_widgets.rs
   ${CMAKE_CURRENT_SOURCE_DIR}/../../backends/imgui_impl_android.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../backends/imgui_impl_opengl3.cpp

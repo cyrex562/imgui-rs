@@ -5,7 +5,7 @@ extern crate core;
 use std::collections::HashSet;
 use std::io::stdout;
 use std::ptr::null_mut;
-use crate::a_tables::TableSettingsAddSettingsHandler;
+use crate::tables::TableSettingsAddSettingsHandler;
 use crate::context_hook::ImGuiContextHookType_Shutdown;
 use crate::context_ops::CallContextHooks;
 use crate::dock_context_ops::{DockContextInitialize, DockContextShutdown};
@@ -229,7 +229,7 @@ mod dock_node_tree_info;
 mod docking_ops;
 mod platform_support;
 mod stb;
-mod a_tables;
+mod tables;
 mod merge_group;
 
 
