@@ -360,7 +360,7 @@ pub unsafe fn Render()
     {
         let mut window: *mut ImGuiWindow =  g.Windows[n];
         IM_MSVC_WARNING_SUPPRESS(6011); // Static Analysis false positive "warning C6011: Dereferencing NULL pointer 'window'"
-        if IsWindowActiveAndVisible(window) && (window.Flags & ImGuiWindowFlags_ChildWindow) == 0 && window != windows_to_render_top_most[0] && window != windows_to_render_top_most[1] {
+        if IsWindowActiveAndVisible(window) && flag_set(window.Flags, ImGuiWindowFlags_ChildWindow) == 0 && window != windows_to_render_top_most[0] && window != windows_to_render_top_most[1] {
             AddRootWindowToDrawData(window);
         }
     }

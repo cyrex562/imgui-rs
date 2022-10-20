@@ -432,7 +432,7 @@ pub unsafe fn ItemAdd(bb: &mut ImRect, id: ImGuiID, nav_bb_arg: *const ImRect, e
     // (DisplayRect is left untouched, made valid when ImGuiItemStatusFlags_HasDisplayRect is set)
     g.LastItemData.ID = id;
     g.LastItemData.Rect = bb.clone();
-    g.LastItemData.NavRect = nav_bb_arg ? *nav_bb_arg : bb;
+    g.LastItemData.NavRect = if nav_bb_arg { *nav_bb_arg }else: { bb };
     g.LastItemData.InFlags = g.CurrentItemFlags | extra_flags;
     g.LastItemData.StatusFlags = ImGuiItemStatusFlags_None;
 
@@ -477,7 +477,7 @@ pub unsafe fn ItemAdd(bb: &mut ImRect, id: ImGuiID, nav_bb_arg: *const ImRect, e
 
 // #ifdef IMGUI_ENABLE_TEST_ENGINE
     if (id != 0) {
-        IMGUI_TEST_ENGINE_ITEM_ADD(nav_bb_arg? * nav_bb_arg: bb, id);
+        IMGUI_TEST_ENGINE_ITEM_ADD(if nav_bb_arg { *nav_bb_arg }else { bb }, id);
     }
 // #endif
 

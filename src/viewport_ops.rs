@@ -28,7 +28,7 @@ pub fn SetupViewportDrawData(viewport: *mut ImGuiViewport, draw_lists: *mut Vec<
     // FIXME: Note that we however do NOT attempt to report "zero drawlist / vertices" into the ImDrawData structure.
     // This is because the work has been done already, and its wasted! We should fix that and add optimizations for
     // it earlier in the pipeline, rather than pretend to hide the data at the end of the pipeline.
-    let is_minimized: bool = (viewport.Flags & ImGuiViewportFlags_Minimized) != 0;
+    let is_minimized: bool = flag_set(viewport.Flags, ImGuiViewportFlags_Minimized) != 0;
 
     let io = GetIO();
     let mut draw_data = &mut viewport.DrawDataP;
@@ -152,7 +152,7 @@ pub unsafe fn GetWindowAlwaysWantOwnViewport(window: *mut ImGuiWindow) -> bool
         if (g.ConfigFlagsCurrFrame & ImGuiConfigFlags_ViewportsEnable){
             if (!window.DockIsActive){
                 if ((window.Flags & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_ChildMenu | ImGuiWindowFlags_Tooltip)) == 0){
-                    if ((window.Flags & ImGuiWindowFlags_Popup) == 0 || (window.Flags & ImGuiWindowFlags_Modal) != 0){
+                    if ((window.Flags & ImGuiWindowFlags_Popup) == 0 || flag_set(window.Flags, ImGuiWindowFlags_Modal) != 0){
                         return true;}}}}}
     return false;
 }
@@ -178,7 +178,7 @@ pub unsafe fn UpdateTryMergeWindowIntoHostViewport(window: *mut ImGuiWindow, vie
         let mut window_behind: *mut ImGuiWindow =  g.Windows[n];
         if (window_behind == window){
             break;}
-        if (window_behind.WasActive && windoe_behind.ViewportOwned && !(window_behind.Flags & ImGuiWindowFlags_ChildWindow)){
+        if (window_behind.WasActive && windoe_behind.ViewportOwned && flag_clear(window_behind.Flags, ImGuiWindowFlags_ChildWindow)){
             if (window_behind.Viewport.GetMainRect().Overlaps(window.Rect())){
                 return false;}}
     }
@@ -328,7 +328,7 @@ pub unsafe fn UpdateViewportsNewFrame()
         {
             // Update Position and Size (from Platform Window to ImGui) if requested.
             // We do it early in the frame instead of waiting for UpdatePlatformWindows() to avoid a frame of lag when moving/resizing using OS facilities.
-            if (!(viewport.Flags & ImGuiViewportFlags_Minimized) && platform_funcs_available)
+            if (flag_clear(viewport.Flags, ImGuiViewportFlags_Minimized) && platform_funcs_available)
             {
                 // Viewport->WorkPos and WorkSize will be updated below
                 if (viewport.PlatformRequestMove){
@@ -437,7 +437,7 @@ pub unsafe fn UpdateViewportsNewFrame()
     if (is_mouse_dragging_with_an_expected_destination && viewport_hovered == null_mut()){
         viewport_hovered = g.MouseLastHoveredViewport;}
     if (is_mouse_dragging_with_an_expected_destination || g.ActiveId == 0 || !IsAnyMouseDown()){
-        if (viewport_hovered != null_mut() && viewport_hovered != g.MouseViewport && !(viewport_hovered.Flags & ImGuiViewportFlags_NoInputs)){
+        if (viewport_hovered != null_mut() && viewport_hovered != g.MouseViewport && flag_clear(viewport_hovered.Flags, ImGuiViewportFlags_NoInputs)){
             g.MouseViewport = viewport_hovered;}}
 
     // IM_ASSERT(g.MouseViewport != NULL);

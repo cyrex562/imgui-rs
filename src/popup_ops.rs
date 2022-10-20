@@ -330,7 +330,7 @@ pub unsafe fn BeginPopupEx(id: ImGuiID, mut flags: ImGuiWindowFlags) -> bool
     }
 
     name: [c_char;20];
-    if (flags & ImGuiWindowFlags_ChildMenu) {
+    if flag_set(flags, ImGuiWindowFlags_ChildMenu) {
         // ImFormatString(name, name.len(), "##Menu_%02d", g.BeginMenuCount);
     } // Recycle windows based on depth
     else {

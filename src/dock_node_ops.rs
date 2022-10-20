@@ -1403,7 +1403,7 @@ pub unsafe fn DockNodePreviewDockSetup(
 
     // Build a tentative future node (reuse same structure because it is practical. Shape will be readjusted when previewing a split)
     data.FutureNode.HasCloseButton = (if host_node { host_node.HasCloseButton } else { host_window.HasCloseButton }) || (payload_window.HasCloseButton);
-    data.FutureNode.HasWindowMenuButton = if host_node { true } else { (host_window.Flags & ImGuiWindowFlags_NoCollapse) == 0 };
+    data.FutureNode.HasWindowMenuButton = if host_node { true } else { flag_set(host_window.Flags, ImGuiWindowFlags_NoCollapse) == 0 };
     data.FutureNode.Pos = if ref_node_for_rect { ref_node_for_rect.Pos } else { host_window.Pos };
     data.FutureNode.Size = if ref_node_for_rect { ref_node_for_rect.Size } else { host_window.Size };
 
@@ -1513,7 +1513,7 @@ pub unsafe fn DockNodePreviewDockRender(
             else {
                 tab_pos.x += g.Style.ItemInnerSpacing.x + TabItemCalcSize(host_node.Windows[0].Name, host_node.Windows[0].HasCloseButton).x;
             }
-        } else if !(host_window.Flags & ImGuiWindowFlags_DockNodeHost) {
+        } else if flag_clear(host_window.Flags, ImGuiWindowFlags_DockNodeHost) {
             tab_pos.x += g.Style.ItemInnerSpacing.x + TabItemCalcSize(host_window.Name, host_window.HasCloseButton).x; // Account for slight offset which will be added when changing from title bar to tab bar
         }
 

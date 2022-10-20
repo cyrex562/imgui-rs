@@ -172,21 +172,23 @@ Index of this file:
 // #if !defined(IMGUI_DISABLE_DEMO_WINDOWS)
 
 // Forward Declarations
-pub unsafe fn ShowExampleAppDockSpace(*mut p_open: bool);
-pub unsafe fn ShowExampleAppDocuments(*mut p_open: bool);
-pub unsafe fn ShowExampleAppMainMenuBar();
-pub unsafe fn ShowExampleAppConsole(*mut p_open: bool);
-pub unsafe fn ShowExampleAppLog(*mut p_open: bool);
-pub unsafe fn ShowExampleAppLayout(*mut p_open: bool);
-pub unsafe fn ShowExampleAppPropertyEditor(*mut p_open: bool);
-pub unsafe fn ShowExampleAppLongText(*mut p_open: bool);
-pub unsafe fn ShowExampleAppAutoResize(*mut p_open: bool);
-pub unsafe fn ShowExampleAppConstrainedResize(*mut p_open: bool);
-pub unsafe fn ShowExampleAppSimpleOverlay(*mut p_open: bool);
-pub unsafe fn ShowExampleAppFullscreen(*mut p_open: bool);
-pub unsafe fn ShowExampleAppWindowTitles(*mut p_open: bool);
-pub unsafe fn ShowExampleAppCustomRendering(*mut p_open: bool);
-pub unsafe fn ShowExampleMenuFile();
+// pub unsafe fn ShowExampleAppDockSpace(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppDocuments(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppMainMenuBar();
+// pub unsafe fn ShowExampleAppConsole(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppLog(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppLayout(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppPropertyEditor(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppLongText(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppAutoResize(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppConstrainedResize(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppSimpleOverlay(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppFullscreen(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppWindowTitles(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppCustomRendering(*mut p_open: bool);
+// pub unsafe fn ShowExampleMenuFile();
+
+use libc::{c_float, c_int};
 
 // Helper to display a little (?) mark which shows a tooltip when hovered.
 // In your own code you may want to display an actual icon if you are using a merged icon fonts (see docs/FONTS.md)
@@ -1772,7 +1774,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         struct Funcs
         {
             staticSin: c_float(*mut c_void, i: c_int) { return sinf(i * 0.1.0); }
-            staticSaw: c_float(*mut c_void, i: c_int) { return (i & 1) ? 1.0 : -1.0; }
+            staticSaw: c_float(*mut c_void, i: c_int) { return if (i & 1) { 1.0} else {- 1.0}; }
         };
         static let func_type: c_int = 0, display_count = 70;
         Separator();
@@ -1780,7 +1782,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         Combo("func", &func_type, "Sin\0Saw\0");
         SameLine();
         SliderInt("Sample count", &display_count, 1, 400);
-        c_float (*func)(*mut c_void, c_int) = (func_type == 0) ? Funcs::Sin : Funcs::Saw;
+        c_float (*func)(*mut c_void, c_int) = if (func_type == 0) { Funcs::Sin} else {Funcs::Saw};
         PlotLines("Lines", func, null_mut(), display_count, 0, null_mut(), -1.0, 1.0, ImVec2::new(0, 80));
         PlotHistogram("Histogram", func, null_mut(), display_count, 0, null_mut(), -1.0, 1.0, ImVec2::new(0, 80));
         Separator();
@@ -1823,7 +1825,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         Checkbox("With Drag and Drop", &drag_and_drop);
         Checkbox("With Options Menu", &options_menu); SameLine(); HelpMarker("Right-click on the individual color widget to show options.");
         Checkbox("With HDR", &hdr); SameLine(); HelpMarker("Currently all this does is to lift the 0..1 limits on dragging widgets.");
-        ImGuiColorEditFlags misc_flags = (hdr ? ImGuiColorEditFlags_HDR : 0) | (drag_and_drop ? 0 : ImGuiColorEditFlags_NoDragDrop) | (alpha_half_preview ? ImGuiColorEditFlags_AlphaPreviewHalf : (alpha_preview ? ImGuiColorEditFlags_AlphaPreview : 0)) | (options_menu ? 0 : ImGuiColorEditFlags_NoOptions);
+        ImGuiColorEditFlags misc_flags = (if hdr {ImGuiColorEditFlags_HDR} else { 0 }) | (if drag_and_drop {0} else { ImGuiColorEditFlags_NoDragDrop }) | (if alpha_half_preview { ImGuiColorEditFlags_AlphaPreviewHalf} else {if alpha_preview {ImGuiColorEditFlags_AlphaPreview} else { 0 }}) | (if options_menu {0} else { ImGuiColorEditFlags_NoOptions });
 
         IMGUI_DEMO_MARKER("Widgets/Color/ColorEdit");
         Text("Color widget:");
@@ -1920,7 +1922,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         Text("Color button only:");
         static let mut no_border: bool =  false;
         Checkbox("ImGuiColorEditFlags_NoBorder", &no_border);
-        ColorButton("MyColor##3c", *(*mut ImVec4)&color, misc_flags | (no_border ? ImGuiColorEditFlags_NoBorder : 0), ImVec2::new(80, 80));
+        ColorButton("MyColor##3c", *(*mut ImVec4)&color, misc_flags | (if no_border { ImGuiColorEditFlags_NoBorder }else {0}), ImVec2::new(80, 80));
 
         IMGUI_DEMO_MARKER("Widgets/Color/ColorPicker");
         Text("Color picker:");
@@ -1960,7 +1962,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         if (display_mode == 2) flags |= ImGuiColorEditFlags_DisplayRGB;     // Override display mode
         if (display_mode == 3) flags |= ImGuiColorEditFlags_DisplayHSV;
         if (display_mode == 4) flags |= ImGuiColorEditFlags_DisplayHex;
-        ColorPicker4("MyColor##4", (*mut c_float)&color, flags, ref_color ? &ref_color_v.x : null_mut());
+        ColorPicker4("MyColor##4", (*mut c_float)&color, flags, if ref_color { & ref_color_v.x} else {null_mut()});
 
         Text("Set defaults in code:");
         SameLine(); HelpMarker(
@@ -2087,7 +2089,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         static i32  s32_v = -1;
         static u32  u32_v = -1;
         static ImS64  s64_v = -1;
-        static u64  u64_v = (u64)-1;
+        static u64  u64_v = -1;
         staticf32_v: c_float = 0.123f;
         static double f64_v = 90000.01234567890123456789;
 
@@ -2099,15 +2101,15 @@ pub unsafe fn ShowDemoWindowWidgets()
         SameLine(); HelpMarker(
             "As with every widgets in dear imgui, we never modify values unless there is a user interaction.\n"
             "You can override the clamping limits by using CTRL+Click to input a value.");
-        DragScalar("drag s8",        ImGuiDataType_S8,     &s8_v,  drag_speed, drag_clamp ? &s8_zero  : null_mut(), drag_clamp ? &s8_fifty  : null_mut());
-        DragScalar("drag u8",        ImGuiDataType_U8,     &u8_v,  drag_speed, drag_clamp ? &u8_zero  : null_mut(), drag_clamp ? &u8_fifty  : null_mut(), "%u ms");
-        DragScalar("drag s16",       ImGuiDataType_S16,    &s16_v, drag_speed, drag_clamp ? &s16_zero : null_mut(), drag_clamp ? &s16_fifty : null_mut());
-        DragScalar("drag u16",       ImGuiDataType_U16,    &u16_v, drag_speed, drag_clamp ? &u16_zero : null_mut(), drag_clamp ? &u16_fifty : null_mut(), "%u ms");
-        DragScalar("drag s32",       ImGuiDataType_S32,    &s32_v, drag_speed, drag_clamp ? &s32_zero : null_mut(), drag_clamp ? &s32_fifty : null_mut());
-        DragScalar("drag s32 hex",   ImGuiDataType_S32,    &s32_v, drag_speed, drag_clamp ? &s32_zero : null_mut(), drag_clamp ? &s32_fifty : null_mut(), "0x%08X");
-        DragScalar("drag u32",       ImGuiDataType_U32,    &u32_v, drag_speed, drag_clamp ? &u32_zero : null_mut(), drag_clamp ? &u32_fifty : null_mut(), "%u ms");
-        DragScalar("drag s64",       ImGuiDataType_S64,    &s64_v, drag_speed, drag_clamp ? &s64_zero : null_mut(), drag_clamp ? &s64_fifty : null_mut());
-        DragScalar("drag u64",       ImGuiDataType_U64,    &u64_v, drag_speed, drag_clamp ? &u64_zero : null_mut(), drag_clamp ? &u64_fifty : null_mut());
+        DragScalar("drag s8",        ImGuiDataType_S8,     &s8_v,  drag_speed, if drag_clamp { & s8_zero} else { null_mut()}, if drag_clamp { & s8_fifty } else {null_mut()});
+    DragScalar("drag u8",        ImGuiDataType_U8,     &u8_v,  drag_speed, if drag_clamp { & u8_zero}  else {null_mut()}, if drag_clamp { & u8_fifty  }else {null_mut()}, "%u ms");
+        DragScalar("drag s16",       ImGuiDataType_S16,    &s16_v, drag_speed, if drag_clamp { & s16_zero} else {null_mut()}, if drag_clamp { & s16_fifty} else {null_mut()});
+        DragScalar("drag u16",       ImGuiDataType_U16,    &u16_v, drag_speed, if drag_clamp { & u16_zero} else {null_mut()}, if drag_clamp{  & u16_fifty } else {null_mut()}, "%u ms");
+        DragScalar("drag s32",       ImGuiDataType_S32,    &s32_v, drag_speed, if drag_clamp { & s32_zero} else {null_mut()}, if drag_clamp {& s32_fifty} else {null_mut()});
+        DragScalar("drag s32 hex",   ImGuiDataType_S32,    &s32_v, drag_speed, if drag_clamp { & s32_zero} else {null_mut()}, if drag_clamp { & s32_fifty} else {null_mut()}, "0x%08X");
+        DragScalar("drag u32",       ImGuiDataType_U32,    &u32_v, drag_speed, if drag_clamp { & u32_zero }else {null_mut()}, if drag_clamp { & u32_fifty} else {null_mut()}, "%u ms");
+        DragScalar("drag s64",       ImGuiDataType_S64,    &s64_v, drag_speed, if drag_clamp { & s64_zero} else {null_mut()}, if drag_clamp { & s64_fifty} else  {null_mut()});
+        DragScalar("drag u64",       ImGuiDataType_U64,    &u64_v, drag_speed, if drag_clamp { & u64_zero} else {null_mut()}, if drag_clamp { & u64_fifty} else {null_mut()});
         DragScalar("drag float",     ImGuiDataType_Float,  &f32_v, 0.005f,  &f32_zero, &f32_one, "%f");
         DragScalar("drag float log", ImGuiDataType_Float,  &f32_v, 0.005f,  &f32_zero, &f32_one, "%f", ImGuiSliderFlags_Logarithmic);
         DragScalar("drag double",    ImGuiDataType_Double, &f64_v, 0.05f, &f64_zero, null_mut(),     "%.10f32 grams");
@@ -2151,18 +2153,18 @@ pub unsafe fn ShowDemoWindowWidgets()
         static let mut inputs_step: bool =  true;
         Text("Inputs");
         Checkbox("Show step buttons", &inputs_step);
-        InputScalar("input s8",      ImGuiDataType_S8,     &s8_v,  inputs_step ? &s8_one  : null_mut(), null_mut(), "%d");
-        InputScalar("input u8",      ImGuiDataType_U8,     &u8_v,  inputs_step ? &u8_one  : null_mut(), null_mut(), "%u");
-        InputScalar("input s16",     ImGuiDataType_S16,    &s16_v, inputs_step ? &s16_one : null_mut(), null_mut(), "%d");
-        InputScalar("input u16",     ImGuiDataType_U16,    &u16_v, inputs_step ? &u16_one : null_mut(), null_mut(), "%u");
-        InputScalar("input s32",     ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : null_mut(), null_mut(), "%d");
-        InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, inputs_step ? &s32_one : null_mut(), null_mut(), "%04X");
-        InputScalar("input u32",     ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : null_mut(), null_mut(), "%u");
-        InputScalar("input hex: u32", ImGuiDataType_U32,    &u32_v, inputs_step ? &u32_one : null_mut(), null_mut(), "%08X");
-        InputScalar("input s64",     ImGuiDataType_S64,    &s64_v, inputs_step ? &s64_one : null_mut());
-        InputScalar("input u64",     ImGuiDataType_U64,    &u64_v, inputs_step ? &u64_one : null_mut());
-        InputScalar("input float",   ImGuiDataType_Float,  &f32_v, inputs_step ? &f32_one : null_mut());
-        InputScalar("input double",  ImGuiDataType_Double, &f64_v, inputs_step ? &f64_one : null_mut());
+        InputScalar("input s8",      ImGuiDataType_S8,     &s8_v,  if inputs_step { & s8_one}  else {null_mut()}, null_mut(), "%d");
+        InputScalar("input u8",      ImGuiDataType_U8,     &u8_v,  if inputs_step { & u8_one } else {null_mut()}, null_mut(), "%u");
+        InputScalar("input s16",     ImGuiDataType_S16,    &s16_v, if inputs_step { & s16_one} else {null_mut()}, null_mut(), "%d");
+        InputScalar("input u16",     ImGuiDataType_U16,    &u16_v, if inputs_step { &u16_one} else { null_mut() }, null_mut(), "%u");
+        InputScalar("input s32",     ImGuiDataType_S32,    &s32_v, if inputs_step { &s32_one} else { null_mut() }, null_mut(), "%d");
+        InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, if inputs_step { &s32_one} else { null_mut() }, null_mut(), "%04X");
+        InputScalar("input u32",     ImGuiDataType_U32,    &u32_v, if inputs_step { &u32_one} else { null_mut() }, null_mut(), "%u");
+        InputScalar("input hex: u32", ImGuiDataType_U32,    &u32_v, if inputs_step { &u32_one} else { null_mut() }, null_mut(), "%08X");
+        InputScalar("input s64",     ImGuiDataType_S64,    &s64_v, if inputs_step { &s64_one} else { null_mut() });
+        InputScalar("input u64",     ImGuiDataType_U64,    &u64_v, if inputs_step { &u64_one} else { null_mut() });
+        InputScalar("input float",   ImGuiDataType_Float,  &f32_v, if inputs_step { &f32_one} else { null_mut() });
+        InputScalar("input double",  ImGuiDataType_Double, &f64_v, if inputs_step { &f64_one} else { null_mut() });
 
         TreePop();
     }
@@ -2365,7 +2367,7 @@ pub unsafe fn ShowDemoWindowWidgets()
 
                 if (IsItemActive() && !IsItemHovered())
                 {
-                    let n_next: c_int = n + (GetMouseDragDelta(0).y < 0.f ? -1 : 1);
+                    let n_next: c_int = if n + (GetMouseDragDelta(0).y < 0.f { - 1} else {1});
                     if (n_next >= 0 && n_next < item_names.len())
                     {
                         item_names[n] = item_names[n_next];
@@ -3062,7 +3064,7 @@ pub unsafe fn ShowDemoWindowLayout()
             names: *const c_char[] = { "Top", "25%", "Center", "75%", "Bottom" };
             TextUnformatted(names[i]);
 
-            const child_flags: ImGuiWindowFlags = enable_extra_decorations ? ImGuiWindowFlags_MenuBar : 0;
+            const child_flags: ImGuiWindowFlags = if enable_extra_decorations { ImGuiWindowFlags_MenuBar } else { 0 };
             let mut child_id: ImGuiID =  GetID(i);
             let child_is_visible: bool = BeginChild(child_id, ImVec2::new(child_w, 200), true, child_flags);
             if (BeginMenuBar())
@@ -3109,7 +3111,7 @@ pub unsafe fn ShowDemoWindowLayout()
         for (let i: c_int = 0; i < 5; i++)
         {
             let child_height: c_float =  GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0;
-            child_flags: ImGuiWindowFlags = ImGuiWindowFlags_HorizontalScrollbar | (enable_extra_decorations ? ImGuiWindowFlags_AlwaysVerticalScrollbar : 0);
+            child_flags: ImGuiWindowFlags = ImGuiWindowFlags_HorizontalScrollbar | (if enable_extra_decorations { ImGuiWindowFlags_AlwaysVerticalScrollbar }else { 0 });
             let mut child_id: ImGuiID =  GetID(i);
             let mut child_is_visible: bool =  BeginChild(child_id, ImVec2::new(-100, child_height), true, child_flags);
             if scroll_to_off {
@@ -3160,14 +3162,14 @@ pub unsafe fn ShowDemoWindowLayout()
             // If you want to create your own time line for a real application you may be better off manipulating
             // the cursor position yourself, aka using SetCursorPos/SetCursorScreenPos to position the widgets
             // yourself. You may also want to use the lower-level ImDrawList API.
-            let num_buttons: c_int = 10 + ((line & 1) ? line * 9 : line * 3);
+            let num_buttons: c_int = 10 + (if (line & 1) { line * 9 }else { line * 3 });
             for (let n: c_int = 0; n < num_buttons; n++)
             {
                 if n > 0 {  SameLine(); }
                 PushID(n + line * 1000);
                 num_buf: [c_char;16];
                 sprintf(num_buf, "%d", n);
-                let mut  label: *const c_char = if !(n % 15)) ? "FizzBuzz" : (!(n % 3)) ? "Fizz" : (!(n % 5) { "Buzz"} else { num_buf};
+                let mut  label: *const c_char = if !(n % 15) { "FizzBuzz" } else {if (!(n % 3)) { "Fizz"} else {if (!(n % 5) { "Buzz"} else { num_buf}}};
                 let hue: c_float =  n * 0.05f32;
                 PushStyleColor(ImGuiCol_Button, (ImVec4)ImColor::HSV(hue, 0.6f, 0.60));
                 PushStyleColor(ImGuiCol_ButtonHovered, (ImVec4)ImColor::HSV(hue, 0.7f, 0.70f32));
@@ -3215,10 +3217,11 @@ pub unsafe fn ShowDemoWindowLayout()
             static let mut show_tab_bar: bool =  true;
             static let mut show_child: bool =  false;
             static let mut explicit_content_size: bool =  false;
-            static let contents_size_x: c_float =  300;
-            if (explicit_content_size)
+            static let contents_size_x: c_float =  300.0;
+            if (explicit_content_size) {
                 SetNextWindowContentSize(ImVec2::new(contents_size_x, 0.0));
-            Begin("Horizontal contents size demo window", &show_horizontal_contents_size_demo_window, show_h_scrollbar ? ImGuiWindowFlags_HorizontalScrollbar : 0);
+            }
+            Begin("Horizontal contents size demo window", &show_horizontal_contents_size_demo_window, if show_h_scrollbar { ImGuiWindowFlags_HorizontalScrollbar } else { 0 });
             IMGUI_DEMO_MARKER("Layout/Scrolling/Horizontal contents size demo window");
             PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2::new(2, 0));
             PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new(2, 0));
@@ -3232,7 +3235,7 @@ pub unsafe fn ShowDemoWindowLayout()
             Checkbox("Child", &show_child);              // Will grow and use contents size
             Checkbox("Explicit content size", &explicit_content_size);
             Text("Scroll %.1f/%.1f %.1f/%.1f", GetScrollX(), GetScrollMaxX(), GetScrollY(), GetScrollMaxY());
-            if (explicit_content_size)
+            if explicit_content_size
             {
                 SameLine();
                 SetNextItemWidth(100);
@@ -3244,16 +3247,16 @@ pub unsafe fn ShowDemoWindowLayout()
             }
             PopStyleVar(2);
             Separator();
-            if (show_button)
+            if show_button
             {
                 Button("this is a 300-wide button", ImVec2::new(300, 0));
             }
-            if (show_tree_nodes)
+            if show_tree_nodes
             {
                 let mut open: bool =  true;
-                if (TreeNode("this is a tree node"))
+                if TreeNode("this is a tree node")
                 {
-                    if (TreeNode("another one of those tree node..."))
+                    if TreeNode("another one of those tree node...")
                     {
                         Text("Some tree contents");
                         TreePop();
@@ -3262,11 +3265,11 @@ pub unsafe fn ShowDemoWindowLayout()
                 }
                 CollapsingHeader("CollapsingHeader", &open);
             }
-            if (show_text_wrapped)
+            if show_text_wrapped
             {
                 TextWrapped("This text should automatically wrap on the edge of the work rectangle.");
             }
-            if (show_columns)
+            if show_columns
             {
                 Text("Tables:");
                 if (BeginTable("table", 4, ImGuiTableFlags_Borders))
@@ -3720,9 +3723,9 @@ let Name: *const c_char;
             _ => IM_ASSERT(0); break;
             }
             if (delta > 0)
-                return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? 1 : -1;
+                return if (sort_spec->SortDirection == ImGuiSortDirection_Ascending) { 1} else {- 1};
             if (delta < 0)
-                return (sort_spec->SortDirection == ImGuiSortDirection_Ascending) ? -1 : 1;
+                return if (sort_spec->SortDirection == ImGuiSortDirection_Ascending) { - 1} else {1};
         }
 
         // qsort() is instable so always return a way to differenciate items.
@@ -3789,7 +3792,7 @@ pub unsafe fn EditTableSizingFlags(*mut p_flags: ImGuiTableFlags)
     }
 }
 
-pub unsafe fn EditTableColumnsFlags(*mut ImGuiTableColumnFlags p_flags)
+pub unsafe fn EditTableColumnsFlags(*mut p_flags: ImGuiTableColumnFlags)
 {
     CheckboxFlags("_Disabled", p_flags, ImGuiTableColumnFlags_Disabled); SameLine(); HelpMarker("Master disable flag (also hide from context menu)");
     CheckboxFlags("_DefaultHide", p_flags, ImGuiTableColumnFlags_DefaultHide);
@@ -3813,7 +3816,7 @@ pub unsafe fn EditTableColumnsFlags(*mut ImGuiTableColumnFlags p_flags)
     CheckboxFlags("_IndentDisable", p_flags, ImGuiTableColumnFlags_IndentDisable); SameLine(); HelpMarker("Default for column >0");
 }
 
-pub unsafe fn ShowTableColumnsStatusFlags(ImGuiTableColumnFlags flags)
+pub unsafe fn ShowTableColumnsStatusFlags(flags: ImGuiTableColumnFlags)
 {
     CheckboxFlags("_IsEnabled", &flags, ImGuiTableColumnFlags_IsEnabled);
     CheckboxFlags("_IsVisible", &flags, ImGuiTableColumnFlags_IsVisible);
@@ -4519,8 +4522,8 @@ pub unsafe fn ShowDemoWindowTables()
         // Create a first table just to show all the options/flags we want to make visible in our example!
         let column_count: c_int = 3;
         column_names: *const c_char[column_count] = { "One", "Two", "Three" };
-        static ImGuiTableColumnFlags column_flags[column_count] = { ImGuiTableColumnFlags_DefaultSort, ImGuiTableColumnFlags_None, ImGuiTableColumnFlags_DefaultHide };
-        static ImGuiTableColumnFlags column_flags_out[column_count] = { 0, 0, 0 }; // Output from TableGetColumnFlags()
+        static column_flags: ImGuiTableColumnFlags[column_count] = { ImGuiTableColumnFlags_DefaultSort, ImGuiTableColumnFlags_None, ImGuiTableColumnFlags_DefaultHide };
+        static column_flags_out: ImGuiTableColumnFlags[column_count] = { 0, 0, 0 }; // Output from TableGetColumnFlags()
 
         if (BeginTable("table_columns_flags_checkboxes", column_count, ImGuiTableFlags_None))
         {
@@ -4808,7 +4811,7 @@ pub unsafe fn ShowDemoWindowTables()
                 // We use a transparent color so we can see the one behind in case our target is RowBg1 and RowBg0 was already targeted by the ImGuiTableFlags_RowBg flag.
                 if (row_bg_type != 0)
                 {
-                    row_bg_color: u32 = GetColorU32(row_bg_type == 1 ? ImVec4(0.7f, 0.3f, 0.3f, 0.650f32) : ImVec4(0.2f + row * 0.1f, 0.2f, 0.2f, 0.650f32)); // Flat or Gradient?
+                    row_bg_color: u32 = GetColorU32(if row_bg_type == 1 { ImVec4(0.7f, 0.3f, 0.3f, 0.650f32) } else { ImVec4(0.2f + row * 0.1f, 0.2f, 0.2f, 0.650f32) }); // Flat or Gradient?
                     TableSetBgColor(ImGuiTableBgTarget_RowBg0 + row_bg_target, row_bg_color);
                 }
 
@@ -5382,7 +5385,7 @@ pub unsafe fn ShowDemoWindowTables()
                 MyItem& item = items[n];
                 item.ID = n;
                 item.Name = template_items_names[template_n];
-                item.Quantity = (template_n == 3) ? 10 : (template_n == 4) ? 20 : 0; // Assign default quantities
+                item.Quantity = if template_n == 3 { 10} else { if template_n == 4 { 20 } else { 0 }}; // Assign default quantities
             }
         }
 
@@ -5392,8 +5395,8 @@ pub unsafe fn ShowDemoWindowTables()
         let table_draw_list: *const ImDrawList= null_mut();  // "
 
         // Submit table
-        let inner_width_to_use: c_float =  (flags & ImGuiTableFlags_ScrollX) ? inner_width_with_scroll : 0.0;
-        if (BeginTable("table_advanced", 6, flags, outer_size_enabled ? outer_size_value : ImVec2::new(0, 0), inner_width_to_use))
+        let inner_width_to_use: c_float =  if flag_set(flags, ImGuiTableFlags_ScrollX) { inner_width_with_scroll } else { 0.0 };
+        if (BeginTable("table_advanced", 6, flags, if outer_size_enabled { outer_size_value } else { ImVec2::new(0, 0), inner_width_to_use) })
         {
             // Declare columns
             // We use the "user_id" parameter of TableSetupColumn() to specify a user id that will be stored in the sort specifications.
@@ -5402,7 +5405,7 @@ pub unsafe fn ShowDemoWindowTables()
             TableSetupColumn("Name",         ImGuiTableColumnFlags_WidthFixed, 0.0, MyItemColumnID_Name);
             TableSetupColumn("Action",       ImGuiTableColumnFlags_NoSort | ImGuiTableColumnFlags_WidthFixed, 0.0, MyItemColumnID_Action);
             TableSetupColumn("Quantity",     ImGuiTableColumnFlags_PreferSortDescending, 0.0, MyItemColumnID_Quantity);
-            TableSetupColumn("Description",  (flags & ImGuiTableFlags_NoHostExtendX) ? 0 : ImGuiTableColumnFlags_WidthStretch, 0.0, MyItemColumnID_Description);
+            TableSetupColumn("Description",  if flag_set(flags, ImGuiTableFlags_NoHostExtendX) { 0 } else { ImGuiTableColumnFlags_WidthStretch }, 0.0, MyItemColumnID_Description);
             TableSetupColumn("Hidden",       ImGuiTableColumnFlags_DefaultHide | ImGuiTableColumnFlags_NoSort);
             TableSetupScrollFreeze(freeze_cols, freeze_rows);
 
@@ -5465,7 +5468,7 @@ pub unsafe fn ShowDemoWindowTables()
                         Button(label, ImVec2::new(-FLT_MIN, 0.0));
                     else if (contents_type == CT_Selectable || contents_type == CT_SelectableSpanRow)
                     {
-                        ImGuiSelectableFlags selectable_flags = (contents_type == CT_SelectableSpanRow) ? ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap : ImGuiSelectableFlags_None;
+                        ImGuiSelectableFlags selectable_flags = if (contents_type == CT_SelectableSpanRow) { ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap } else { ImGuiSelectableFlags_None };
                         if (Selectable(label, item_is_selected, selectable_flags, ImVec2::new(0, row_min_height)))
                         {
                             if (GetIO().KeyCtrl)
@@ -6138,8 +6141,8 @@ pub unsafe fn ShowAboutWindow(*mut p_open: bool)
         Text("define: IMGUI_HAS_DOCK");
 // #endif
         Separator();
-        Text("io.BackendPlatformName: %s", io.BackendPlatformName ? io.BackendPlatformName : "NULL");
-        Text("io.BackendRendererName: %s", io.BackendRendererName ? io.BackendRendererName : "NULL");
+        Text("io.BackendPlatformName: %s", if io.BackendPlatformName { io.BackendPlatformName } else {"NULL"});
+        Text("io.BackendRendererName: %s", if io.BackendRendererName { io.BackendRendererName } else { "NULL" });
         Text("io.ConfigFlags: 0x%08X", io.ConfigFlags);
         if io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard{        Text(" NavEnableKeyboard");}
         if io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad{         Text(" NavEnableGamepad");}
@@ -6277,11 +6280,11 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
     // Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0 or 1.0)
     if (SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0, "%.0f"))
         style.GrabRounding = style.FrameRounding; // Make GrabRounding always the same value as FrameRounding
-    { let mut border: bool =  (style.WindowBorderSize > 0.0); if (Checkbox("WindowBorder", &border)) { style.WindowBorderSize = border ? 1.0 : 0.0; } }
+    { let mut border: bool =  (style.WindowBorderSize > 0.0); if (Checkbox("WindowBorder", &border)) { if style.WindowBorderSize = border { 1.0 } else { 0.0 }; } }
     SameLine();
-    { let mut border: bool =  (style.FrameBorderSize > 0.0);  if (Checkbox("FrameBorder",  &border)) { style.FrameBorderSize  = border ? 1.0 : 0.0; } }
+    { let mut border: bool =  (style.FrameBorderSize > 0.0);  if (Checkbox("FrameBorder",  &border)) { if style.FrameBorderSize  = border { 1.0 } else { 0.0 }; } }
     SameLine();
-    { let mut border: bool =  (style.PopupBorderSize > 0.0);  if (Checkbox("PopupBorder",  &border)) { style.PopupBorderSize  = border ? 1.0 : 0.0; } }
+    { let mut border: bool =  (style.PopupBorderSize > 0.0);  if (Checkbox("PopupBorder",  &border)) { if style.PopupBorderSize  = border { 1.0 } else { 0.0 }; } }
 
     // Save/Revert button
     if (Button("Save Ref"))
@@ -6848,7 +6851,7 @@ struct ExampleAppConsole
         else if (Stricmp(command_line, "HISTORY") == 0)
         {
             let first: c_int = History.Size - 10;
-            for (let i: c_int = first > 0 ? first : 0; i < History.Size; i++)
+            for (let i: c_int = if first > 0 { first }else {0}; i < History.Size; i++)
                 AddLog("%3d: %s\n", i, History[i]);
         }
         else
@@ -7060,7 +7063,7 @@ struct ExampleAppLog
             for (let line_no: c_int = 0; line_no < LineOffsets.Size; line_no++)
             {
                 let mut  line_start: *const c_char = buf + LineOffsets[line_no];
-                let mut  line_end: *const c_char = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
+                let mut  line_end: *const c_char = if (line_no + 1 < LineOffsets.Size) { (buf + LineOffsets[line_no + 1] - 1)} else {buf_end};
                 if (Filter.PassFilter(line_start, line_end))
                     TextUnformatted(line_start, line_end);
             }
@@ -7087,7 +7090,7 @@ struct ExampleAppLog
                 for (let line_no: c_int = clipper.DisplayStart; line_no < clipper.DisplayEnd; line_no++)
                 {
                     let mut  line_start: *const c_char = buf + LineOffsets[line_no];
-                    let mut  line_end: *const c_char = (line_no + 1 < LineOffsets.Size) ? (buf + LineOffsets[line_no + 1] - 1) : buf_end;
+                    let mut  line_end: *const c_char = if (line_no + 1 < LineOffsets.Size) { (buf + LineOffsets[line_no + 1] - 1)} else {buf_end};
                     TextUnformatted(line_start, line_end);
                 }
             }
@@ -7422,7 +7425,7 @@ pub unsafe fn ShowExampleAppConstrainedResize(bool* p_open)
     // Submit window
     if (!window_padding)
         PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2::new(0.0, 0.0));
-    const window_flags: ImGuiWindowFlags = auto_resize ? ImGuiWindowFlags_AlwaysAutoResize : 0;
+    const window_flags: ImGuiWindowFlags = if auto_resize { ImGuiWindowFlags_AlwaysAutoResize} else {0};
     let window_open: bool = Begin("Example: Constrained Resize", p_open, window_flags);
     if (!window_padding)
         PopStyleVar();
@@ -7477,10 +7480,10 @@ pub unsafe fn ShowExampleAppSimpleOverlay(bool* p_open)
         let work_pos: ImVec2 = viewport.WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
         let work_size: ImVec2 = viewport.WorkSize;
         window_pos: ImVec2, window_pos_pivot;
-        window_pos.x = (location & 1) ? (work_pos.x + work_size.x - PAD) : (work_pos.x + PAD);
-        window_pos.y = (location & 2) ? (work_pos.y + work_size.y - PAD) : (work_pos.y + PAD);
-        window_pos_pivot.x = (location & 1) ? 1.0 : 0.0;
-        window_pos_pivot.y = (location & 2) ? 1.0 : 0.0;
+        window_pos.x = if (location & 1) { (work_pos.x + work_size.x - PAD)} else {work_pos.x + PAD};
+        window_pos.y = if (location & 2) { (work_pos.y + work_size.y - PAD)} else {work_pos.y + PAD};
+        window_pos_pivot.x = if (location & 1) { 1.0} else {0.0};
+        window_pos_pivot.y = if (location & 2) { 1.0} else {0.0};
         SetNextWindowPos(window_pos, ImGuiCond_Always, window_pos_pivot);
         SetNextWindowViewport(viewport.ID);
         window_flags |= ImGuiWindowFlags_NoMove;
@@ -7529,8 +7532,8 @@ pub unsafe fn ShowExampleAppFullscreen(bool* p_open)
     // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
     // Based on your use case you may want one of the other.
     let viewport: *const ImGuiViewport = GetMainViewport();
-    SetNextWindowPos(use_work_area ? viewport.WorkPos : viewport.Pos);
-    SetNextWindowSize(use_work_area ? viewport.WorkSize : viewport.Size);
+    SetNextWindowPos(if use_work_area { viewport.WorkPos} else {viewport.Pos});
+    SetNextWindowSize(if use_work_area { viewport.WorkSize} else {viewport.Size});
 
     if (Begin("Example: Fullscreen window", p_open, flags))
     {
@@ -7662,14 +7665,14 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             let spacing: c_float =  10f32;
             const corners_tl_br: ImDrawFlags = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
             let rounding: c_float =  sz / 5f32;
-            let circle_segments: c_int = circle_segments_override ? circle_segments_override_v : 0;
-            let curve_segments: c_int = curve_segments_override ? curve_segments_override_v : 0;
+            let circle_segments: c_int = if circle_segments_override { circle_segments_override_v} else {0};
+            let curve_segments: c_int = if curve_segments_override { curve_segments_override_v} else {0};
             let x: c_float =  p.x + 4.0;
             let y: c_float =  p.y + 4.0;
             for (let n: c_int = 0; n < 2; n++)
             {
                 // First line uses a thickness of 1.0, second line uses the configurable thickness
-                let th: c_float =  (n == 0) ? 1.0 : thickness;
+                let th: c_float = if (n == 0) { 1.0} else {thickness};
                 draw_list.AddNgon(ImVec2::new(x + sz*0.5, y + sz*0.5), sz*0.5, col, ngon_sides, th);                 x += sz + spacing;  // N-gon
                 draw_list.AddCircle(ImVec2::new(x + sz*0.5, y + sz*0.5), sz*0.5, col, circle_segments, th);          x += sz + spacing;  // Circle
                 draw_list.AddRect(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, 0.0, ImDrawFlags_None, th);          x += sz + spacing;  // Square
@@ -7768,7 +7771,7 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
 
             // Pan (we use a zero mouse threshold when there's no context menu)
             // You may decide to make that threshold dynamic based on whether the mouse is hovering something etc.
-            let mouse_threshold_for_pan: c_float =  opt_enable_context_menu ? -1.0 : 0.0;
+            let mouse_threshold_for_pan: c_float =  if opt_enable_context_menu { - 1.0} else {0.0};
             if (is_active && IsMouseDragging(ImGuiMouseButton_Right, mouse_threshold_for_pan))
             {
                 scrolling.x += io.MouseDelta.x;
@@ -8084,7 +8087,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
         {
             let open_count: c_int = 0;
             for (let doc_n: c_int = 0; doc_n < app.Documents.Size; doc_n++)
-                open_count += app.Documents[doc_n].Open ? 1 : 0;
+                open_count += if app.Documents[doc_n].Open { 1} else {0};
 
             if (BeginMenu("Open", open_count < app.Documents.Size))
             {
@@ -8141,7 +8144,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
     // Tabs
     if (opt_target == Target_Tab)
     {
-        ImGuiTabBarFlags tab_bar_flags = (opt_fitting_flags) | (opt_reorderable ? ImGuiTabBarFlags_Reorderable : 0);
+        ImGuiTabBarFlags tab_bar_flags = (opt_fitting_flags) | (if opt_reorderable { ImGuiTabBarFlags_Reorderable} else {0});
         if (BeginTabBar("##tabs", tab_bar_flags))
         {
             if opt_reorderable {
@@ -8158,7 +8161,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
                 if (!doc->Open)
                     continue;
 
-                ImGuiTabItemFlags tab_flags = (doc->Dirty ? ImGuiTabItemFlags_UnsavedDocument : 0);
+                ImGuiTabItemFlags tab_flags = (if doc->Dirty { ImGuiTabItemFlags_UnsavedDocument} else {0});
                 let mut visible: bool =  BeginTabItem(doc.Name, &doc->Open, tab_flags);
 
                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.
@@ -8196,8 +8199,8 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
                 if (!doc->Open)
                     continue;
 
-                SetNextWindowDockID(dockspace_id, redock_all ? ImGuiCond_Always : ImGuiCond_FirstUseEver);
-                window_flags: ImGuiWindowFlags = (doc->Dirty ? ImGuiWindowFlags_UnsavedDocument : 0);
+                SetNextWindowDockID(dockspace_id, if redock_all {ImGuiCond_Always} else { ImGuiCond_FirstUseEver });
+                window_flags: ImGuiWindowFlags = (if doc->Dirty { ImGuiWindowFlags_UnsavedDocument} else {0});
                 let mut visible: bool =  Begin(doc.Name, &doc->Open, window_flags);
 
                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.

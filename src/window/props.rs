@@ -65,18 +65,18 @@ pub unsafe fn IsWindowFocused(flags: ImGuiFocusedFlags) -> bool {
     if (ref_window == null_mut()) {
         return false;
     }
-    if (flags & ImGuiFocusedFlags_AnyWindow) {
+    if flag_set(flags, ImGuiFocusedFlags_AnyWindow) {
         return true;
     }
 
     // IM_ASSERT(cur_window); // Not inside a Begin()/End()
     let popup_hierarchy: bool = flag_clear(flags, ImGuiFocusedFlags_NoPopupHierarchy);
     let dock_hierarchy: bool = flag_set(flags, ImGuiFocusedFlags_DockHierarchy);
-    if (flags & ImGuiHoveredFlags_RootWindow) {
+    if flag_set(flags, ImGuiHoveredFlags_RootWindow) {
         cur_window = GetCombinedRootWindow(cur_window, popup_hierarchy, dock_hierarchy);
     }
 
-    if (flags & ImGuiHoveredFlags_ChildWindows) {
+    if flag_set(flags, ImGuiHoveredFlags_ChildWindows) {
         return IsWindowChildOf(ref_window, cur_window, popup_hierarchy, dock_hierarchy);
     } else {
         return (ref_window == cur_window);
@@ -383,4 +383,3 @@ pub unsafe fn SetWindowFontScale(scale: c_float)
     g.FontSize = window.CalcFontSize();
     g.DrawListSharedData.FontSize = window.CalcFontSize();
 }
-

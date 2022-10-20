@@ -96,7 +96,7 @@ DockSpace: ImGuiID(id: ImGuiID, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *co
     if (window_class && window_class.ClassId != node.WindowClass.ClassId)
         IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X: setup WindowClass 0x%08X -> 0x%08X\n", id, node.WindowClass.ClassId, window_class.ClassId);
     node.SharedFlags = flags;
-    node.WindowClass = window_class ? *window_class : ImGuiWindowClass();
+    node.WindowClass = if window_class { * window_class} else {ImGuiWindowClass()};
 
     // When a DockSpace transitioned form implicit to explicit this may be called a second time
     // It is possible that the node has already been claimed by a docked window which appeared before the DockSpace() node, so we overwrite IsDockSpace again.
@@ -321,12 +321,12 @@ pub unsafe fn DockBuilderRemoveNodeChildNodes(root_id: ImGuiID)
     ctx: *mut ImGuiContext = GImGui;
     dc: *mut ImGuiDockContext  = &ctx.DockContext;
 
-    root_node:*mut ImGuiDockNode = root_id ? DockContextFindNodeByID(ctx, root_id) : null_mut();
+    root_node:*mut ImGuiDockNode = if root_id { DockContextFindNodeByID(ctx, root_id) } else { null_mut() };
     if root_id && root_node == null_mut() { return ; }
     let mut has_central_node: bool =  false;
 
-    ImGuiDataAuthority backup_root_node_authority_for_pos = root_node ? root_node.AuthorityForPos : ImGuiDataAuthority_Auto;
-    ImGuiDataAuthority backup_root_node_authority_for_size = root_node ? root_node.AuthorityForSize : ImGuiDataAuthority_Auto;
+    ImGuiDataAuthority backup_root_node_authority_for_pos = if root_node { root_node.AuthorityForPos } else { ImGuiDataAuthority_Auto };
+    ImGuiDataAuthority backup_root_node_authority_for_size = if root_node { root_node.AuthorityForSize } else { ImGuiDataAuthority_Auto };
 
     // Process active windows
     Vec<ImGuiDockNode*> nodes_to_remove;
@@ -444,12 +444,12 @@ DockBuilderSplitNode: ImGuiID(id: ImGuiID, split_dir: ImGuiDir,size_ratio_for_no
     req.DockTargetNode = node;
     req.DockPayload= null_mut();
     req.DockSplitDir = split_dir;
-    req.DockSplitRatio = ImSaturate((split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? size_ratio_for_node_at_dir : 1.0 - size_ratio_for_node_at_dir);
+    req.DockSplitRatio = ImSaturate(if (split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) { size_ratio_for_node_at_dir }else {1.0 - size_ratio_for_node_at_dir});
     req.DockSplitOuter = false;
     DockContextProcessDock(&g, &req);
 
-    let mut id_at_dir: ImGuiID =  node.ChildNodes[(split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? 0 : 1].ID;
-    let mut id_at_opposite_dir: ImGuiID =  node.ChildNodes[(split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) ? 1 : 0].ID;
+    let mut id_at_dir: ImGuiID =  node.ChildNodes[if (split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) { 0} else {1}].ID;
+    let mut id_at_opposite_dir: ImGuiID =  node.ChildNodes[if (split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up) { 1} else {0}].ID;
     if (out_id_at_dir)
         *out_id_at_dir = id_at_dir;
     if (out_id_at_opposite_dir)
@@ -480,7 +480,7 @@ static DockBuilderCopyNodeRec:*mut ImGuiDockNode(src_node:*mut ImGuiDockNode, ds
             dst_node.ChildNodes[child_n].ParentNode = dst_node;
         }
 
-    IMGUI_DEBUG_LOG_DOCKING("[docking] Fork node %08X -> %08X (%d childs)\n", src_node.ID, dst_node.ID, dst_node.IsSplitNode() ? 2 : 0);
+    IMGUI_DEBUG_LOG_DOCKING("[docking] Fork node %08X -> %08X (%d childs)\n", src_node.ID, dst_node.ID, if dst_node.IsSplitNode() { 2 }else {0});
     return dst_node;
 }
 
@@ -698,7 +698,7 @@ pub unsafe fn BeginDocked(window: *mut ImGuiWindow,p_open: *mut bool)
     {
         // Calling SetNextWindowPos() undock windows by default (by setting PosUndock)
         let mut want_undock: bool =  false;
-        want_undock |= (window.Flags & ImGuiWindowFlags_NoDocking) != 0;
+        want_undock |= flag_set(window.Flags, ImGuiWindowFlags_NoDocking) != 0;
         want_undock |= (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) && (window.SetWindowPosAllowFlags & g.NextWindowData.PosCond) && g.NextWindowData.PosUndock;
         if (want_undock)
         {
@@ -870,7 +870,7 @@ pub unsafe fn BeginDockableDragDropTarget(window: *mut ImGuiWindow)
                 dock_into_floating_window = true; // Dock into a regular window
         }
 
-        let explicit_target_rect: ImRect =  (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) ? node.TabBar.BarRect : ImRect(window.Pos, window.Pos + ImVec2::new(window.Size.x, GetFrameHeight()));
+        let explicit_target_rect: ImRect =  if (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) { node.TabBar.BarRect } else { ImRect(window.Pos, window.Pos + ImVec2::new(window.Size.x, GetFrameHeight())) };
         let is_explicit_target: bool = g.IO.ConfigDockingWithShift || IsMouseHoveringRect(explicit_target_rect.Min, explicit_target_rect.Max);
 
         // Preview docking request and find out split direction/ratio
@@ -1033,7 +1033,7 @@ pub unsafe fn DockSettingsHandler_DockNodeToSettings(dc: *mut ImGuiDockContext, 
     ImGuiDockNodeSettings node_settings;
     // IM_ASSERT(depth < (1 << (sizeof(node_settings.Depth) << 3)));
     node_settings.ID = node.ID;
-    node_settings.ParentNodeId = node.ParentNode ? node.ParentNode.ID : 0;
+    node_settings.ParentNodeId = if node.ParentNode { node.ParentNode.ID } else { 0 };
     node_settings.ParentWindowId = if node.IsDockSpace() && node.HostWindow && node.Hostwindow.ParentWindow { node.Hostwindow.Parentwindow.ID} else { 0};
     node_settings.SelectedTabId = node.SelectedTabId;
     node_settings.SplitAxis = if node.IsSplitNode( { node.SplitAxis} else { ImGuiAxis_None)};
@@ -1074,7 +1074,7 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettings
     {
         let line_start_pos: c_int = buf->size(); line_start_pos;
         let node_settings: *const ImGuiDockNodeSettings = &dc->NodesSettings[node_n];
-        buf->appendf("%*s%s%*s", node_settings->Depth * 2, "", (node_settings.Flags & ImGuiDockNodeFlags_DockSpace) ? "DockSpace" : "DockNode ", (max_depth - node_settings->Depth) * 2, "");  // Text align nodes to facilitate looking at .ini file
+        buf->appendf("%*s%s%*s", node_settings->Depth * 2, "", flag_set(node_settings.Flags, ImGuiDockNodeFlags_DockSpace) ? "DockSpace" : "DockNode ", (max_depth - node_settings->Depth) * 2, "");  // Text align nodes to facilitate looking at .ini file
         buf->appendf(" ID=0x%08X", node_settings.ID);
         if (node_settings.ParentNodeId)
         {
@@ -1088,17 +1088,17 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettings
         }
         if (node_settings->SplitAxis != ImGuiAxis_None)
             buf->appendf(" Split=%c", (node_settings->SplitAxis == ImGuiAxis_X) ? 'X' : 'Y');
-        if (node_settings.Flags & ImGuiDockNodeFlags_NoResize)
+        if flag_set(node_settings.Flags, ImGuiDockNodeFlags_NoResize)
             buf->appendf(" NoResize=1");
-        if (node_settings.Flags & ImGuiDockNodeFlags_CentralNode)
+        if flag_set(node_settings.Flags, ImGuiDockNodeFlags_CentralNode)
             buf->appendf(" CentralNode=1");
-        if (node_settings.Flags & ImGuiDockNodeFlags_NoTabBar)
+        if flag_set(node_settings.Flags, ImGuiDockNodeFlags_NoTabBar)
             buf->appendf(" NoTabBar=1");
-        if (node_settings.Flags & ImGuiDockNodeFlags_HiddenTabBar)
+        if flag_set(node_settings.Flags, ImGuiDockNodeFlags_HiddenTabBar)
             buf->appendf(" HiddenTabBar=1");
-        if (node_settings.Flags & ImGuiDockNodeFlags_NoWindowMenuButton)
+        if flag_set(node_settings.Flags, ImGuiDockNodeFlags_NoWindowMenuButton)
             buf->appendf(" NoWindowMenuButton=1");
-        if (node_settings.Flags & ImGuiDockNodeFlags_NoCloseButton)
+        if flag_set(node_settings.Flags, ImGuiDockNodeFlags_NoCloseButton)
             buf->appendf(" NoCloseButton=1");
         if (node_settings.SelectedTabId)
             buf->appendf(" Selected=0x%08X", node_settings.SelectedTabId);

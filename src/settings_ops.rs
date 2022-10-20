@@ -69,7 +69,7 @@ pub unsafe fn MarkIniSettingsDirty()
 pub unsafe fn MarkIniSettingsDirty2(window: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (!(window.Flags & ImGuiWindowFlags_NoSavedSettings)){
+    if (flag_clear(window.Flags, ImGuiWindowFlags_NoSavedSettings)){
         if (g.SettingsDirtyTimer <= 0.0){
             g.SettingsDirtyTimer = g.IO.IniSavingRate;}}
 }
@@ -220,7 +220,7 @@ pub unsafe fn LoadIniSettingsFromMemory(ini_data: *const c_char, ini_size: size_
             *type_end = 0; // Overwrite first ']'
             name_start+= 1;  // Skip second '['
             entry_handler = FindSettingsHandler(type_start);
-            entry_data = entry_handler ? entry_handler->ReadOpenFn(&g, entry_handler, name_start) : null_mut();
+            entry_data = if entry_handler { entry_handler -> ReadOpenFn(&g, entry_handler, name_start) } else { null_mut() };
         }
         else if (entry_handler != null_mut() && entry_data != null_mut())
         {

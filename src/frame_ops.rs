@@ -76,7 +76,7 @@ pub unsafe fn NewFrame() {
     g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx] = g.IO.DeltaTime;
     g.FramerateSecPerFrameIdx = (g.FramerateSecPerFrameIdx + 1) % g.FramerateSecPerFrame.len();
     g.FramerateSecPerFrameCount = ImMin(g.FramerateSecPerFrameCount + 1, g.FramerateSecPerFrame.len() as c_int);
-    g.IO.Framerate = (g.FramerateSecPerFrameAccum > 0.0)?(1.0 / (g.FramerateSecPerFrameAccum / g.FramerateSecPerFrameCount)): f32::MAX;
+    g.IO.Framerate = if (g.FramerateSecPerFrameAccum > 0.0) { (1.0 / (g.FramerateSecPerFrameAccum / g.FramerateSecPerFrameCount)) }else { f32::MAX };
 
     UpdateViewportsNewFrame();
 

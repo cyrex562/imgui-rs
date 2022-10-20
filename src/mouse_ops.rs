@@ -40,7 +40,7 @@ pub unsafe fn StartMouseMovingWindow(window: *mut ImGuiWindow) {
     SetActiveIdUsingAllKeyboardKeys();
 
     let mut can_move_window: bool = true;
-    if (window.Flags & ImGuiWindowFlags_NoMove) || (window.RootWindowDockTree.Flags & ImGuiWindowFlags_NoMove) {
+    if flag_set(window.Flags, ImGuiWindowFlags_NoMove) || (window.RootWindowDockTree.Flags & ImGuiWindowFlags_NoMove) {
         can_move_window = false;
     }
     let mut node = window.DockNodeAsHost;
@@ -161,14 +161,14 @@ pub unsafe fn UpdateMouseMovingWindowEndFrame() {
         // Handle the edge case of a popup being closed while clicking in its empty space.
         // If we try to focus it, FocusWindow() > ClosePopupsOverWindow() will accidentally close any parent popups because they are not linked together any more.
         let mut root_window: *mut ImGuiWindow = if g.HoveredWindow.is_null() == false { g.Hoveredwindow.RootWindow } else { null_mut() };
-        let is_closed_popup: bool = root_window.is_null() == false && (root_window.Flags & ImGuiWindowFlags_Popup) != 0 && !IsPopupOpen(root_window.PopupId, ImGuiPopupFlags_AnyPopupLevel);
+        let is_closed_popup: bool = root_window.is_null() == false && flag_set(root_window.Flags, ImGuiWindowFlags_Popup) != 0 && !IsPopupOpen(root_window.PopupId, ImGuiPopupFlags_AnyPopupLevel);
 
         if root_window != null_mut() && !is_closed_popup {
             StartMouseMovingWindow(g.HoveredWindow); //-V595
 
             // Cancel moving if clicked outside of title bar
             if g.IO.ConfigWindowsMoveFromTitleBarOnly {
-                if !(root_window.Flags & ImGuiWindowFlags_NoTitleBar) != 0 || root_window.DockIsActive {
+                if flag_clear(root_window.Flags, ImGuiWindowFlags_NoTitleBar) != 0 || root_window.DockIsActive {
                     if !root_window.TitleBarRect().Contains(g.IO.MouseClickedPos[0].clone()) {
                         g.MovingWindow = null_mut();
                     }
@@ -340,10 +340,10 @@ pub unsafe fn UpdateMouseWheel() {
     // Vertical Mouse Wheel scrolling
     if wheel_y != 0.0 {
         StartLockWheelingWindow(window);
-        while (window.Flags & ImGuiWindowFlags_ChildWindow) && ImGuiWindowFlags::from(((window.ScrollMax.y == 0.0) || ((window.Flags & ImGuiWindowFlags_NoScrollWithMouse) && !(window.Flags & ImGuiWindowFlags_NoMouseInputs)))) {
+        while flag_set(window.Flags, ImGuiWindowFlags_ChildWindow) && ImGuiWindowFlags::from(((window.ScrollMax.y == 0.0) || ((window.Flags & ImGuiWindowFlags_NoScrollWithMouse) && flag_clear(window.Flags, ImGuiWindowFlags_NoMouseInputs)))) {
             window = window.ParentWindow;
         }
-        if !(window.Flags & ImGuiWindowFlags_NoScrollWithMouse) && !(window.Flags & ImGuiWindowFlags_NoMouseInputs) {
+        if flag_clear(window.Flags, ImGuiWindowFlags_NoScrollWithMouse) && flag_clear(window.Flags, ImGuiWindowFlags_NoMouseInputs) {
             let max_step: c_float = window.InnerRect.GetHeight() * 0.67f32;
             let scroll_step: c_float = ImFloor(ImMin(5 * window.CalcFontSize(), max_step));
             SetScrollY(window, window.Scroll.y - wheel_y * scroll_step);
@@ -353,10 +353,10 @@ pub unsafe fn UpdateMouseWheel() {
     // Horizontal Mouse Wheel scrolling, or Vertical Mouse Wheel w/ Shift held
     if wheel_x != 0.0 {
         StartLockWheelingWindow(window);
-        while (window.Flags & ImGuiWindowFlags_ChildWindow) != 0 && ((window.ScrollMax.x == 0.0) || ((window.Flags & ImGuiWindowFlags_NoScrollWithMouse) != 0 && !(window.Flags & ImGuiWindowFlags_NoMouseInputs) != 0)) {
+        while flag_set(window.Flags, ImGuiWindowFlags_ChildWindow) != 0 && ((window.ScrollMax.x == 0.0) || ((window.Flags & ImGuiWindowFlags_NoScrollWithMouse) != 0 && flag_clear(window.Flags, ImGuiWindowFlags_NoMouseInputs) != 0)) {
             window = window.ParentWindow;
         }
-        if !(window.Flags & ImGuiWindowFlags_NoScrollWithMouse) && !(window.Flags & ImGuiWindowFlags_NoMouseInputs) {
+        if flag_clear(window.Flags, ImGuiWindowFlags_NoScrollWithMouse) && flag_clear(window.Flags, ImGuiWindowFlags_NoMouseInputs) {
             let max_step: c_float = window.InnerRect.GetWidth() * 0.67f32;
             let scroll_step: c_float = ImFloor(ImMin(2 * window.CalcFontSize(), max_step));
             SetScrollX(window, window.Scroll.x - wheel_x * scroll_step);

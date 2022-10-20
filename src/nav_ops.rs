@@ -1571,7 +1571,7 @@ pub unsafe fn NavUpdateWindowing()
         let mut new_nav_window: *mut ImGuiWindow =  g.NavWindow;
         while is_not_null(new_nav_window.ParentWindow)
             && (new_nav_window.DC.NavLayersActiveMask & (1 << ImGuiNavLayer_Menu)) == 0
-            && (new_nav_window.Flags & ImGuiWindowFlags_ChildWindow) != 0
+            && flag_set(new_nav_window.Flags, ImGuiWindowFlags_ChildWindow) != 0
             && (new_nav_window.Flags & (ImGuiWindowFlags_Popup | ImGuiWindowFlags_ChildMenu)) == 0 {
             new_nav_window = new_nav_window.ParentWindow;
         }
@@ -1600,7 +1600,7 @@ pub unsafe fn NavUpdateWindowing()
 // Window has already passed the IsWindowNavFocusable()
 pub unsafe fn GetFallbackWindowNameForWindowingList(window: *mut ImGuiWindow) ->  *const c_char
 {
-    // if (window.Flags & ImGuiWindowFlags_Popup) {
+    // if flag_set(window.Flags, ImGuiWindowFlags_Popup) {
     //     return "(Popup)";
     // }
     // if ((window.Flags & ImGuiWindowFlags_MenuBar) && strcmp(window.Name, "##MainMenuBar") == 0) {

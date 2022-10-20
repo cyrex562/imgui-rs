@@ -307,7 +307,7 @@ pub unsafe fn DockContextPruneUnusedSettingsNodes(ctx: *mut ImGuiContext)
         let data_root: *mut ImGuiDockContextPruneNodeData = if data.RootId == settings.ID { data} else { pool.GetByKey(data.RootId)};
 
         let mut remove: bool =  false;
-        remove |= (data.CountWindows == 1 && settings.ParentNodeId == 0 && data.CountChildNodes == 0 && !(settings.Flags & ImGuiDockNodeFlags_CentralNode));  // Floating root node with only 1 window
+        remove |= (data.CountWindows == 1 && settings.ParentNodeId == 0 && data.CountChildNodes == 0 && flag_clear(settings.Flags, ImGuiDockNodeFlags_CentralNode));  // Floating root node with only 1 window
         remove |= (data.CountWindows == 0 && settings.ParentNodeId == 0 && data.CountChildNodes == 0); // Leaf nodes with 0 window
         remove |= (data_root.CountChildWindows == 0);
         if (remove)

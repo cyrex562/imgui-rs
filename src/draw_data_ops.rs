@@ -36,7 +36,7 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
     // May trigger for you if you are using PrimXXX functions incorrectly.
     // IM_ASSERT(draw_list.VtxBuffer.Size == 0 || draw_list._VtxWritePtr == draw_list.VtxBuffer.Data + draw_list.VtxBuffer.Size);
     // IM_ASSERT(draw_list.IdxBuffer.Size == 0 || draw_list._IdxWritePtr == draw_list.IdxBuffer.Data + draw_list.IdxBuffer.Size);
-    if !(draw_list.Flags & ImDrawListFlags_AllowVtxOffset) {}
+    if flag_clear(draw_list.Flags, ImDrawListFlags_AllowVtxOffset) {}
         // IM_ASSERT(draw_list._VtxCurrentIdx == draw_list.VtxBuffer.Size);
 
     // Check that draw_list doesn't use more vertices than indexable (default ImDrawIdx = unsigned short = 2 bytes = 64K vertices per ImDrawList = per window)

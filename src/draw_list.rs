@@ -181,7 +181,7 @@ impl ImDrawList {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
         }
-        if rounding < 0.5 || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
+        if rounding < 0.5 || flag_set(flags, ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
         {
             self.PrimReserve(6, 4);
             self.PrimRect(p_min, p_max, col);
@@ -816,7 +816,7 @@ impl ImDrawList {
         }
 
         flags = FixRectCornerFlags(flags);
-        if rounding < 0.5 || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone {
+        if rounding < 0.5 || flag_set(flags, ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone {
             self.AddImage(user_texture_id, p_min, p_max, uv_min, uv_max, col);
             return;
         }
@@ -981,7 +981,7 @@ impl ImDrawList {
             rounding,
             ImFabs(b.y - a.y) * ( if ((flags & ImDrawFlags_RoundCornersLeft) == ImDrawFlags_RoundCornersLeft) || ((flags & ImDrawFlags_RoundCornersRight)  == ImDrawFlags_RoundCornersRight) { 0.5 } else { 1 } ) - 1);
 
-        if rounding < 0.5 || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
+        if rounding < 0.5 || flag_set(flags, ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
         {
             self.PathLineTo(a);
             self.PathLineTo(&ImVec2::new(b.x, a.y));

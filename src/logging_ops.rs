@@ -93,7 +93,7 @@ pub unsafe fn LogRenderedText(ref_pos: *const ImVec2, text: *const c_char, mut t
 //     {
 //         g.LogBuffer.Buf.clear();
 //         g.LogBuffer.appendfv(fmt, args);
-//         ImFileWrite(g.LogBuffer.c_str(), sizeof, (u64)g.LogBuffer.size(), g.LogFile);
+//         ImFileWrite(g.LogBuffer.c_str(), sizeof, g.LogBuffer.size(), g.LogFile);
 //     }
 //     else
 //     {

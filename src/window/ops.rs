@@ -83,7 +83,7 @@ pub unsafe fn IsWindowContentHoverable(window: *mut ImGuiWindow, flags: ImGuiHov
                 if focused_root_window.Flags & ImGuiWindowFlags_Modal {
                     return false;
                 }
-                if (focused_root_window.Flags & ImGuiWindowFlags_Popup)
+                if flag_set(focused_root_window.Flags, ImGuiWindowFlags_Popup)
                     && flag_clear(flags, ImGuiHoveredFlags_AllowWhenBlockedByPopup)
                 {
                     return false;
@@ -490,7 +490,7 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     flags: ImGuiWindowFlags = window.Flags.clone();
 
-    if (flags & ImGuiWindowFlags_NoResize) || (flags & ImGuiWindowFlags_AlwaysAutoResize) || window.AutoFitFramesX > 0 || window.AutoFitFramesY > 0 {
+    if flag_set(flags, ImGuiWindowFlags_NoResize) || flag_set(flags, ImGuiWindowFlags_AlwaysAutoResize) || window.AutoFitFramesX > 0 || window.AutoFitFramesY > 0 {
         return false;
     }
     if window.WasActive == false { // Early out to avoid running this code for e.g. an hidden implicit/fallback Debug window.
@@ -1139,7 +1139,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             };
         }
         // For windows with title bar or menu bar, we clamp to FrameHeight(FontSize + FramePadding.y * 2.0) to completely hide artifacts.
-        //if ((window.Flags & ImGuiWindowFlags_MenuBar) || !(window.Flags & ImGuiWindowFlags_NoTitleBar))
+        //if ((window.Flags & ImGuiWindowFlags_MenuBar) || flag_clear(window.Flags, ImGuiWindowFlags_NoTitleBar))
         //    window.WindowRounding = ImMin(window.WindowRounding, g.FontSize + style.FramePadding.y * 2.0);
 
         // Apply window focus (new and reactivated windows are moved to front)
@@ -1482,7 +1482,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         }
 
         // [Test Engine] Register title bar / tab
-        if (!(window.Flags & ImGuiWindowFlags_NoTitleBar)) {
+        if (flag_clear(window.Flags, ImGuiWindowFlags_NoTitleBar)) {
             IMGUI_TEST_ENGINE_ITEM_ADD(g.LastItemData.Rect, g.LastItemData.ID);
         }
     }
@@ -1603,19 +1603,19 @@ pub unsafe fn End()
     // IM_ASSERT(g.CurrentWindowStack.Size > 0);
 
     // Error checking: verify that user doesn't directly call End() on a child window.
-    if ((window.Flags & ImGuiWindowFlags_ChildWindow) && !(window.Flags & ImGuiWindowFlags_DockNodeHost) && !window.DockIsActive) {}
+    if ((window.Flags & ImGuiWindowFlags_ChildWindow) && flag_clear(window.Flags, ImGuiWindowFlags_DockNodeHost) && !window.DockIsActive) {}
         // IM_ASSERT_USER_ERROR(g.WithinEndChild, "Must call EndChild() and not End()!");
 
     // Close anything that is open
     if (window.DC.CurrentColumns) {
         EndColumns();
     }
-    if (!(window.Flags & ImGuiWindowFlags_DockNodeHost)) {   // Pop inner window clip rectangle
+    if (flag_clear(window.Flags, ImGuiWindowFlags_DockNodeHost)) {   // Pop inner window clip rectangle
         PopClipRect();
     }
 
     // Stop logging
-    if (!(window.Flags & ImGuiWindowFlags_ChildWindow)) {   // FIXME: add more options for scope of logging
+    if (flag_clear(window.Flags, ImGuiWindowFlags_ChildWindow)) {   // FIXME: add more options for scope of logging
         LogFinish();
     }
 

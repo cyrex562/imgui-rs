@@ -291,7 +291,7 @@ pub unsafe fn ImFontAtlasBuildWithStbTruetype(mut atlas: *mut ImFontAtlas) -> bo
     }
 
     // 7. Allocate texture
-    atlas.TexHeight = if (atlas.Flags & ImFontAtlasFlags_NoPowerOfTwoHeight) { (atlas.TexHeight + 1) } else { ImUpperPowerOfTwo(atlas.TexHeight) };
+    atlas.TexHeight = if flag_set(atlas.Flags, ImFontAtlasFlags_NoPowerOfTwoHeight) { (atlas.TexHeight + 1) } else { ImUpperPowerOfTwo(atlas.TexHeight) };
     atlas.TexUvScale = ImVec2::new((1 / atlas.TexWidth) as c_float, (1 / atlas.TexHeight) as c_float);
     atlas.TexPixelsAlpha8 = libc::malloc(atlas.TexWidth * atlas.TexHeight);
     libc::memset(atlas.TexPixelsAlpha8, 0, atlas.TexWidth * atlas.TexHeight);
@@ -600,7 +600,7 @@ pub fn ImFontAtlasBuildInit(mut atlas: *mut ImFontAtlas)
     // Register texture region for mouse cursors or standard white pixels
     if atlas.PackIdMouseCursors < 0
     {
-        if !(atlas.Flags & ImFontAtlasFlags_NoMouseCursors) {
+        if flag_clear(atlas.Flags, ImFontAtlasFlags_NoMouseCursors) {
             atlas.PackIdMouseCursors = atlas.AddCustomRectRegular(FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1, FONT_ATLAS_DEFAULT_TEX_DATA_H);
         }
         else {
@@ -612,7 +612,7 @@ pub fn ImFontAtlasBuildInit(mut atlas: *mut ImFontAtlas)
     // The +2 here is to give space for the end caps, whilst height +1 is to accommodate the fact we have a zero-width row
     if atlas.PackIdLines < 0
     {
-        if !(atlas.Flags & ImFontAtlasFlags_NoBakedLines) {
+        if flag_clear(atlas.Flags, ImFontAtlasFlags_NoBakedLines) {
             atlas.PackIdLines = atlas.AddCustomRectRegular(IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 2, IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1);
         }
     }

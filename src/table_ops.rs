@@ -81,7 +81,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
         if (bg_col0 | bg_col1 | border_col) != 0 || draw_strong_bottom_border || draw_cell_bg_color {
 // In theory we could call SetWindowClipRectBeforeSetChannel() but since we know TableEndRow() is
 // always followed by a change of clipping rectangle we perform the smallest overwrite possible here.
-            if (table.Flags & ImGuiTableFlags_NoClip) == 0 {
+            if flag_set(table.Flags, ImGuiTableFlags_NoClip) == 0 {
                 window.DrawList._CmdHeader.ClipRect = table.Bg0ClipRectForDrawCmd.ToVec4();
             }
             table.DrawSplitter.SetCurrentChannel(window.DrawList, TABLE_DRAW_CHANNEL_BG0);
@@ -104,7 +104,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
         if draw_cell_bg_color {
             let mut cell_data_end = &mut table.RowCellData[table.RowCellDataCurrent];
             let mut cell_data = &mut table.RowCellData[0];
-// for (*mut ImGuiTableCellData cell_data = &table.RowCellData[0]; cell_data <= cell_data_end; cell_data++)
+// for (cell_data: *mut ImGuiTableCellData = &table.RowCellData[0]; cell_data <= cell_data_end; cell_data++)
             while cell_data <= cell_data_end {
 // As we render the BG here we need to clip things (for layout we would not)
 // FIXME: This cancels the OuterPadding addition done by TableGetCellBgRect(), need to keep it while rendering correctly while scrolling.
@@ -221,7 +221,7 @@ pub fn TableGetInstanceData(table: *mut ImGuiTable, instance_no: c_int) -> *mut 
 // - Important: if ImGuiTableFlags_PadOuterX is set but ImGuiTableFlags_PadInnerX is not set, the outer-most left and right
 //   columns report a small offset so their CellBgRect can extend up to the outer border.
 //   FIXME: But the rendering code in TableEndRow() nullifies that with clamping required for scrolling.
-// ImRect TableGetCellBgRect(*const ImGuiTable table, column_n: c_int)
+// ImRect TableGetCellBgRect(table: *const ImGuiTable, column_n: c_int)
 pub fn TableGetCellBgRect(table: *const ImGuiTable, column_n: c_int) -> ImRect {
     let column: &ImGuiTableColumn = &table.Columns[column_n];
     let mut x1 = column.MinX;

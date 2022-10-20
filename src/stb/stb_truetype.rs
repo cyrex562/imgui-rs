@@ -5383,7 +5383,7 @@ pub unsafe fn stbtt__matches(fc: *mut u8, offset: u32, name: *mut u8, flags: i32
    // check italics/bold/underline flags in macStyle...
    if (flags) {
       hd = stbtt__find_table(fc, offset, str_to_const_c_char_ptr("head"));
-      if (ttUSHORT(fc+hd44) & 7) != (flags & 7) as u16 { return  0; }
+      if (ttUSHORT(fc+hd44) & 7) != flag_set(flags, 7) as u16 { return  0; }
    }
 
    nm = stbtt__find_table(fc, offset, str_to_const_c_char_ptr("name"));

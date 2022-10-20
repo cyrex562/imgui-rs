@@ -189,17 +189,17 @@ pub fn CalcTypematicRepeatAmount(t0: c_float, t1: c_float, repeat_delay: c_float
 // c_void GetTypematicRepeatRate(ImGuiInputFlags flags, c_float* repeat_delay, c_float* repeat_rate)
 pub unsafe fn GetTypematicRepeatRate(flags: ImGuiInputFlags, repeat_delay: *mut c_float, repeat_rate: *mut c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (flags & ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateNavMove {
+    if flag_set(flags, ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateNavMove {
         *repeat_delay = g.IO.KeyRepeatDelay * 0.72f32;
         *repeat_rate = g.IO.KeyRepeatRate * 0.80;
         return;
     }
-    if (flags & ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateNavMove {
+    if flag_set(flags, ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateNavMove {
         *repeat_delay = g.IO.KeyRepeatDelay * 0.72f32;
         *repeat_rate = g.IO.KeyRepeatRate * 0.3f32;
         return;
     }
-    if (flags & ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateNavTweak || (flags & ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateDefault {
+    if flag_set(flags, ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateNavTweak || flag_set(flags, ImGuiInputFlags_RepeatRateMask_) == ImGuiInputFlags_RepeatRateDefault {
         *repeat_delay = g.IO.KeyRepeatDelay * 1.0;
         *repeat_rate = g.IO.KeyRepeatRate * 1.0;
         return;
@@ -373,7 +373,7 @@ pub fn IsMousePosValid(mouse_pos: *const ImVec2) -> bool {
     // Because GImGui is not dereferenced in every code path, the static analyzer assume that it may be NULL (which it doesn't for other functions).
     // IM_ASSERT(GImGui != NULL);
     let MOUSE_INVALID: c_float = -256000;
-    let p: ImVec2 = mouse_pos? * mouse_pos: GimGui.IO.MousePos;
+    let p: ImVec2 = if mouse_pos { *mouse_pos }else { GimGui.IO.MousePos };
     return p.x >= MOUSE_INVALID && p.y >= MOUSE_INVALID;
 }
 

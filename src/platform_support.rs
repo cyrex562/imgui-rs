@@ -113,7 +113,7 @@ static GetClipboardTextFn_DefaultImpl: *const c_char
 static GetClipboardTextFn_DefaultImpl: *const c_char
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.ClipboardHandlerData.empty() ? null_mut() : g.ClipboardHandlerData.begin();
+    return if g.ClipboardHandlerData.empty() { null_mut()} else {g.ClipboardHandlerData.begin()};
 }
 
 pub unsafe fn SetClipboardTextFn_DefaultImpl(*mut c_void, text: *const c_char)

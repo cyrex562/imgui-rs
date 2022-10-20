@@ -18,7 +18,7 @@ pub const ImGuiContextHookType_Shutdown: ImGuiContextHookType = 6;
 pub const ImGuiContextHookType_PendingRemoval_: ImGuiContextHookType = 7;
 // };
 
-// typedef c_void (*ImGuiContextHookCallback)(*mut ImGuiContext ctx, *mut ImGuiContextHook hook);
+// typedef c_void (*ImGuiContextHookCallback)(ctx: *mut ImGuiContext, *mut ImGuiContextHook hook);
 pub type ImGuiContextHookCallback = fn(ctx: *mut ImGuiContext, hook: *mut ImGuiContextHook);
 
 #[derive(Default, Debug, Clone)]

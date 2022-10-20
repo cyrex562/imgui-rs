@@ -532,14 +532,14 @@ static STBRP__CDECL: c_int rect_height_compare(a: *const c_void, b: *const c_voi
    if (p.h > q.h)
       return -1;
    if p.h < q.h { return   1; }
-   return (p.w > q.w) ? -1 : (p.w < q.w);
+   return if (p.w > q.w) { - 1} else {p.w < q.w};
 }
 
 static STBRP__CDECL: c_int rect_original_order(a: *const c_void, b: *const c_void)
 {
    const p: *mut stbrp_rect = (const stbrp_rect *) a;
    const q: *mut stbrp_rect = (const stbrp_rect *) b;
-   return (p.was_packed < q.was_packed) ? -1 : (p.was_packed > q.was_packed);
+   return of (p.was_packed < q.was_packed) { - 1 } else{ (p.was_packed > q.was_packed)};
 }
 
 STBRP_DEF stbrp_pack_rects: c_int(context: *mut stbrp_context, rects: *mut stbrp_rect, num_rects: c_int)
