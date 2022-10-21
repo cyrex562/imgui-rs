@@ -27,8 +27,8 @@ pub UserCallbackData:  *mut c_void,   // 4-8  // The draw callback code can acce
 impl ImDrawCmd {
     // ImDrawCmd() { memset(this, 0, sizeof(*this)); } // Also ensure our padding fields are zeroed
 
-    // Since 1.83: returns ImTextureID associated with this draw call. Warning: DO NOT assume this is always same as 'TextureId' (we will change this function for an upcoming feature)
-    // inline ImTextureID GetTexID() const { return TextureId; }
+    // Since 1.83: returns associated: ImTextureID with this draw call. Warning: DO NOT assume this is always same as 'TextureId' (we will change this function for an upcoming feature)
+    // inline GetTexID: ImTextureID() const { return TextureId; }
     pub fn GetTexID(&self) -> ImTextureID {
         self.TextureId
     }

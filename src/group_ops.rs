@@ -33,7 +33,7 @@ pub unsafe fn BeginGroup() {
     window.DC.GroupOffset.x = window.DC.CursorPos.x - window.Pos.x - window.DC.ColumnsOffset.x;
     window.DC.Indent = window.DC.GroupOffset.clone();
     window.DC.CursorMaxPos = window.DC.CursorPos;
-    window.DC.CurrLineSize = ImVec2::new(0.0, 0.0);
+    window.DC.CurrLineSize = ImVec2::from_floats(0.0, 0.0);
     if g.LogEnabled {
         g.LogLinePosY = -f32::MAX;
     } // To enforce a carriage return

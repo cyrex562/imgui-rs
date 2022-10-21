@@ -172,20 +172,20 @@ Index of this file:
 // #if !defined(IMGUI_DISABLE_DEMO_WINDOWS)
 
 // Forward Declarations
-// pub unsafe fn ShowExampleAppDockSpace(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppDocuments(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppDockSpace(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppDocuments(p_open: *mut bool);
 // pub unsafe fn ShowExampleAppMainMenuBar();
-// pub unsafe fn ShowExampleAppConsole(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppLog(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppLayout(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppPropertyEditor(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppLongText(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppAutoResize(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppConstrainedResize(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppSimpleOverlay(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppFullscreen(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppWindowTitles(*mut p_open: bool);
-// pub unsafe fn ShowExampleAppCustomRendering(*mut p_open: bool);
+// pub unsafe fn ShowExampleAppConsole(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppLog(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppLayout(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppPropertyEditor(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppLongText(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppAutoResize(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppConstrainedResize(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppSimpleOverlay(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppFullscreen(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppWindowTitles(p_open: *mut bool);
+// pub unsafe fn ShowExampleAppCustomRendering(p_open: *mut bool);
 // pub unsafe fn ShowExampleMenuFile();
 
 use libc::{c_float, c_int};
@@ -277,7 +277,7 @@ pub unsafe fn ShowDemoWindowMisc();
 // Demonstrate most Dear ImGui features (this is big function!)
 // You may execute this function to experiment with the UI and understand what it does.
 // You may then search for keywords in the code when you are interested by a specific feature.
-pub unsafe fn ShowDemoWindow(*mut p_open: bool)
+pub unsafe fn ShowDemoWindow(p_open: *mut bool)
 {
     // Exceptionally add an extra assert here for people confused about initial Dear ImGui setup
     // Most ImGui functions would normally just crash if the context is missing.
@@ -1090,7 +1090,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             "Hover the texture for a zoomed view!");
 
         // Below we are displaying the font texture because it is the only texture we have access to inside the demo!
-        // Remember that ImTextureID is just storage for whatever you want it to be. It is essentially a value that
+        // Remember that is: ImTextureID just storage for whatever you want it to be. It is essentially a value that
         // will be passed to the rendering backend via the ImDrawCmd structure.
         // If you use one of the default imgui_impl_XXXX.cpp rendering backend, they all have comments at the top
         // of their respective source file to specify what they expect to be stored in ImTextureID, for example:
@@ -1167,7 +1167,7 @@ pub unsafe fn ShowDemoWindowWidgets()
     if (TreeNode("Combo"))
     {
         // Expose flags as checkbox for the demo
-        static ImGuiComboFlags flags = 0;
+        static flags: ImGuiComboFlags = 0;
         CheckboxFlags("ImGuiComboFlags_PopupAlignLeft", &flags, ImGuiComboFlags_PopupAlignLeft);
         SameLine(); HelpMarker("Only makes a difference if the popup is larger than the combo");
         if (CheckboxFlags("ImGuiComboFlags_NoArrowButton", &flags, ImGuiComboFlags_NoArrowButton))
@@ -1562,7 +1562,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 // For example, you code may declare a function 'InputText(const char* label, MyString* my_str)'
                 static MyInputTextMultiline: bool(label: *const c_char, Vec<char>* my_str, size: &ImVec2 = ImVec2::new(0, 0), ImGuiInputTextFlags flags = 0)
                 {
-                    // IM_ASSERT((flags & ImGuiInputTextFlags_CallbackResize) == 0);
+                    // IM_ASSERT(flag_set(flags, ImGuiInputTextFlags_CallbackResize) == 0);
                     return InputTextMultiline(label, my_str.begin(), my_str.size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, my_str);
                 }
             };
@@ -2066,8 +2066,8 @@ pub unsafe fn ShowDemoWindowWidgets()
         // Setup limits (as helper variables so we can take their address, as explained above)
         // Note: SliderScalar() functions have a maximum usable range of half the natural type maximum, hence the /2.
         #ifndef LLONG_MIN
-        ImS64 LLONG_MIN = -9223372036854775807LL - 1;
-        ImS64 LLONG_MAX = 9223372036854775807LL;
+        i64 LLONG_MIN = -9223372036854775807LL - 1;
+        i64 LLONG_MAX = 9223372036854775807LL;
         u64 ULLONG_MAX = (2ULL * 9223372036854775807LL + 1);
         #endif
         const char    s8_zero  = 0,   s8_one  = 1,   s8_fifty  = 50, s8_min  = -128,        s8_max = 127;
@@ -2076,7 +2076,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         const ImU16   u16_zero = 0,   u16_one = 1,   u16_fifty = 50, u16_min = 0,           u16_max = 65535;
         const i32   s32_zero = 0,   s32_one = 1,   s32_fifty = 50, s32_min = INT_MIN/2,   s32_max = INT_MAX/2,    s32_hi_a = INT_MAX/2 - 100,    s32_hi_b = INT_MAX/2;
         const u32   u32_zero = 0,   u32_one = 1,   u32_fifty = 50, u32_min = 0,           u32_max = UINT_MAX/2,   u32_hi_a = UINT_MAX/2 - 100,   u32_hi_b = UINT_MAX/2;
-        const ImS64   s64_zero = 0,   s64_one = 1,   s64_fifty = 50, s64_min = LLONG_MIN/2, s64_max = LLONG_MAX/2,  s64_hi_a = LLONG_MAX/2 - 100,  s64_hi_b = LLONG_MAX/2;
+        const i64   s64_zero = 0,   s64_one = 1,   s64_fifty = 50, s64_min = LLONG_MIN/2, s64_max = LLONG_MAX/2,  s64_hi_a = LLONG_MAX/2 - 100,  s64_hi_b = LLONG_MAX/2;
         const u64   u64_zero = 0,   u64_one = 1,   u64_fifty = 50, u64_min = 0,           u64_max = ULLONG_MAX/2, u64_hi_a = ULLONG_MAX/2 - 100, u64_hi_b = ULLONG_MAX/2;
         f32_zero: c_float = 0.f, f32_one = 1.f, f32_lo_a = -10000000000, f32_hi_a = 10000000000;
         const double  f64_zero = 0.,  f64_one = 1.,  f64_lo_a = -1000000000000000.0, f64_hi_a = 1000000000000000.0;
@@ -2088,7 +2088,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         static ImU16  u16_v = 65535;
         static i32  s32_v = -1;
         static u32  u32_v = -1;
-        static ImS64  s64_v = -1;
+        static i64  s64_v = -1;
         static u64  u64_v = -1;
         staticf32_v: c_float = 0.123f;
         static double f64_v = 90000.01234567890123456789;
@@ -5992,7 +5992,7 @@ pub unsafe fn ShowDemoWindowMisc()
 
             Button("Drag Me");
             if (IsItemActive())
-                GetForegroundDrawList().AddLine(io.MouseClickedPos[0], io.MousePos, GetColorU32(ImGuiCol_Button), 4.0); // Draw a line between the button and the mouse cursor
+                GetForegroundDrawList().AddLine(io.MouseClickedPos[0], io.MousePos, GetColorU32(ImGuiCol_Button, 0.0), 4.0); // Draw a line between the button and the mouse cursor
 
             // Drag operations gets "unlocked" when the mouse has moved past a certain threshold
             // (the default threshold is stored in io.MouseDragThreshold). You can request a lower or higher
@@ -6038,7 +6038,7 @@ pub unsafe fn ShowDemoWindowMisc()
 // Access from Dear ImGui Demo -> Tools -> About
 //-----------------------------------------------------------------------------
 
-pub unsafe fn ShowAboutWindow(*mut p_open: bool)
+pub unsafe fn ShowAboutWindow(p_open: *mut bool)
 {
     if (!Begin("About Dear ImGui", p_open, ImGuiWindowFlags_AlwaysAutoResize))
     {
@@ -6357,7 +6357,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
                 LogText("ImVec4* colors = GetStyle().Colors;" IM_NEWLINE);
                 for (let i: c_int = 0; i < ImGuiCol_COUNT; i++)
                 {
-                    const ImVec4& col = style.Colors[i];
+                    col: &ImVec4 = style.Colors[i];
                     let mut  name: *const c_char = GetStyleColorName(i);
                     if (!output_only_modified || memcmp(&col, &ref->Colors[i], sizeof(ImVec4)) != 0)
                         LogText("colors[ImGuiCol_%s]%*s= ImVec4(%.2ff, %.2ff, %.2ff, %.2f0f32);" IM_NEWLINE,
@@ -6473,12 +6473,12 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
                     offset_y: c_float     = floorf(RAD_MAX);
 
                     let p1: ImVec2 = GetCursorScreenPos();
-                    draw_list.AddCircle(ImVec2::new(p1.x + offset_x, p1.y + offset_y), rad, GetColorU32(ImGuiCol_Text));
+                    draw_list.AddCircle(ImVec2::new(p1.x + offset_x, p1.y + offset_y), rad, GetColorU32(ImGuiCol_Text, 0.0));
                     Dummy(ImVec2::new(canvas_width, RAD_MAX * 2));
 
                     /*
                     let p2: ImVec2 = GetCursorScreenPos();
-                    draw_list.AddCircleFilled(ImVec2::new(p2.x + offset_x, p2.y + offset_y), rad, GetColorU32(ImGuiCol_Text));
+                    draw_list.AddCircleFilled(ImVec2::new(p2.x + offset_x, p2.y + offset_y), rad, GetColorU32(ImGuiCol_Text, 0.0));
                     Dummy(ImVec2::new(canvas_width, RAD_MAX * 2));
                     */
 
@@ -7972,7 +7972,7 @@ let Name: *const c_char;       // Document title
     bool        WantClose;  // Set when the document
     ImVec4      Color;      // An arbitrary variable associated to the document
 
-    MyDocument(name: *const c_char, let mut open: bool =  true, const ImVec4& color = ImVec4(1.0, 1.0, 1.0, 1.0))
+    MyDocument(name: *const c_char, let mut open: bool =  true, color: &ImVec4 = ImVec4(1.0, 1.0, 1.0, 1.0))
     {
         Name = name;
         Open = OpenPrev = open;

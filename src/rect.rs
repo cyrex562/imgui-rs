@@ -34,30 +34,30 @@ impl ImRect {
         }
     }
 
-    // constexpr ImRect(const ImVec4& v)                         : Min(v.x, v.y), Max(v.z, v.w)      {}
+    // constexpr ImRect(v: &ImVec4)                         : Min(v.x, v.y), Max(v.z, v.w)      {}
     pub fn from_vec4(v: &ImVec4) -> Self {
         Self {
-            Min: ImVec2::new(v.x, v.y),
-            Max: ImVec2::new(v.z, v.w),
+            Min: ImVec2::from_floats(v.x, v.y),
+            Max: ImVec2::from_floats(v.z, v.w),
         }
     }
 
     // constexpr ImRect(c_float x1, c_float y1, c_float x2, c_float y2)  : Min(x1, y1), Max(x2, y2)          {}
     pub fn from_floats(x1: c_float, y1: c_float, x2: c_float, y2: c_float) -> Self {
         Self {
-            Min: ImVec2::new(x1, y1),
-            Max: ImVec2::new(x2, y2),
+            Min: ImVec2::from_floats(x1, y1),
+            Max: ImVec2::from_floats(x2, y2),
         }
     }
 
     // ImVec2      GetCenter() const                   { return ImVec2::new((Min.x + Max.x) * 0.5, (Min.y + Max.y) * 0.5); }
     pub fn GetCenter(&mut self) -> ImVec2 {
-        ImVec2::new((self.Min.x + self.Max.x) * 0.5, (self.Min.y + Self.Max.y) * 0.5)
+        ImVec2::from_floats((self.Min.x + self.Max.x) * 0.5, (self.Min.y + Self.Max.y) * 0.5)
     }
 
     // ImVec2      GetSize() const                     { return ImVec2::new(Max.x - Min.x, Max.y - Min.y); }
     pub fn GetSize(&mut self) -> ImVec2 {
-        ImVec2::new(self.Max.x - self.Min.x, self.Max.y - self.Min.y)
+        ImVec2::from_floats(self.Max.x - self.Min.x, self.Max.y - self.Min.y)
     }
 
     // c_float       GetWidth() const                    { return Max.x - Min.x; }
@@ -83,12 +83,12 @@ impl ImRect {
 
     // ImVec2      GetTR() const                       { return ImVec2::new(Max.x, Min.y); }  // Top-right
     pub fn GetTR(&mut self) -> ImVec2 {
-        ImVec2::new(self.Max.x, self.Min.y)
+        ImVec2::from_floats(self.Max.x, self.Min.y)
     }
 
     // ImVec2      GetBL() const                       { return ImVec2::new(Min.x, Max.y); }  // Bottom-left
     pub fn GetBL(&mut self) -> ImVec2 {
-        ImVec2::new(self.Min.x, self.Max.y)
+        ImVec2::from_floats(self.Min.x, self.Max.y)
     }
 
     // ImVec2      GetBR() const                       { return Max; }                   // Bottom-right
@@ -152,7 +152,7 @@ impl ImRect {
     }
 
     // void        Expand(const amount: &mut ImVec2)        { Min.x -= amount.x; Min.y -= amount.y; Max.x += amount.x; Max.y += amount.y; }
-    pub fn Expand2(&mut self, amount: &ImVec2) {
+    pub fn expand_from_vec(&mut self, amount: &ImVec2) {
         self.Min.x -= amount.x;
         self.Min.y -= amount.y;
         self.Max.x += amount.x;

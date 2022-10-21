@@ -137,7 +137,7 @@ pub unsafe fn SetWindowViewport(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
 {
     // Abandon viewport
     if (window.ViewportOwned && window.Viewport.Window == window){
-        window.Viewport.Size = ImVec2::new(0.0, 0.0);}
+        window.Viewport.Size = ImVec2::from_floats(0.0, 0.0);}
 
     window.Viewport = viewport;
     window.ViewportId = viewport.ID;
@@ -297,7 +297,7 @@ pub unsafe fn UpdateViewportsNewFrame()
     let mut main_viewport: *mut ImGuiViewport =  g.Viewports[0];
     // IM_ASSERT(main_viewport.ID == IMGUI_VIEWPORT_DEFAULT_ID);
     // IM_ASSERT(main_viewport.Window == NULL);
-    let main_viewport_pos: ImVec2 = if viewports_enabled { g.PlatformIO.Platform_GetWindowPos(main_viewport)} else {ImVec2::new(0.0, 0.0)};
+    let main_viewport_pos: ImVec2 = if viewports_enabled { g.PlatformIO.Platform_GetWindowPos(main_viewport)} else {ImVec2::from_floats(0.0, 0.0)};
     let main_viewport_size: ImVec2 = g.IO.DisplaySize;
     if (viewports_enabled && (main_viewport.Flags & ImGuiViewportFlags_Minimized))
     {
@@ -344,7 +344,7 @@ pub unsafe fn UpdateViewportsNewFrame()
         // Lock down space taken by menu bars and status bars, reset the offset for functions like BeginMainMenuBar() to alter them again.
         viewport.WorkOffsetMin = viewport.BuildWorkOffsetMin;
         viewport.WorkOffsetMax = viewport.BuildWorkOffsetMax;
-        viewport.BuildWorkOffsetMin = viewport.BuildWorkOffsetMax = ImVec2::new(0.0, 0.0);
+        viewport.BuildWorkOffsetMin = viewport.BuildWorkOffsetMax = ImVec2::from_floats(0.0, 0.0);
         viewport.UpdateWorkRect();
 
         // Reset alpha every frame. Users of transparency (docking) needs to request a lower alpha back.
@@ -600,7 +600,7 @@ pub unsafe fn WindowSelectViewport(window: *mut ImGuiWindow)
         window.ViewportId = g.NextWindowData.ViewportId; // Store ID even if Viewport isn't resolved yet.
         lock_viewport = true;
     }
-    else if ((flags & ImGuiWindowFlags_ChildWindow) || (flags & ImGuiWindowFlags_ChildMenu))
+    else if (flag_set(flags, ImGuiWindowFlags_ChildWindow) || (flags & ImGuiWindowFlags_ChildMenu))
     {
         // Always inherit viewport from parent window
         if (window.DockNode && window.DockNode.HostWindow) {}
@@ -818,7 +818,7 @@ pub unsafe fn UpdatePlatformWindows()
             if (g.PlatformIO.Renderer_CreateWindow != null_mut()){
                 g.PlatformIO.Renderer_CreateWindow(viewport);}
             viewport.LastNameHash = 0;
-            viewport.LastPlatformPos = viewport.LastPlatformSize = ImVec2::new(f32::MAX, f32::MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/Size below, before Platform_ShowWindow (FIXME: Is that necessary?)
+            viewport.LastPlatformPos = viewport.LastPlatformSize = ImVec2::from_floats(f32::MAX, f32::MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/Size below, before Platform_ShowWindow (FIXME: Is that necessary?)
             viewport.LastRendererSize = viewport.Size;                                       // We don't need to call Renderer_SetWindowSize() as it is expected Renderer_CreateWindow() already did it.
             viewport.PlatformWindowCreated = true;
         }

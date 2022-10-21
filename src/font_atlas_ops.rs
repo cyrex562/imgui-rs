@@ -78,8 +78,8 @@ pub unsafe fn ImFontAtlasBuildWithStbTruetype(mut atlas: *mut ImFontAtlas) -> bo
     atlas.TexID = null_mut();
     atlas.TexWidth = 0;
     atlas.TexHeight = 0;
-    atlas.TexUvScale = ImVec2::new(0.0, 0.0);
-    atlas.TexUvWhitePixel = ImVec2::new(0.0, 0.0);
+    atlas.TexUvScale = ImVec2::from_floats(0.0, 0.0);
+    atlas.TexUvWhitePixel = ImVec2::from_floats(0.0, 0.0);
     atlas.ClearTexData();
 
     // Temporary storage for building
@@ -292,7 +292,7 @@ pub unsafe fn ImFontAtlasBuildWithStbTruetype(mut atlas: *mut ImFontAtlas) -> bo
 
     // 7. Allocate texture
     atlas.TexHeight = if flag_set(atlas.Flags, ImFontAtlasFlags_NoPowerOfTwoHeight) { (atlas.TexHeight + 1) } else { ImUpperPowerOfTwo(atlas.TexHeight) };
-    atlas.TexUvScale = ImVec2::new((1 / atlas.TexWidth) as c_float, (1 / atlas.TexHeight) as c_float);
+    atlas.TexUvScale = ImVec2::from_floats((1 / atlas.TexWidth) as c_float, (1 / atlas.TexHeight) as c_float);
     atlas.TexPixelsAlpha8 = libc::malloc(atlas.TexWidth * atlas.TexHeight);
     libc::memset(atlas.TexPixelsAlpha8, 0, atlas.TexWidth * atlas.TexHeight);
     spc.pixels = atlas.TexPixelsAlpha8;
@@ -520,7 +520,7 @@ pub unsafe fn ImFontAtlasBuildRenderDefaultTexData(mut atlas: *mut ImFontAtlas)
             atlas.TexPixelsRGBA32[offset] = atlas.TexPixelsRGBA32[offset + 1] = atlas.TexPixelsRGBA32[offset + w] = atlas.TexPixelsRGBA32[offset + w + 1] = IM_COL32_WHITE;
         }
     }
-    atlas.TexUvWhitePixel = ImVec2::new((r.X + 0.5) * atlas.TexUvScale.x, (r.Y + 0.5) * atlas.TexUvScale.y);
+    atlas.TexUvWhitePixel = ImVec2::from_floats((r.X + 0.5) * atlas.TexUvScale.x, (r.Y + 0.5) * atlas.TexUvScale.y);
 }
 
 pub fn ImFontAtlasBuildRenderLinesTexData(mut atlas: *mut ImFontAtlas)
@@ -587,8 +587,8 @@ pub fn ImFontAtlasBuildRenderLinesTexData(mut atlas: *mut ImFontAtlas)
         }
 
         // Calculate UVs for this line
-        let uv0: ImVec2 = ImVec2::new((r.X + pad_left - 1), (r.Y + y)) * atlas.TexUvScale;
-        let uv1: ImVec2 = ImVec2::new((r.X + pad_left + line_width + 1), (r.Y + y + 1)) * atlas.TexUvScale;
+        let uv0: ImVec2 = ImVec2::from_floats((r.X + pad_left - 1), (r.Y + y)) * atlas.TexUvScale;
+        let uv1: ImVec2 = ImVec2::from_floats((r.X + pad_left + line_width + 1), (r.Y + y + 1)) * atlas.TexUvScale;
         let half_v: c_float =  (uv0.y + uv1.y) * 0.5; // Calculate a constant V in the middle of the row to avoid sampling artifacts
         atlas.TexUvLines[n] = ImVec4::from_floats(uv0.x, half_v, uv1.x, half_v);
     }

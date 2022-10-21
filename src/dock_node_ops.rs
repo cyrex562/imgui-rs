@@ -19,7 +19,7 @@ use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::frame_ops::GetFrameHeight;
 use crate::GImGui;
-use crate::id_ops::{GetID, PopID, PushID2, PushID4, PushOverrideID};
+use crate::id_ops::{id_from_str, PopID, push_str_id, push_int_id, PushOverrideID};
 use crate::a_imgui_cpp::{BeginDockableDragDropTarget, DockSettingsRenameNodeReferences};
 use crate::item_ops::{IsItemActive, PopItemFlag, PushItemFlag};
 use crate::layout_ops::SameLine;
@@ -623,7 +623,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode) {
             window_flags |= ImGuiWindowFlags_NoTitleBar;
 
             SetNextWindowBgAlpha(0.0); // Don't set ImGuiWindowFlags_NoBackground because it disables borders
-            PushStyleVar(crate::style_var::ImGuiStyleVar_WindowPadding, ImVec2::new(0.0, 0.0));
+            PushStyleVar(crate::style_var::ImGuiStyleVar_WindowPadding, ImVec2::from_floats(0.0, 0.0));
             Begin(window_label, null_mut(), window_flags);
             PopStyleVar();
             beginned_into_host_window = true;
@@ -796,9 +796,9 @@ pub unsafe fn DockNodeUpdateWindowMenu(node: *mut ImGuiDockNode, tab_bar: *mut I
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut ret_tab_id: ImGuiID = 0;
     if g.Style.WindowMenuButtonPosition == ImGuiDir_Left {
-        SetNextWindowPos(&ImVec2::new(node.Pos.x, &node.Pos.y + GetFrameHeight()), ImGuiCond_Always, &ImVec2::new(0.0, 0.0));
+        SetNextWindowPos(&ImVec2::from_floats(node.Pos.x, &node.Pos.y + GetFrameHeight()), ImGuiCond_Always, &ImVec2::from_floats(0.0, 0.0));
     } else {
-        SetNextWindowPos(&ImVec2::new(node.Pos.x + node.Size.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, &ImVec2::new(1.0, 0.0));
+        SetNextWindowPos(&ImVec2::from_floats(node.Pos.x + node.Size.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, &ImVec2::from_floats(1.0, 0.0));
     }
     if BeginPopup(str_to_const_c_char_ptr("#WindowMenu"), 0) {
         node.IsFocused = true;
@@ -974,7 +974,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
 
     // Docking/Collapse button
     if has_window_menu_button {
-        if CollapseButton(host_window.GetID(str_to_const_c_char_ptr("#COLLAPSE"), null()), window_menu_button_pos, node) { // == DockNodeGetWindowMenuButtonId(node)
+        if CollapseButton(host_window.id_from_str(str_to_const_c_char_ptr("#COLLAPSE"), null()), window_menu_button_pos, node) { // == DockNodeGetWindowMenuButtonId(node)
             OpenPopup(str_to_const_c_char_ptr("#WindowMenu"), 0);
         }
         if IsItemActive() {
@@ -1101,7 +1101,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
             PushItemFlag(crate::item_flags::ImGuiItemFlags_Disabled, true);
             PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_Text] * ImVec4(1.0, 1.0, 1.0, 0.40f32));
         }
-        if CloseButton(host_window.GetID(str_to_const_c_char_ptr("#CLOSE"), null()), close_button_pos) {
+        if CloseButton(host_window.id_from_str(str_to_const_c_char_ptr("#CLOSE"), null()), close_button_pos) {
             node.WantCloseAll = true;
             // for (let n: c_int = 0; n < tab_bar.Tabs.Size; n++)
             for n in 0..tab_bar.Tabs.len() {
@@ -1118,7 +1118,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
 
     // When clicking on the title bar outside of tabs, we still focus the selected tab for that node
     // FIXME: TabItem use AllowItemOverlap so we manually perform a more specific test for now (hovered || held)
-    let mut title_bar_id: ImGuiID = host_window.GetID(str_to_const_c_char_ptr("#TITLEBAR"), null());
+    let mut title_bar_id: ImGuiID = host_window.id_from_str(str_to_const_c_char_ptr("#TITLEBAR"), null());
     if g.HoveredId == 0 || g.HoveredId == title_bar_id || g.ActiveId == title_bar_id {
         held: bool;
         ButtonBehavior(title_bar_rect, title_bar_id, null_mut(), &held, crate::button_flags::ImGuiButtonFlags_AllowItemOverlap);
@@ -1261,13 +1261,13 @@ pub unsafe fn DockNodeCalcTabBarLayout(
     r.Max.x -= style.FramePadding.x;
     if node.HasCloseButton {
         r.Max.x -= button_sz;
-        if out_close_button_pos { *out_close_button_pos = ImVec2::new(r.Max.x - style.FramePadding.x, r.Min.y); }
+        if out_close_button_pos { *out_close_button_pos = ImVec2::from_floats(r.Max.x - style.FramePadding.x, r.Min.y); }
     }
     if node.HasWindowMenuButton && style.WindowMenuButtonPosition == ImGuiDir_Left {
         r.Min.x += button_sz + style.ItemInnerSpacing.x;
     } else if node.HasWindowMenuButton && style.WindowMenuButtonPosition == ImGuiDir_Right {
         r.Max.x -= button_sz + style.FramePadding.x;
-        window_menu_button_pos = ImVec2::new(r.Max.x, r.Min.y);
+        window_menu_button_pos = ImVec2::from_floats(r.Max.x, r.Min.y);
     }
     if out_tab_bar_rect { *out_tab_bar_rect = r; }
     if out_window_menu_button_pos { *out_window_menu_button_pos = window_menu_button_pos; }
@@ -1314,11 +1314,11 @@ pub unsafe fn DockNodeCalcDropRectsAndTestMousePos(parent: &mut ImRect, dir: ImG
         //off = ImVec2::new(ImFloor(parent.GetWidth() * 0.5 - GetFrameHeightWithSpacing() * 1.4 - hs_h), ImFloor(parent.GetHeight() * 0.5 - GetFrameHeightWithSpacing() * 1.4 - hs_h));
         hs_w = ImFloor(hs_for_central_nodes * 1.5);
         hs_h = ImFloor(hs_for_central_nodes * 0.8);
-        off = ImVec2::new(ImFloor(parent.GetWidth() * 0.5 - hs_h), ImFloor(parent.GetHeight() * 0.5 - hs_h));
+        off = ImVec2::from_floats(ImFloor(parent.GetWidth() * 0.5 - hs_h), ImFloor(parent.GetHeight() * 0.5 - hs_h));
     } else {
         hs_w = ImFloor(hs_for_central_nodes);
         hs_h = ImFloor(hs_for_central_nodes * 0.9);
-        off = ImVec2::new(ImFloor(hs_w * 2.4), ImFloor(hs_w * 2.4));
+        off = ImVec2::from_floats(ImFloor(hs_w * 2.4), ImFloor(hs_w * 2.4));
     }
 
     let c: ImVec2 = ImFloor(parent.GetCenter());
@@ -1572,10 +1572,10 @@ pub unsafe fn DockNodePreviewDockRender(
                 overlay_draw_lists[overlay_n].AddRectFilled(draw_r.Min, draw_r.Max, overlay_col, overlay_rounding);
                 overlay_draw_lists[overlay_n].AddRect(draw_r_in.Min, draw_r_in.Max, overlay_col_lines, overlay_rounding);
                 if dir == ImGuiDir_Left || dir == ImGuiDir_Right {
-                    overlay_draw_lists[overlay_n].AddLine(ImVec2::new(center.x, draw_r_in.Min.y), ImVec2::new(center.x, draw_r_in.Max.y), overlay_col_lines);
+                    overlay_draw_lists[overlay_n].AddLine(ImVec2::from_floats(center.x, draw_r_in.Min.y), ImVec2::from_floats(center.x, draw_r_in.Max.y), overlay_col_lines);
                 }
                 if dir == ImGuiDir_Up || dir == ImGuiDir_Down {
-                    overlay_draw_lists[overlay_n].AddLine(ImVec2::new(draw_r_in.Min.x, center.y), ImVec2::new(draw_r_in.Max.x, center.y), overlay_col_lines);
+                    overlay_draw_lists[overlay_n].AddLine(ImVec2::from_floats(draw_r_in.Min.x, center.y), ImVec2::from_floats(draw_r_in.Max.x, center.y), overlay_col_lines);
                 }
             }
         }
@@ -1833,7 +1833,7 @@ pub unsafe fn DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode) {
         } else {
             //bb.Min[axis] += 1; // Display a little inward so highlight doesn't connect with nearby tabs on the neighbor node.
             //bb.Max[axis] -= 1;
-            PushID4(node.ID);
+            push_int_id(node.ID);
 
             // Find resizing limits by gathering list of nodes that are touching the splitter line.
             // Vec<ImGuiDockNode*> touching_nodes[2];
@@ -1843,7 +1843,7 @@ pub unsafe fn DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode) {
             resize_limits[0] = node.ChildNodes[0].Pos[axis] + min_size;
             resize_limits[1] = node.ChildNodes[1].Pos[axis] + node.ChildNodes[1].Size[axis] - min_size;
 
-            let mut splitter_id: ImGuiID = GetID(str_to_const_c_char_ptr("##Splitter"));
+            let mut splitter_id: ImGuiID = id_from_str(str_to_const_c_char_ptr("##Splitter"));
             // Only process when splitter is active {
             if g.ActiveId == splitter_id {
                 DockNodeTreeUpdateSplitterFindTouchingNode(child_0, axis, 1, &mut touching_nodes[0]);
@@ -1878,7 +1878,7 @@ pub unsafe fn DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode) {
             let min_size_0: c_float = resize_limits[0] - child_0.Pos[axis];
             let min_size_1: c_float = child_1.Pos[axis] + child_1.Size[axis] - resize_limits[1];
             bg_col: u32 = GetColorU32(ImGuiCol_WindowBg, 0.0);
-            if SplitterBehavior(bb, GetID(str_to_const_c_char_ptr("##Splitter")), axis, &cur_size_0, &cur_size_1, min_size_0, min_size_1, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER, bg_col) {
+            if SplitterBehavior(bb, id_from_str(str_to_const_c_char_ptr("##Splitter")), axis, &cur_size_0, &cur_size_1, min_size_0, min_size_1, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER, bg_col) {
                 if touching_nodes[0].Size > 0 && touching_nodes[1].Size > 0 {
                     child_0.Size[axis] = child_0.SizeRef[axis] = cur_size_0;
                     child_1.Pos[axis] -= cur_size_1 - child_1.Size[axis];

@@ -7,7 +7,7 @@ use crate::clipboard_ops::SetClipboardText;
 use crate::context::ImGuiContext;
 use crate::file_ops::ImFileOpen;
 use crate::id_ops::{PopID, PushID};
-use crate::ImFileClose;
+use crate::{GImGui, ImFileClose};
 use crate::a_imgui_cpp::{GImGui, ImStreolRange};
 use crate::input_ops::{PopAllowKeyboardFocus, PushAllowKeyboardFocus};
 use crate::item_ops::SetNextItemWidth;
@@ -140,11 +140,10 @@ pub unsafe fn LogBegin(log_type: ImGuiLogType, auto_open_depth: c_int)
 }
 
 // Important: doesn't copy underlying data, use carefully (prefix/suffix must be in scope at the time of the next LogRenderedText)
-pub unsafe fn LogSetNextTextDecoration(prefix: *const c_char, suffix: *const c_char)
-{
+pub unsafe fn LogSetNextTextDecoration(prefix: &str, suffix: &str) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    g.LogNextPrefix = prefix;
-    g.LogNextSuffix = suffix;
+    g.LogNextPrefix = prefix.into_string();
+    g.LogNextSuffix = suffix.into_string();
 }
 
 pub unsafe fn LogToTTY(auto_open_depth: c_int)

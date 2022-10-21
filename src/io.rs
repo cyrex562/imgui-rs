@@ -274,7 +274,7 @@ impl ImGuiIO {
         // Settings
         out.ConfigFlags = ImGuiConfigFlags_None;
         out.BackendFlags = ImGuiBackendFlags_None;
-        out.DisplaySize = ImVec2::new(-1.0, -1.0);
+        out.DisplaySize = ImVec2::from_floats(-1.0, -1.0);
         out.DeltaTime = 1.0 / 60f32;
         out.IniSavingRate = 5f32;
         out.IniFilename = String::from("imgui.ini").as_ptr().into(); // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
@@ -298,7 +298,7 @@ impl ImGuiIO {
         out.FontGlobalScale = 1.0;
         out.FontDefault = null_mut();
         out.FontAllowUserScaling = false;
-        out.DisplayFramebufferScale = ImVec2::new(1.0, 1.0);
+        out.DisplayFramebufferScale = ImVec2::from_floats(1.0, 1.0);
 
         // Docking options (when ImGuiConfigFlags_DockingEnable is set)
         out.ConfigDockingNoSplit = false;
@@ -339,8 +339,8 @@ impl ImGuiIO {
         out.SetPlatformImeDataFn = SetPlatformImeDataFn_DefaultImpl;
 
         // Input (NB: we already have memset zero the entire structure!)
-        out.MousePos = ImVec2::new(-f32::MAX, -f32::MAX);
-        out.MousePosPrev = ImVec2::new(-f32::MAX, -f32::MAX);
+        out.MousePos = ImVec2::from_floats(-f32::MAX, -f32::MAX);
+        out.MousePosPrev = ImVec2::from_floats(-f32::MAX, -f32::MAX);
         out.MouseDragThreshold = 6f32;
         // for (i: c_int = 0; i < IM_ARRAYSIZE(MouseDownDuration); i+ +)
         for i in 0 .. out.MouseDownDuration.len()

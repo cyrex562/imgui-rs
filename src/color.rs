@@ -145,7 +145,7 @@ impl ImColor {
             Value: ImVec4::from_floats(r, g, b, a),
         }
     }
-    // constexpr ImColor(const ImVec4& col)                            : Value(col) {}
+    // constexpr ImColor(col: &ImVec4)                            : Value(col) {}
     pub fn from_vec4(col: &ImVec4) -> Self {
         Self { Value: col.clone() }
     }

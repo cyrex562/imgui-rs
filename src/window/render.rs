@@ -55,29 +55,29 @@ pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_b
     if has_close_button
     {
         pad_r += button_sz;
-        close_button_pos = ImVec2::new(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
+        close_button_pos = ImVec2::from_floats(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
     }
     if has_collapse_button && style.WindowMenuButtonPosition == ImGuiDir_Right
     {
         pad_r += button_sz;
-        collapse_button_pos = ImVec2::new(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
+        collapse_button_pos = ImVec2::from_floats(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
     }
     if has_collapse_button && style.WindowMenuButtonPosition == ImGuiDir_Left
     {
-        collapse_button_pos = ImVec2::new(title_bar_rect.Min.x + pad_l - style.FramePadding.x, title_bar_rect.Min.y);
+        collapse_button_pos = ImVec2::from_floats(title_bar_rect.Min.x + pad_l - style.FramePadding.x, title_bar_rect.Min.y);
         pad_l += button_sz;
     }
 
     // Collapse button (submitting first so it gets priority when choosing a navigation init fallback)
     if has_collapse_button {
-        if CollapseButton(window.GetID(str_to_const_c_char_ptr("#COLLAPSE"), null()), collapse_button_pos, null_mut()) {
+        if CollapseButton(window.id_from_str(str_to_const_c_char_ptr("#COLLAPSE"), null()), collapse_button_pos, null_mut()) {
             window.WantCollapseToggle = true;
         }
     } // Defer actual collapsing to next frame as we are too far in the Begin() function
 
     // Close button
     if has_close_button {
-        if CloseButton(window.GetID(str_to_const_c_char_ptr("#CLOSE"), null()), close_button_pos) {
+        if CloseButton(window.id_from_str(str_to_const_c_char_ptr("#CLOSE"), null()), close_button_pos) {
             *p_open = false;
         }
     }
@@ -88,7 +88,7 @@ pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_b
     // Title bar text (with: horizontal alignment, avoiding collapse/close button, optional "unsaved document" marker)
     // FIXME: Refactor text alignment facilities along with RenderText helpers, this is WAY too much messy code..
     let marker_size_x: c_float = if  flag_set(flags, ImGuiWindowFlags_UnsavedDocument) { button_sz * 0.80 } else { 0.0 };
-    let text_size: ImVec2 = CalcTextSize(name, null_mut(), true, 0.0) + ImVec2::new(marker_size_x, 0.0);
+    let text_size: ImVec2 = CalcTextSize(name, null_mut(), true, 0.0) + ImVec2::from_floats(marker_size_x, 0.0);
 
     // As a nice touch we try to ensure that centered title text doesn't get affected by visibility of Close/Collapse button,
     // while uncentered title text will still reach edges correctly.
@@ -166,8 +166,8 @@ pub unsafe fn RenderDimmedBackgroundBehindWindow(window: *mut ImGuiWindow, col: 
             draw_list.AddDrawCmd();
         }
         draw_list.PushClipRect(
-            viewport_rect.Min - ImVec2::new(1.0, 1.0),
-            viewport_rect.Max + ImVec2::new(1.0, 1.0),
+            viewport_rect.Min - ImVec2::from_floats(1.0, 1.0),
+            viewport_rect.Max + ImVec2::from_floats(1.0, 1.0),
             false,
         ); // Ensure ImDrawCmd are not merged
         draw_list.AddRectFilled(
@@ -269,8 +269,6 @@ pub unsafe fn RenderDimmedBackgrounds() {
             &bb.Max,
             GetColorU32(ImGuiCol_NavWindowingHighlight, g.NavWindowingHighlightAlpha),
             window.WindowRounding,
-            0,
-            3.0,
         );
         window.DrawList.PopClipRect();
     }
@@ -311,7 +309,7 @@ pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
     let rounding: c_float =  window.WindowRounding;
     let border_size: c_float =  window.WindowBorderSize;
     if border_size > 0.0 && flag_clear(window.Flags, ImGuiWindowFlags_NoBackground) {
-        window.DrawList.AddRect(&window.Pos, window.Pos + window.Size, GetColorU32(ImGuiCol_Border, 0.0), rounding, 0, border_size);
+        window.DrawList.AddRect(&window.Pos, window.Pos + window.Size, GetColorU32(ImGuiCol_Border, 0.0), rounding);
     }
 
     let border_held = window.ResizeBorderHeld;
@@ -319,14 +317,14 @@ pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
     {
         let def = resize_border_def[border_held];
         let border_r: ImRect =  ops::GetResizeBorderRect(window, border_held as c_int, rounding, 0.0);
-        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN1) + ImVec2::new(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle - IM_PI * 0.25, def.OuterAngle, 0);
-        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN2) + ImVec2::new(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle, def.OuterAngle + IM_PI * 0.25, 0);
+        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN1) + ImVec2::from_floats(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle - IM_PI * 0.25, def.OuterAngle, 0);
+        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN2) + ImVec2::from_floats(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle, def.OuterAngle + IM_PI * 0.25, 0);
         window.DrawList.PathStroke(GetColorU32(ImGuiCol_SeparatorActive, 0.0), 0, ImMax(2.0, border_size)); // Thicker than usual
     }
     if g.Style.FrameBorderSize > 0.0 && flag_clear(window.Flags, ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive
     {
         let y: c_float =  window.Pos.y + window.TitleBarHeight() - 1;
-        window.DrawList.AddLine(&ImVec2::new(window.Pos.x + border_size, y), &ImVec2::new(window.Pos.x + window.Size.x - border_size, y), GetColorU32(ImGuiCol_Border, 0.0), g.Style.FrameBorderSize);
+        window.DrawList.AddLine(&ImVec2::from_floats(window.Pos.x + border_size, y), &ImVec2::from_floats(window.Pos.x + window.Size.x - border_size, y), GetColorU32(ImGuiCol_Border, 0.0), g.Style.FrameBorderSize);
     }
 }
 
@@ -406,7 +404,7 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: 
             if window.DockIsActive || flag_set(flags, ImGuiWindowFlags_DockNodeHost) {
                 bg_draw_list.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_BG);
             }
-            bg_draw_list.AddRectFilled(window.Pos + ImVec2::new(0.0, window.TitleBarHeight()), window.Pos + window.Size, bg_col, window_rounding, if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { 0 } else { ImDrawFlags_RoundCornersBottom });
+            bg_draw_list.AddRectFilled(window.Pos + ImVec2::from_floats(0.0, window.TitleBarHeight()), window.Pos + window.Size, bg_col, window_rounding, if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { 0 } else { ImDrawFlags_RoundCornersBottom });
             if window.DockIsActive || flag_set(flags, ImGuiWindowFlags_DockNodeHost) {
                 bg_draw_list.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_FG);
             }
@@ -429,7 +427,7 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: 
         {
             let mut menu_bar_rect: ImRect =  window.MenuBarRect();
             menu_bar_rect.ClipWith(window.Rect());  // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
-            window.DrawList.AddRectFilled(menu_bar_rect.Min + ImVec2::new(window_border_size, 0.0), menu_bar_rect.Max - ImVec2::new(window_border_size, 0.0), GetColorU32(ImGuiCol_MenuBarBg, 0.0), if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { window_rounding }else { 0.0 }, ImDrawFlags_RoundCornersTop);
+            window.DrawList.AddRectFilled(menu_bar_rect.Min + ImVec2::from_floats(window_border_size, 0.0), menu_bar_rect.Max - ImVec2::from_floats(window_border_size, 0.0), GetColorU32(ImGuiCol_MenuBarBg, 0.0), if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { window_rounding }else { 0.0 }, ImDrawFlags_RoundCornersTop);
             if style.FrameBorderSize > 0.0 && menu_bar_rect.Max.y < window.Pos.y + window.Size.y {
                 window.DrawList.AddLine(&menu_bar_rect.GetBL(), &menu_bar_rect.GetBR(), GetColorU32(ImGuiCol_Border, 0.0), style.FrameBorderSize);
             }
@@ -442,8 +440,8 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: 
             let unhide_sz_draw: c_float =  ImFloor(g.FontSize * 0.70);
             let unhide_sz_hit: c_float =  ImFloor(g.FontSize * 0.550f32);
             let p: ImVec2 = node.Pos;
-            let mut r: ImRect = ImRect::new(p, p + ImVec2::new(unhide_sz_hit, unhide_sz_hit));
-            let mut unhide_id: ImGuiID =  window.GetID(str_to_const_c_char_ptr("#UNHIDE"), null());
+            let mut r: ImRect = ImRect::new(p, p + ImVec2::from_floats(unhide_sz_hit, unhide_sz_hit));
+            let mut unhide_id: ImGuiID =  window.id_from_str(str_to_const_c_char_ptr("#UNHIDE"), null());
             KeepAliveID(unhide_id);
             // hovered: bool, held;
             let mut hovered = false;
@@ -461,7 +459,7 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: 
                     ImGuiCol_ButtonHovered
                 } else { ImGuiCol_Button }
             }, 0.0);
-            window.DrawList.AddTriangleFilled(&p, p + ImVec2::new(unhide_sz_draw, 0.0), p + ImVec2::new(0.0, unhide_sz_draw), col);
+            window.DrawList.AddTriangleFilled(&p, p + ImVec2::from_floats(unhide_sz_draw, 0.0), p + ImVec2::from_floats(0.0, unhide_sz_draw), col);
         }
 
         // Scrollbars
@@ -480,9 +478,9 @@ pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: 
             {
                 let grip = resize_grip_def[resize_grip_n];
                 let corner: ImVec2 = ImLerp(window.Pos, window.Pos + window.Size, grip.CornerPosN);
-                window.DrawList.PathLineTo(corner + grip.InnerDir * (if resize_grip_n & 1 { ImVec2::new(window_border_size, resize_grip_draw_size) } else { ImVec2::new(resize_grip_draw_size, window_border_size) }));
-                window.DrawList.PathLineTo(corner + grip.InnerDir * (if resize_grip_n & 1 { ImVec2::new(resize_grip_draw_size, window_border_size) } else { ImVec2::new(window_border_size, resize_grip_draw_size) }));
-                window.DrawList.PathArcToFast(&ImVec2::new(corner.x + grip.InnerDir.x * (window_rounding + window_border_size), corner.y + grip.InnerDir.y * (window_rounding + window_border_size)), window_rounding, grip.AngleMin12, grip.AngleMax12);
+                window.DrawList.PathLineTo(corner + grip.InnerDir * (if resize_grip_n & 1 { ImVec2::from_floats(window_border_size, resize_grip_draw_size) } else { ImVec2::from_floats(resize_grip_draw_size, window_border_size) }));
+                window.DrawList.PathLineTo(corner + grip.InnerDir * (if resize_grip_n & 1 { ImVec2::from_floats(resize_grip_draw_size, window_border_size) } else { ImVec2::from_floats(window_border_size, resize_grip_draw_size) }));
+                window.DrawList.PathArcToFast(&ImVec2::from_floats(corner.x + grip.InnerDir.x * (window_rounding + window_border_size), corner.y + grip.InnerDir.y * (window_rounding + window_border_size)), window_rounding, grip.AngleMin12, grip.AngleMax12);
                 window.DrawList.PathFillConvex(resize_grip_col[resize_grip_n]);
             }
         }

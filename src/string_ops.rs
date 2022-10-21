@@ -38,11 +38,12 @@ pub unsafe fn ImStrncpy(dst: *mut c_char, src: * c_char, count: size_t) {
 }
 
 // char* ImStrdup(const char* str)
-pub unsafe fn ImStrdup(src_str: * c_char) -> *mut c_char {
+pub unsafe fn ImStrdup(src_str: &str) -> *mut c_char {
     // let len = strlen(str);
     // void* buf = IM_ALLOC(len + 1);
     // return memcpy(buf, (const void*)str, len + 1);
-    libc::strdup(src_str)
+    let arg = CStr::from_bytes_with_nul_unchecked(src_str.as_bytes());
+    libc::strdup(arg.as_ptr())
 }
 
 // char* ImStrdupcpy(char* dst, size_t* p_dst_size, const char* src)
@@ -226,7 +227,7 @@ pub fn ImFormatStringToTempBuffer(out_buf: *mut *mut c_char, out_buf_end: *mut *
 }
 
 // void ImFormatStringToTempBufferV(const char** out_buf, const char** out_buf_end, const char* fmt, va_list args)
-pub fn ImFormatStringToTempBufferV(out_buf: *mut *mut c_char, out_buf_end: *mut *mut c_char, fmt_str: * c_char, args: &Vec<String>) {
+pub fn ImFormatStringToTempBufferV(fmt_str: &str) -> String {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     // int buf_len = ImFormatStringV(g.TempBuffer.Data, g.TempBuffer.Size, fmt, args);
     // *out_buf = g.TempBuffer.Data;
@@ -245,7 +246,7 @@ pub fn ImFormatStringToTempBufferV(out_buf: *mut *mut c_char, out_buf_end: *mut 
 // A nearly-branchless UTF-8 decoder, based on work of Christopher Wellons (https://github.com/skeeto/branchless-utf8).
 // We handle UTF-8 decoding error by skipping forward.
 // int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_uint, in_text: *c_char, mut in_text_end: *c_char) -> c_int
+pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_uint, in_text: &str) -> c_int
 {
     pub const lengths: [c_char;32] = [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0 ];
     pub const masks: [c_int;5]  = [ 0x00, 0x7f, 0x1f, 0x0f32, 0x07 ];
@@ -291,7 +292,7 @@ pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_uint, in_text: *c_char, mut in
         // One byte is consumed in case of invalid first byte of in_text.
         // All available bytes (at most `len` bytes) are consumed on incomplete/invalid second to last bytes.
         // Invalid or incomplete input may consume less bytes than wanted, therefore every byte has to be inspected in s.
-        wanted = ImMin(wanted, !!s[0] + !!s[1] + !!s[2] + !!s[3]);
+        wanted = wanted.min( !!s[0] + !!s[1] + !!s[2] + !!s[3]);
         *out_char = IM_UNICODE_CODEPOINT_INVALID;
     }
 
@@ -387,10 +388,10 @@ pub fn ImTextCharToUtf8(mut out_buf: [c_char;5]) -> *const c_char
 
 // Not optimal but we very rarely use this function.
 // int ImTextCountUtf8BytesFromChar(const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCountUtf8BytesFromChar(in_text: *const c_char, in_text_end: *const c_char) -> c_int {
+pub unsafe fn ImTextCountUtf8BytesFromChar(in_text:&strr) -> c_int {
     // unsigned int unused = 0;
     let mut unused: c_uint = 0;
-    return ImTextCharFromUtf8(&mut unused, in_text, in_text_end);
+    return ImTextCharFromUtf8(&mut unused, in_text);
 }
 
 // static inline int ImTextCountUtf8BytesFromChar(unsigned int c)

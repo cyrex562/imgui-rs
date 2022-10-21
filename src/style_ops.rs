@@ -26,7 +26,7 @@ pub fn GetColorU32(idx: ImGuiCol, alpha_mul: c_float) -> u32 {
     return ColorConvertFloat4ToU32(c);
 }
 
-// GetColorU32: u32(const ImVec4& col)
+// GetColorU32: u32(col: &ImVec4)
 pub fn GetColorU32FromImVec4(col: &ImVec4) -> u32 {
     let style = GimGui.Style;
     let mut c = col.clone();
@@ -34,7 +34,7 @@ pub fn GetColorU32FromImVec4(col: &ImVec4) -> u32 {
     return ColorConvertFloat4ToU32(&c);
 }
 
-// const ImVec4& GetStyleColorVec4(ImGuiCol idx)
+// GetStyleColorVec4: &ImVec4(ImGuiCol idx)
 pub fn GetStyleColorVec4(idx: ImGuiCol) -> &ImVec4 {
     let style = GimGui.Style;
     return style.Colors[idx];
@@ -62,7 +62,7 @@ pub fn PushStyleColor(idx: ImGuiCol, col: u32) {
     g.Style.Colors[idx.clone()] = ColorConvertU32ToFloat4(col);
 }
 
-// c_void PushStyleColor(ImGuiCol idx, const ImVec4& col)
+// c_void PushStyleColor(ImGuiCol idx, col: &ImVec4)
 pub fn PushStyleColor2(idx: ImGuiCol, col: &ImVec4) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut backup: ImGuiColorMod = ImGuiColorMod::default();

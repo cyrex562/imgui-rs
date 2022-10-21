@@ -70,6 +70,11 @@ pub unsafe fn SetCurrentWindow(window: *mut ImGuiWindow) {
     }
 }
 
+pub unsafe fn GetCurrentWindow() -> *mut ImGuiWindow {
+    let g = GImGui;
+    g.CurrentWindow
+}
+
 // static inline IsWindowContentHoverable: bool(window: *mut ImGuiWindow, flags: ImGuiHoveredFlags)
 pub unsafe fn IsWindowContentHoverable(window: *mut ImGuiWindow, flags: ImGuiHoveredFlags) -> bool {
     // An active popup disable hovering on other windows (apart from its own children)
@@ -225,11 +230,11 @@ pub fn ApplyWindowSettings(window: *mut ImGuiWindow, settings: *mut ImGuiWindowS
     if settings.ViewportId
     {
         window.ViewportId = settings.ViewportId.clone();
-        window.ViewportPos = ImVec2::new(settings.ViewportPos.x.clone() as c_float, settings.ViewportPos.y.clone() as c_float);
+        window.ViewportPos = ImVec2::from_floats(settings.ViewportPos.x.clone() as c_float, settings.ViewportPos.y.clone() as c_float);
     }
-    window.Pos = ImFloor(ImVec2::new(settings.Pos.x.clone() + window.ViewportPos.x.clone(), settings.Pos.y.clone() + window.ViewportPos.y.clone()));
+    window.Pos = ImFloor(ImVec2::from_floats(settings.Pos.x.clone() + window.ViewportPos.x.clone(), settings.Pos.y.clone() + window.ViewportPos.y.clone()));
     if settings.Size.x > 0 && settings.Size.y > 0 {
-        window.SizeFull = ImFloor(ImVec2::new(settings.Size.x.clone() as c_float, settings.Size.y.clone() as c_float));
+        window.SizeFull = ImFloor(ImVec2::from_floats(settings.Size.x.clone() as c_float, settings.Size.y.clone() as c_float));
         window.Size = window.SizeFull;
     }
     window.Collapsed = settings.Collapsed.clone();
@@ -276,7 +281,7 @@ pub unsafe fn CreateNewWindow(name: *const c_char, flags: ImGuiWindowFlags) -> *
 
     // Default/arbitrary window position. Use SetNextWindowPos() with the appropriate condition flag to change the initial position of a window.
     let main_viewport: *const ImGuiViewport = GetMainViewport();
-    window.Pos = main_viewport.Pos + ImVec2::new(60.0, 60.0);
+    window.Pos = main_viewport.Pos + ImVec2::from_floats(60.0, 60.0);
     window.ViewportPos = main_viewport.Pos;
 
     // User can disable loading and saving of settings. Tooltip and child windows also don't store settings.
@@ -362,7 +367,7 @@ pub unsafe fn CalcWindowAutoFitSize(window: *mut ImGuiWindow, size_contents: &Im
     let style = &mut g.Style;
     let decoration_up_height: c_float = window.TitleBarHeight() + window.MenuBarHeight();
     let size_pad: ImVec2 = window.WindowPadding * 2.0;
-    let size_desired: ImVec2 = size_contents + size_pad + ImVec2::new(0.0, decoration_up_height);
+    let size_desired: ImVec2 = size_contents + size_pad + ImVec2::from_floats(0.0, decoration_up_height);
     if flag_set(window.Flags.clone(), ImGuiWindowFlags_Tooltip) {
         // Tooltip always resize
         return size_desired;
@@ -372,13 +377,13 @@ pub unsafe fn CalcWindowAutoFitSize(window: *mut ImGuiWindow, size_contents: &Im
         let is_menu: bool = flag_set(window.Flags.clone(), ImGuiWindowFlags_ChildMenu);
         let mut size_min: ImVec2 = style.WindowMinSize;
         if is_popup || is_menu { // Popups and menus bypass style.WindowMinSize by default, but we give then a non-zero minimum size to facilitate understanding problematic cases (e.g. empty popups)
-            size_min = ImMin(size_min, ImVec2::new(4.0, 4.0));
+            size_min = ImMin(size_min, ImVec2::from_floats(4.0, 4.0));
         }
 
         // FIXME-VIEWPORT-WORKAREA: May want to use GetWorkSize() instead of Size depending on the type of windows?
         let mut avail_size: ImVec2 = window.Viewport.Size;
         if window.ViewportOwned {
-            avail_size = ImVec2::new(f32::MAX, f32::MAX);
+            avail_size = ImVec2::from_floats(f32::MAX, f32::MAX);
         }
         let monitor_idx: c_int = window.ViewportAllowPlatformMonitorExtend.clone();
         if monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.Size {
@@ -445,7 +450,7 @@ pub unsafe fn CalcResizePosSizeFromAnyCorner(window: *mut ImGuiWindow, corner_ta
 pub fn GetResizeBorderRect(window: *mut ImGuiWindow, border_n: c_int, perp_padding: c_float, thickness: c_float) -> ImRect {
     let mut rect: ImRect = window.Rect();
     if thickness == 0.0 {
-        rect.Max -= ImVec2::new(1.0, 1.0);
+        rect.Max -= ImVec2::from_floats(1.0, 1.0);
     }
     if border_n == ImGuiDir_Left {
         return ImRect(rect.Min.x - thickness, rect.Min.y + perp_padding, rect.Min.x.clone() + thickness.clone(), rect.Max.y - perp_padding.clone()); }
@@ -553,8 +558,8 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
         {
             // Resize from any of the four corners
             // We don't use an incremental MouseDelta but rather compute an absolute target size based on mouse position
-            let clamp_min: ImVec2 = ImVec2::new(if def.CornerPosN.x == 1.0 { visibility_rect.Min.x.clone() } else { -f32::MAX }, if def.CornerPosN.y == 1.0 { visibility_rect.Min.y.clone() } else { -f32::MAX });
-            let clamp_max: ImVec2 = ImVec2::new(if def.CornerPosN.x == 0.0 { visibility_rect.Max.x.clone() } else { f32::MAX }, if def.CornerPosN.y == 0.0 { visibility_rect.Max.y.clone() } else { f32::MAX });
+            let clamp_min: ImVec2 = ImVec2::from_floats(if def.CornerPosN.x == 1.0 { visibility_rect.Min.x.clone() } else { -f32::MAX }, if def.CornerPosN.y == 1.0 { visibility_rect.Min.y.clone() } else { -f32::MAX });
+            let clamp_max: ImVec2 = ImVec2::from_floats(if def.CornerPosN.x == 0.0 { visibility_rect.Max.x.clone() } else { f32::MAX }, if def.CornerPosN.y == 0.0 { visibility_rect.Max.y.clone() } else { f32::MAX });
             let mut corner_target: ImVec2 = g.IO.MousePos - g.ActiveIdClickOffset + ImLerp(def.InnerDir * grip_hover_outer_size.clone(), def.InnerDir * -grip_hover_inner_size.clone(), def.CornerPosN); // Corner of the window corresponding to our corner grip
             corner_target = ImClamp(corner_target, clamp_min, clamp_max);
             CalcResizePosSizeFromAnyCorner(window, &corner_target, def.CornerPosN, &mut pos_target, &mut size_target);
@@ -592,7 +597,7 @@ pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: 
         }
         if held
         {
-            let clamp_min = ImVec2::new(if border_n == ImGuiDir_Right { visibility_rect.Min.x.clone() } else { -f32::MAX }, if border_n == ImGuiDir_Down { visibility_rect.Min.y.clone() } else { -f32::MAX });
+            let clamp_min = ImVec2::from_floats(if border_n == ImGuiDir_Right { visibility_rect.Min.x.clone() } else { -f32::MAX }, if border_n == ImGuiDir_Down { visibility_rect.Min.y.clone() } else { -f32::MAX });
             let clamp_max = ImVec2::New(if border_n == ImGuiDir_Left { visibility_rect.Max.x.clone() } else { f32::MAX }, if border_n == ImGuiDir_Up { visibility_rect.Max.y.clone() } else { f32::MAX });
             let mut border_target: ImVec2 = window.Pos;
             border_target[axis] = g.IO.MousePos[axis.clone()] - g.ActiveIdClickOffset[axis.clone()] + WINDOWS_HOVER_PADDING;
@@ -847,7 +852,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         window.ContentSizeExplicit = g.NextWindowData.ContentSizeVal;
     }
     else if first_begin_of_the_frame {
-    window.ContentSizeExplicit = ImVec2::new(0.0, 0.0);
+    window.ContentSizeExplicit = ImVec2::from_floats(0.0, 0.0);
 }
     if flag_set(g.NextWindowData.Flags.clone(), ImGuiNextWindowDataFlags_HasWindowClass) {
         window.WindowClass = g.NextWindowData.WindowClass;
@@ -963,7 +968,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             } else { style.WindowBorderSize };
         }
         if !window.DockIsActive && flag_set(flags, ImGuiWindowFlags_ChildWindow) && flag_clear(flags, (ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_Popup)) && window.WindowBorderSize == 0.0 {
-            window.WindowPadding = ImVec2::new(0.0, if flag_set(flags, ImGuiWindowFlags_MenuBar) { style.WindowPadding.y }else { 0.0 });
+            window.WindowPadding = ImVec2::from_floats(0.0, if flag_set(flags, ImGuiWindowFlags_MenuBar) { style.WindowPadding.y }else { 0.0 });
         }
         else {
             window.WindowPadding = style.WindowPadding;
@@ -1221,9 +1226,9 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         {
             // When reading the current size we need to read it after size constraints have been applied.
             // When we use InnerRect here we are intentionally reading last frame size, same for ScrollbarSizes values before we set them again.
-            let avail_size_from_current_frame: ImVec2 = ImVec2::new(window.SizeFull.x, window.SizeFull.y - decoration_up_height);
+            let avail_size_from_current_frame: ImVec2 = ImVec2::from_floats(window.SizeFull.x, window.SizeFull.y - decoration_up_height);
             let avail_size_from_last_frame: ImVec2 = window.InnerRect.GetSize() + window.ScrollbarSizes;
-            let needed_size_from_last_frame: ImVec2 = if window_just_created { ImVec2::new(0.0, 0.0) } else { window.ContentSize + window.WindowPadding * 2.0 };
+            let needed_size_from_last_frame: ImVec2 = if window_just_created { ImVec2::from_floats(0.0, 0.0) } else { window.ContentSize + window.WindowPadding * 2.0 };
             let size_x_for_scrollbars: c_float =  if use_current_size_for_scrollbar_x { avail_size_from_current_frame.x } else { avail_size_from_last_frame.x };
             let size_y_for_scrollbars: c_float =  if use_current_size_for_scrollbar_y { avail_size_from_current_frame.y } else { avail_size_from_last_frame.y };
             //scrollbar_y_from_last_frame: bool = window.ScrollbarY; // FIXME: May want to use that in the ScrollbarX expression? How many pros vs cons?
@@ -1232,7 +1237,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
             if window.ScrollbarX && !window.ScrollbarY {
                 window.ScrollbarY = (needed_size_from_last_frame.y > size_y_for_scrollbars) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar);
             }
-            window.ScrollbarSizes = ImVec2::new(if window.ScrollbarY { style.ScrollbarSize }else { 0.0 }, if window.ScrollbarX { style.ScrollbarSize }else { 0.0 });
+            window.ScrollbarSizes = ImVec2::from_floats(if window.ScrollbarY { style.ScrollbarSize }else { 0.0 }, if window.ScrollbarX { style.ScrollbarSize }else { 0.0 });
         }
 
         // UPDATE RECTANGLES (1- THOSE NOT AFFECTED BY SCROLLING)
@@ -1296,7 +1301,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
 
         // Apply scrolling
         window.Scroll = CalcNextScrollFromScrollTargetAndClamp(window);
-        window.ScrollTarget = ImVec2::new(f32::MAX, f32::MAX);
+        window.ScrollTarget = ImVec2::from_floats(f32::MAX, f32::MAX);
 
         // DRAWING
 
@@ -1373,14 +1378,14 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         // This is used by clipper to compensate and fix the most common use case of large scroll area. Easy and cheap, next best thing compared to switching everything to double or u64.
         let start_pos_highp_x = window.Pos.x + window.WindowPadding.x - window.Scroll.x + window.DC.ColumnsOffset.x;
         let start_pos_highp_y = window.Pos.y + window.WindowPadding.y - window.Scroll.y + decoration_up_height;
-        window.DC.CursorStartPos  = ImVec2::new(start_pos_highp_x, start_pos_highp_y);
-        window.DC.CursorStartPosLossyness = ImVec2::new((start_pos_highp_x - window.DC.CursorStartPos.x), (start_pos_highp_y - window.DC.CursorStartPos.y));
+        window.DC.CursorStartPos  = ImVec2::from_floats(start_pos_highp_x, start_pos_highp_y);
+        window.DC.CursorStartPosLossyness = ImVec2::from_floats((start_pos_highp_x - window.DC.CursorStartPos.x), (start_pos_highp_y - window.DC.CursorStartPos.y));
         window.DC.CursorPos = window.DC.CursorStartPos;
         window.DC.CursorPosPrevLine = window.DC.CursorPos;
         window.DC.CursorMaxPos = window.DC.CursorStartPos;
         window.DC.IdealMaxPos = window.DC.CursorStartPos;
-        window.DC.CurrLineSize = ImVec2::new(0.0, 0.0);
-        window.DC.PrevLineSize = ImVec2::new(0.0, 0.0);
+        window.DC.CurrLineSize = ImVec2::from_floats(0.0, 0.0);
+        window.DC.PrevLineSize = ImVec2::from_floats(0.0, 0.0);
         window.DC.CurrLineTextBaseOffset = 0.0;
         window.DC.PrevLineTextBaseOffset = 0.0;
         window.DC.IsSameLine = false;
@@ -1495,7 +1500,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
 
     // Pull/inherit current state
     window.DC.NavFocusScopeIdCurrent = if flag_set(flags, ImGuiWindowFlags_ChildWindow)
-    { parent_window.DC.NavFocusScopeIdCurrent } else { window.GetID(str_to_const_c_char_ptr("#FOCUSSCOPE"), null()) }; // Inherit from parent only // -V595
+    { parent_window.DC.NavFocusScopeIdCurrent } else { window.id_from_str(str_to_const_c_char_ptr("#FOCUSSCOPE"), null()) }; // Inherit from parent only // -V595
 
     if (flag_clear(flags, ImGuiWindowFlags_DockNodeHost)) {
         PushClipRect(&window.InnerClipRect.Min, &window.InnerClipRect.Max, true);

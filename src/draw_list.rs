@@ -99,10 +99,10 @@ impl ImDrawList {
     // void  PushClipRectFullScreen();
     pub unsafe fn PushClipRectFullScreen(&mut self) {
         self.PushClipRect(
-            &ImVec2::new(self._Data.ClipRectFullscreen.x,
-                         self._Data.ClipRectFullscreen.y),
-            &ImVec2::new(self._Data.ClipRectFullscreen.z,
-                         self._Data.ClipRectFullscreen.w),
+            &ImVec2::from_floats(self._Data.ClipRectFullscreen.x,
+                                 self._Data.ClipRectFullscreen.y),
+            &ImVec2::from_floats(self._Data.ClipRectFullscreen.z,
+                                 self._Data.ClipRectFullscreen.w),
             false);
     }
 
@@ -113,7 +113,7 @@ impl ImDrawList {
         self._OnChangedClipRect();
     }
 
-    // void  PushTextureID(ImTextureID texture_id);
+    // void  PushTextureID(texture_id: ImTextureID);
     pub fn PushTextureID(&mut self, texture_id: ImTextureID) {
         self._TextureIdStack.push(texture_id);
         self._CmdHeader.TextureId = texture_id;
@@ -130,17 +130,17 @@ impl ImDrawList {
         self._OnChangedTextureID();
     }
 
-    // inline ImVec2   GetClipRectMin() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2::new(cr.x, cr.y); }
+    // inline ImVec2   GetClipRectMin() const { cr: &ImVec4 = _ClipRectStack.back(); return ImVec2::new(cr.x, cr.y); }
     pub fn GetClipRectMin(&mut self) -> ImVec2 {
         let cr = self._ClipRectStack.last().unwrap();
-        return ImVec2::new(cr.x, cr.y);
+        return ImVec2::from_floats(cr.x, cr.y);
     }
 
 
-    // inline ImVec2   GetClipRectMax() const { const ImVec4& cr = _ClipRectStack.back(); return ImVec2::new(cr.z, cr.w); }
+    // inline ImVec2   GetClipRectMax() const { cr: &ImVec4 = _ClipRectStack.back(); return ImVec2::new(cr.z, cr.w); }
     pub fn GetClipRectMax(&mut self) -> ImVec2 {
         let cr = self._ClipRectStack.last();
-        return ImVec2::new(cr.z, cr.w);
+        return ImVec2::from_floats(cr.z, cr.w);
     }
 
     // Primitives
@@ -155,22 +155,22 @@ impl ImDrawList {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
         }
-    self.PathLineTo(p1 + ImVec2::new(0.5, 0.5));
-    self.PathLineTo(p2 + ImVec2::new(0.5, 0.5));
+    self.PathLineTo(p1 + ImVec2::from_floats(0.5, 0.5));
+    self.PathLineTo(p2 + ImVec2::from_floats(0.5, 0.5));
     self.PathStroke(col, 0, thickness);
 
     }
 
     // void  AddRect(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0, c_float thickness = 1.0);   // a: upper-left, b: lower-right (== upper-left + size)
-    pub unsafe fn AddRect(&mut self, p_min: &ImVec2, p_max: &ImVec2, col: u32, rounding: c_float, flags: ImDrawFlags, thickness: c_float) {
+    pub unsafe fn AddRect(&mut self, p_min: &ImVec2, p_max: &ImVec2, col: u32, rounding: c_float) {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
         }
         if flag_set(Flags, ImDrawListFlags_AntiAliasedLines) {
-            self.PathRect(p_min + ImVec2::new(0.50, 0.5), p_max - ImVec2::new(0.50, 0.5), rounding, flags);
+            self.PathRect(p_min + ImVec2::from_floats(0.50, 0.5), p_max - ImVec2::from_floats(0.50, 0.5), rounding, flags);
         }
         else {
-            self.PathRect(p_min + ImVec2::new(0.50, 0.5), p_max - ImVec2::new(0.49, 0.490), rounding, flags); // Better looking lower-right corner and rounded non-AA shapes.
+            self.PathRect(p_min + ImVec2::from_floats(0.50, 0.5), p_max - ImVec2::from_floats(0.49, 0.490), rounding, flags); // Better looking lower-right corner and rounded non-AA shapes.
             self.PathStroke(col, ImDrawFlags_Closed, thickness);
         }
     }
@@ -208,9 +208,9 @@ impl ImDrawList {
         self.PrimWriteIdx((self._VtxCurrentIdx + 2));
         self.PrimWriteIdx((self._VtxCurrentIdx + 3));
         self.PrimWriteVtx(p_min, &uv, col_upr_left);
-        self.PrimWriteVtx(&ImVec2::new(p_max.x, p_min.y), &uv, col_upr_right);
+        self.PrimWriteVtx(&ImVec2::from_floats(p_max.x, p_min.y), &uv, col_upr_right);
         self.PrimWriteVtx(p_max, &uv, col_bot_right);
-        self.PrimWriteVtx(&ImVec2::new(p_min.x, p_max.y), &uv, col_bot_left);
+        self.PrimWriteVtx(&ImVec2::from_floats(p_min.x, p_max.y), &uv, col_bot_left);
     }
 
     // void  AddQuad(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, col: u32, c_float thickness = 1.0);
@@ -349,7 +349,7 @@ impl ImDrawList {
 
     // void  AddText(const font: *mut ImFont, c_float font_size, const pos: &mut ImVec2, col: u32, const char* text_begin, const char*
 // text_end = NULL, c_float wrap_width = 0.0, const ImVec4* cpu_fine_clip_rect = NULL);
-    pub unsafe fn AddText2(&mut self, mut font: *const ImFont, mut font_size: c_float, pos: &ImVec2, col: u32, text_begin: *const c_char, mut text_end: *const c_char, wrap_width: c_float, cpu_fine_clip_rect: *const ImVec4) {
+    pub unsafe fn AddText2(&mut self, mut font: *const ImFont, mut font_size: c_float, pos: &ImVec2, col: u32, text_begin: &str, mut wrap_width: c_float, cpu_fine_clip_rect: *const ImVec4) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
         }
@@ -517,8 +517,8 @@ impl ImDrawList {
                         tex_uvs.z = tex_uvs.z + (tex_uvs_1.z - tex_uvs.z) * fractional_thickness;
                         tex_uvs.w = tex_uvs.w + (tex_uvs_1.w - tex_uvs.w) * fractional_thickness;
                     }*/
-                    let tex_uv0 = ImVec2::new(tex_uvs.x, tex_uvs.y);
-                    let tex_uv1 = ImVec2::new(tex_uvs.z, tex_uvs.w);
+                    let tex_uv0 = ImVec2::from_floats(tex_uvs.x, tex_uvs.y);
+                    let tex_uv1 = ImVec2::from_floats(tex_uvs.z, tex_uvs.w);
                     // for (let i: c_int = 0; i < points_count; i++)
                     for i in 0 .. points_count
                     {
@@ -767,10 +767,10 @@ impl ImDrawList {
     }
 
     // Image primitives
-// - Read FAQ to understand what ImTextureID is.
+// - Read FAQ to understand what is: ImTextureID.
 // - "p_min" and "p_max" represent the upper-left and lower-right corners of the rectangle.
 // - "uv_min" and "uv_max" represent the normalized texture coordinates to use for those corners. Using (0,0)->(1,1) texture coordinates will generally display the entire texture.
-// void  AddImage(ImTextureID user_texture_id, const p_min: &mut ImVec2, const p_max: &mut ImVec2, const uv_min: &mut ImVec2 = ImVec2::new(0, 0), const uv_max: &mut ImVec2 = ImVec2::new(1, 1), col: u32 = IM_COL32_WHITE);
+// void  AddImage(user_texture_id: ImTextureID, const p_min: &mut ImVec2, const p_max: &mut ImVec2, const uv_min: &mut ImVec2 = ImVec2::new(0, 0), const uv_max: &mut ImVec2 = ImVec2::new(1, 1), col: u32 = IM_COL32_WHITE);
     pub fn AddImage(&mut self, user_texture_id: ImTextureID, p_min: &ImVec2, p_max: &ImVec2, uv_ming: &ImVec2, uv_max: &ImVec2, col: u32) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -790,7 +790,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddImageQuad(ImTextureID user_texture_id, const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, const uv1: &mut ImVec2 = ImVec2::new(0, 0), const uv2: &mut ImVec2 = ImVec2::new(1, 0), const uv3: &mut ImVec2 = ImVec2::new(1, 1), const uv4: &mut ImVec2 = ImVec2::new(0, 1), col: u32 = IM_COL32_WHITE);
+    // void  AddImageQuad(user_texture_id: ImTextureID, const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, const uv1: &mut ImVec2 = ImVec2::new(0, 0), const uv2: &mut ImVec2 = ImVec2::new(1, 0), const uv3: &mut ImVec2 = ImVec2::new(1, 1), const uv4: &mut ImVec2 = ImVec2::new(0, 1), col: u32 = IM_COL32_WHITE);
     pub fn AddImageQuad(&mut self, user_texture_id: ImTextureID, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, uv1: &ImVec2, uv2: &ImVec2, uv3: &ImVec2, uv4: &ImVec2, col: u32) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
@@ -809,7 +809,7 @@ impl ImDrawList {
     }
 
 
-    // void  AddImageRounded(ImTextureID user_texture_id, const p_min: &mut ImVec2, const p_max: &mut ImVec2, const uv_min: &mut ImVec2, const uv_max: &mut ImVec2, col: u32, c_float rounding, flags: ImDrawFlags = 0);
+    // void  AddImageRounded(user_texture_id: ImTextureID, const p_min: &mut ImVec2, const p_max: &mut ImVec2, const uv_min: &mut ImVec2, const uv_max: &mut ImVec2, col: u32, c_float rounding, flags: ImDrawFlags = 0);
     pub unsafe fn AddImageRounded(&mut self, user_texture_id: ImTextureID, p_min: &ImVec2, p_max: &ImVec2, uv_min: &ImVec2, uv_max: &ImVec2, col: u32, rounding: c_float, mut flags: ImDrawFlags) {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
@@ -901,13 +901,13 @@ impl ImDrawList {
 
             self._Path.reserve(self._Path.Size + (a_mid_samples + 1 + (if a_emit_start { 1 } else { 0 }) + (if a_emit_end { 1 }else { 0 })));
             if a_emit_start {
-                self._Path.push(ImVec2::new(center.x + ImCos(a_min) * radius, center.y + ImSin(a_min) * radius));
+                self._Path.push(ImVec2::from_floats(center.x + ImCos(a_min) * radius, center.y + ImSin(a_min) * radius));
             }
             if a_mid_samples > 0.0 {
                 self._PathArcToFastEx(center, radius, a_min_sample as size_t, a_max_sample as size_t, 0);
             }
             if (a_emit_end) {
-                self._Path.push(ImVec2::new(center.x + ImCos(a_max) * radius, center.y + ImSin(a_max) * radius));
+                self._Path.push(ImVec2::from_floats(center.x + ImCos(a_max) * radius, center.y + ImSin(a_max) * radius));
             }
         }
         else
@@ -976,17 +976,17 @@ impl ImDrawList {
         flags = FixRectCornerFlags(flags);
         rounding = ImMin(
             rounding,
-            ImFabs(b.x - a.x) * (if ((flags & ImDrawFlags_RoundCornersTop)  == ImDrawFlags_RoundCornersTop)  || ((flags & ImDrawFlags_RoundCornersBottom) == ImDrawFlags_RoundCornersBottom) { 0.5 } else { 1 } ) - 1);
+            ImFabs(b.x - a.x) * (if (flag_set(flags, ImDrawFlags_RoundCornersTop)  == ImDrawFlags_RoundCornersTop)  || (flag_set(flags, ImDrawFlags_RoundCornersBottom) == ImDrawFlags_RoundCornersBottom) { 0.5 } else { 1 } ) - 1);
         rounding = ImMin(
             rounding,
-            ImFabs(b.y - a.y) * ( if ((flags & ImDrawFlags_RoundCornersLeft) == ImDrawFlags_RoundCornersLeft) || ((flags & ImDrawFlags_RoundCornersRight)  == ImDrawFlags_RoundCornersRight) { 0.5 } else { 1 } ) - 1);
+            ImFabs(b.y - a.y) * ( if (flag_set(flags, ImDrawFlags_RoundCornersLeft) == ImDrawFlags_RoundCornersLeft) || (flag_set(flags, ImDrawFlags_RoundCornersRight)  == ImDrawFlags_RoundCornersRight) { 0.5 } else { 1 } ) - 1);
 
         if rounding < 0.5 || flag_set(flags, ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
         {
             self.PathLineTo(a);
-            self.PathLineTo(&ImVec2::new(b.x, a.y));
+            self.PathLineTo(&ImVec2::from_floats(b.x, a.y));
             self.PathLineTo(b);
-            self.PathLineTo(&ImVec2::new(a.x, b.y));
+            self.PathLineTo(&ImVec2::from_floats(a.x, b.y));
         }
         else
         {
@@ -994,10 +994,10 @@ impl ImDrawList {
             let rounding_tr: c_float =  if flag_set(flags, ImDrawFlags_RoundCornersTopRight) { rounding } else { 0 };
             let rounding_br: c_float =  if flag_set(flags, ImDrawFlags_RoundCornersBottomRight) { rounding } else { 0 };
             let rounding_bl: c_float =  if flag_set(flags, ImDrawFlags_RoundCornersBottomLeft) { rounding } else { 0 };
-            self.PathArcToFast(&ImVec2::new(a.x + rounding_tl, a.y + rounding_tl), rounding_tl, 6, 9);
-            self.PathArcToFast(&ImVec2::new(b.x - rounding_tr, a.y + rounding_tr), rounding_tr, 9, 12);
-            self.PathArcToFast(&ImVec2::new(b.x - rounding_br, b.y - rounding_br), rounding_br, 0, 3);
-            self.PathArcToFast(&ImVec2::new(a.x + rounding_bl, b.y - rounding_bl), rounding_bl, 3, 6);
+            self.PathArcToFast(&ImVec2::from_floats(a.x + rounding_tl, a.y + rounding_tl), rounding_tl, 6, 9);
+            self.PathArcToFast(&ImVec2::from_floats(b.x - rounding_tr, a.y + rounding_tr), rounding_tr, 9, 12);
+            self.PathArcToFast(&ImVec2::from_floats(b.x - rounding_br, b.y - rounding_br), rounding_br, 0, 3);
+            self.PathArcToFast(&ImVec2::from_floats(a.x + rounding_bl, b.y - rounding_bl), rounding_bl, 3, 6);
         }
     }
 
@@ -1111,8 +1111,8 @@ impl ImDrawList {
     // void  PrimRect(const a: &mut ImVec2, const b: &mut ImVec2, col: u32);      // Axis aligned rectangle (composed of two triangles)
     pub fn PrimRect(&mut self, a: &ImVec2, b: &ImVec2, col: u32) {
         // b: ImVec2(c.x, a.y), d(a.x, c.y), uv(_Data.TexUvWhitePixel);
-        let mut b = ImVec2::new(c.x, a.y);
-        let mut d = ImVec2::new(a.x, c.y);
+        let mut b = ImVec2::from_floats(c.x, a.y);
+        let mut d = ImVec2::from_floats(a.x, c.y);
         let mut uv = self._Data.TexUvWhitePixel;
 
         let idx: ImDrawIdx = self._VtxCurrentIdx as ImDrawIdx;
@@ -1507,7 +1507,7 @@ impl ImDrawList {
         for i in 0 .. num_segments
         {
             let a: c_float =  a_min + (i / num_segments) * (a_max - a_min);
-            self._Path.push(ImVec2::new(center.x + ImCos(a) * radius, center.y + ImSin(a) * radius));
+            self._Path.push(ImVec2::from_floats(center.x + ImCos(a) * radius, center.y + ImSin(a) * radius));
         }
     }
 }

@@ -273,7 +273,7 @@ use crate::draw_channel::ImDrawChannel;
 use crate::draw_list::ImDrawList;
 use crate::draw_list_splitter::ImDrawListSplitter;
 use crate::hovered_flags::ImGuiHoveredFlags_DelayNormal;
-use crate::id_ops::{ClearActiveID, GetID, KeepAliveID, PopID, PushID, PushID4, PushOverrideID};
+use crate::id_ops::{ClearActiveID, id_from_str, KeepAliveID, PopID, PushID, push_int_id, PushOverrideID};
 use crate::input_ops::{GetMousePos, IsMouseDoubleClicked, IsMouseDragging, SetMouseCursor};
 use crate::item_flags::ImGuiItemFlags_SelectableDontClosePopup;
 use crate::item_ops::{CalcItemSize, GetItemRectMax, GetItemRectMin, IsAnyItemHovered, IsClippedEx, IsItemHovered, ItemAdd, ItemHoverable, ItemSize, PopItemFlag, PopItemWidth, PushItemFlag, PushItemWidth};
@@ -339,7 +339,7 @@ pub fn TableFixFlags(mut flags: ImGuiTableFlags, outer_window: *mut ImGuiWindow)
     }
 
     // Adjust flags: enable NoKeepColumnsVisible when using ImGuiTableFlags_SizingFixedSame
-    if ((flags & ImGuiTableFlags_SizingMask_) == ImGuiTableFlags_SizingFixedSame) {
+    if (flag_set(flags, ImGuiTableFlags_SizingMask_) == ImGuiTableFlags_SizingFixedSame) {
         flags |= ImGuiTableFlags_NoKeepColumnsVisible;
     }
 
@@ -380,7 +380,7 @@ pub unsafe fn TableFindByID(id: ImGuiID) -> *mut ImGuiTable
 // Read about "TABLE SIZING" at the top of this file.
 pub unsafe fn BeginTable(str_id: *const c_char, columns_count: c_int, flags: ImGuiTableFlags, outer_size: &ImVec2,inner_width: c_float) -> bool
 {
-    let mut id: ImGuiID =  GetID(str_id);
+    let mut id: ImGuiID =  id_from_str(str_id);
     return BeginTableEx(str_id, id, columns_count, flags, outer_size, inner_width);
 }
 
@@ -465,12 +465,12 @@ pub unsafe fn  BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_i
             override_content_size.x = inner_width;}
 
         if override_content_size.x != f32::MAX || override_content_size.y != f32::MAX {
-            SetNextWindowContentSize(&ImVec2::new(if override_content_size.x != f32::MAX { override_content_size.x } else { 0.0 }, if override_content_size.y != f32::MAX { override_content_size.y }else { 0.0 }));
+            SetNextWindowContentSize(&ImVec2::from_floats(if override_content_size.x != f32::MAX { override_content_size.x } else { 0.0 }, if override_content_size.y != f32::MAX { override_content_size.y }else { 0.0 }));
         }
 
         // Reset scroll if we are reactivating it
         if (table_last_flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) == 0 {
-            SetNextWindowScroll(&ImVec2::new(0.0, 0.0));
+            SetNextWindowScroll(&ImVec2::from_floats(0.0, 0.0));
         }
 
         // Create scrolling region (without border and zero window padding)
@@ -505,7 +505,7 @@ pub unsafe fn  BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_i
     temp_data.HostBackupCursorMaxPos = inner_window.DC.CursorMaxPos;
     temp_data.HostBackupItemWidth = outer_window.DC.ItemWidth;
     temp_data.HostBackupItemWidthStackSize = outer_window.DC.ItemWidthStack.Size;
-    inner_window.DC.PrevLineSize = inner_window.DC.CurrLineSize = ImVec2::new(0.0, 0.0);
+    inner_window.DC.PrevLineSize = inner_window.DC.CurrLineSize = ImVec2::from_floats(0.0, 0.0);
 
     // Padding and Spacing
     // - None               ........Content..... Pad .....Content........
@@ -792,7 +792,7 @@ pub unsafe fn TableSetupColumnFlags(table: *mut ImGuiTable, column: *mut ImGuiTa
     }
 
     // Sorting
-    if ((flags & ImGuiTableColumnFlags_NoSortAscending) && (flags & ImGuiTableColumnFlags_NoSortDescending)) {
+    if (flag_set(flags, ImGuiTableColumnFlags_NoSortAscending) && (flags & ImGuiTableColumnFlags_NoSortDescending)) {
         flags |= ImGuiTableColumnFlags_NoSort;
     }
 
@@ -802,7 +802,7 @@ pub unsafe fn TableSetupColumnFlags(table: *mut ImGuiTable, column: *mut ImGuiTa
     }
 
     // Alignment
-    //if ((flags & ImGuiTableColumnFlags_AlignMask_) == 0)
+    //if (flag_set(flags, ImGuiTableColumnFlags_AlignMask_) == 0)
     //    flags |= ImGuiTableColumnFlags_AlignCenter;
     //IM_ASSERT(ImIsPowerOfTwo(flags & ImGuiTableColumnFlags_AlignMask_)); // Check that only 1 of each set is used.
 
@@ -1597,7 +1597,7 @@ pub unsafe fn TableSetupColumn(label: *const c_char, mut flags: ImGuiTableColumn
     let mut table: *mut ImGuiTable = g.CurrentTable;
     // IM_ASSERT(table != NULL && "Need to call TableSetupColumn() after BeginTable()!");
     // IM_ASSERT(table.IsLayoutLocked == false && "Need to call call TableSetupColumn() before first row!");
-    // IM_ASSERT((flags & ImGuiTableColumnFlags_StatusMask_) == 0 && "Illegal to pass StatusMask values to TableSetupColumn()");
+    // IM_ASSERT(flag_set(flags, ImGuiTableColumnFlags_StatusMask_) == 0 && "Illegal to pass StatusMask values to TableSetupColumn()");
     if (table.DeclColumnsCount >= table.ColumnsCount as ImGuiTableColumnIdx)
     {
         // IM_ASSERT_USER_ERROR(table.DeclColumnsCount < table.ColumnsCount, "Called TableSetupColumn() too many times!");
@@ -1882,7 +1882,7 @@ pub unsafe fn TableNextRow(row_flags: ImGuiTableRowFlags,row_min_height: c_float
 // [Internal] Called by TableNextRow()
 pub unsafe fn TableBeginRow(table: *mut ImGuiTable)
 {
-    window: *mut ImGuiWindow = table.InnerWindow;
+    let mut window: *mut ImGuiWindow = table.InnerWindow;
     // IM_ASSERT(!table.IsInsideRow);
 
     // New row
@@ -1902,7 +1902,7 @@ pub unsafe fn TableBeginRow(table: *mut ImGuiTable)
     table.RowTextBaseline = 0.0;
     table.RowIndentOffsetX = window.DC.Indent.x - table.HostIndentX; // Lock indent
     window.DC.PrevLineTextBaseOffset = 0.0;
-    window.DC.CurrLineSize = ImVec2::new(0.0, 0.0);
+    window.DC.CurrLineSize = ImVec2::from_floats(0.0, 0.0);
     window.DC.IsSameLine = window.DC.IsSetPos = false;
     window.DC.CursorMaxPos.y = next_y1;
 
@@ -2264,7 +2264,7 @@ pub unsafe fn TableUpdateColumnsWeightFromWidth(table: *mut ImGuiTable)
 pub unsafe fn TablePushBackgroundChannel()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: *mut ImGuiWindow = g.CurrentWindow;
      let table: *mut ImGuiTable = g.CurrentTable;
 
     // Optimization: avoid SetCurrentChannel() + PushClipRect()
@@ -2276,7 +2276,7 @@ pub unsafe fn TablePushBackgroundChannel()
 pub unsafe fn TablePopBackgroundChannel()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: *mut ImGuiWindow = g.CurrentWindow;
      let table: *mut ImGuiTable = g.CurrentTable;
     let column: *mut ImGuiTableColumn = &mut table.Columns[table.CurrentColumn];
 
@@ -2456,11 +2456,11 @@ pub unsafe fn TableMergeDrawChannels(table: *mut ImGuiTable)
             }
             buf: [c_char; 32];
             // ImFormatString(buf, 32, "MG%d:%d", merge_group_n, merge_group.ChannelsCount);
-            let text_pos: ImVec2 = merge_group.ClipRect.Min + ImVec2::new(4.0, 4.0);
+            let text_pos: ImVec2 = merge_group.ClipRect.Min + ImVec2::from_floats(4.0, 4.0);
             let text_size: ImVec2 = CalcTextSize(buf, null_mut(), false, 0.0);
             GetForegroundDrawList(null_mut()).AddRectFilled(&text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255), 0.0, 0);
             GetForegroundDrawList(null_mut()).AddText(&text_pos, IM_COL32(255, 255, 0, 255), buf, null_mut());
-            GetForegroundDrawList(null_mut()).AddRect(&merge_group.ClipRect.Min, &merge_group.ClipRect.Max, IM_COL32(255, 255, 0, 255), 0.0, 0, 0.0);
+            GetForegroundDrawList(null_mut()).AddRect(&merge_group.ClipRect.Min, &merge_group.ClipRect.Max, IM_COL32(255, 255, 0, 255), 0.0);
         }
     }
 // #endif
@@ -2629,7 +2629,7 @@ pub unsafe fn TableDrawBorders(table: *mut ImGuiTable)
             }
 
             if (draw_y2 > draw_y1) {
-                inner_drawlist.AddLine(ImVec2::new(column.MaxX, draw_y1), ImVec2::new(column.MaxX, draw_y2), col, border_size);
+                inner_drawlist.AddLine(ImVec2::from_floats(column.MaxX, draw_y1), ImVec2::from_floats(column.MaxX, draw_y2), col, border_size);
             }
         }
     }
@@ -2651,13 +2651,13 @@ pub unsafe fn TableDrawBorders(table: *mut ImGuiTable)
         }
         else if flag_set(table.Flags, ImGuiTableFlags_BordersOuterV)
         {
-            inner_drawlist.AddLine(outer_border.Min, ImVec2::new(outer_border.Min.x, outer_border.Max.y), outer_col, border_size);
-            inner_drawlist.AddLine(ImVec2::new(outer_border.Max.x, outer_border.Min.y), outer_border.Max, outer_col, border_size);
+            inner_drawlist.AddLine(outer_border.Min, ImVec2::from_floats(outer_border.Min.x, outer_border.Max.y), outer_col, border_size);
+            inner_drawlist.AddLine(ImVec2::from_floats(outer_border.Max.x, outer_border.Min.y), outer_border.Max, outer_col, border_size);
         }
         else if flag_set(table.Flags, ImGuiTableFlags_BordersOuterH)
         {
-            inner_drawlist.AddLine(outer_border.Min, ImVec2::new(outer_border.Max.x, outer_border.Min.y), outer_col, border_size);
-            inner_drawlist.AddLine(ImVec2::new(outer_border.Min.x, outer_border.Max.y), outer_border.Max, outer_col, border_size);
+            inner_drawlist.AddLine(outer_border.Min, ImVec2::from_floats(outer_border.Max.x, outer_border.Min.y), outer_col, border_size);
+            inner_drawlist.AddLine(ImVec2::from_floats(outer_border.Min.x, outer_border.Max.y), outer_border.Max, outer_col, border_size);
         }
     }
     if flag_set(table.Flags, ImGuiTableFlags_BordersInnerH) && table.RowPosY2 < table.OuterRect.Max.y
@@ -2665,8 +2665,8 @@ pub unsafe fn TableDrawBorders(table: *mut ImGuiTable)
         // Draw bottom-most row border
         let border_y: c_float =  table.RowPosY2;
         if border_y >= table.BgClipRect.Min.y && border_y < table.BgClipRect.Max.y {
-            inner_drawlist.AddLine(ImVec2::new(table.BorderX1, border_y),
-                                   ImVec2::new(table.BorderX2, border_y),
+            inner_drawlist.AddLine(ImVec2::from_floats(table.BorderX1, border_y),
+                                   ImVec2::from_floats(table.BorderX2, border_y),
                                    table.BorderColorLight,
                                    border_size);
         }
@@ -2968,7 +2968,7 @@ pub unsafe fn TableHeadersRow()
         // - in your own code you may omit the PushID/PopID all-together, provided you know they won't collide
         // - table.InstanceCurrent is only >0 when we use multiple BeginTable/EndTable calls with same identifier.
         let mut  name: *const c_char = if TableGetColumnFlags(column_n) & ImGuiTableColumnFlags_NoHeaderLabel { str_to_const_c_char_ptr("")} else { TableGetColumnName(column_n)};
-        PushID4(table.InstanceCurrent * table.ColumnsCount + column_n);
+        push_int_id(table.InstanceCurrent * table.ColumnsCount + column_n);
         TableHeader(name);
         PopID();
     }
@@ -2988,7 +2988,7 @@ pub unsafe fn TableHeadersRow()
 pub unsafe fn TableHeader(mut label: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: *mut ImGuiWindow = g.CurrentWindow;
     if window.SkipItems { return ; }
 
      let table: *mut ImGuiTable = g.CurrentTable;
@@ -3031,9 +3031,9 @@ pub unsafe fn TableHeader(mut label: *const c_char)
 
     // Keep header highlighted when context menu is open.
     let selected: bool = (table.IsContextPopupOpen && table.ContextPopupColumn == column_n as ImGuiTableColumnIdx && table.InstanceInteracted == table.InstanceCurrent as i16);
-    let mut id: ImGuiID =  window.GetID(label);
+    let mut id: ImGuiID =  window.id_from_str(label);
     let mut bb: ImRect = ImRect::new(cell_r.Min.x, cell_r.Min.y, cell_r.Max.x, ImMax(cell_r.Max.y, cell_r.Min.y + label_height + g.Style.CellPadding.y * 2.0));
-    ItemSize(&ImVec2::new(0.0, label_height), 0.0); // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
+    ItemSize(&ImVec2::from_floats(0.0, label_height), 0.0); // Don't declare unclipped width, it'll be fed ContentMaxPosHeadersIdeal
     if !ItemAdd(&mut bb, id, null(), 0) { return ; }
 
     //GetForegroundDrawList().AddRect(cell_r.Min, cell_r.Max, IM_COL32(255, 0, 0, 255)); // [DEBUG]
@@ -3106,11 +3106,11 @@ pub unsafe fn TableHeader(mut label: *const c_char)
             if column.SortOrder > 0
             {
                 PushStyleColor(ImGuiCol_Text, GetColorU32(ImGuiCol_Text, 0.70));
-                RenderText(ImVec2::new(x + g.Style.ItemInnerSpacing.x, y), sort_order_su0f32, null(), false);
+                RenderText(ImVec2::from_floats(x + g.Style.ItemInnerSpacing.x, y), sort_order_su0f32, null(), false);
                 PopStyleColor(0);
                 x += w_sort_text;
             }
-            RenderArrow(window.DrawList, ImVec2::new(x, y), GetColorU32(ImGuiCol_Text, 0.0), if column.SortDirection == ImGuiSortDirection_Ascending { ImGuiDir_Up } else { ImGuiDir_Down }, ARROW_SCALE);
+            RenderArrow(window.DrawList, ImVec2::from_floats(x, y), GetColorU32(ImGuiCol_Text, 0.0), if column.SortDirection == ImGuiSortDirection_Ascending { ImGuiDir_Up } else { ImGuiDir_Down }, ARROW_SCALE);
         }
 
         // Handle clicking on column header to adjust Sort Order
@@ -3124,7 +3124,7 @@ pub unsafe fn TableHeader(mut label: *const c_char)
     // Render clipped label. Clipping here ensure that in the majority of situations, all our header cells will
     // be merged into a single draw call.
     //window.DrawList.AddCircleFilled(ImVec2::new(ellipsis_max, label_pos.y), 40, IM_COL32_WHITE);
-    RenderTextEllipsis(window.DrawList, &label_pos, &ImVec2::new(ellipsis_max, label_pos.y + label_height + g.Style.FramePadding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
+    RenderTextEllipsis(window.DrawList, &label_pos, &ImVec2::from_floats(ellipsis_max, label_pos.y + label_height + g.Style.FramePadding.y), ellipsis_max, ellipsis_max, label, label_end, &label_size);
 
     let text_clipped: bool = label_size.x > (ellipsis_max - label_pos.x);
     if text_clipped && hovered && g.ActiveId == 0 && IsItemHovered(ImGuiHoveredFlags_DelayNormal) {
@@ -3179,7 +3179,7 @@ pub unsafe fn TableBeginContextMenuPopup(table: *mut ImGuiTable) -> bool
 pub unsafe fn TableDrawContextMenu(table: *mut ImGuiTable)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: *mut ImGuiWindow = g.CurrentWindow;
     if window.SkipItems { return ; }
 
     let mut want_separator: bool =  false;
@@ -3919,7 +3919,7 @@ pub unsafe fn GetColumnWidthEx(columns: *mut ImGuiOldColumns, mut column_index: 
 pub unsafe fn GetColumnWidth(mut column_index: c_int) -> c_float
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: *mut ImGuiWindow = g.CurrentWindow;
     columns: *mut ImGuiOldColumns = window.DC.CurrentColumns;
     if columns == null_mut(){
         return GetContentRegionAvail().x;}
@@ -4022,12 +4022,12 @@ pub unsafe fn FindOrCreateColumns(window: *mut ImGuiWindow, id: ImGuiID) -> *mut
 
 pub unsafe fn GetColumnsID(str_id: *const c_char, columns_count: c_int) -> ImGuiID
 {
-    window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window: *mut ImGuiWindow = GetCurrentWindow();
 
     // Differentiate column ID with an arbitrary prefix for cases where users name their columns set the same as another widget.
     // In addition, when an identifier isn't explicitly provided we include the number of columns in the hash to make it uniquer.
-    PushID4(0x11223347 + (if str_id {0} else { columns_count }));
-    let mut id: ImGuiID =  window.GetID(if str_id { str_id }else {"columns"});
+    push_int_id(0x11223347 + (if str_id {0} else { columns_count }));
+    let mut id: ImGuiID =  window.id_from_str(if str_id { str_id }else {"columns"});
     PopID();
 
     return id;
@@ -4159,7 +4159,7 @@ pub unsafe fn NextColumn()
     }
     window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x);
     window.DC.CursorPos.y = columns.LineMinY;
-    window.DC.CurrLineSize = ImVec2::new(0.0, 0.0);
+    window.DC.CurrLineSize = ImVec2::from_floats(0.0, 0.0);
     window.DC.CurrLineTextBaseOffset = 0.0;
 
     // FIXME-COLUMNS: Share code with BeginColumns() - move code on columns setup.
@@ -4207,7 +4207,7 @@ pub unsafe fn EndColumns()
             let x: c_float =  window.Pos.x + GetColumnOffset(n);
             let mut column_id: ImGuiID =  columns.ID + ImGuiID(n);
             let column_hit_hw: c_float =  COLUMNS_HIT_RECT_HALF_WIDTH;
-            let mut column_hit_rect: ImRect = ImRect::new(ImVec2::new(x - column_hit_hw, y1), ImVec2::new(x + column_hit_hw, y2));
+            let mut column_hit_rect: ImRect = ImRect::new(ImVec2::from_floats(x - column_hit_hw, y1), ImVec2::from_floats(x + column_hit_hw, y2));
             KeepAliveID(column_id);
             if (IsClippedEx(&mut column_hit_rect, column_id)) { // FIXME: Can be removed or replaced with a lower-level test
                 continue;
@@ -4231,7 +4231,7 @@ pub unsafe fn EndColumns()
                 } else { ImGuiCol_Separator }
             }, 0.0);
             let xi: c_float =  IM_FLOOR(x);
-            window.DrawList.AddLine(&ImVec2::new(xi, y1 + 1.0), &ImVec2::new(xi, y2), col, 0.0);
+            window.DrawList.AddLine(&ImVec2::from_floats(xi, y1 + 1.0), &ImVec2::from_floats(xi, y2), col, 0.0);
         }
 
         // Apply dragging after drawing the column lines, so our rendered lines are in sync with how items were displayed during the frame.
@@ -4260,7 +4260,7 @@ pub unsafe fn EndColumns()
 
 pub unsafe fn Columns(columns_count: c_int, id: *const c_char, border: bool)
 {
-    window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window: *mut ImGuiWindow = GetCurrentWindow();
     // IM_ASSERT(columns_count >= 1);
 
     flags: ImGuiOldColumnFlags = (if border {0} else { ImGuiOldColumnFlags_NoBorder });

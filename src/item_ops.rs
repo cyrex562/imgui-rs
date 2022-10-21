@@ -8,7 +8,6 @@ use crate::content_ops::GetContentRegionMaxAbs;
 use crate::draw_flags::ImDrawFlags_None;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::hovered_flags::{ImGuiHoveredFlags, ImGuiHoveredFlags_AllowWhenBlockedByActiveItem, ImGuiHoveredFlags_AllowWhenDisabled, ImGuiHoveredFlags_AllowWhenOverlapped, ImGuiHoveredFlags_DelayNormal, ImGuiHoveredFlags_DelayShort, ImGuiHoveredFlags_NoNavOverride, ImGuiHoveredFlags_None, ImGuiHoveredFlags_NoSharedDelay};
-use {ClearActiveID, KeepAliveID, SetHoveredID};
 use crate::id_ops::{ClearActiveID, KeepAliveID, SetHoveredID};
 use crate::imgui::GImGui;
 use crate::input_ops::{IsMouseClicked, IsMouseHoveringRect};
@@ -199,7 +198,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool
         // items if we perform the test in ItemAdd(), but that would incur a small runtime cost.
         // #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX in imconfig.h if you want this check to also be performed in ItemAdd().
         if g.DebugItemPickerActive && g.HoveredIdPreviousFrame == id {
-            GetForegroundDrawList(null_mut()).AddRect(&bb.Min, &bb.Max, IM_COL32(255, 255, 0, 255), 0.0, ImDrawFlags_None, 0.0);
+            GetForegroundDrawList(null_mut()).AddRect(&bb.Min, &bb.Max, IM_COL32(255, 255, 0, 255), 0.0);
         }
         if g.DebugItemPickerBreakId == id {
             // IM_DEBUG_BREAK();
@@ -432,7 +431,7 @@ pub unsafe fn ItemAdd(bb: &mut ImRect, id: ImGuiID, nav_bb_arg: *const ImRect, e
     // (DisplayRect is left untouched, made valid when ImGuiItemStatusFlags_HasDisplayRect is set)
     g.LastItemData.ID = id;
     g.LastItemData.Rect = bb.clone();
-    g.LastItemData.NavRect = if nav_bb_arg { *nav_bb_arg }else: { bb };
+    g.LastItemData.NavRect = if nav_bb_arg.is_null() == false { *nav_bb_arg }else { bb };
     g.LastItemData.InFlags = g.CurrentItemFlags | extra_flags;
     g.LastItemData.StatusFlags = ImGuiItemStatusFlags_None;
 
@@ -594,7 +593,7 @@ pub unsafe fn PushMultiItemsWidths(components: c_int,w_full: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    let setyle = &mut g.Style;
+    let style = &mut g.Style;
     w_item_one: c_float  = ImMax(1.0, IM_FLOOR((w_full - (style.ItemInnerSpacing.x) * (components - 1)) / components));
     let w_item_last: c_float =  ImMax(1.0, IM_FLOOR(w_full - (w_item_one + style.ItemInnerSpacing.x) * (components - 1)));
     window.DC.ItemWidthStack.push(window.DC.ItemWidth); // Backup current width
@@ -642,12 +641,12 @@ pub unsafe fn CalcItemWidth() -> c_float
 // Note that only CalcItemWidth() is publicly exposed.
 // The 4.0 here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
 // CalcItemSize: ImVec2(size: ImVec2,default_w: c_float,default_h: c_float)
-pub unsafe fn CalcItemSize(mut size: ImVec2, default_w: c_float, default_h: c_float) -> ImVec2
+pub unsafe fn CalcItemSize(size: &mut ImVec2, default_w: c_float, default_h: c_float) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
 
-    region_max: ImVec2;
+    let mut region_max = ImVec2::default();
     if size.x < 0.0 || size.y < 0.0 {
         region_max = GetContentRegionMaxAbs();
     }
@@ -666,5 +665,5 @@ pub unsafe fn CalcItemSize(mut size: ImVec2, default_w: c_float, default_h: c_fl
         size.y = ImMax(4.0, region_max.y - window.DC.CursorPos.y + size.y);
     }
 
-    return size;
+    return size.clone();
 }

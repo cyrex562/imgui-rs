@@ -120,12 +120,12 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
 
 // Draw top border
         if border_col > 0 && bg_y1 >= table.BgClipRect.Min.y && bg_y1 < table.BgClipRect.Max.y {
-            window.DrawList.AddLine(&mut ImVec2::new(table.BorderX1, bg_y1), &mut ImVec2::new(table.BorderX2, bg_y1), border_col, border_size);
+            window.DrawList.AddLine(&mut ImVec2::from_floats(table.BorderX1, bg_y1), &mut ImVec2::from_floats(table.BorderX2, bg_y1), border_col, border_size);
         }
 
 // Draw bottom border at the row unfreezing mark (always strong)
         if draw_strong_bottom_border && bg_y2 >= table.BgClipRect.Min.y && bg_y2 < table.BgClipRect.Max.y {
-            window.DrawList.AddLine(&mut ImVec2::new(table.BorderX1, bg_y2), &mut ImVec2::new(table.BorderX2, bg_y2), table.BorderColorStrong, border_size);
+            window.DrawList.AddLine(&mut ImVec2::from_floats(table.BorderX1, bg_y2), &mut ImVec2::from_floats(table.BorderX2, bg_y2), table.BorderColorStrong, border_size);
         }
     }
 

@@ -231,6 +231,7 @@ mod platform_support;
 mod stb;
 mod tables;
 mod merge_group;
+mod a_widgets;
 
 
 // c_void Initialize()

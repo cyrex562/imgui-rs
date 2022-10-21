@@ -80,12 +80,12 @@ pub unsafe fn ScrollToRect(window: *mut ImGuiWindow, item_rect: &mut ImRect, fla
 pub unsafe fn ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &mut ImRect, mut flags: ImGuiScrollFlags) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window_rect: ImRect = ImRect::new(window.InnerRect.Min - ImVec2::new(1.0, 1.0), window.InnerRect.Max + ImVec2::new(1.0, 1.0));
+    let mut window_rect: ImRect = ImRect::new(window.InnerRect.Min - ImVec2::from_floats(1.0, 1.0), window.InnerRect.Max + ImVec2::from_floats(1.0, 1.0));
     //GetForegroundDrawList(window).AddRect(window_rect.Min, window_rect.Max, IM_COL32_WHITE); // [DEBUG]
 
     // Check that only one behavior is selected per axis
-    // IM_ASSERT((flags & ImGuiScrollFlags_MaskX_) == 0 || ImIsPowerOfTwo(flags & ImGuiScrollFlags_MaskX_));
-    // IM_ASSERT((flags & ImGuiScrollFlags_MaskY_) == 0 || ImIsPowerOfTwo(flags & ImGuiScrollFlags_MaskY_));
+    // IM_ASSERT(flag_set(flags, ImGuiScrollFlags_MaskX_) == 0 || ImIsPowerOfTwo(flags & ImGuiScrollFlags_MaskX_));
+    // IM_ASSERT(flag_set(flags, ImGuiScrollFlags_MaskY_) == 0 || ImIsPowerOfTwo(flags & ImGuiScrollFlags_MaskY_));
 
     // Defaults
     let mut in_flags = flags;

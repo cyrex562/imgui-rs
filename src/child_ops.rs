@@ -84,7 +84,7 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
 // BeginChild: bool(str_id: *const c_char, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild(str_id: *const c_char, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    return BeginChildEx(str_id, window.GetID(str_id, null()), size_arg, border, extra_flags);
+    return BeginChildEx(str_id, window.id_from_str(str_id, null()), size_arg, border, extra_flags);
 }
 
 // BeginChild: bool(ImGuiID id, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
@@ -123,7 +123,7 @@ pub unsafe fn EndChild() {
 
             // When browsing a window that has no activable items (scroll only) we keep a highlight on the child (pass g.NavId to trick into always displaying)
             if window.DC.NavLayersActiveMask == 0 && window == g.NavWindow {
-                RenderNavHighlight(&ImRect::from_vec2(bb.Min.clone() - ImVec2::new(2.0, 2.0), bb.Max.clone() + ImVec2::new(2.0, 2.0)), g.NavId, ImGuiNavHighlightFlags_TypeThin);
+                RenderNavHighlight(&ImRect::from_vec2(bb.Min.clone() - ImVec2::from_floats(2.0, 2.0), bb.Max.clone() + ImVec2::from_floats(2.0, 2.0)), g.NavId, ImGuiNavHighlightFlags_TypeThin);
             }
         } else {
             // Not navigable into

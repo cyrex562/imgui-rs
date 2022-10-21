@@ -131,7 +131,7 @@ pub unsafe fn SetWindowPos(window: *mut ImGuiWindow, pos: &ImVec2, cond: ImGuiCo
 
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     window.SetWindowPosAllowFlags &= !(ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing);
-    window.SetWindowPosVal = ImVec2::new(f32::MAX, f32::MAX);
+    window.SetWindowPosVal = ImVec2::from_floats(f32::MAX, f32::MAX);
 
     // Set
     let old_pos: ImVec2 = window.Pos;

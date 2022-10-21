@@ -30,6 +30,7 @@ use crate::vec4::ImVec4;
 use crate::window::window_class::ImGuiWindowClass;
 use crate::window::window_flags::ImGuiWindowFlags;
 use rect::WindowRectAbsToRel;
+use crate::id_ops::id_from_str;
 use crate::window::window_temp_data::ImGuiWindowTempData;
 use crate::window_flags::ImGuiWindowFlags;
 use crate::window_ops::WindowRectAbsToRel;
@@ -48,7 +49,7 @@ pub mod rect;
 pub mod find;
 pub mod focus;
 pub mod props;
-mod stb_tt_point;
+
 
 // Storage for one window
 pub struct ImGuiWindow {
@@ -258,17 +259,17 @@ pub struct ImGuiWindow {
 
 impl ImGuiWindow {
     //ImGuiWindow(context: *mut ImGuiContext, *const c_char name);
-    pub unsafe fn new(context: *mut ImGuiContext, name: *const c_char) {
+    pub unsafe fn new(context: *mut ImGuiContext, name: &str) {
         let mut out = Self {
             Name: ImStrdup(name),
-            NameBufLen: libc::strlen(name) + 1,
+            NameBufLen: name.len(),
             ID: ImHashStr(name, 0, 0),
             ViewportAllowPlatformMonitorExtend: -1,
-            ViewportPos: ImVec2::new(f32::MAX, f32::MAX),
-            MoveId: GetID("#MOVE"),
-            TabId: GetID("#TAB"),
-            ScrollTarget: ImVec2::new(f32::MAX, f32::MAX),
-            ScrollTargetCenterRatio: ImVec2::new(0.5, 0.5),
+            ViewportPos: ImVec2::from_floats(f32::MAX, f32::MAX),
+            MoveId: id_from_str("#MOVE"),
+            TabId: id_from_str("#TAB"),
+            ScrollTarget: ImVec2::from_floats(f32::MAX, f32::MAX),
+            ScrollTargetCenterRatio: ImVec2::from_floats(0.5, 0.5),
             AutoFitFramesX: -1,
             AutoFitFramesY: -1,
             AutoPosLastDirection: ImGuiDir_None,
@@ -276,8 +277,8 @@ impl ImGuiWindow {
             SetWindowSizeAllowFlags: ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
             SetWindowCollapsedAllowFlags: ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
             SetWindowDockAllowFlags: ImGuiCond_Always | ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing,
-            SetWindowPosVal: ImVec2::new(f32::MAX, f32::MAX),
-            SetWindowPosPivot: ImVec2::new(f32::MAX, f32::MAX),
+            SetWindowPosVal: ImVec2::from_floats(f32::MAX, f32::MAX),
+            SetWindowPosPivot: ImVec2::from_floats(f32::MAX, f32::MAX),
             LastFrameActive: -1,
             LastFrameJustFocused: -1,
             LastTimeActive: -1.0,
@@ -299,9 +300,9 @@ impl ImGuiWindow {
     //~ImGuiWindow();
 
     // ImGuiID     GetID(*const c_char str, *const c_char str_end = NULL);
-    pub unsafe fn GetID(&self, begin: *const c_char, end: *const c_char) -> ImGuiID {
+    pub unsafe fn id_from_str(&self, begin: &str) -> ImGuiID {
         let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
-        let mut id: ImGuiID = ImHashStr(begin, if end.is_null() == false { (end - begin) } else { 0 }, seed as u32);
+        let mut id: ImGuiID = ImHashStr(begin, begin.len(), seed as u32);
         let g = GImGui; // ImGuiContext& g = *GImGui;
         if g.DebugHookIdInfo == id {
             DebugHookIdInfo(id, ImGuiDataType_String, begin, end);

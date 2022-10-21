@@ -96,9 +96,9 @@ pub unsafe fn FindHoveredWindows() {
                 | ImGuiWindowFlags_NoResize
                 | ImGuiWindowFlags_AlwaysAutoResize)
         {
-            bb.Expand2(&padding_regular.clone());
+            bb.expand_from_vec(&padding_regular.clone());
         } else {
-            bb.Expand2(&padding_for_resize);
+            bb.expand_from_vec(&padding_for_resize);
         }
         if !bb.Contains(&g.IO.MousePos) {
             continue;
@@ -107,11 +107,11 @@ pub unsafe fn FindHoveredWindows() {
         // Support for one rectangular hole in any given window
         // FIXME: Consider generalizing hit-testing override (with more generic data, callback, etc.) (#1512)
         if window.HitTestHoleSize.x != 0 {
-            let hole_pos = ImVec2::new(
+            let hole_pos = ImVec2::from_floats(
                 window.Pos.x + window.HitTestHoleOffset.x,
                 window.Pos.y + window.HitTestHoleOffset.y,
             );
-            let hole_size = ImVec2::new(
+            let hole_size = ImVec2::from_floats(
                 window.HitTestHoleSize.x as c_float,
                 window.HitTestHoleSize.y as c_float,
             );

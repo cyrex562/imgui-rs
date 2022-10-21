@@ -149,15 +149,15 @@ impl ImFont {
     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). f32::MAX to disable.
     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0 to disable.
     // ImVec2            CalcTextSizeA(c_float size, c_float max_width, c_float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
-    pub unsafe fn CalcTextSizeA(&mut self, size: c_float, max_width: c_float, wrap_width: c_float, text_begin: *const c_char, mut text_end: *const c_char, remaining: *mut *const c_char) -> ImVec2 {
-        if !text_end {
-            text_end = text_begin + libc::strlen(text_begin);
-        } // FIXME-OPT: Need to avoid this.
+    pub unsafe fn CalcTextSizeA(&mut self, size: c_float, max_width: c_float, wrap_width: c_float, text_begin: &str, remaining: &mut usize) -> ImVec2 {
+        // if !text_end {
+        //     text_end = text_begin + libc::strlen(text_begin);
+        // } // FIXME-OPT: Need to avoid this.
 
         let line_height: c_float = size;
         let scale: c_float = size / FontSize;
 
-        let mut text_size: ImVec2 = ImVec2::new(0.0, 0.0);
+        let mut text_size: ImVec2 = ImVec2::from_floats(0.0, 0.0);
         let mut line_width: c_float = 0.0;
 
         let word_wrap_enabled: bool = (wrap_width > 0.0);
@@ -366,11 +366,11 @@ impl ImFont {
         let x: c_float =  IM_FLOOR(pos.x);
         let y: c_float =  IM_FLOOR(pos.y);
         draw_list.PrimReserve(6, 4);
-        draw_list.PrimRectUV(&ImVec2::new(x + glyph.X0 * scale, y + glyph.Y0 * scale), &ImVec2::new(x + glyph.X1 * scale, y + glyph.Y1 * scale), &ImVec2::new(glyph.U0, glyph.V0), &ImVec2::new(glyph.U1, glyph.V1), col);
+        draw_list.PrimRectUV(&ImVec2::from_floats(x + glyph.X0 * scale, y + glyph.Y0 * scale), &ImVec2::from_floats(x + glyph.X1 * scale, y + glyph.Y1 * scale), &ImVec2::from_floats(glyph.U0, glyph.V0), &ImVec2::from_floats(glyph.U1, glyph.V1), col);
     }
 
 
-    // void              RenderText(draw_list: *mut ImDrawList, c_float size, const pos: &mut ImVec2, col: u32, const ImVec4& clip_rect, const char* text_begin, const char* text_end, c_float wrap_width = 0.0, cpu_fine_clip: bool = false) const;
+    // void              RenderText(draw_list: *mut ImDrawList, c_float size, const pos: &mut ImVec2, col: u32, clip_rect: &ImVec4, const char* text_begin, const char* text_end, c_float wrap_width = 0.0, cpu_fine_clip: bool = false) const;
     pub unsafe fn RenderText(&mut self, draw_list: &mut ImDrawList, size: c_float, pos: &ImVec2, mut col: u32, clip_rect: &ImVec4, text_begin: *const c_char, mut text_end: *const c_char, wrap_width: c_float, cpu_fine_clip: bool) {
         if !text_end {
             text_end = text_begin + libc::strlen(text_begin);

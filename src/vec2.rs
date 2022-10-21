@@ -26,10 +26,17 @@ impl ImVec2 {
     // }
 
     // constexpr ImVec2::new(float _x, float _y)    : x(_x), y(_y) { }
-    pub fn new(x: c_float, y: c_float) -> Self {
+    pub fn from_floats(x: c_float, y: c_float) -> Self {
         Self {
             x,
             y
+        }
+    }
+
+    pub fn from_ints(x: i32, y: i32) -> Self {
+        Self {
+            x: x as c_float,
+            y: y as c_float
         }
     }
 

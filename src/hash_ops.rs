@@ -51,7 +51,7 @@ pub unsafe fn ImHashData(data_p: *c_void, mut data_size: usize, seed: u32) -> Im
 // - We don't do 'current += 2; continue;' after handling ### to keep the code smaller/faster (measured ~10% diff in Debug build)
 // FIXME-OPT: Replace with e.g. FNV1a hash? CRC32 pretty much randomly access 1KB. Need to do proper measurements.
 // ImGuiID ImHashStr(const char* data_p, data_size: size_t, seed: u32)
-pub unsafe fn ImHashStr(data_p: *c_char, mut data_size: usize, mut seed: u32) -> ImGuiID
+pub unsafe fn ImHashStr(data_p: &str, mut data_size: usize, mut seed: u32) -> ImGuiID
 {
     seed = !seed;
     let mut crc = seed;

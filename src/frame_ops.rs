@@ -319,7 +319,7 @@ pub unsafe fn NewFrame() {
     // We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
     // This fallback is particularly important as it avoid  calls from crashing.
     g.WithinFrameScopeWithImplicitWindow = true;
-    SetNextWindowSize(&ImVec2::new(400.0, 400.0), ImGuiCond_FirstUseEver);
+    SetNextWindowSize(&ImVec2::from_floats(400.0, 400.0), ImGuiCond_FirstUseEver);
     Begin(str_to_const_c_char_ptr("Debug##Default"), null_mut(), 0);
     // IM_ASSERT(g.Currentwindow.IsFallbackWindow == true);
 

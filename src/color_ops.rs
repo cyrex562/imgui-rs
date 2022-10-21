@@ -29,7 +29,7 @@ pub fn ColorConvertU32ToFloat4(in_color: u32) -> ImVec4
         ((in_color >> IM_COL32_A_SHIFT) & 0xFF) * s);
 }
 
-// ColorConvertFloat4ToU32: u32(const ImVec4& in)
+// ColorConvertFloat4ToU32: u32(in: &ImVec4)
 pub fn ColorConvertFloat4ToU32(in_float: &ImVec4) -> u32
 {
     let mut out: u32 = 0;

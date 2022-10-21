@@ -84,7 +84,7 @@ DockSpace: ImGuiID(id: ImGuiID, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *co
     if (window.SkipItems)
         flags |= ImGuiDockNodeFlags_KeepAliveOnly;
 
-    // IM_ASSERT((flags & ImGuiDockNodeFlags_DockSpace) == 0);
+    // IM_ASSERT(flag_set(flags, ImGuiDockNodeFlags_DockSpace) == 0);
     // IM_ASSERT(id != 0);
     node:*mut ImGuiDockNode = DockContextFindNodeByID(ctx, id);
     if (!node)
@@ -799,7 +799,7 @@ pub unsafe fn BeginDocked(window: *mut ImGuiWindow,p_open: *mut bool)
 
     // Update ChildId to allow returning from Child to Parent with Escape
     let mut parent_window: *mut ImGuiWindow =  window.DockNode.HostWindow;
-    window.ChildId = parent_window.GetID(window.Name);
+    window.ChildId = parent_window.id_from_str(window.Name);
 }
 
 pub unsafe fn BeginDockableDragDropSource(window: *mut ImGuiWindow)
@@ -870,7 +870,7 @@ pub unsafe fn BeginDockableDragDropTarget(window: *mut ImGuiWindow)
                 dock_into_floating_window = true; // Dock into a regular window
         }
 
-        let explicit_target_rect: ImRect =  if (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) { node.TabBar.BarRect } else { ImRect(window.Pos, window.Pos + ImVec2::new(window.Size.x, GetFrameHeight())) };
+        let explicit_target_rect: ImRect =  if (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) { node.TabBar.BarRect } else { ImRect(window.Pos, window.Pos + ImVec2::from_floats(window.Size.x, GetFrameHeight())) };
         let is_explicit_target: bool = g.IO.ConfigDockingWithShift || IsMouseHoveringRect(explicit_target_rect.Min, explicit_target_rect.Max);
 
         // Preview docking request and find out split direction/ratio

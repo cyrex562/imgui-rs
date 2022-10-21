@@ -17,8 +17,8 @@ pub struct ImGuiResizeBorderDef
 
 pub const resize_border_def: [ImGuiResizeBorderDef;4] =
 [
-    ImGuiResizeBorderDef{ InnerDir:ImVec2::new(1.0, 0.0), SegmentN1:ImVec2::new(0.0, 1.0), SegmentN2:ImVec2::new(0.0, 0.0), OuterAngle:IM_PI * 1.0 }, // Left
-    ImGuiResizeBorderDef{ InnerDir:ImVec2::new(-1.0, 0.0), SegmentN1:ImVec2::new(1.0, 0.0), SegmentN2:ImVec2::new(1.0, 1.0), OuterAngle:IM_PI * 0.0 }, // Right
-    ImGuiResizeBorderDef{ InnerDir:ImVec2::new(0.0, 1.0), SegmentN1:ImVec2::new(0.0, 0.0), SegmentN2:ImVec2::new(1.0, 0.0), OuterAngle:IM_PI * 1.5 }, // Up
-    ImGuiResizeBorderDef{ InnerDir:ImVec2::new(0.0, -1.0), SegmentN1:ImVec2::new(1.0, 1.0), SegmentN2:ImVec2::new(0.0, 1.0), OuterAngle:IM_PI * 0.5 }  // Down
+    ImGuiResizeBorderDef{ InnerDir:ImVec2::from_floats(1.0, 0.0), SegmentN1:ImVec2::from_floats(0.0, 1.0), SegmentN2:ImVec2::from_floats(0.0, 0.0), OuterAngle:IM_PI * 1.0 }, // Left
+    ImGuiResizeBorderDef{ InnerDir:ImVec2::from_floats(-1.0, 0.0), SegmentN1:ImVec2::from_floats(1.0, 0.0), SegmentN2:ImVec2::from_floats(1.0, 1.0), OuterAngle:IM_PI * 0.0 }, // Right
+    ImGuiResizeBorderDef{ InnerDir:ImVec2::from_floats(0.0, 1.0), SegmentN1:ImVec2::from_floats(0.0, 0.0), SegmentN2:ImVec2::from_floats(1.0, 0.0), OuterAngle:IM_PI * 1.5 }, // Up
+    ImGuiResizeBorderDef{ InnerDir:ImVec2::from_floats(0.0, -1.0), SegmentN1:ImVec2::from_floats(1.0, 1.0), SegmentN2:ImVec2::from_floats(0.0, 1.0), OuterAngle:IM_PI * 0.5 }  // Down
 ];

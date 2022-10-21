@@ -29,7 +29,7 @@ use crate::utils::is_not_null;
 //  - Call GetTexDataAsAlpha8() or GetTexDataAsRGBA32() to build and retrieve pixels data.
 //  - Upload the pixels data into a texture within your graphics system (see imgui_impl_xxxx.cpp examples)
 //  - Call SetTexID(my_tex_id); and pass the pointer/identifier to your texture in a format natural to your graphics API.
-//    This value will be passed back to you during rendering to identify the texture. Read FAQ entry about ImTextureID for more details.
+//    This value will be passed back to you during rendering to identify the texture. Read FAQ entry about for: ImTextureID more details.
 // Common pitfalls:
 // - If you pass a 'glyph_ranges' array to AddFont*** functions, you need to make sure that your array persist up until the
 //   atlas is build (when calling GetTexData*** or Build()). We only copy the pointer, not the data.
@@ -381,7 +381,7 @@ impl ImFontAtlas {
     }
 
 
-    // void                        SetTexID(ImTextureID id)    { TexID = id; }
+    // void                        SetTexID(id: ImTextureID)    { TexID = id; }
     pub fn SetTexID(&mut self, id: ImTextureID) {
         self.TexID = id
     }
@@ -602,8 +602,8 @@ impl ImFontAtlas {
     pub unsafe fn CalcUstomRectUV(&mut self, rect: *const ImFontAtlasCustomRect, out_uv_min: *mut ImVec2, out_uv_max: *mut ImVec2) {
         // IM_ASSERT(TexWidth > 0 && TexHeight > 0);   // Font atlas needs to be built before we can calculate UV coordinates
         // IM_ASSERT(rect.IsPacked());                // Make sure the rectangle has been packed
-        *out_uv_min = ImVec2::new(rect.X * self.TexUvScale.x, rect.Y * self.TexUvScale.y);
-        *out_uv_max = ImVec2::new((rect.X + rect.Width) * self.TexUvScale.x, (rect.Y + rect.Height) * self.TexUvScale.y);
+        *out_uv_min = ImVec2::from_floats(rect.X * self.TexUvScale.x, rect.Y * self.TexUvScale.y);
+        *out_uv_max = ImVec2::from_floats((rect.X + rect.Width) * self.TexUvScale.x, (rect.Y + rect.Height) * self.TexUvScale.y);
     }
 
 
@@ -618,7 +618,7 @@ impl ImFontAtlas {
 
         // IM_ASSERT(PackIdMouseCursors != -1);
         let mut r = self.GetCustomRectByIndex(self.PackIdMouseCursors);
-        let mut pos: ImVec2 = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0] + ImVec2::new(r.X as c_float, r.Y as c_float);
+        let mut pos: ImVec2 = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0] + ImVec2::from_floats(r.X as c_float, r.Y as c_float);
         let size: ImVec2 = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][1];
         *out_size = size;
         *out_offset = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][2];

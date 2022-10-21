@@ -747,10 +747,10 @@ pub struct ImGuiContext {
     pub LogBuffer: ImGuiTextBuffer,
 
     // const char*             LogNextPrefix;
-    pub LogNextPrefix: *const c_char,
+    pub LogNextPrefix: String,
 
     // const char*             LogNextSuffix;
-    pub LogNextSuffix: *const c_char,
+    pub LogNextSuffix: String,
 
     // float                   LogLinePosY;
     pub LogLinePosY: c_float,
@@ -864,7 +864,7 @@ impl ImGuiContext {
             ActiveIdHasBeenPressedBefore: false,
             ActiveIdHasBeenEditedBefore: false,
             ActiveIdHasBeenEditedThisFrame: false,
-            ActiveIdClickOffset: ImVec2::new(-1.0, -1.0),
+            ActiveIdClickOffset: ImVec2::from_floats(-1.0, -1.0),
             ActiveIdWindow: null_mut(),
             ActiveIdSource: ImGuiInputSource_None,
             ActiveIdMouseButton: -1,
@@ -1011,8 +1011,8 @@ impl ImGuiContext {
 
         out.IO.Fonts = if shared_font_atlas.is_null() == false { shared_font_atlas } else { IM_NEW(ImFontAtlas)() };
         out.ActiveIdUsingKeyInputMask.ClearAllBits();
-        out.PlatformImeData.InputPos = ImVec2::new();
-        out.PlatformImeDataPrev.InputPos = ImVec2::new(-1.0, -1.0); // Different to ensure initial submission
+        out.PlatformImeData.InputPos = ImVec2::from_floats();
+        out.PlatformImeDataPrev.InputPos = ImVec2::from_floats(-1.0, -1.0); // Different to ensure initial submission
         libc::memset(out.DragDropPayloadBufLocal.as_mut_ptr(), 0, libc::sizeof(out.DragDropPayloadBufLocal));
         libc::memset(out.FramerateSecPerFrame.as_mut_ptr(), 0, libc::sizeof(FramerateSecPerFrame));
         return out;

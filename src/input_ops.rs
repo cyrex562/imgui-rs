@@ -225,7 +225,7 @@ pub fn GetKeyPressedAmount(key: ImGuiKey, repeat_delay: c_float, repeat_rate: c_
 // Return 2D vector representing the combination of four cardinal direction, with analog value support (for e.g. ImGuiKey_GamepadLStick* values).
 // GetKeyVector2d: ImVec2(ImGuiKey key_left, ImGuiKey key_right, ImGuiKey key_up, ImGuiKey key_down)
 pub fn GetKeyVector2D(key_left: ImGuiKey, key_right: ImGuiKey, key_up: ImGuiKey, key_down: ImGuiKey) -> ImVec2 {
-    return ImVec2::new(
+    return ImVec2::from_floats(
         GetKeyData(key_right).AnalogValue - GetKeyData(key_left).AnalogValue,
         GetKeyData(key_down).AnalogValue - GetKeyData(key_up).AnalogValue);
 }
@@ -407,7 +407,7 @@ pub fn GetMouseDragDelta(button: ImGuiMouseButton, mut lock_threshold: c_float) 
             }
         }
     }
-    return ImVec2::new(0.0, 0.0);
+    return ImVec2::from_floats(0.0, 0.0);
 }
 
 // c_void ResetMouseDragDelta(ImGuiMouseButton button)
@@ -504,9 +504,9 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
     for event_n in 0..g.InputEventsQueue.len() {
         let mut e: *mut ImGuiInputEvent = &mut g.InputEventsQueue[event_n];
         if e.Type == ImGuiInputEventType_MousePos {
-            let mut event_pos = ImVec2::new(e.MousePos.PosX, e.MousePos.PosY);
+            let mut event_pos = ImVec2::from_floats(e.MousePos.PosX, e.MousePos.PosY);
             if IsMousePosValid(&event_pos) {
-                event_pos = ImVec2::new(ImFloorSigned(event_pos.x), ImFloorSigned(event_pos.y));
+                event_pos = ImVec2::from_floats(ImFloorSigned(event_pos.x), ImFloorSigned(event_pos.y));
             } // Apply same flooring as UpdateMouseInputs()
             e.IgnoredAsSame = (io.MousePos.x == event_pos.x && io.MousePos.y == event_pos.y);
             if !e.IgnoredAsSame {

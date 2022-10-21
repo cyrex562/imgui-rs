@@ -44,7 +44,7 @@ impl ImDrawListSharedData {
         // for (let i: c_int = 0; i < IM_ARRAYSIZE(ArcFastVtx); i++)
         for i in 0..out.ArcFastVtx.len() {
             let a: c_float = (i * 2 * IM_PI) / out.ArcFastVtx.len();
-            out.ArcFastVtx[i] = ImVec2::new(ImCos(a), ImSin(a));
+            out.ArcFastVtx[i] = ImVec2::from_floats(ImCos(a), ImSin(a));
         }
         out.ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(
             IM_DRAWLIST_ARCFAST_SAMPLE_MAX,

@@ -328,12 +328,10 @@ pub unsafe fn AcceptDragDropPayload(payload_type: *const c_char, mut flags: ImGu
     payload.Preview = was_accepted_previously;
     flags |= (g.DragDropSourceFlags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect); // Source can also inhibit the preview (useful for external sources that lives for 1 frame)
     if flag_clear(flags, ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview {
-        window.DrawList.AddRect(r.Min - ImVec2::new(3.5,3.5),
-                                r.Max + ImVec2::new(3.5, 3.5),
+        window.DrawList.AddRect(r.Min - ImVec2::from_floats(3.5, 3.5),
+                                r.Max + ImVec2::from_floats(3.5, 3.5),
                                 GetColorU32(ImGuiCol_DragDropTarget, 0.0),
-                                0.0,
-                                0,
-                                2.0);}
+                                0.0);}
     g.DragDropAcceptFrameCount = g.FrameCount;
     payload.Delivery = was_accepted_previously && !IsMouseDown(g.DragDropMouseButton); // For extern drag sources affecting os window focus, it's easier to just test !IsMouseDown() instead of IsMouseReleased()
     if !payload.Delivery && flag_clear(flags, ImGuiDragDropFlags_AcceptBeforeDelivery) {

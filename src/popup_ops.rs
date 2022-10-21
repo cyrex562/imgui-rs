@@ -367,7 +367,7 @@ pub unsafe fn BeginPopupModal(name: *const c_char, p_open: *mut bool, mut flags:
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    let mut id: ImGuiID =  window.GetID(name, null());
+    let mut id: ImGuiID =  window.id_from_str(name, null());
     if !IsPopupOpen(id, ImGuiPopupFlags_None)
     {
         g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
@@ -380,7 +380,7 @@ pub unsafe fn BeginPopupModal(name: *const c_char, p_open: *mut bool, mut flags:
     if ((g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) == 0)
     {
         let viewport: *const ImGuiViewport =if  window.WasActive { window.Viewport } else { GetMainViewport() }; // FIXME-VIEWPORT: What may be our reference viewport?
-        SetNextWindowPos(&viewport.GetCenter(), ImGuiCond_FirstUseEver, &ImVec2::new(0.5, 0.5));
+        SetNextWindowPos(&viewport.GetCenter(), ImGuiCond_FirstUseEver, &ImVec2::from_floats(0.5, 0.5));
     }
 
     flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_Modal | ImGuiWindowFlags_NoCollapse | ImGuiWindowFlags_NoDocking;
@@ -425,7 +425,7 @@ pub unsafe fn OpenPopupOnItemClick(str_id: *const c_char, popup_flags: ImGuiPopu
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup)
     {
-        let mut id: ImGuiID =  if str_id { window.GetID(str_id, null()) } else { g.LastItemData.ID };    // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
+        let mut id: ImGuiID =  if str_id { window.id_from_str(str_id, null()) } else { g.LastItemData.ID };    // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
         // IM_ASSERT(id != 0);                                             // You cannot pass a NULL str_id if the last item has no identifier (e.g. a Text() item)
         OpenPopupEx(id, popup_flags);
     }
@@ -454,7 +454,7 @@ pub unsafe fn BeginPopupContextItem(str_id: *const c_char, popup_flags: ImGuiPop
     if (window.SkipItems) {
         return false;
     }
-    let mut id: ImGuiID =  if str_id { window.GetID(str_id, null()) } else { g.LastItemData.ID };    // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
+    let mut id: ImGuiID =  if str_id { window.id_from_str(str_id, null()) } else { g.LastItemData.ID };    // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
     // IM_ASSERT(id != 0);                                             // You cannot pass a NULL str_id if the last item has no identifier (e.g. a Text() item)
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup)) {
@@ -470,7 +470,7 @@ pub unsafe fn BeginPopupContextWindow(mut str_id: *const c_char, popup_flags: Im
     if !str_id {
         str_id = str_to_const_c_char_ptr("window_context");
     }
-    let mut id: ImGuiID =  window.GetID(str_id, null());
+    let mut id: ImGuiID =  window.id_from_str(str_id, null());
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if IsMouseReleased(mouse_button) && IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) {
         if flag_clear(popup_flags, ImGuiPopupFlags_NoOpenOverItems) || !IsAnyItemHovered() {
@@ -487,7 +487,7 @@ pub unsafe fn BeginPopupContextVoid(mut str_id: *const c_char, popup_flags: ImGu
     if (!str_id) {
         str_id = str_to_const_c_char_ptr("void_context");
     }
-    let mut id: ImGuiID =  window.GetID(str_id, null());
+    let mut id: ImGuiID =  window.id_from_str(str_id, null());
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if IsMouseReleased(mouse_button) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow) {
         if GetTopMostPopupModal() == null_mut() {
@@ -520,10 +520,10 @@ pub unsafe fn FindBestWindowPosForPopupEx(ref_pos: &ImVec2, size: &ImVec2, last_
                 continue;
             }
             pos: ImVec2;
-            if dir == ImGuiDir_Down { pos = ImVec2::new(r_avoid.Min.x, r_avoid.Max.y); }       // Below, Toward Right (default)
-            if dir == ImGuiDir_Right { pos = ImVec2::new(r_avoid.Min.x, r_avoid.Min.y - size.y); } // Above, Toward Right
-            if dir == ImGuiDir_Left { pos = ImVec2::new(r_avoid.Max.x - size.x, r_avoid.Max.y); } // Below, Toward Left
-            if dir == ImGuiDir_Up { pos = ImVec2::new(r_avoid.Max.x - size.x, r_avoid.Min.y - size.y); } // Above, Toward Left
+            if dir == ImGuiDir_Down { pos = ImVec2::from_floats(r_avoid.Min.x, r_avoid.Max.y); }       // Below, Toward Right (default)
+            if dir == ImGuiDir_Right { pos = ImVec2::from_floats(r_avoid.Min.x, r_avoid.Min.y - size.y); } // Above, Toward Right
+            if dir == ImGuiDir_Left { pos = ImVec2::from_floats(r_avoid.Max.x - size.x, r_avoid.Max.y); } // Below, Toward Left
+            if dir == ImGuiDir_Up { pos = ImVec2::from_floats(r_avoid.Max.x - size.x, r_avoid.Min.y - size.y); } // Above, Toward Left
             if (!r_outer.Contains(ImRect(pos, pos + size))) {
                 continue;
             }
@@ -582,7 +582,7 @@ pub unsafe fn FindBestWindowPosForPopupEx(ref_pos: &ImVec2, size: &ImVec2, last_
 
     // For tooltip we prefer avoiding the cursor at all cost even if it means that part of the tooltip won't be visible.
     if policy == ImGuiPopupPositionPolicy_Tooltip {
-        return ref_pos + ImVec2::new(2.0, 2.0);
+        return ref_pos + ImVec2::from_floats(2.0, 2.0);
     }
 
     // Otherwise try to keep within display
@@ -610,8 +610,8 @@ pub unsafe fn GetPopupAllowedExtentRect(window: *mut ImGuiWindow) -> ImRect
         r_screen = window.Viewport.GetMainRect();
     }
     let padding: ImVec2 = g.Style.DisplaySafeAreaPadding;
-    r_screen.Expand2(&ImVec2::new(if r_screen.GetWidth() > padding.x * 2 { -padding.x } else { 0.0 },
-                                  if r_screen.GetHeight() > padding.y * 2 { -padding.y } else { 0.0 }));
+    r_screen.expand_from_vec(&ImVec2::from_floats(if r_screen.GetWidth() > padding.x * 2 { -padding.x } else { 0.0 },
+                                                  if r_screen.GetHeight() > padding.y * 2 { -padding.y } else { 0.0 }));
     return r_screen;
 }
 

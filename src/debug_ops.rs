@@ -198,7 +198,7 @@ pub unsafe fn DebugRenderViewportThumbnail(draw_list: *mut ImDrawList, viewport:
         let thumb_r: ImRect =  thumb_window.Rect();
         let title_r: ImRect =  thumb_window.TitleBarRect();
         thumb_r = ImRect(ImFloor(off + thumb_r.Min * scale), ImFloor(off +  thumb_r.Max * scale));
-        title_r = ImRect(ImFloor(off + title_r.Min * scale), ImFloor(off +  ImVec2::new(title_r.Max.x, title_r.Min.y) * scale) + ImVec2::new(0,5)); // Exaggerate title bar height
+        title_r = ImRect(ImFloor(off + title_r.Min * scale), ImFloor(off +  ImVec2::from_floats(title_r.Max.x, title_r.Min.y) * scale) + ImVec2::from_floats(0, 5)); // Exaggerate title bar height
         thumb_r.ClipWithFull(bb);
         title_r.ClipWithFull(bb);
         let window_is_focused: bool = (g.NavWindow && thumb_window.RootWindowForTitleBarHighlight == g.NavWindow.RootWindowForTitleBarHighlight);
@@ -301,7 +301,7 @@ pub unsafe fn ShowFontAtlas(atlas: *mut ImFontAtlas)
     {
         tint_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 1.0);
         border_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 0.5);
-        Image(atlas->TexID, ImVec2::new(atlas->TexWidth, atlas->TexHeight), ImVec2::new(0.0, 0.0), ImVec2::new(1.0, 1.0), tint_col, border_col);
+        Image(atlas->TexID, ImVec2::from_floats(atlas->TexWidth, atlas->TexHeight), ImVec2::from_floats(0.0, 0.0), ImVec2::from_floats(1.0, 1.0), tint_col, border_col);
         TreePop();
     }
 }
@@ -837,7 +837,7 @@ pub unsafe fn DebugNodeDockNodeFlags(ImGuiDockNodeFlags* p_flags, label: *const 
 {
     using namespace ImGui;
     PushID(label);
-    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::new(0.0, 0.0));
+    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::from_floats(0.0, 0.0));
     Text("%s:", label);
     if (!enabled)
         BeginDisabled();
@@ -1087,7 +1087,7 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
     if (TreeNode("Glyphs", "Glyphs (%d)", font->Glyphs.Size))
     {
         let mut  draw_list: *mut ImDrawList =  GetWindowDrawList();
-        glyph_col: u32 = GetColorU32(ImGuiCol_Text);
+        glyph_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
         let cell_size: c_float =  font->FontSize * 1;
         let cell_spacing: c_float =  GetStyle().ItemSpacing.y;
         for (let mut base: c_uint =  0; base <= IM_UNICODE_CODEPOINT_MAX; base += 256)
@@ -1130,7 +1130,7 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
                     EndTooltip();
                 }
             }
-            Dummy(ImVec2::new((cell_size + cell_spacing) * 16, (cell_size + cell_spacing) * 16));
+            Dummy(ImVec2::from_floats((cell_size + cell_spacing) * 16, (cell_size + cell_spacing) * 16));
             TreePop();
         }
         TreePop();
@@ -1184,8 +1184,8 @@ pub unsafe fn DebugNodeTabBar(ImGuiTabBar* tab_bar, label: *const c_char)
     {
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList();
         draw_list.AddRect(tab_bar.BarRect.Min, tab_bar.BarRect.Max, IM_COL32(255, 255, 0, 255));
-        draw_list.AddLine(ImVec2::new(tab_bar->ScrollingRectMinX, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar->ScrollingRectMinX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255));
-        draw_list.AddLine(ImVec2::new(tab_bar->ScrollingRectMaxX, tab_bar.BarRect.Min.y), ImVec2::new(tab_bar->ScrollingRectMaxX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255));
+        draw_list.AddLine(ImVec2::from_floats(tab_bar->ScrollingRectMinX, tab_bar.BarRect.Min.y), ImVec2::from_floats(tab_bar->ScrollingRectMinX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255));
+        draw_list.AddLine(ImVec2::from_floats(tab_bar->ScrollingRectMaxX, tab_bar.BarRect.Min.y), ImVec2::from_floats(tab_bar->ScrollingRectMaxX, tab_bar.BarRect.Max.y), IM_COL32(0, 255, 0, 255));
     }
     if (open)
     {
@@ -1213,7 +1213,7 @@ pub unsafe fn DebugNodeViewport(viewport: *mut ImGuiViewport)
             viewport.Pos.x, viewport.Pos.y, viewport.Size.x, viewport.Size.y,
             viewport.WorkOffsetMin.x, viewport.WorkOffsetMin.y, viewport.WorkOffsetMax.x, viewport.WorkOffsetMax.y,
             viewport.PlatformMonitor, viewport.DpiScale * 100);
-        if (viewport.Idx > 0) { SameLine(); if (SmallButton("Reset Pos")) { viewport.Pos = ImVec2::new(200, 200); viewport.UpdateWorkRect(); if viewport.Window{ viewport.window.Pos = viewport.Pos;} } }
+        if (viewport.Idx > 0) { SameLine(); if (SmallButton("Reset Pos")) { viewport.Pos = ImVec2::from_floats(200, 200); viewport.UpdateWorkRect(); if viewport.Window{ viewport.window.Pos = viewport.Pos;} } }
         BulletText("Flags: 0x%04X =%s%s%s%s%s%s%s%s%s%s%s%s", viewport.Flags,
             //(flags & ImGuiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard
             flag_set(flags, ImGuiViewportFlags_IsPlatformMonitor) ? " IsPlatformMonitor" : "",
@@ -1363,7 +1363,7 @@ pub unsafe fn ShowDebugLogWindow(bool* p_open)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize))
-        SetNextWindowSize(ImVec2::new(0.0, GetFontSize() * 12.0), ImGuiCond_FirstUseEver);
+        SetNextWindowSize(ImVec2::from_floats(0.0, GetFontSize() * 12.0), ImGuiCond_FirstUseEver);
     if (!Begin("Dear ImGui Debug Log", p_open) || GetCurrentWindow()->BeginCount > 1)
     {
         End();
@@ -1387,7 +1387,7 @@ pub unsafe fn ShowDebugLogWindow(bool* p_open)
     SameLine();
     if (SmallButton("Copy"))
         SetClipboardText(g.DebugLogBuf.c_str());
-    BeginChild("##log", ImVec2::new(0.0, 0.0), true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+    BeginChild("##log", ImVec2::from_floats(0.0, 0.0), true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
     TextUnformatted(g.DebugLogBuf.begin(), g.DebugLogBuf.end()); // FIXME-OPT: Could use a line index, but TextUnformatted() has a semi-decent fast path for large text.
     if GetScrollY() >= GetScrollMaxY(){
         SetScrollHereY(1.0);}
@@ -1492,7 +1492,7 @@ pub unsafe fn ShowStackToolWindow(bool* p_open)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize))
-        SetNextWindowSize(ImVec2::new(0.0, GetFontSize() * 8.0), ImGuiCond_FirstUseEver);
+        SetNextWindowSize(ImVec2::from_floats(0.0, GetFontSize() * 8.0), ImGuiCond_FirstUseEver);
     if (!Begin("Dear ImGui Stack Tool", p_open) || GetCurrentWindow()->BeginCount > 1)
     {
         End();
@@ -1557,7 +1557,7 @@ pub unsafe fn ShowStackToolWindow(bool* p_open)
             TableNextColumn();
             Text("0x%08X", info.ID);
             if (n == tool.Results.Size - 1)
-                TableSetBgColor(ImGuiTableBgTarget_CellBg, GetColorU32(ImGuiCol_Header));
+                TableSetBgColor(ImGuiTableBgTarget_CellBg, GetColorU32(ImGuiCol_Header, 0.0));
         }
         EndTable();
     }

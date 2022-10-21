@@ -40,7 +40,7 @@ pub fn ImBezierCubicClosestPointCasteljauStep(p: &mut ImVec2, p_closest: &mut Im
     d2 = if d2 >= 0.0 { d2 } else { -d2 };
     d3 = if d3 >= 0.0 { d3 } else { -d3 };
     if (d2 + d3) * (d2 + d3) < tess_tol * (dx * dx + dy * dy) {
-        let mut p_current = ImVec2::new(x4, y4);
+        let mut p_current = ImVec2::from_floats(x4, y4);
         let mut p_line = ImLineClosestPoint(p_last, p_current, p);
         let mut dist2 = ImLengthSqr(p - p_line);
         if dist2 < p_closest_dist2 {

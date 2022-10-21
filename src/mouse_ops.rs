@@ -213,7 +213,7 @@ pub unsafe fn UpdateMouseInputs() {
     if IsMousePosValid(&io.MousePos) && IsMousePosValid(&io.MousePosPrev) {
         io.MouseDelta = io.MousePos.clone() - io.MousePosPrev.clone();
     } else {
-        io.MouseDelta = ImVec2::new(0.0, 0.0);
+        io.MouseDelta = ImVec2::from_floats(0.0, 0.0);
     }
 
     // If mouse moved we re-enable mouse hovering in case it was disabled by gamepad/keyboard. In theory should use a >0.0 threshold but would need to reset in everywhere we set this to true.
@@ -232,7 +232,7 @@ pub unsafe fn UpdateMouseInputs() {
         if io.MouseClicked[i] {
             let mut is_repeated_click: bool = false;
             if (g.Time - io.MouseClickedTime[i]) < io.MouseDoubleClickTime {
-                let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new(0.0, 0.0) };
+                let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::from_floats(0.0, 0.0) };
                 if ImLengthSqr(delta_from_click_pos) < io.MouseDoubleClickMaxDist * io.MouseDoubleClickMaxDist {
                     is_repeated_click = true;
                 }
@@ -245,11 +245,11 @@ pub unsafe fn UpdateMouseInputs() {
             io.MouseClickedTime[i] = g.Time.clone();
             io.MouseClickedPos[i] = io.MousePos.clone();
             io.MouseClickedCount[i] = io.MouseClickedLastCount[i];
-            io.MouseDragMaxDistanceAbs[i] = ImVec2::new(0.0, 0.0);
+            io.MouseDragMaxDistanceAbs[i] = ImVec2::from_floats(0.0, 0.0);
             io.MouseDragMaxDistanceSqr[i] = 0.0;
         } else if io.MouseDown[i] {
             // Maintain the maximum distance we reaching from the initial click position, which is used with dragging threshold
-            let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::new(0.0, 0.0) };
+            let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) { (io.MousePos.clone() - io.MouseClickedPos[i].clone()) } else { ImVec2::from_floats(0.0, 0.0) };
             io.MouseDragMaxDistanceSqr[i] = ImMax(io.MouseDragMaxDistanceSqr[i], ImLengthSqr(delta_from_click_pos));
             io.MouseDragMaxDistanceAbs[i].x = ImMax(io.MouseDragMaxDistanceAbs[i].x, if delta_from_click_pos.x < 0.0 { delta_from_click_pos.x.clone() * -1 } else { delta_from_click_pos.x.clone() });
             io.MouseDragMaxDistanceAbs[i].y = ImMax(io.MouseDragMaxDistanceAbs[i].y, if delta_from_click_pos.y < 0.0 { delta_from_click_pos.y.clone() * -1 } else { delta_from_click_pos.y.clone() });
@@ -369,7 +369,7 @@ pub unsafe fn UpdateMouseWheel() {
 pub unsafe fn UpdateHoveredWindowAndCaptureFlags() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let io = &mut g.IO;
-    g.WindowsHoverPadding = ImMax(g.Style.TouchExtraPadding.clone(), ImVec2::new(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING));
+    g.WindowsHoverPadding = ImMax(g.Style.TouchExtraPadding.clone(), ImVec2::from_floats(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING));
 
     // Find the window hovered by mouse:
     // - Child windows can extend beyond the limit of their parent so we need to derive HoveredRootWindow from HoveredWindow.

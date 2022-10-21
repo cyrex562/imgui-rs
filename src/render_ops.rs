@@ -45,70 +45,68 @@ use crate::window_flags::{ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoBring
 use crate::window_ops::{IsWindowActiveAndVisible, RenderDimmedBackgrounds};
 
 // FindRenderedTextEnd: *const c_char(text: *const c_char, text_end: *const c_char)
-pub unsafe fn FindRenderedTextEnd(text: *const c_char, mut text_end: *const c_char) -> *const c_char {
-    let mut text_display_end: *const c_char = text;
-    if !text_end {
-        text_end = null();
-    }
-
-    while text_display_end < text_end && *text_display_end != '\0' as c_char && (text_display_end[0] != '#' || text_display_end[1] != '#') {
-        text_display_end += 1;
-    }
-    return text_display_end;
+pub unsafe fn FindRenderedTextEnd(text: &str) -> usize {
+    // let mut text_display_end: *const c_char = text;
+    // if !text_end {
+    //     text_end = null();
+    // }
+    //
+    // while text_display_end < text_end && *text_display_end != '\0' as c_char && (text_display_end[0] != '#' || text_display_end[1] != '#') {
+    //     text_display_end += 1;
+    // }
+    // return text_display_end;
+    todo!()
 }
 
 // Internal ImGui functions to render text
 // RenderText***() functions calls ImDrawList::AddText() calls ImBitmapFont::RenderText()
 // c_void RenderText(pos: ImVec2, text: *const c_char, text_end: *const c_char, hide_text_after_hash: bool)
-pub unsafe fn RenderText(pos: ImVec2, text: *const c_char, mut text_end: *const c_char, hide_text_after_hash: bool) {
+pub unsafe fn RenderText(pos: ImVec2, text: &str, hide_text_after_hash: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
 
     // Hide anything after a '##' string
-    let text_display_end: *const c_char;
+    let mut text_display_end = 0usize;
     if hide_text_after_hash {
-        text_display_end = FindRenderedTextEnd(text, text_end);
+        text_display_end = FindRenderedTextEnd(text);
     } else {
-        if !text_end {
-            text_end = text + libc::strlen(text);
-        } // FIXME-OPT
-        text_display_end = text_end;
+        // if !text_end {
+        //     text_end = text + libc::strlen(text);
+        // } // FIXME-OPT
+        text_display_end = text.len() - 1;;
     }
 
     if text != text_display_end {
-        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0.0), text, text_display_end, 0.0, null());
+        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0.0), text,  0.0, null());
         if g.LogEnabled {
-            LogRenderedText(&pos, text, text_display_end);
+            // LogRenderedText(&pos, text, text_display_end);
         }
     }
 }
 
 // c_void RenderTextWrapped(pos: ImVec2, text: *const c_char, text_end: *const c_char, c_float wrap_width)
-pub unsafe fn RenderTextWrapped(pos: ImVec2, text: *const c_char, mut text_end: *const c_char)
+pub unsafe fn RenderTextWrapped(pos: ImVec2, text: &str)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
 
-    if !text_end {
-        text_end = text + libc::strlen(text);
-    } // FIXME-OPT
+    // if !text_end {
+    //     text_end = text + libc::strlen(text);
+    // } // FIXME-OPT
 
-    if text != text_end
-    {
-        window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0.0), text, text_end, wrap_width, null());
+    window.DrawList.AddText2(g.Font, g.FontSize, &pos, GetColorU32(ImGuiCol_Text, 0.0), text, wrap_width, null());
         if g.LogEnabled {
-            LogRenderedText(&pos, text, text_end);
+            // LogRenderedText(&pos, text, text_end);
         }
-    }
 }
 
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
 // c_void RenderTextClippedEx(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: *const c_char, text_display_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
-pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_display_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
+pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, text: &str, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     let mut pos: ImVec2 = pos_min.clone();
-    let text_size = if text_size_if_known { text_size_if_known.clone() } else { CalcTextSize(text, text_display_end, false, 0.0) };
+    let text_size = if text_size_if_known { text_size_if_known.clone() } else { CalcTextSize(text,  false, 0.0) };
 
     let clip_min: *const ImVec2 = if clip_rect { &clip_rect.Min } else { &pos_min };
     clip_max: *const ImVec2 = if clip_rect { &clip_rect.Max } else { &pos_max };
@@ -128,16 +126,16 @@ pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVe
     // Render
     if need_clipping {
         let mut fine_clip_rect = ImVec4::from_floats(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
-        draw_list.AddText2(null(), 0.0, &pos, GetColorU32(ImGuiCol_Text, 0.0), text, text_display_end, 0.0, &fine_clip_rect);
+        draw_list.AddText2(null(), 0.0, &pos, GetColorU32(ImGuiCol_Text, 0.0), text,  0.0, &fine_clip_rect);
     } else {
-        draw_list.AddText2(null_mut(), 0.0, &pos, GetColorU32(ImGuiCol_Text, 0.0), text, text_display_end, 0.0, null_mut());
+        draw_list.AddText2(null_mut(), 0.0, &pos, GetColorU32(ImGuiCol_Text, 0.0), text,  0.0, null_mut());
     }
 }
 
 // c_void RenderTextClipped(const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
-pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const c_char, text_end: *const c_char, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
+pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: &str,  text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
     // Hide anything after a '##' string
-    let mut text_display_end: *const c_char = FindRenderedTextEnd(text, text_end);
+    let mut text_display_end = FindRenderedTextEnd(text);
     let text_len: c_int = (text_display_end - text);
     if text_len == 0 {
         return;
@@ -145,9 +143,9 @@ pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    RenderTextClippedEx(window.DrawList, pos_min, pos_max, text, text_display_end, text_size_if_known, align, clip_rect);
+    RenderTextClippedEx(window.DrawList, pos_min, pos_max, text,  text_size_if_known, align, clip_rect);
     if g.LogEnabled {
-        LogRenderedText(pos_min, text, text_display_end);
+        // LogRenderedText(pos_min, text);
     }
 }
 
@@ -156,12 +154,13 @@ pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: *const
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
 // c_void RenderTextEllipsis(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, c_float clip_max_x, c_float ellipsis_max_x, text: *const c_char, text_end_full: *const c_char, *const text_size_if_known: ImVec2)
-pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, clip_max_x: c_float, ellipsis_max_x: c_float, text: *const c_char, mut text_end_full: *const c_char, text_size_if_known: *const ImVec2) {
+pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, clip_max_x: c_float, ellipsis_max_x: c_float, text: &str, text_size_if_known: *const ImVec2) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if text_end_full == null() {
-        text_end_full = FindRenderedTextEnd(text, null());
-    }
-    let text_size: ImVec2 = if text_size_if_known { (*text_size_if_known).clone() } else { CalcTextSize(text, text_end_full, false, 0.0) };
+    // if text_end_full == null() {
+    //     text_end_full = FindRenderedTextEnd(text);
+    // }
+    let text_end_full = FindRenderedTextEnd(text);
+    let text_size: ImVec2 = if text_size_if_known { (*text_size_if_known).clone() } else { CalcTextSize(text,  false, 0.0) };
 
     //draw_list.AddLine(ImVec2::new(pos_max.x, pos_min.y - 4), ImVec2::new(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
     //draw_list.AddLine(ImVec2::new(ellipsis_max_x, pos_min.y-2), ImVec2::new(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
@@ -175,7 +174,7 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
 
         let mut font: *const ImFont = draw_list._Data.Font;
         let font_size: c_float = draw_list._Data.FontSize;
-        let mut text_end_ellipsis: *const c_char = null();
+        let mut text_end_ellipsis= 0usize;
 
         let mut ellipsis_char: ImWchar = font.EllipsisChar;
         let mut ellipsis_char_count: c_int = 1;
@@ -197,11 +196,11 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
 
         // We can now claim the space between pos_max.x and ellipsis_max.x
         let text_avail_width: c_float = ImMax((ImMax(pos_max.x, ellipsis_max_x) - ellipsis_total_width) - pos_min.x, 1.0);
-        let mut text_size_clipped_x: c_float = font.CalcTextSizeA(font_size, text_avail_width, 0.0, text, text_end_full, &mut text_end_ellipsis).x;
+        let mut text_size_clipped_x: c_float = font.CalcTextSizeA(font_size, text_avail_width, 0.0, text,  &mut text_end_ellipsis).x;
         if text == text_end_ellipsis && text_end_ellipsis < text_end_full {
             // Always display at least 1 character if there's no room for character + ellipsis
-            text_end_ellipsis = text + ImTextCountUtf8BytesFromChar(text, text_end_full);
-            text_size_clipped_x = font.CalcTextSizeA(font_size, f32::MAX, 0.0, text, text_end_ellipsis, null_mut()).x;
+            text_end_ellipsis = text + ImTextCountUtf8BytesFromChar(text);
+            text_size_clipped_x = font.CalcTextSizeA(font_size, f32::MAX, 0.0, text, &mut text_end_ellipsis).x;
         }
         while text_end_ellipsis > text && ImCharIsBlankA(text_end_ellipsis[-1]) {
             // Trim trailing space before ellipsis (FIXME: Supporting non-ascii blanks would be nice, for this we need a function to backtrack in UTF-8 text)
@@ -210,17 +209,17 @@ pub unsafe fn RenderTextEllipsis(draw_list: *mut ImDrawList, pos_min: &ImVec2, p
         }
 
         // Render text, render ellipsis
-        RenderTextClippedEx(draw_list, pos_min, &ImVec2::new(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, &ImVec2::new(0.0, 0.0), null_mut());
+        RenderTextClippedEx(draw_list, pos_min, &ImVec2::from_floats(clip_max_x, pos_max.y), text, text_end_ellipsis, &text_size, &ImVec2::from_floats(0.0, 0.0), null_mut());
         let mut ellipsis_x: c_float = pos_min.x + text_size_clipped_x;
         if ellipsis_x + ellipsis_total_width <= ellipsis_max_x {
             // for (let i: c_int = 0; i < ellipsis_char_count; i+ +)
             for i in 0..ellipsis_char_count {
-                font.RenderChar(draw_list, font_size, ImVec2::new(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text, 0.0), ellipsis_char);
+                font.RenderChar(draw_list, font_size, ImVec2::from_floats(ellipsis_x, pos_min.y), GetColorU32(ImGuiCol_Text, 0.0), ellipsis_char);
                 ellipsis_x += ellipsis_glyph_width;
             }
         }
     } else {
-        RenderTextClippedEx(draw_list, pos_min, ImVec2::new(clip_max_x, pos_max.y), text, text_end_full, &text_size, ImVec2::new(0.0, 0.0), null());
+        RenderTextClippedEx(draw_list, pos_min, ImVec2::from_floats(clip_max_x, pos_max.y), text, text_end_full, &text_size, ImVec2::from_floats(0.0, 0.0), null());
     }
 
     if g.LogEnabled {
@@ -236,8 +235,8 @@ pub unsafe fn RenderFrame(p_min: ImVec2, p_max: ImVec2, fill_col: u32, border: b
     window.DrawList.AddRectFilled(&p_min, &p_max, fill_col, rounding, ImDrawFlags_None);
     let border_size: c_float = g.Style.FrameBorderSize;
     if border && border_size > 0.0 {
-        window.DrawList.AddRect(p_min + ImVec2::new(1.0, 1.0), p_max + ImVec2::new(1.0, 1.0), GetColorU32(ImGuiCol_BorderShadow, 0.0), rounding, 0, border_size);
-        window.DrawList.AddRect(&p_min, &p_max, GetColorU32(ImGuiCol_Border, 0.0), rounding, 0, border_size);
+        window.DrawList.AddRect(p_min + ImVec2::from_floats(1.0, 1.0), p_max + ImVec2::from_floats(1.0, 1.0), GetColorU32(ImGuiCol_BorderShadow, 0.0), rounding);
+        window.DrawList.AddRect(&p_min, &p_max, GetColorU32(ImGuiCol_Border, 0.0), rounding);
     }
 }
 
@@ -247,8 +246,8 @@ pub unsafe fn RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float)
     let mut window = g.CurrentWindow;
     let border_size: c_float = g.Style.FrameBorderSize;
     if border_size > 0.0 {
-        window.DrawList.AddRect(p_min + ImVec2::new(1, 1), p_max + ImVec2::new(1, 1), GetColorU32(ImGuiCol_BorderShadow, 0.0), rounding, 0, border_size);
-        window.DrawList.AddRect(&p_min, &p_max, GetColorU32(ImGuiCol_Border, 0.0), rounding, 0, border_size);
+        window.DrawList.AddRect(p_min + ImVec2::from_floats(1, 1), p_max + ImVec2::from_floats(1, 1), GetColorU32(ImGuiCol_BorderShadow, 0.0), rounding);
+        window.DrawList.AddRect(&p_min, &p_max, GetColorU32(ImGuiCol_Border, 0.0), rounding);
     }
 }
 
@@ -272,18 +271,18 @@ pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighli
     if flags & ImGuiNavHighlightFlags_TypeDefault {
         let THICKNESS: c_float = 2.0;
         let DISTANCE: c_float = 3.0 + THICKNESS * 0.5;
-        display_rect.Expand(ImVec2::new(DISTANCE, DISTANCE));
+        display_rect.Expand(ImVec2::from_floats(DISTANCE, DISTANCE));
         let mut fully_visible: bool = window.ClipRect.Contains2(&display_rect);
         if !fully_visible {
             window.DrawList.PushClipRect(&display_rect.Min, &display_rect.Max, false);
         }
-        window.DrawList.AddRect(display_rect.Min + ImVec2::new(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.Max - ImVec2::new(THICKNESS * 0.5, THICKNESS * 0.5), GetColorU32(ImGuiCol_NavHighlight, 0.0), rounding, 0, THICKNESS);
+        window.DrawList.AddRect(display_rect.Min + ImVec2::from_floats(THICKNESS * 0.5, THICKNESS * 0.5), display_rect.Max - ImVec2::from_floats(THICKNESS * 0.5, THICKNESS * 0.5), GetColorU32(ImGuiCol_NavHighlight, 0.0), rounding);
         if !fully_visible {
             window.DrawList.PopClipRect();
         }
     }
     if flags & ImGuiNavHighlightFlags_TypeThin {
-        window.DrawList.AddRect(&display_rect.Min, &display_rect.Max, GetColorU32(ImGuiCol_NavHighlight, 0.0), rounding, 0, 1.0);
+        window.DrawList.AddRect(&display_rect.Min, &display_rect.Max, GetColorU32(ImGuiCol_NavHighlight, 0.0), rounding);
     }
 }
 
@@ -297,7 +296,7 @@ pub unsafe fn RenderMouseCursor(base_pos: ImVec2, base_scale: c_float, mouse_cur
         // We scale cursor with current viewport/monitor, however Windows 10 for its own hardware cursor seems to be using a different scale factor.
         // offset: ImVec2, size, uv[4];
         let mut offset: ImVec2;
-        let mut size: ImVec2 = ImVec2::new(0.0, 0.0);
+        let mut size: ImVec2 = ImVec2::from_floats(0.0, 0.0);
         let mut uv: [ImVec2; 4];
         let out_uv_border: [ImVec2; 2] = [uv[0].clone(), uv[1].clone()];
         let out_uv_fill: [ImVec2; 2] = [uv[2].clone(), uv[3].clone()];
@@ -307,14 +306,14 @@ pub unsafe fn RenderMouseCursor(base_pos: ImVec2, base_scale: c_float, mouse_cur
         let mut viewport: *mut ImGuiViewport = g.Viewports[n];
         let pos: ImVec2 = &base_pos - &offset;
         let scale: c_float = base_scale * viewport.DpiScale;
-        if !viewport.GetMainRect().Overlaps(ImRect(pos.clone(), pos.clone() + ImVec2::new(size.x + 2, size.y + 2) * scale)) {
+        if !viewport.GetMainRect().Overlaps(ImRect(pos.clone(), pos.clone() + ImVec2::from_floats(size.x + 2, size.y + 2) * scale)) {
             continue;
         }
         let mut draw_list: *mut ImDrawList = GetForegroundDrawList(viewport);
         let mut tex_id: ImTextureID = font_atlas.TexID;
         draw_list.PushTextureID(tex_id);
-        draw_list.AddImage(tex_id, pos + ImVec2::new(1, 0) * scale, &pos + (ImVec2::new(1.0, 0.0) + size) * scale, &uv[2], &uv[3], col_shadow);
-        draw_list.AddImage(tex_id, &pos + ImVec2::new(2, 0) * scale, &pos + (ImVec2::new(2, 0) + &size) * scale, &uv[2], &uv[3], col_shadow);
+        draw_list.AddImage(tex_id, pos + ImVec2::from_floats(1, 0) * scale, &pos + (ImVec2::from_floats(1.0, 0.0) + size) * scale, &uv[2], &uv[3], col_shadow);
+        draw_list.AddImage(tex_id, &pos + ImVec2::from_floats(2, 0) * scale, &pos + (ImVec2::from_floats(2, 0) + &size) * scale, &uv[2], &uv[3], col_shadow);
         draw_list.AddImage(tex_id, &pos, &pos + &size * scale, &uv[2], &uv[3], col_border);
         draw_list.AddImage(tex_id, &pos, &pos + &size * scale, &uv[0], &uv[1], col_fill);
         draw_list.PopTextureID();
@@ -410,7 +409,7 @@ pub unsafe fn RenderArrow(mut draw_list: *mut ImDrawList, pos: ImVec2, col: u32,
 {
     let h: c_float =  draw_list._Data.FontSize * 1;
     let mut r: c_float =  h * 0.40 * scale;
-    let center: ImVec2 = pos + ImVec2::new(h * 0.50, h * 0.50 * scale);
+    let center: ImVec2 = pos + ImVec2::from_floats(h * 0.50, h * 0.50 * scale);
 
     // a: ImVec2, b, c;
     let mut a = ImVec2::default();
@@ -420,15 +419,15 @@ pub unsafe fn RenderArrow(mut draw_list: *mut ImDrawList, pos: ImVec2, col: u32,
     match dir {
         ImGuiDir_Up | ImGuiDir_Down => {
             if dir == ImGuiDir_Up {r = -r};
-        a = ImVec2::new(0.0, 0.7500) * r;
-        b = ImVec2::new(-0.866, -0.7500) * r;
-        c = ImVec2::new(0.866, -0.7500) * r;
+        a = ImVec2::from_floats(0.0, 0.7500) * r;
+        b = ImVec2::from_floats(-0.866, -0.7500) * r;
+        c = ImVec2::from_floats(0.866, -0.7500) * r;
         },
         ImGuiDir_Left | ImGuiDir_Right => {
             if dir == ImGuiDir_Left { r = -r; }
-            a = ImVec2::new(0.750, 0.00) * r;
-            b = ImVec2::new(-0.750, 0.8660) * r;
-            c = ImVec2::new(-0.750, -0.8660) * r;
+            a = ImVec2::from_floats(0.750, 0.00) * r;
+            b = ImVec2::from_floats(-0.750, 0.8660) * r;
+            c = ImVec2::from_floats(-0.750, -0.8660) * r;
         },
         ImGuiDir_None | ImGuiDir_COUNT => {
 
@@ -448,14 +447,14 @@ pub unsafe fn RenderCheckMark(mut draw_list: *mut ImDrawList, mut pos: ImVec2, c
 {
     let thickness: c_float =  ImMax(sz / 5, 1.0);
     sz -= thickness * 0.5;
-    pos += ImVec2::new(thickness * 0.25, thickness * 0.250);
+    pos += ImVec2::from_floats(thickness * 0.25, thickness * 0.250);
 
     let third: c_float =  sz / 3.0;
     let bx: c_float =  pos.x + third;
     let by: c_float =  pos.y + sz - third * 0.5;
-    draw_list.PathLineTo(&ImVec2::new(bx - third, by - third));
-    draw_list.PathLineTo(&ImVec2::new(bx, by));
-    draw_list.PathLineTo(&ImVec2::new(bx + third * 2.0, by - third * 2.00));
+    draw_list.PathLineTo(&ImVec2::from_floats(bx - third, by - third));
+    draw_list.PathLineTo(&ImVec2::from_floats(bx, by));
+    draw_list.PathLineTo(&ImVec2::from_floats(bx + third * 2.0, by - third * 2.00));
     draw_list.PathStroke(col, 0, thickness);
 }
 
@@ -464,10 +463,10 @@ pub unsafe fn RenderArrowPointingAt(mut draw_list: *mut ImDrawList, pos: ImVec2,
 {
     match direction
     {
-     ImGuiDir_Left =>  draw_list.AddTriangleFilled(&ImVec2::new(pos.x + half_sz.x, pos.y - half_sz.y), &ImVec2::new(pos.x + half_sz.x, pos.y + half_sz.y), &pos, col),
-     ImGuiDir_Right => draw_list.AddTriangleFilled(&ImVec2::new(pos.x - half_sz.x, pos.y + half_sz.y), &ImVec2::new(pos.x - half_sz.x, pos.y - half_sz.y), &pos, col),
-     ImGuiDir_Up =>    draw_list.AddTriangleFilled(&ImVec2::new(pos.x + half_sz.x, pos.y + half_sz.y), &ImVec2::new(pos.x - half_sz.x, pos.y + half_sz.y), &pos, col),
-    ImGuiDir_Down =>  draw_list.AddTriangleFilled(&ImVec2::new(pos.x - half_sz.x, pos.y - half_sz.y), &ImVec2::new(pos.x + half_sz.x, pos.y - half_sz.y), &pos, col),
+     ImGuiDir_Left =>  draw_list.AddTriangleFilled(&ImVec2::from_floats(pos.x + half_sz.x, pos.y - half_sz.y), &ImVec2::from_floats(pos.x + half_sz.x, pos.y + half_sz.y), &pos, col),
+     ImGuiDir_Right => draw_list.AddTriangleFilled(&ImVec2::from_floats(pos.x - half_sz.x, pos.y + half_sz.y), &ImVec2::from_floats(pos.x - half_sz.x, pos.y - half_sz.y), &pos, col),
+     ImGuiDir_Up =>    draw_list.AddTriangleFilled(&ImVec2::from_floats(pos.x + half_sz.x, pos.y + half_sz.y), &ImVec2::from_floats(pos.x - half_sz.x, pos.y + half_sz.y), &pos, col),
+    ImGuiDir_Down =>  draw_list.AddTriangleFilled(&ImVec2::from_floats(pos.x - half_sz.x, pos.y - half_sz.y), &ImVec2::from_floats(pos.x + half_sz.x, pos.y - half_sz.y), &pos, col),
     ImGuiDir_None | ImGuiDir_COUNT => {} // Fix warnings
         _ => {}
     }
@@ -477,8 +476,8 @@ pub unsafe fn RenderArrowPointingAt(mut draw_list: *mut ImDrawList, pos: ImVec2,
 // and because the saved space means that the left-most tab label can stay at exactly the same position as the label of a loose window.
 pub unsafe fn RenderArrowDockMenu(mut draw_list: *mut ImDrawList, p_min: ImVec2,sz: c_float, col: u32)
 {
-    draw_list.AddRectFilled(p_min + ImVec2::new(sz * 0.20, sz * 0.150), p_min + ImVec2::new(sz * 0.80, sz * 0.3), col, 0.0, 0);
-    RenderArrowPointingAt(draw_list, p_min + ImVec2::new(sz * 0.50, sz * 0.850), ImVec2::new(sz * 0.3, sz * 0.4), ImGuiDir_Down, col);
+    draw_list.AddRectFilled(p_min + ImVec2::from_floats(sz * 0.20, sz * 0.150), p_min + ImVec2::from_floats(sz * 0.80, sz * 0.3), col, 0.0, 0);
+    RenderArrowPointingAt(draw_list, p_min + ImVec2::from_floats(sz * 0.50, sz * 0.850), ImVec2::from_floats(sz * 0.3, sz * 0.4), ImGuiDir_Down, col);
 }
 
 // FIXME: Cleanup and move code to ImDrawList.
@@ -492,8 +491,8 @@ pub unsafe fn RenderRectFilledRangeH(mut draw_list: *mut ImDrawList, rect: &ImRe
         swap(&mut x_start_norm, &mut x_end_norm);
     }
 
-    let p0: ImVec2 = ImVec2::new(ImLerp(rect.Min.x, rect.Max.x, x_start_norm), rect.Min.y);
-    let p1: ImVec2 = ImVec2::new(ImLerp(rect.Min.x, rect.Max.x, x_end_norm), rect.Max.y);
+    let p0: ImVec2 = ImVec2::from_floats(ImLerp(rect.Min.x, rect.Max.x, x_start_norm), rect.Min.y);
+    let p1: ImVec2 = ImVec2::from_floats(ImLerp(rect.Min.x, rect.Max.x, x_end_norm), rect.Max.y);
     if rounding == 0.0
     {
         draw_list.AddRectFilled(&p0, &p1, col, 0.0, 0);
@@ -508,18 +507,18 @@ pub unsafe fn RenderRectFilledRangeH(mut draw_list: *mut ImDrawList, rect: &ImRe
     let x0: c_float =  ImMax(p0.x, rect.Min.x + rounding);
     if arc0_b == arc0_e
     {
-        draw_list.PathLineTo(&ImVec2::new(x0, p1.y));
-        draw_list.PathLineTo(&ImVec2::new(x0, p0.y));
+        draw_list.PathLineTo(&ImVec2::from_floats(x0, p1.y));
+        draw_list.PathLineTo(&ImVec2::from_floats(x0, p0.y));
     }
     else if arc0_b == 0.0 && arc0_e == half_pi
     {
-        draw_list.PathArcToFast(&ImVec2::new(x0, p1.y - rounding), rounding, 3, 6); // BL
-        draw_list.PathArcToFast(&ImVec2::new(x0, p0.y + rounding), rounding, 6, 9); // TR
+        draw_list.PathArcToFast(&ImVec2::from_floats(x0, p1.y - rounding), rounding, 3, 6); // BL
+        draw_list.PathArcToFast(&ImVec2::from_floats(x0, p0.y + rounding), rounding, 6, 9); // TR
     }
     else
     {
-        draw_list.PathArcTo(&ImVec2::new(x0, p1.y - rounding), rounding, IM_PI - arc0_e, IM_PI - arc0_b, 3); // BL
-        draw_list.PathArcTo(&ImVec2::new(x0, p0.y + rounding), rounding, IM_PI + arc0_b, IM_PI + arc0_e, 3); // TR
+        draw_list.PathArcTo(&ImVec2::from_floats(x0, p1.y - rounding), rounding, IM_PI - arc0_e, IM_PI - arc0_b, 3); // BL
+        draw_list.PathArcTo(&ImVec2::from_floats(x0, p0.y + rounding), rounding, IM_PI + arc0_b, IM_PI + arc0_e, 3); // TR
     }
     if p1.x > rect.Min.x + rounding
     {
@@ -528,18 +527,18 @@ pub unsafe fn RenderRectFilledRangeH(mut draw_list: *mut ImDrawList, rect: &ImRe
         let x1: c_float =  ImMin(p1.x, rect.Max.x - rounding);
         if arc1_b == arc1_e
         {
-            draw_list.PathLineTo(&ImVec2::new(x1, p0.y));
-            draw_list.PathLineTo(&ImVec2::new(x1, p1.y));
+            draw_list.PathLineTo(&ImVec2::from_floats(x1, p0.y));
+            draw_list.PathLineTo(&ImVec2::from_floats(x1, p1.y));
         }
         else if arc1_b == 0.0 && arc1_e == half_pi
         {
-            draw_list.PathArcToFast(&ImVec2::new(x1, p0.y + rounding), rounding, 9, 12); // TR
-            draw_list.PathArcToFast(&ImVec2::new(x1, p1.y - rounding), rounding, 0, 3);  // BR
+            draw_list.PathArcToFast(&ImVec2::from_floats(x1, p0.y + rounding), rounding, 9, 12); // TR
+            draw_list.PathArcToFast(&ImVec2::from_floats(x1, p1.y - rounding), rounding, 0, 3);  // BR
         }
         else
         {
-            draw_list.PathArcTo(&ImVec2::new(x1, p0.y + rounding), rounding, -arc1_e, -arc1_b, 3); // TR
-            draw_list.PathArcTo(&ImVec2::new(x1, p1.y - rounding), rounding, arc1_b, arc1_e, 3); // BR
+            draw_list.PathArcTo(&ImVec2::from_floats(x1, p0.y + rounding), rounding, -arc1_e, -arc1_b, 3); // TR
+            draw_list.PathArcTo(&ImVec2::from_floats(x1, p1.y - rounding), rounding, arc1_b, arc1_e, 3); // BR
         }
     }
     draw_list.PathFillConvex(col);
@@ -550,28 +549,28 @@ pub unsafe fn RenderRectFilledWithHole(mut draw_list: *mut ImDrawList, outer: &I
     let fill_R: bool = (inner.Max.x < outer.Max.x);
     let fill_U: bool = (inner.Min.y > outer.Min.y);
     let fill_D: bool = (inner.Max.y < outer.Max.y);
-    if fill_L { draw_list.AddRectFilled(&ImVec2::new(outer.Min.x, inner.Min.y), &ImVec2::new(inner.Min.x, inner.Max.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_U { 0 } else { ImDrawFlags_RoundCornersTopLeft }) | (if fill_D { 0 } else { ImDrawFlags_RoundCornersBottomLeft })); }
+    if fill_L { draw_list.AddRectFilled(&ImVec2::from_floats(outer.Min.x, inner.Min.y), &ImVec2::from_floats(inner.Min.x, inner.Max.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_U { 0 } else { ImDrawFlags_RoundCornersTopLeft }) | (if fill_D { 0 } else { ImDrawFlags_RoundCornersBottomLeft })); }
     if fill_R {
-        draw_list.AddRectFilled(&ImVec2::new(inner.Max.x, inner.Min.y), &ImVec2::new(outer.Max.x, inner.Max.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_U? { 0 } else { ImDrawFlags_RoundCornersTopRight }) | (if fill_D {
+        draw_list.AddRectFilled(&ImVec2::from_floats(inner.Max.x, inner.Min.y), &ImVec2::from_floats(outer.Max.x, inner.Max.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_U? { 0 } else { ImDrawFlags_RoundCornersTopRight }) | (if fill_D {
             0
         } else { ImDrawFlags_RoundCornersBottomRight }));
     }
     if fill_U {
-        draw_list.AddRectFilled(&ImVec2::new(inner.Min.x, outer.Min.y), &ImVec2::new(inner.Max.x, inner.Min.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_L { 0 } else { ImDrawFlags_RoundCornersTopLeft }) | (if fill_R {
+        draw_list.AddRectFilled(&ImVec2::from_floats(inner.Min.x, outer.Min.y), &ImVec2::from_floats(inner.Max.x, inner.Min.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_L { 0 } else { ImDrawFlags_RoundCornersTopLeft }) | (if fill_R {
             0
         } else { ImDrawFlags_RoundCornersTopRight }));
     }
     if fill_D {
-        draw_list.AddRectFilled(&ImVec2::new(inner.Min.x, inner.Max.y), &ImVec2::new(inner.Max.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_L { 0 } else { ImDrawFlags_RoundCornersBottomLeft }) | (if fill_R {
+        draw_list.AddRectFilled(&ImVec2::from_floats(inner.Min.x, inner.Max.y), &ImVec2::from_floats(inner.Max.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersNone | (if fill_L { 0 } else { ImDrawFlags_RoundCornersBottomLeft }) | (if fill_R {
             0
         } else { ImDrawFlags_RoundCornersBottomRight }));
     }
-    if fill_L && fill_U { draw_list.AddRectFilled(&ImVec2::new(outer.Min.x, outer.Min.y), &ImVec2::new(inner.Min.x, inner.Min.y), col, rounding, ImDrawFlags_RoundCornersTopLeft); }
+    if fill_L && fill_U { draw_list.AddRectFilled(&ImVec2::from_floats(outer.Min.x, outer.Min.y), &ImVec2::from_floats(inner.Min.x, inner.Min.y), col, rounding, ImDrawFlags_RoundCornersTopLeft); }
     if fill_R && fill_U {
-        draw_list.AddRectFilled(&ImVec2::new(inner.Max.x, outer.Min.y), &ImVec2::new(outer.Max.x, inner.Min.y), col, rounding, ImDrawFlags_RoundCornersTopRight);
+        draw_list.AddRectFilled(&ImVec2::from_floats(inner.Max.x, outer.Min.y), &ImVec2::from_floats(outer.Max.x, inner.Min.y), col, rounding, ImDrawFlags_RoundCornersTopRight);
     }
-    if fill_L && fill_D { draw_list.AddRectFilled(&ImVec2::new(outer.Min.x, inner.Max.y), &ImVec2::new(inner.Min.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersBottomLeft); }
-    if fill_R && fill_D { draw_list.AddRectFilled(&ImVec2::new(inner.Max.x, inner.Max.y), &ImVec2::new(outer.Max.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersBottomRight); }
+    if fill_L && fill_D { draw_list.AddRectFilled(&ImVec2::from_floats(outer.Min.x, inner.Max.y), &ImVec2::from_floats(inner.Min.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersBottomLeft); }
+    if fill_R && fill_D { draw_list.AddRectFilled(&ImVec2::from_floats(inner.Max.x, inner.Max.y), &ImVec2::from_floats(outer.Max.x, outer.Max.y), col, rounding, ImDrawFlags_RoundCornersBottomRight); }
 }
 
 pub fn CalcRoundingFlagsForRectInRect(r_in: &ImRect, r_outer: &ImRect, threshold: c_float) -> ImDrawFlags
@@ -627,7 +626,7 @@ pub unsafe fn RenderColorRectWithAlphaCheckerboard(mut draw_list: *mut ImDrawLis
                 cell_flags = if flags == ImDrawFlags_RoundCornersNone || cell_flags == ImDrawFlags_RoundCornersNone { 
                     ImDrawFlags_RoundCornersNone } else { 
                     (cell_flags & flags) };
-                draw_list.AddRectFilled(&ImVec2::new(x1, y1), &ImVec2::new(x2, y2), col_bg2, rounding, cell_flags);
+                draw_list.AddRectFilled(&ImVec2::from_floats(x1, y1), &ImVec2::from_floats(x2, y2), col_bg2, rounding, cell_flags);
             }
             yi += 1;
         }

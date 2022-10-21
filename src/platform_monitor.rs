@@ -24,10 +24,10 @@ impl ImGuiPlatformMonitor {
     // ImGuiPlatformMonitor()          { MainPos = MainSize = WorkPos = WorkSize = ImVec2::new(0, 0); DpiScale = 1.0; }
     pub fn new() -> Self {
         Self {
-            MainPos: ImVec2::new(),
-            MainSize: ImVec2::new(),
-            WorkPos: ImVec2::new(),
-            WorkSize: ImVec2::new(),
+            MainPos: ImVec2::from_floats(),
+            MainSize: ImVec2::from_floats(),
+            WorkPos: ImVec2::from_floats(),
+            WorkSize: ImVec2::from_floats(),
             DpiScale: 1.0,
         }
     }

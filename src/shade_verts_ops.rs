@@ -35,7 +35,7 @@ pub fn ShadeVertsLinearUV(draw_list: *mut ImDrawList, vert_start_idx: c_int, ver
 {
     let size: ImVec2 = b - a;
     let uv_size: ImVec2 = uv_b - uv_a;
-    let scale: ImVec2 = ImVec2::new(
+    let scale: ImVec2 = ImVec2::from_floats(
         if size.x != 0.0 { (uv_size.x / size.x) } else { 0 },
         if size.y != 0.0 { (uv_size.y / size.y) } else { 0 });
 
@@ -48,7 +48,7 @@ pub fn ShadeVertsLinearUV(draw_list: *mut ImDrawList, vert_start_idx: c_int, ver
         // for (vertex: *mut ImDrawVert = vert_start; vertex < vert_end; ++vertex)
         for vert in vert_start .. vert_end
         {
-            vertex.uv = ImClamp(uv_a + ImMul(ImVec2::new(vertex.pos.x, vertex.pos.y) - a, &scale), min, max);
+            vertex.uv = ImClamp(uv_a + ImMul(ImVec2::from_floats(vertex.pos.x, vertex.pos.y) - a, &scale), min, max);
         }
     }
     else
@@ -56,7 +56,7 @@ pub fn ShadeVertsLinearUV(draw_list: *mut ImDrawList, vert_start_idx: c_int, ver
         // for (vertex: *mut ImDrawVert = vert_start; vertex < vert_end; ++vertex)
         for vertex in vert_start .. vert_end
         {
-            vertex.uv = uv_a + ImMul(ImVec2::new(vertex.pos.x, vertex.pos.y) - a, &scale);
+            vertex.uv = uv_a + ImMul(ImVec2::from_floats(vertex.pos.x, vertex.pos.y) - a, &scale);
         }
     }
 }

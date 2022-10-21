@@ -27,7 +27,7 @@ pub unsafe fn BeginTooltipEx(mut tooltip_flags: ImGuiTooltipFlags, extra_window_
         // In the context of a dragging tooltip we try to reduce that offset and we enforce following the cursor.
         // Whatever we do we want to call SetNextWindowPos() to enforce a tooltip position and disable clipping the tooltip without our display area, like regular tooltip do.
         //let mut tooltip_pos: ImVec2 =  g.IO.MousePos - g.ActiveIdClickOffset - g.Style.WindowPadding;
-        let tooltip_pos: ImVec2 = g.IO.MousePos + ImVec2::new(16 * g.Style.MouseCursorScale, 8 * g.Style.MouseCursorScale);
+        let tooltip_pos: ImVec2 = g.IO.MousePos + ImVec2::from_floats(16 * g.Style.MouseCursorScale, 8 * g.Style.MouseCursorScale);
         SetNextWindowPos(&tooltip_pos, 0, &Default::default());
         SetNextWindowBgAlpha(g.Style.Colors[ImGuiCol_PopupBg].w * 0.60);
         //PushStyleVar(ImGuiStyleVar_Alpha, g.Style.Alpha * 0.60); // This would be nice but e.g ColorButton with checkboard has issue with transparent colors :(

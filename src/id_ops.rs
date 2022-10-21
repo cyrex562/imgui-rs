@@ -98,28 +98,28 @@ pub unsafe fn KeepAliveID(id: ImGuiID) {
 }
 
 
-pub unsafe fn PushID(str_id: *const c_char) {
+// pub unsafe fn PushID(str_id: &str) {
+//     let g = GImGui; // ImGuiContext& g = *GImGui;
+//     let mut window = g.CurrentWindow;
+//     let mut id: ImGuiID = window.id_from_str(str_id);
+//     window.IDStack.push(id);
+// }
+
+pub unsafe fn push_str_id(str_id_begin: &str) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
-    let mut id: ImGuiID = window.GetID(str_id, null());
+    let mut id: ImGuiID = window.id_from_str(str_id_begin);
     window.IDStack.push(id);
 }
 
-pub unsafe fn PushID2(str_id_begin: *const c_char, str_id_end: *const c_char) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
-    let mut id: ImGuiID = window.GetID(str_id_begin, str_id_end);
-    window.IDStack.push(id);
-}
-
-pub unsafe fn PushID3(ptr_id: *const c_void) {
+pub unsafe fn push_void_ptr_id(ptr_id: *const c_void) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     let mut id: ImGuiID = window.GetID2(ptr_id);
     window.IDStack.push(id);
 }
 
-pub unsafe fn PushID4(int_id: c_int) {
+pub unsafe fn push_int_id(int_id: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     let mut id: ImGuiID = window.GetID3(int_id);
@@ -139,8 +139,8 @@ pub unsafe fn PushOverrideID(id: ImGuiID) {
 // Helper to avoid a common series of PushOverrideID -> GetID() -> PopID() call
 // (note that when using this pattern, TestEngine's "Stack Tool" will tend to not display the intermediate stack level.
 //  for that to work we would need to do PushOverrideID() -> ItemAdd() -> PopID() which would alter widget code a little more)
-pub unsafe fn GetIDWithSeed(str: *const c_char, str_end: *const c_char, seed: ImGuiID) -> ImGuiID {
-    let mut id: ImGuiID = ImHashStr(str, if is_not_null(str_end) { str_end - str } else { 0 }, seed as u32);
+pub unsafe fn GetIDWithSeed(arg: &str, seed: ImGuiID) -> ImGuiID {
+    let mut id: ImGuiID = ImHashStr(arg, arg.len(), seed as u32);
     let g = GImGui; // ImGuiContext& g = *GImGui; if (g.DebugHookIdInfo == id)
     DebugHookIdInfo(id, ImGuiDataType_String, str, str_end);
     return id;
@@ -152,19 +152,19 @@ pub unsafe fn PopID() {
     window.IDStack.pop_back();
 }
 
-pub unsafe fn GetID(str_id: *const c_char) -> ImGuiID {
+pub unsafe fn id_from_str(str_id: &str) -> ImGuiID {
     let g = GImGui; // ImGuiContext& g = *GImGui
     let mut window: *mut ImGuiWindow = g.CurrentWindow;
-    return window.GetId(str_id, null());
+    return window.id_from_str(str_id);
 }
 
-pub unsafe fn GetID2(str_id_begin: *const c_char, str_id_end: *const c_char) -> ImGuiID {
-    let g = GImGui; // ImGuiContext& g = *GImGui
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
-    return window.GetID(str_id_begin, str_id_end);
-}
+// pub unsafe fn GetID2(str_id_begin: &str) -> ImGuiID {
+//     let g = GImGui; // ImGuiContext& g = *GImGui
+//     let mut window: *mut ImGuiWindow = g.CurrentWindow;
+//     return window.id_from_str(str_id_begin);
+// }
 
-pub unsafe fn GetID3(ptr_id: *const c_void) -> ImGuiID {
+pub unsafe fn id_from_void_ptr(ptr_id: *const c_void) -> ImGuiID {
     let g = GImGui; // ImGuiContext& g = *GImGui
     let mut window: *mut ImGuiWindow = g.CurrentWindow;
     return window.GetID2(ptr_id);
