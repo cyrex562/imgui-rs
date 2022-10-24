@@ -103,10 +103,10 @@ pub unsafe fn RenderTextWrapped(pos: ImVec2, text: &str)
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
 // c_void RenderTextClippedEx(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: *const c_char, text_display_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
-pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, text: &str, text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
+pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVec2, pos_max: &ImVec2, text: &str, text_size_if_known: *const ImVec2, align: Option<&ImVec2>, clip_rect: *const ImRect) {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     let mut pos: ImVec2 = pos_min.clone();
-    let text_size = if text_size_if_known { text_size_if_known.clone() } else { CalcTextSize(text,  false, 0.0) };
+    let text_size = if text_size_if_known { text_size_if_known.clone() } else { CalcTextSize(text, false, 0.0) };
 
     let clip_min: *const ImVec2 = if clip_rect { &clip_rect.Min } else { &pos_min };
     clip_max: *const ImVec2 = if clip_rect { &clip_rect.Max } else { &pos_max };
@@ -126,14 +126,14 @@ pub unsafe fn RenderTextClippedEx(mut draw_list: *mut ImDrawList, pos_min: &ImVe
     // Render
     if need_clipping {
         let mut fine_clip_rect = ImVec4::from_floats(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
-        draw_list.AddText2(null(), 0.0, &pos, GetColorU32(ImGuiCol_Text, 0.0), text,  0.0, &fine_clip_rect);
+        draw_list.AddText2(null(), 0.0, &pos, GetColorU32(ImGuiCol_Text, 0.0), text, 0.0, &fine_clip_rect);
     } else {
-        draw_list.AddText2(null_mut(), 0.0, &pos, GetColorU32(ImGuiCol_Text, 0.0), text,  0.0, null_mut());
+        draw_list.AddText2(null_mut(), 0.0, &pos, GetColorU32(ImGuiCol_Text, 0.0), text, 0.0, null_mut());
     }
 }
 
 // c_void RenderTextClipped(const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
-pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: &str,  text_size_if_known: *const ImVec2, align: &ImVec2, clip_rect: *const ImRect) {
+pub unsafe fn RenderTextClipped(pos_min: &ImVec2, pos_max: &ImVec2, text: &str,  text_size_if_known: *const ImVec2, align: Option<&ImVec2>, clip_rect: *const ImRect) {
     // Hide anything after a '##' string
     let mut text_display_end = FindRenderedTextEnd(text);
     let text_len: c_int = (text_display_end - text);

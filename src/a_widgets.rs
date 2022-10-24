@@ -92,7 +92,7 @@ Index of this file:
 use std::env::args;
 use std::ops::Index;
 use std::ptr::{null, null_mut};
-use libc::{c_char, c_float, c_int, c_uint, INT_MAX, INT_MIN, memcmp, memcpy, size_t, strcmp, strlen};
+use libc::{c_char, c_float, c_int, c_uint, c_void, INT_MAX, INT_MIN, memcmp, memcpy, size_t, strcmp, strlen};
 use crate::activate_flags::ImGuiActivateFlags_PreferInput;
 use crate::color::{IM_COL32_A_MASK, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_CheckMark, ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered, ImGuiCol_PlotHistogram, ImGuiCol_ScrollbarBg, ImGuiCol_ScrollbarGrab, ImGuiCol_ScrollbarGrabActive, ImGuiCol_ScrollbarGrabHovered, ImGuiCol_Separator, ImGuiCol_SeparatorActive, ImGuiCol_SeparatorHovered, ImGuiCol_Text, ImGuiCol_TextDisabled};
 use crate::combo_flags::{ImGuiComboFlags, ImGuiComboFlags_CustomPreview, ImGuiComboFlags_HeightLarge, ImGuiComboFlags_HeightMask_, ImGuiComboFlags_HeightRegular, ImGuiComboFlags_HeightSmall, ImGuiComboFlags_NoArrowButton, ImGuiComboFlags_None, ImGuiComboFlags_NoPreview, ImGuiComboFlags_PopupAlignLeft};
@@ -445,7 +445,7 @@ pub unsafe fn LabelTextV(label: &str, fmt: &str)
     if !ItemAdd(&mut total_bb, 0, null(), 0) { return ; }
 
     // Render
-    RenderTextClipped(value_bb.Min + style.FramePadding, &value_bb.Max, value_text_begin.as_str(), &value_size, &ImVec2::from_floats(0.0, 0.0), null());
+    RenderTextClipped(value_bb.Min + style.FramePadding, &value_bb.Max, value_text_begin.as_str(), &value_size, Some(&ImVec2::from_floats(0.0, 0.0)), null());
     if (label_size.x > 0.0) {
         RenderText(ImVec2::from_floats(value_bb.Max.x + style.ItemInnerSpacing.x, value_bb.Min.y + style.FramePadding.y), label, false);
     }
@@ -1424,7 +1424,7 @@ pub unsafe fn ProgressBar(mut fraction: c_float, size_arg: &mut ImVec2, overlay:
 
     let overlay_size: ImVec2 = CalcTextSize(overlay, false, 0.0);
     if overlay_size.x > 0.0 {
-        RenderTextClipped(&ImVec2::from_floats(ImClamp(fill_br.x + style.ItemSpacing.x, bb.Min.x, bb.Max.x - overlay_size.x - style.ItemInnerSpacing.x), bb.Min.y), &bb.Max, overlay,  &overlay_size, &ImVec2::from_floats(0.0, 0.5), &bb);
+        RenderTextClipped(&ImVec2::from_floats(ImClamp(fill_br.x + style.ItemSpacing.x, bb.Min.x, bb.Max.x - overlay_size.x - style.ItemInnerSpacing.x), bb.Min.y), &bb.Max, overlay,  &overlay_size, Some(&ImVec2::from_floats(0.0, 0.5)), &bb);
     }
 }
 
@@ -1745,7 +1745,7 @@ pub unsafe fn staticCalcMaxPopupHeightFromItemCount(items_count: c_int) -> c_flo
     return (g.FontSize + g.Style.ItemSpacing.y) * items_count - g.Style.ItemSpacing.y + (g.Style.WindowPadding.y * 2);
 }
 
-pub unsafe fn BeginCombo(label: &str, preview_value: &str, flags: ImGuiComboFlags) -> bool
+pub unsafe fn BeginCombo(label: &str, preview_value: &mut String, flags: ImGuiComboFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
@@ -1768,59 +1768,63 @@ pub unsafe fn BeginCombo(label: &str, preview_value: &str, flags: ImGuiComboFlag
 
     // Open on click
     let mut hovered = false; let mut held = false;
-    let mut pressed: bool =  ButtonBehavior(bb, id, &hovered, &held);
-    let mut popup_id: ImGuiID =  ImHashStr("##ComboPopup", 0, id);
+    let mut pressed: bool =  ButtonBehavior(&bb, id, &mut hovered, &mut held, 0);
+    let mut popup_id: ImGuiID =  ImHashStr("##ComboPopup", 0, id as u32);
     let mut popup_open: bool =  IsPopupOpen(popup_id, ImGuiPopupFlags_None);
-    if (pressed && !popup_open)
+    if pressed && !popup_open
     {
         OpenPopupEx(popup_id, ImGuiPopupFlags_None);
         popup_open = true;
     }
 
     // Render shape
-    frame_col: u32 = GetColorU32(if hovered {ImGuiCol_FrameBgHovered} else { ImGuiCol_FrameBg });
+    frame_col: u32 = GetColorU32(if hovered { ImGuiCol_FrameBgHovered } else { ImGuiCol_FrameBg }, 0.0);
     let value_x2: c_float =  ImMax(bb.Min.x, bb.Max.x - arrow_size);
-    RenderNavHighlight(bb, id);
-    if (flag_clear(flags, ImGuiComboFlags_NoPreview))
-        window.DrawList.AddRectFilled(bb.Min, ImVec2::from_floats(value_x2, bb.Max.y), frame_col, style.FrameRounding, if flag_set(flags, ImGuiComboFlags_NoArrowButton) { ImDrawFlags_RoundCornersAll } else { ImDrawFlags_RoundCornersLeft });
-    if (flag_clear(flags, ImGuiComboFlags_NoArrowButton))
+    RenderNavHighlight(&bb, id, 0);
+    if flag_clear(flags, ImGuiComboFlags_NoPreview) {
+        window.DrawList.AddRectFilled(&bb.Min, &ImVec2::from_floats(value_x2, bb.Max.y), frame_col, style.FrameRounding, if flag_set(flags, ImGuiComboFlags_NoArrowButton) { ImDrawFlags_RoundCornersAll } else { ImDrawFlags_RoundCornersLeft });
+    }
+    if flag_clear(flags, ImGuiComboFlags_NoArrowButton)
     {
-        bg_col: u32 = GetColorU32(if (popup_open || hovered) { ImGuiCol_ButtonHovered } else { ImGuiCol_Button });
+        bg_col: u32 = GetColorU32(if popup_open || hovered { ImGuiCol_ButtonHovered } else { ImGuiCol_Button }, 0.0);
         text_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
-        window.DrawList.AddRectFilled(ImVec2::from_floats(value_x2, bb.Min.y), bb.Max, bg_col, style.FrameRounding, if (w <= arrow_size) { ImDrawFlags_RoundCornersAll } else { ImDrawFlags_RoundCornersRight });
-        if (value_x2 + arrow_size - style.FramePadding.x <= bb.Max.x)
+        window.DrawList.AddRectFilled(&ImVec2::from_floats(value_x2, bb.Min.y), &bb.Max, bg_col, style.FrameRounding, if w <= arrow_size { ImDrawFlags_RoundCornersAll } else { ImDrawFlags_RoundCornersRight });
+        if value_x2 + arrow_size - style.FramePadding.x <= bb.Max.x {
             RenderArrow(window.DrawList, ImVec2::from_floats(value_x2 + style.FramePadding.y, bb.Min.y + style.FramePadding.y), text_col, ImGuiDir_Down, 1.0);
+        }
     }
     RenderFrameBorder(bb.Min, bb.Max, style.FrameRounding);
 
     // Custom preview
-    if (flags & ImGuiComboFlags_CustomPreview)
+    if flags & ImGuiComboFlags_CustomPreview
     {
         g.ComboPreviewData.PreviewRect = ImRect(bb.Min.x, bb.Min.y, value_x2, bb.Max.y);
         // IM_ASSERT(preview_value == NULL || preview_value[0] == 0);
-        preview_value= null_mut();
+        preview_value.clear();
     }
 
     // Render preview and label
-    if (preview_value != null_mut() && flag_clear(flags, ImGuiComboFlags_NoPreview))
+    if preview_value != null_mut() && flag_clear(flags, ImGuiComboFlags_NoPreview)
     {
-        if (g.LogEnabled)
+        if g.LogEnabled {
             LogSetNextTextDecoration("{", "}");
-        RenderTextClipped(bb.Min + style.FramePadding, ImVec2::from_floats(value_x2, bb.Max.y), preview_value, null_mut(), null_mut());
+        }
+        RenderTextClipped(bb.Min + style.FramePadding, &ImVec2::from_floats(value_x2, bb.Max.y), preview_value, null_mut(), None, null());
     }
-    if (label_size.x > 0)
-        RenderText(ImVec2::from_floats(bb.Max.x + style.ItemInnerSpacing.x, bb.Min.y + style.FramePadding.y), label);
+    if label_size.x > 0.0 {
+        RenderText(ImVec2::from_floats(bb.Max.x + style.ItemInnerSpacing.x, bb.Min.y + style.FramePadding.y), label, false);
+    }
 
     if !popup_open { return  false; }
 
     g.NextWindowData.Flags = backup_next_window_data_flags;
-    return BeginComboPopup(popup_id, bb, flags);
+    return BeginComboPopup(popup_id, &mut bb, flags);
 }
 
-pub unsafe fn BeginComboPopup(popup_id: ImGuiID, bb: &ImRect, flags: ImGuiComboFlags) -> bool
+pub unsafe fn BeginComboPopup(popup_id: ImGuiID, bb: &mut ImRect, mut flags: ImGuiComboFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (!IsPopupOpen(popup_id, ImGuiPopupFlags_None))
+    if !IsPopupOpen(popup_id, ImGuiPopupFlags_None)
     {
         g.NextWindowData.ClearFlags();
         return false;
@@ -1828,39 +1832,40 @@ pub unsafe fn BeginComboPopup(popup_id: ImGuiID, bb: &ImRect, flags: ImGuiComboF
 
     // Set popup size
     let w: c_float =  bb.GetWidth();
-    if (g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint)
+    if flag_set(g.NextWindowData.Flags , ImGuiNextWindowDataFlags_HasSizeConstraint)
     {
         g.NextWindowData.SizeConstraintRect.Min.x = ImMax(g.NextWindowData.SizeConstraintRect.Min.x, w);
     }
     else
     {
-        if (flag_clear(flags, ImGuiComboFlags_HeightMask_))
+        if flag_clear(flags, ImGuiComboFlags_HeightMask_) {
             flags |= ImGuiComboFlags_HeightRegular;
+        }
         // IM_ASSERT(ImIsPowerOfTwo(flags & ImGuiComboFlags_HeightMask_)); // Only one
-        let popup_max_height_in_items: c_int = -1;
+        let mut popup_max_height_in_items: c_int = -1;
         if flags & ImGuiComboFlags_HeightRegular {      popup_max_height_in_items = 8;}
         else if flags & ImGuiComboFlags_HeightSmall {   popup_max_height_in_items = 4;}
         else if flags & ImGuiComboFlags_HeightLarge {   popup_max_height_in_items = 20;}
-        SetNextWindowSizeConstraints(ImVec2::from_floats(w, 0.0), ImVec2::from_floats(f32::MAX, CalcMaxPopupHeightFromItemCount(popup_max_height_in_items)));
+        SetNextWindowSizeConstraints(&ImVec2::from_floats(w, 0.0), &ImVec2::from_floats(f32::MAX, CalcMaxPopupHeightFromItemCount(popup_max_height_in_items)), (), null_mut());
     }
 
     // This is essentially a specialized version of BeginPopupEx()
     name: [c_char;16];
-    ImFormatString(name, name.len(), "##Combo_%02d", g.BeginPopupStack.len()); // Recycle windows based on depth
+    // ImFormatString(name, name.len(), "##Combo_%02d", g.BeginPopupStack.len()); // Recycle windows based on depth
 
     // Set position given a custom constraint (peak into expected window size so we can position it)
     // FIXME: This might be easier to express with an hypothetical SetNextWindowPosConstraints() function?
     // FIXME: This might be moved to Begin() or at least around the same spot where Tooltips and other Popups are calling FindBestWindowPosForPopupEx()?
-    if (popup_window: *mut ImGuiWindow = FindWindowByName(name))
-        if (popup_window.WasActive)
-        {
+    if popup_window: *mut ImGuiWindow = FindWindowByName(name) {
+        if popup_window.WasActive {
             // Always override 'AutoPosLastDirection' to not leave a chance for a past value to affect us.
             let size_expected: ImVec2 = CalcWindowNextAutoFitSize(popup_window);
-            popup_window.AutoPosLastDirection = if flags & ImGuiComboFlags_PopupAlignLeft { ImGuiDir_Left} else { ImGuiDir_Down}; // Left = "Below, Toward Left", Down = "Below, Toward Right (default)"
-            let r_outer: ImRect =  GetPopupAllowedExtentRect(popup_window);
-            let pos: ImVec2 = FindBestWindowPosForPopupEx(bb.GetBL(), size_expected, &popup_window.AutoPosLastDirection, r_outer, bb, ImGuiPopupPositionPolicy_ComboBox);
-            SetNextWindowPos(pos);
+            popup_window.AutoPosLastDirection = if flags & ImGuiComboFlags_PopupAlignLeft { ImGuiDir_Left } else { ImGuiDir_Down }; // Left = "Below, Toward Left", Down = "Below, Toward Right (default)"
+            let mut r_outer: ImRect = GetPopupAllowedExtentRect(popup_window);
+            let pos: ImVec2 = FindBestWindowPosForPopupEx(&bb.GetBL(), &size_expected, &mut popup_window.AutoPosLastDirection, &mut r_outer, bb, ImGuiPopupPositionPolicy_ComboBox);
+            SetNextWindowPos(&pos, 0, &Default::default());
         }
+    }
 
     // We don't use BeginPopupEx() solely because we have a custom name string, which we could make an argument to BeginPopupEx()
     window_flags: ImGuiWindowFlags = ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoMove;
@@ -1887,12 +1892,13 @@ pub unsafe fn BeginComboPreview() -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow = g.CurrentWindow;
-    *mut ImGuiComboPreviewData preview_data = &g.ComboPreviewData;
+    preview_data: *mut ImGuiComboPreviewData = &mut g.ComboPreviewData;
 
-    if (window.SkipItems || !window.ClipRect.Overlaps(g.LastItemData.Rect)) // FIXME: Because we don't have a ImGuiItemStatusFlags_Visible flag to test last ItemAdd() result
+    if window.SkipItems || !window.ClipRect.Overlaps(g.LastItemData.Rect) { // FIXME: Because we don't have a ImGuiItemStatusFlags_Visible flag to test last ItemAdd() result
         return false;
+    }
     // IM_ASSERT(g.LastItemData.Rect.Min.x == preview_Data.PreviewRect.Min.x && g.LastItemData.Rect.Min.y == preview_Data.PreviewRect.Min.y); // Didn't call after BeginCombo/EndCombo block or forgot to pass ImGuiComboFlags_CustomPreview flag?
-    if !window.ClipRect.Contains(preview_data.PreviewRect)) // Narrower test (optional { return  false; }
+    if !window.ClipRect.Contains(preview_data.PreviewRect) {} // Narrower test (optional { return  false; }
 
     // FIXME: This could be contained in a PushWorkRect() api
     preview_data.BackupCursorPos = window.DC.CursorPos;
@@ -1909,20 +1915,19 @@ pub unsafe fn BeginComboPreview() -> bool
     return true;
 }
 
-pub unsafe fn EndComboPreview()
-{
+pub unsafe fn EndComboPreview() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow = g.CurrentWindow;
-    *mut ImGuiComboPreviewData preview_data = &g.ComboPreviewData;
+    let preview_data: *mut ImGuiComboPreviewData = &mut g.ComboPreviewData;
 
     // FIXME: Using CursorMaxPos approximation instead of correct AABB which we will store in ImDrawCmd in the future
     draw_list: *mut ImDrawList = window.DrawList;
-    if (window.DC.CursorMaxPos.x < preview_Data.PreviewRect.Max.x && window.DC.CursorMaxPos.y < preview_Data.PreviewRect.Max.y)
-        if (draw_list.CmdBuffer.len() > 1) // Unlikely case that the PushClipRect() didn't create a command
-        {
+    if window.DC.CursorMaxPos.x < preview_Data.PreviewRect.Max.x && window.DC.CursorMaxPos.y < preview_Data.PreviewRect.Max.y {
+        if draw_list.CmdBuffer.len() > 1 { // Unlikely case that the PushClipRect() didn't create a command {
             draw_list._CmdHeader.ClipRect = draw_list.CmdBuffer[draw_list.CmdBuffer.len() - 1].ClipRect = draw_list.CmdBuffer[draw_list.CmdBuffer.len() - 2].ClipRect;
-            draw_list._TryMergeDrawCmds();
         }
+    }
+    draw_list._TryMergeDrawCmds();
     PopClipRect();
     window.DC.CursorPos = preview_Data.BackupCursorPos;
     window.DC.CursorMaxPos = ImMax(window.DC.CursorMaxPos, preview_Data.BackupCursorMaxPos);
@@ -1934,20 +1939,21 @@ pub unsafe fn EndComboPreview()
 }
 
 // Getter for the old Combo() API: const char*[]
-pub unsafe fn Items_ArrayGetter(data: *mut c_void, idx: c_int, *const out_text: *mut c_char) -> bool
+pub unsafe fn Items_ArrayGetter(data: *mut c_void, idx: c_int, out_text: *mut c_char) -> bool
 {
-    *const mut: *mut c_char const items = (*const mut: *mut c_char const)data;
-    if (out_text)
+    let items = data;
+    if (out_text) {
         *out_text = items[idx];
+    }
     return true;
 }
 
 // Getter for the old Combo() API: "item1\0item2\0item3\0"
-pub unsafe fn Items_SingleStringGetter(data: *mut c_void, idx: c_int, *const out_text: *mut c_char) -> bool
+pub unsafe fn Items_SingleStringGetter(data: *mut c_void, idx: c_int, out_text: *mut c_char) -> bool
 {
     // FIXME-OPT: we could pre-compute the indices to fasten this. But only 1 active combo means the waste is limited.
     let mut  items_separated_by_zeros: *const c_char =data;
-    let items_count: c_int = 0;
+    let mut items_count: c_int = 0;
     let mut  p: *const c_char = items_separated_by_zeros;
     while (*p)
     {
@@ -1957,23 +1963,25 @@ pub unsafe fn Items_SingleStringGetter(data: *mut c_void, idx: c_int, *const out
         items_count+= 1;
     }
     if !*p { return  false; }
-    if (out_text)
+    if (out_text) {
         *out_text = p;
+    }
     return true;
 }
 
 // Old API, prefer using BeginCombo() nowadays if you can.
-pub unsafe fn Combo(label: *const c_char, current_item: *mut c_int, bool (*items_getter)(*mut c_void, c_int, *const *mut char), data: *mut c_void, items_count: c_int, popup_max_height_in_items: c_int) -> bool
+pub unsafe fn Combo(label: *const c_char, current_item: *mut c_int, items_getter: fn(*mut c_void, c_int, *mut c_char) -> bool, data: *mut c_void, items_count: c_int, popup_max_height_in_items: c_int) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Call the getter to obtain the preview string which is a parameter to BeginCombo()
-    let mut  preview_value: *const c_char= null_mut();
-    if (*current_item >= 0 && *current_item < items_count)
-        items_getter(data, *current_item, &preview_value);
+    let mut  preview_value: *mut c_char= null_mut();
+    if *current_item >= 0 && *current_item < items_count {
+        items_getter(data, *current_item, preview_value);
+    }
 
     // The old Combo() API exposed "popup_max_height_in_items". The new more general BeginCombo() API doesn't have/need it, but we emulate it here.
-    if (popup_max_height_in_items != -1 && !(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSizeConstraint))
+    if popup_max_height_in_items != -1 && flag_clear(g.NextWindowData.Flags , ImGuiNextWindowDataFlags_HasSizeConstraint)
         SetNextWindowSizeConstraints(ImVec2::from_floats(0, 0), ImVec2::from_floats(f32::MAX, CalcMaxPopupHeightFromItemCount(popup_max_height_in_items)));
 
     if !BeginCombo(label, preview_value, ImGuiComboFlags_None) { return  false; }
@@ -2007,14 +2015,14 @@ let item_text: *const c_char;
 }
 
 // Combo box helper allowing to pass an array of strings.
-pub unsafe fn Combo(label: *const c_char, current_item: *mut c_int, const: *const c_char items[], items_count: c_int, height_in_items: c_int) -> bool
+pub unsafe fn Combo2(label: *const c_char, current_item: *mut c_int, const: *const c_char items[], items_count: c_int, height_in_items: c_int) -> bool
 {
     let value_changed: bool = Combo(label, current_item, Items_ArrayGetter, items, items_count, height_in_items);
     return value_changed;
 }
 
 // Combo box helper allowing to pass all items in a single string literal holding multiple zero-terminated items "item1\0item2\0"
-pub unsafe fn Combo(label: *const c_char, current_item: *mut c_int, items_separated_by_zeros: *const c_char, height_in_items: c_int) -> bool
+pub unsafe fn Combo3(label: *const c_char, current_item: *mut c_int, items_separated_by_zeros: *const c_char, height_in_items: c_int) -> bool
 {
     let items_count: c_int = 0;
     let mut  p: *const c_char = items_separated_by_zeros;       // FIXME-OPT: Avoid computing this, or at least only when combo is open
