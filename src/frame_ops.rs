@@ -245,7 +245,7 @@ pub unsafe fn NewFrame() {
     if GetTopMostPopupModal() != null_mut() || (g.NavWindowingTarget != null_mut() && g.NavWindowingHighlightAlpha > 0.0) {
         g.DimBgRatio = ImMin(g.DimBgRatio + g.IO.DeltaTime * 6f32, 1.0);
     } else {
-        g.DimBgRatio = ImMax(g.DimBgRatio - g.IO.DeltaTime * 10f32, 0.0);
+        g.DimBgRatio = ImMax(g.DimBgRatio - g.IO.DeltaTime * 10.0, 0.0);
     }
 
     g.MouseCursor = ImGuiMouseCursor_Arrow;

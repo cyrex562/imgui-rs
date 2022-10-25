@@ -791,9 +791,9 @@ pub unsafe fn NavUpdate()
         if (nav_gamepad_active)
         {
             let scroll_dir: ImVec2 = GetKeyVector2d(ImGuiKey_GamepadLStickLeft, ImGuiKey_GamepadLStickRight, ImGuiKey_GamepadLStickUp, ImGuiKey_GamepadLStickDown);
-            let tweak_factor: c_float =  if IsKeyDown(ImGuiKey_NavGamepadTweakSlow) { 1.0 / 10f32 } else {
+            let tweak_factor: c_float =  if IsKeyDown(ImGuiKey_NavGamepadTweakSlow) { 1.0 / 10.0 } else {
                 if IsKeyDown(ImGuiKey_NavGamepadTweakFast) {
-                    10f32
+                    10.0
                 } else { 1.0 }
             };
             if (scroll_dir.x != 0.0 && window.ScrollbarX) {
@@ -818,7 +818,7 @@ pub unsafe fn NavUpdate()
     {
         io.MousePos = NavCalcPreferredRefPos();io.MousePosPrev = NavCalcPreferredRefPos();
         io.WantSetMousePos = true;
-        //IMGUI_DEBUG_LOG_IO("SetMousePos: (%.1f,%.10f32)\n", io.MousePos.x, io.MousePos.y);
+        //IMGUI_DEBUG_LOG_IO("SetMousePos: (%.1f,%.10.0)\n", io.MousePos.x, io.MousePos.y);
     }
 
     // [DEBUG]
@@ -1402,7 +1402,7 @@ pub unsafe fn NavUpdateWindowing()
     // Fade out
     if is_not_null(g.NavWindowingTargetAnim) && g.NavWindowingTarget == null_mut()
     {
-        g.NavWindowingHighlightAlpha = ImMax(g.NavWindowingHighlightAlpha - io.DeltaTime * 10f32, 0.0);
+        g.NavWindowingHighlightAlpha = ImMax(g.NavWindowingHighlightAlpha - io.DeltaTime * 10.0, 0.0);
         if g.DimBgRatio <= 0.0 && g.NavWindowingHighlightAlpha <= 0.0 {
             g.NavWindowingTargetAnim = null_mut();
         }

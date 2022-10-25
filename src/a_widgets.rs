@@ -1,4 +1,5 @@
 // dear imgui, v1.89 WIP
+#![allow(non_upper_case_globals)]
 // (widgets code)
 
 /*
@@ -98,7 +99,7 @@ use crate::color::{IM_COL32_A_MASK, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGu
 use crate::combo_flags::{ImGuiComboFlags, ImGuiComboFlags_CustomPreview, ImGuiComboFlags_HeightLarge, ImGuiComboFlags_HeightMask_, ImGuiComboFlags_HeightRegular, ImGuiComboFlags_HeightSmall, ImGuiComboFlags_NoArrowButton, ImGuiComboFlags_None, ImGuiComboFlags_NoPreview, ImGuiComboFlags_PopupAlignLeft};
 use crate::combo_preview_data::ImGuiComboPreviewData;
 use crate::data_type::{ImGuiDataType, ImGuiDataType_COUNT, ImGuiDataType_Double, ImGuiDataType_Float, ImGuiDataType_S16, ImGuiDataType_S32, ImGuiDataType_S64, ImGuiDataType_S8, ImGuiDataType_U16, ImGuiDataType_U32, ImGuiDataType_U64, ImGuiDataType_U8};
-use crate::data_type_info::ImGuiDataTypeInfo;
+use crate::data_type_info::{GDataTypeInfo, ImGuiDataTypeInfo};
 use crate::data_type_temp_storage::ImGuiDataTypeTempStorage;
 use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_Right};
 use crate::draw_flags::{ImDrawFlags, ImDrawFlags_RoundCornersAll, ImDrawFlags_RoundCornersBottomLeft, ImDrawFlags_RoundCornersBottomRight, ImDrawFlags_RoundCornersLeft, ImDrawFlags_RoundCornersNone, ImDrawFlags_RoundCornersRight, ImDrawFlags_RoundCornersTopRight};
@@ -111,20 +112,20 @@ use crate::drag_drop_flags::{ImGuiDragDropFlags_SourceNoDisableHover, ImGuiDragD
 use crate::frame_ops::GetFrameHeight;
 use crate::group_ops::{BeginGroup, EndGroup};
 use crate::hovered_flags::ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-use crate::id_ops::{ClearActiveID, KeepAliveID, PopID, PushID, SetActiveID, SetHoveredID};
-use crate::input_ops::{CalcTypematicRepeatAmount, GetKeyData, IsMouseClicked, IsMouseDragging, IsMouseDragPastThreshold, SetMouseCursor};
-use crate::input_source::{ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
+use crate::id_ops::{ClearActiveID, KeepAliveID, PopID, push_int_id, push_str_id, PushID, SetActiveID, SetHoveredID};
+use crate::input_ops::{CalcTypematicRepeatAmount, GetKeyData, IsKeyDown, IsMouseClicked, IsMouseDragging, IsMouseDragPastThreshold, IsMousePosValid, SetMouseCursor};
+use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
 use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_ButtonRepeat, ImGuiItemFlags_Inputable, ImGuiItemFlags_MixedValue, ImGuiItemFlags_NoNav, ImGuiItemFlags_NoNavDefaultFocus, ImGuiItemFlags_ReadOnly};
 use crate::item_ops::{CalcItemSize, CalcItemWidth, CalcWrapWidthForPos, IsClippedEx, IsItemActive, IsItemHovered, ItemAdd, ItemHoverable, ItemSize, MarkItemEdited, PopItemWidth, PushMultiItemsWidths};
 use crate::item_status_flags::{ImGuiItemStatusFlags_Checkable, ImGuiItemStatusFlags_Checked, ImGuiItemStatusFlags_FocusedByTabbing, ImGuiItemStatusFlags_HoveredRect};
-use crate::key::{ImGuiKey, ImGuiKey_NavGamepadActivate, ImGuiKey_Space};
+use crate::key::{ImGuiKey, ImGuiKey_NavGamepadActivate, ImGuiKey_NavGamepadTweakFast, ImGuiKey_NavGamepadTweakSlow, ImGuiKey_NavKeyboardTweakFast, ImGuiKey_NavKeyboardTweakSlow, ImGuiKey_Space};
 use crate::layout_ops::SameLine;
 use crate::layout_type::{ImGuiLayoutType, ImGuiLayoutType_Horizontal, ImGuiLayoutType_Vertical};
 use crate::logging_ops::{LogRenderedText, LogSetNextTextDecoration};
-use crate::math_ops::{ImAddClampOverflow, ImCharIsBlankA, ImClamp, ImLerp, ImMax, ImMin, ImSaturateFloat, ImSubClampOverflow};
+use crate::math_ops::{ImAddClampOverflow, ImCharIsBlankA, ImClamp, ImLerp, ImMax, ImMin, ImSaturateFloat, ImSubClampOverflow, ImSwap};
 use crate::mouse_cursor::{ImGuiMouseCursor_ResizeEW, ImGuiMouseCursor_ResizeNS};
 use crate::mouse_ops::StartMouseMovingWindowOrNode;
-use crate::nav_ops::SetFocusID;
+use crate::nav_ops::{GetNavTweakPressedAmount, SetFocusID};
 use crate::next_window_data_flags::{ImGuiNextWindowDataFlags, ImGuiNextWindowDataFlags_HasSizeConstraint};
 use crate::old_columns::ImGuiOldColumns;
 use crate::popup_flags::ImGuiPopupFlags_None;
@@ -134,13 +135,13 @@ use crate::rect::ImRect;
 use crate::render_ops::{FindRenderedTextEnd, RenderArrow, RenderArrowDockMenu, RenderBullet, RenderCheckMark, RenderFrame, RenderFrameBorder, RenderNavHighlight, RenderRectFilledRangeH, RenderText, RenderTextClipped, RenderTextWrapped};
 use crate::separator_flags::{ImGuiSeparatorFlags, ImGuiSeparatorFlags_Horizontal, ImGuiSeparatorFlags_SpanAllColumns, ImGuiSeparatorFlags_Vertical};
 use crate::shrink_width_item::ImGuiShrinkWidthItem;
-use crate::slider_flags::{ImGuiSliderFlags, ImGuiSliderFlags_AlwaysClamp, ImGuiSliderFlags_NoInput, ImGuiSliderFlags_ReadOnly};
+use crate::slider_flags::{ImGuiSliderFlags, ImGuiSliderFlags_AlwaysClamp, ImGuiSliderFlags_Logarithmic, ImGuiSliderFlags_NoInput, ImGuiSliderFlags_NoRoundToFormat, ImGuiSliderFlags_ReadOnly, ImGuiSliderFlags_Vertical};
 use crate::string_ops::{ImFormatString, ImFormatStringToTempBufferV, str_to_const_c_char_ptr};
 use crate::style_ops::{GetColorU32, GetColorU32FromImVec4, PopStyleColor, PushStyleColor, PushStyleColor2};
 use crate::style_var::{ImGuiStyleVar_FramePadding, ImGuiStyleVar_WindowPadding};
 use crate::table::ImGuiTable;
 use crate::tables::{PopColumnsBackground, PushColumnsBackground};
-use crate::text_flags::{ImGuiTextFlags, ImGuiTextFlags_NoWidthForLargeClippedText};
+use crate::text_flags::{ImGuiTextFlags, ImGuiTextFlags_None, ImGuiTextFlags_NoWidthForLargeClippedText};
 use crate::text_ops::{CalcTextSize, GetTextLineHeight};
 use crate::type_defs::{ImGuiID, ImTextureID};
 use crate::utils::{flag_clear, flag_set, ImQsort};
@@ -1939,23 +1940,24 @@ pub unsafe fn EndComboPreview() {
 }
 
 // Getter for the old Combo() API: const char*[]
-pub unsafe fn Items_ArrayGetter(data: *mut c_void, idx: c_int, out_text: *mut c_char) -> bool
+pub unsafe fn Items_ArrayGetter(data: &[String], idx: usize, out_text: &mut String) -> bool
 {
     let items = data;
-    if (out_text) {
-        *out_text = items[idx];
-    }
+    // if (out_text) {
+    //     *out_text = items[idx];
+    // }
+    *out_text = items[idx].clone();
     return true;
 }
 
 // Getter for the old Combo() API: "item1\0item2\0item3\0"
-pub unsafe fn Items_SingleStringGetter(data: *mut c_void, idx: c_int, out_text: *mut c_char) -> bool
+pub unsafe fn Items_SingleStringGetter(data: &[String], idx: usize, out_text: &mut String) -> bool
 {
     // FIXME-OPT: we could pre-compute the indices to fasten this. But only 1 active combo means the waste is limited.
-    let mut  items_separated_by_zeros: *const c_char =data;
-    let mut items_count: c_int = 0;
-    let mut  p: *const c_char = items_separated_by_zeros;
-    while (*p)
+    // let mut  items_separated_by_zeros: *const c_char =data;
+    // let mut items_count: c_int = 0;
+    // let mut  p: *const c_char = items_separated_by_zeros;
+    while *p
     {
         if idx == items_count {
             break(); }
@@ -1963,40 +1965,43 @@ pub unsafe fn Items_SingleStringGetter(data: *mut c_void, idx: c_int, out_text: 
         items_count+= 1;
     }
     if !*p { return  false; }
-    if (out_text) {
+    if out_text {
         *out_text = p;
     }
     return true;
 }
 
 // Old API, prefer using BeginCombo() nowadays if you can.
-pub unsafe fn Combo(label: *const c_char, current_item: *mut c_int, items_getter: fn(*mut c_void, c_int, *mut c_char) -> bool, data: *mut c_void, items_count: c_int, popup_max_height_in_items: c_int) -> bool
+pub unsafe fn Combo(label: &str, current_item: *mut usize, items_getter: fn(&[String], usize, &mut String) -> bool, data: &[String], items_count: usize, popup_max_height_in_items: c_int) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Call the getter to obtain the preview string which is a parameter to BeginCombo()
-    let mut  preview_value: *mut c_char= null_mut();
+    let mut  preview_value: String = String::default();
     if *current_item >= 0 && *current_item < items_count {
-        items_getter(data, *current_item, preview_value);
+        items_getter(data, *current_item, &mut preview_value);
     }
 
     // The old Combo() API exposed "popup_max_height_in_items". The new more general BeginCombo() API doesn't have/need it, but we emulate it here.
-    if popup_max_height_in_items != -1 && flag_clear(g.NextWindowData.Flags , ImGuiNextWindowDataFlags_HasSizeConstraint)
-        SetNextWindowSizeConstraints(ImVec2::from_floats(0, 0), ImVec2::from_floats(f32::MAX, CalcMaxPopupHeightFromItemCount(popup_max_height_in_items)));
+    if popup_max_height_in_items != -1 && flag_clear(g.NextWindowData.Flags , ImGuiNextWindowDataFlags_HasSizeConstraint) {
+        SetNextWindowSizeConstraints(&ImVec2::from_floats(0.0, 0.0), &ImVec2::from_floats(f32::MAX, CalcMaxPopupHeightFromItemCount(popup_max_height_in_items)), (), null_mut());
+    }
 
-    if !BeginCombo(label, preview_value, ImGuiComboFlags_None) { return  false; }
+    if !BeginCombo(label, &mut preview_value, ImGuiComboFlags_None) { return  false; }
 
     // Display items
     // FIXME-OPT: Use clipper (but we need to disable it on the appearing frame to make sure our call to SetItemDefaultFocus() is processed)
     let mut value_changed: bool =  false;
-    for (let i: c_int = 0; i < items_count; i++)
+    // for (let i: c_int = 0; i < items_count; i++)
+    for i in 0 .. items_count
     {
         PushID(i);
         let item_selected: bool = (i == *current_item);
-let item_text: *const c_char;
-        if (!items_getter(data, i, &item_text))
-            item_text = "*Unknown item*";
-        if (Selectable(item_text, item_selected))
+        let mut item_text = String::default();
+        if !items_getter(data, i, &mut item_text) {
+            item_text = String::from("*Unknown item*");
+        }
+        if Selectable(item_text, item_selected)
         {
             value_changed = true;
             *current_item = i;
@@ -2015,23 +2020,22 @@ let item_text: *const c_char;
 }
 
 // Combo box helper allowing to pass an array of strings.
-pub unsafe fn Combo2(label: *const c_char, current_item: *mut c_int, const: *const c_char items[], items_count: c_int, height_in_items: c_int) -> bool
+pub unsafe fn Combo2(label: &str, current_item: *mut usize, items: &[String], items_count: usize, height_in_items: c_int) -> bool
 {
     let value_changed: bool = Combo(label, current_item, Items_ArrayGetter, items, items_count, height_in_items);
     return value_changed;
 }
 
 // Combo box helper allowing to pass all items in a single string literal holding multiple zero-terminated items "item1\0item2\0"
-pub unsafe fn Combo3(label: *const c_char, current_item: *mut c_int, items_separated_by_zeros: *const c_char, height_in_items: c_int) -> bool
-{
-    let items_count: c_int = 0;
-    let mut  p: *const c_char = items_separated_by_zeros;       // FIXME-OPT: Avoid computing this, or at least only when combo is open
-    while (*p)
-    {
-        p += strlen(p) + 1;
-        items_count+= 1;
-    }
-    let mut value_changed: bool =  Combo(label, current_item, Items_SingleStringGetter, items_separated_by_zeros, items_count, height_in_items);
+pub unsafe fn Combo3(label: &str, current_item: *mut usize, items_separated_by_zeros: &[String], height_in_items: c_int) -> bool {
+    let mut items_count = items_separated_by_zeros.len();
+    // let mut  p: *const c_char = items_separated_by_zeros;       // FIXME-OPT: Avoid computing this, or at least only when combo is open
+    // while (*p)
+    // {
+    //     p += strlen(p) + 1;
+    //     items_count+= 1;
+    // }
+    let mut value_changed: bool = Combo(label, current_item, Items_SingleStringGetter, items_separated_by_zeros, items_count, height_in_items);
     return value_changed;
 }
 
@@ -2049,257 +2053,304 @@ pub unsafe fn Combo3(label: *const c_char, current_item: *mut c_int, items_separ
 // - RoundScalarWithFormat<>()
 //-------------------------------------------------------------------------
 
-static const ImGuiDataTypeInfo GDataTypeInfo[] =
-{
-    { sizeof,             "S8",   "%d",   "%d"    },  // ImGuiDataType_S8
-    { sizeof,    "U8",   "%u",   "%u"    },
-    { sizeof,            "S16",  "%d",   "%d"    },  // ImGuiDataType_S16
-    { sizeof,   "U16",  "%u",   "%u"    },
-    { sizeof,              "S32",  "%d",   "%d"    },  // ImGuiDataType_S32
-    { sizeof,     "U32",  "%u",   "%u"    },
-// #ifdef _MSC_VER
-    { sizeof,            "S64",  "%I64d","%I64d" },  // ImGuiDataType_S64
-    { sizeof,            "U64",  "%I64u","%I64u" },
-// #else
-    { sizeof,            "S64",  "%lld", "%lld"  },  // ImGuiDataType_S64
-    { sizeof,            "U64",  "%llu", "%llu"  },
-// #endif
-    { sizeof,            "float", "%.3f","%f"    },  // ImGuiDataType_Float (float are promoted to double in va_arg)
-    { sizeof,           "double","%f",  "%lf"   },  // ImGuiDataType_Double
-};
-IM_STATIC_ASSERT(GDataTypeInfo.len() == ImGuiDataType_COUNT);
+// static const ImGuiDataTypeInfo GDataTypeInfo[] =
+// {
+//     { sizeof,             "S8",   "%d",   "%d"    },  // ImGuiDataType_S8
+//     { sizeof,    "U8",   "%u",   "%u"    },
+//     { sizeof,            "S16",  "%d",   "%d"    },  // ImGuiDataType_S16
+//     { sizeof,   "U16",  "%u",   "%u"    },
+//     { sizeof,              "S32",  "%d",   "%d"    },  // ImGuiDataType_S32
+//     { sizeof,     "U32",  "%u",   "%u"    },
+// // #ifdef _MSC_VER
+//     { sizeof,            "S64",  "%I64d","%I64d" },  // ImGuiDataType_S64
+//     { sizeof,            "U64",  "%I64u","%I64u" },
+// // #else
+//     { sizeof,            "S64",  "%lld", "%lld"  },  // ImGuiDataType_S64
+//     { sizeof,            "U64",  "%llu", "%llu"  },
+// // #endif
+//     { sizeof,            "float", "%.3f","%f"    },  // ImGuiDataType_Float (float are promoted to double in va_arg)
+//     { sizeof,           "double","%f",  "%lf"   },  // ImGuiDataType_Double
+// };
+// IM_STATIC_ASSERT(GDataTypeInfo.len() == ImGuiDataType_COUNT);
 
 // FIXME-LEGACY: Prior to 1.61 our DragInt() function internally used floats and because of this the compile-time default value for format was "%.0f".
 // Even though we changed the compile-time default, we expect users to have carried %f around, which would break the display of DragInt() calls.
 // To honor backward compatibility we are rewriting the format string, unless IMGUI_DISABLE_OBSOLETE_FUNCTIONS is enabled. What could possibly go wrong?!
-static PatchFormatStringFloatToInt: *const c_char(fmt: *const c_char)
+pub fn PatchFormatStringFloatToInt(fmt: &str) -> String
 {
-    if (fmt[0] == '%' && fmt[1] == '.' && fmt[2] == '0' && fmt[3] == 'f' && fmt[4] == 0) // Fast legacy path for "%.0f" which is expected to be the most common case.
-        return "%d";
-    let mut  fmt_start: *const c_char = ImParseFormatFindStart(fmt);    // Find % (if any, and ignore %%)
-    let mut  fmt_end: *const c_char = ImParseFormatFindEnd(fmt_start);  // Find end of format specifier, which itself is an exercise of confidence/recklessness (because snprintf is dependent on libc or user).
-    if (fmt_end > fmt_start && fmt_end[-1] == 'f')
-    {
-// #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-        if (fmt_start == fmt && fmt_end[0] == 0)
-            return "%d";
-let tmp_format: *const c_char;
-        ImFormatStringToTempBuffer(&tmp_format, null_mut(), "%.*s%%d%s", (fmt_start - fmt), fmt, fmt_end); // Honor leading and trailing decorations, but lose alignment/precision.
-        return tmp_format;
-// #else
-        // IM_ASSERT(0 && "DragInt(): Invalid format string!"); // Old versions used a default parameter of "%.0f", please replace with e.g. "%d"
-// #endif
-    }
-    return fmt;
+//     if (fmt[0] == '%' && fmt[1] == '.' && fmt[2] == '0' && fmt[3] == 'f' && fmt[4] == 0) // Fast legacy path for "%.0f" which is expected to be the most common case.
+//         return "%d";
+//     let mut  fmt_start: *const c_char = ImParseFormatFindStart(fmt);    // Find % (if any, and ignore %%)
+//     let mut  fmt_end: *const c_char = ImParseFormatFindEnd(fmt_start);  // Find end of format specifier, which itself is an exercise of confidence/recklessness (because snprintf is dependent on libc or user).
+//     if (fmt_end > fmt_start && fmt_end[-1] == 'f')
+//     {
+// // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+//         if (fmt_start == fmt && fmt_end[0] == 0)
+//             return "%d";
+// let tmp_format: *const c_char;
+//         ImFormatStringToTempBuffer(&tmp_format, null_mut(), "%.*s%%d%s", (fmt_start - fmt), fmt, fmt_end); // Honor leading and trailing decorations, but lose alignment/precision.
+//         return tmp_format;
+// // #else
+//         // IM_ASSERT(0 && "DragInt(): Invalid format string!"); // Old versions used a default parameter of "%.0f", please replace with e.g. "%d"
+// // #endif
+//     }
+//     return fmt;
+    todo!()
 }
 
-*const ImGuiDataTypeInfo DataTypeGetInfo(ImGuiDataType data_type)
+pub fn DataTypeGetInfo(data_type: ImGuiDataType) -> ImGuiDataTypeInfo
 {
     // IM_ASSERT(data_type >= 0 && data_type < ImGuiDataType_COUNT);
-    return &GDataTypeInfo[data_type];
+    return GDataTypeInfo[data_type].clone();
 }
 
-DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, ImGuiDataType data_type, p_data: *const c_void, format: *const c_char)
+// DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, data_type: ImGuiDataType, p_data: *const c_void, format: *const c_char)
+pub fn DataTypeFormatString(buf: &mut String, buf_size: usize, data_type: ImGuiDataType, p_data: &String, format: &String) -> usize
 {
+    todo!();
     // Signedness doesn't matter when pushing integer arguments
-    if (data_type == ImGuiDataType_S32 || data_type == ImGuiDataType_U32)
-        return ImFormatString(buf, buf_size, format, *(*const u32)p_data);
-    if (data_type == ImGuiDataType_S64 || data_type == ImGuiDataType_U64)
-        return ImFormatString(buf, buf_size, format, *(*const u64)p_data);
-    if (data_type == ImGuiDataType_Float)
-        return ImFormatString(buf, buf_size, format, *(*const c_float)p_data);
-    if (data_type == ImGuiDataType_Double)
-        return ImFormatString(buf, buf_size, format, *(*const double)p_data);
-    if (data_type == ImGuiDataType_S8)
-        return ImFormatString(buf, buf_size, format, *(*const i8)p_data);
-    if (data_type == ImGuiDataType_U8)
-        return ImFormatString(buf, buf_size, format, *(*const u8)p_data);
-    if (data_type == ImGuiDataType_S16)
-        return ImFormatString(buf, buf_size, format, *(*const i16)p_data);
-    if (data_type == ImGuiDataType_U16)
-        return ImFormatString(buf, buf_size, format, *(*const ImU16)p_data);
+    if data_type == ImGuiDataType_S32 || data_type == ImGuiDataType_U32 {
+        // return ImFormatString(buf, buf_size, format, *(*;const u32)p_data);
+    }
+    if data_type == ImGuiDataType_S64 || data_type == ImGuiDataType_U64 {
+        // return ImFormatString(buf, buf_size, format, *(*;const u64)p_data);
+    }
+    if (data_type == ImGuiDataType_Float) {
+        // return ImFormatString(buf, buf_size, format, *(*;const c_float)p_data);
+    }
+    if (data_type == ImGuiDataType_Double) {
+        // return ImFormatString(buf, buf_size, format, *(*;const double)p_data);
+    }
+    if (data_type == ImGuiDataType_S8) {
+        // return ImFormatString(buf, buf_size, format, *(*;const i8)p_data);
+    }
+    if (data_type == ImGuiDataType_U8) {
+        // return ImFormatString(buf, buf_size, format, *(*;const u8)p_data);
+    }
+    if (data_type == ImGuiDataType_S16) {
+        // return ImFormatString(buf, buf_size, format, *(*;const i16)p_data);
+    }
+    if (data_type == ImGuiDataType_U16) {
+        // return ImFormatString(buf, buf_size, format, *(*;const ImU16)p_data);
+    }
     // IM_ASSERT(0);
     return 0;
 }
 
-pub unsafe fn DataTypeApplyOp(ImGuiDataType data_type, op: c_int, output: *mut c_void, arg1: *const c_void, arg2: *const c_void)
+pub type DataTypeOperation = c_int;
+pub const DataTypeOperationAdd: DataTypeOperation = 0;
+pub const DataTypeOperationSub: DataTypeOperation = 1;
+
+pub unsafe fn DataTypeApplyOp<T>(data_type: ImGuiDataType, op: DataTypeOperation, output: &mut T, arg1: &T, arg2: &T)
 {
     // IM_ASSERT(op == '+' || op == '-');
-    switch (data_type)
+    match data_type
     {
-        ImGuiDataType_S8 =>
-            if (op == '+') { *(*mut i8)output  = ImAddClampOverflow(*(*const i8)arg1,  *(*const i8)arg2,  IM_S8_MIN,  IM_S8_MAX); }
-            if (op == '-') { *(*mut i8)output  = ImSubClampOverflow(*(*const i8)arg1,  *(*const i8)arg2,  IM_S8_MIN,  IM_S8_MAX); }
+        ImGuiDataType_S8 => {
+            if op == DataTypeOperationAdd { *output = ImAddClampOverflow(arg1, arg2, IM_S8_MIN, IM_S8_MAX); }
+            if op == DataTypeOperationSub { *output = ImSubClampOverflow(arg1, arg2, IM_S8_MIN, IM_S8_MAX); }
             return;
-        ImGuiDataType_U8 =>
-            if (op == '+') { *(*mut u8)output  = ImAddClampOverflow(*(*const u8)arg1,  *(*const u8)arg2,  IM_U8_MIN,  IM_U8_MAX); }
-            if (op == '-') { *(*mut u8)output  = ImSubClampOverflow(*(*const u8)arg1,  *(*const u8)arg2,  IM_U8_MIN,  IM_U8_MAX); }
+        }
+        ImGuiDataType_U8 => {
+            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_U8_MIN, IM_U8_MAX); }
+            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_U8_MIN, IM_U8_MAX); }
             return;
-        ImGuiDataType_S16 =>
-            if (op == '+') { *(*mut i16)output = ImAddClampOverflow(*(*const i16)arg1, *(*const i16)arg2, IM_S16_MIN, IM_S16_MAX); }
-            if (op == '-') { *(*mut i16)output = ImSubClampOverflow(*(*const i16)arg1, *(*const i16)arg2, IM_S16_MIN, IM_S16_MAX); }
+        }
+        ImGuiDataType_S16 => {
+            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_S16_MIN, IM_S16_MAX); }
+            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_S16_MIN, IM_S16_MAX); }
             return;
-        ImGuiDataType_U16 =>
-            if (op == '+') { *(*mut ImU16)output = ImAddClampOverflow(*(*const ImU16)arg1, *(*const ImU16)arg2, IM_U16_MIN, IM_U16_MAX); }
-            if (op == '-') { *(*mut ImU16)output = ImSubClampOverflow(*(*const ImU16)arg1, *(*const ImU16)arg2, IM_U16_MIN, IM_U16_MAX); }
+        }
+        ImGuiDataType_U16 => {
+            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_U16_MIN, IM_U16_MAX); }
+            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_U16_MIN, IM_U16_MAX); }
             return;
-        ImGuiDataType_S32 =>
-            if (op == '+') { *(*mut i32)output = ImAddClampOverflow(*(*const i32)arg1, *(*const i32)arg2, IM_S32_MIN, IM_S32_MAX); }
-            if (op == '-') { *(*mut i32)output = ImSubClampOverflow(*(*const i32)arg1, *(*const i32)arg2, IM_S32_MIN, IM_S32_MAX); }
+        }
+        ImGuiDataType_S32 => {
+            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_S32_MIN, IM_S32_MAX); }
+            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_S32_MIN, IM_S32_MAX); }
             return;
-        ImGuiDataType_U32 =>
-            if (op == '+') { *(*mut u32)output = ImAddClampOverflow(*(*const u32)arg1, *(*const u32)arg2, IM_U32_MIN, IM_U32_MAX); }
-            if (op == '-') { *(*mut u32)output = ImSubClampOverflow(*(*const u32)arg1, *(*const u32)arg2, IM_U32_MIN, IM_U32_MAX); }
+        }
+        ImGuiDataType_U32 => {
+            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_U32_MIN, IM_U32_MAX); }
+            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_U32_MIN, IM_U32_MAX); }
             return;
-        ImGuiDataType_S64 =>
-            if (op == '+') { *(*mut i64)output = ImAddClampOverflow(*(*const i64)arg1, *(*const i64)arg2, IM_S64_MIN, IM_S64_MAX); }
-            if (op == '-') { *(*mut i64)output = ImSubClampOverflow(*(*const i64)arg1, *(*const i64)arg2, IM_S64_MIN, IM_S64_MAX); }
+        }
+        ImGuiDataType_S64 => {
+            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_S64_MIN, IM_S64_MAX); }
+            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_S64_MIN, IM_S64_MAX); }
             return;
-        ImGuiDataType_U64 =>
-            if (op == '+') { *(*mut u64)output = ImAddClampOverflow(*(*const u64)arg1, *(*const u64)arg2, IM_U64_MIN, IM_U64_MAX); }
-            if (op == '-') { *(*mut u64)output = ImSubClampOverflow(*(*const u64)arg1, *(*const u64)arg2, IM_U64_MIN, IM_U64_MAX); }
+        }
+        ImGuiDataType_U64 => {
+            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_U64_MIN, IM_U64_MAX); }
+            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_U64_MIN, IM_U64_MAX); }
             return;
-        ImGuiDataType_Float =>
-            if (op == '+') { *(*mut c_float)output = *(*const c_float)arg1 + *(*const c_float)arg2; }
-            if (op == '-') { *(*mut c_float)output = *(*const c_float)arg1 - *(*const c_float)arg2; }
+        }
+        ImGuiDataType_Float => {
+            if (op == DataTypeOperationAdd) { *output = arg1 + arg2; }
+            if (op == DataTypeOperationSub) { *output = arg1 - arg2; }
             return;
-        ImGuiDataType_Double =>
-            if (op == '+') { *(*mut double)output = *(*const double)arg1 + *(*const double)arg2; }
-            if (op == '-') { *(*mut double)output = *(*const double)arg1 - *(*const double)arg2; }
+        }
+        ImGuiDataType_Double => {
+            if (op == DataTypeOperationAdd) { *output = arg1 + arg2; }
+            if (op == DataTypeOperationSub) { *output = arg1 - arg2; }
             return;
-        ImGuiDataType_COUNT => break;
+        }
+        ImGuiDataType_COUNT => { },
+        _ => {}
     }
     // IM_ASSERT(0);
 }
 
 // User can input math operators (e.g. +100) to edit a numerical values.
 // NB: This is _not_ a full expression evaluator. We should probably add one and replace this dumb mess..
-pub unsafe fn DataTypeApplyFromText(buf: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, format: *const c_char) -> bool
+pub unsafe fn DataTypeApplyFromText(buf: &str, data_type: ImGuiDataType, p_data: &str, format: &str) -> bool
 {
-    while (ImCharIsBlankA(*buf))
-        buf+= 1;
-    if !buf[0] { return  false; }
-
-    // Copy the value in an opaque buffer so we can compare at the end of the function if it changed at all.
-    let type_info: *const ImGuiDataTypeInfo = DataTypeGetInfo(data_type);
-    ImGuiDataTypeTempStorage data_backup;
-    memcpy(&data_backup, p_data, type_info.Size);
-
-    // Sanitize format
-    // For float/double we have to ignore format with precision (e.g. "%.2f") because sscanf doesn't take them in, so force them into %f and %lf
-    format_sanitized: [c_char;32];
-    if (data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double)
-        format = type_info->ScanFmt;
-    else
-        format = ImParseFormatSanitizeForScanning(format, format_sanitized, format_sanitized.len());
-
-    // Small types need a 32-bit buffer to receive the result from scanf()
-    let v32: c_int = 0;
-    if sscanf(buf, format, if type_info.Size >= 4 { p_data } else { &v32 }) < 1 { return  false; }
-    if (type_info.Size < 4)
-    {
-        if (data_type == ImGuiDataType_S8)
-            *(*mut i8)p_data = ImClamp(v32, IM_S8_MIN, IM_S8_MAX);
-        else if (data_type == ImGuiDataType_U8)
-            *(*mut u8)p_data = ImClamp(v32, IM_U8_MIN, IM_U8_MAX);
-        else if (data_type == ImGuiDataType_S16)
-            *(*mut i16)p_data = ImClamp(v32, IM_S16_MIN, IM_S16_MAX);
-        else if (data_type == ImGuiDataType_U16)
-            *(*mut ImU16)p_data = (ImU16)ImClamp(v32, IM_U16_MIN, IM_U16_MAX);
-        else
-            // IM_ASSERT(0);
-    }
-
-    return memcmp(&data_backup, p_data, type_info.Size) != 0;
+    // while (ImCharIsBlankA(*buf))
+    //     buf+= 1;
+    // if !buf[0] { return  false; }
+    //
+    // // Copy the value in an opaque buffer so we can compare at the end of the function if it changed at all.
+    // let type_info: *const ImGuiDataTypeInfo = DataTypeGetInfo(data_type);
+    // ImGuiDataTypeTempStorage data_backup;
+    // memcpy(&data_backup, p_data, type_info.Size);
+    //
+    // // Sanitize format
+    // // For float/double we have to ignore format with precision (e.g. "%.2f") because sscanf doesn't take them in, so force them into %f and %lf
+    // format_sanitized: [c_char;32];
+    // if (data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double)
+    //     format = type_info->ScanFmt;
+    // else
+    //     format = ImParseFormatSanitizeForScanning(format, format_sanitized, format_sanitized.len());
+    //
+    // // Small types need a 32-bit buffer to receive the result from scanf()
+    // let v32: c_int = 0;
+    // if sscanf(buf, format, if type_info.Size >= 4 { p_data } else { &v32 }) < 1 { return  false; }
+    // if (type_info.Size < 4)
+    // {
+    //     if (data_type == ImGuiDataType_S8)
+    //         p_data = ImClamp(v32, IM_S8_MIN, IM_S8_MAX);
+    //     else if (data_type == ImGuiDataType_U8)
+    //         *(*mut u8)p_data = ImClamp(v32, IM_U8_MIN, IM_U8_MAX);
+    //     else if (data_type == ImGuiDataType_S16)
+    //         *(*mut i16)p_data = ImClamp(v32, IM_S16_MIN, IM_S16_MAX);
+    //     else if (data_type == ImGuiDataType_U16)
+    //         *(*mut ImU16)p_data = (ImU16)ImClamp(v32, IM_U16_MIN, IM_U16_MAX);
+    //     else
+    //         // IM_ASSERT(0);
+    // }
+    //
+    // return memcmp(&data_backup, p_data, type_info.Size) != 0;
+    todo!()
 }
 
-template<typename T>
-pub fn DataTypeCompareT(*const T lhs, *const T rhs) -> c_int
-{
-    if (*lhs < *rhs) return -1;
-    if *lhs > *rhs { return  1; }
-    return 0;
+// template<typename T>
+// pub fn DataTypeCompareT(*const T lhs, *const T rhs) -> c_int
+pub fn DataTypeCompareT<T>(lhs: &T, rhs: &T) -> c_int {
+    // if (*lhs < *rhs) return -1;
+    // if *lhs > *rhs { return  1; }
+    // return 0;
+    if lhs < rhs { return -1 } else if lhs > rhs { return 1 }
+    return 0
 }
 
-DataTypeCompare: c_int(ImGuiDataType data_type, arg_1: *const c_void, arg_2: *const c_void)
+pub fn DataTypeCompare<T>(data_type: ImGuiDataType, arg_1: &T, arg_2: &T) -> c_int
 {
-    switch (data_type)
-    {
-    ImGuiDataType_S8 =>     return DataTypeCompareT<i8  >((*const i8  )arg_1, (*const i8  )arg_2);
-    ImGuiDataType_U8 =>     return DataTypeCompareT<u8  >((*const u8  )arg_1, (*const u8  )arg_2);
-    ImGuiDataType_S16 =>    return DataTypeCompareT<i16 >((*const i16 )arg_1, (*const i16 )arg_2);
-    ImGuiDataType_U16 =>    return DataTypeCompareT<ImU16 >((*const ImU16 )arg_1, (*const ImU16 )arg_2);
-    ImGuiDataType_S32 =>    return DataTypeCompareT<i32 >((*const i32 )arg_1, (*const i32 )arg_2);
-    ImGuiDataType_U32 =>    return DataTypeCompareT<u32 >((*const u32 )arg_1, (*const u32 )arg_2);
-    ImGuiDataType_S64 =>    return DataTypeCompareT<i64 >((*const i64 )arg_1, (*const i64 )arg_2);
-    ImGuiDataType_U64 =>    return DataTypeCompareT<u64 >((*const u64 )arg_1, (*const u64 )arg_2);
-    ImGuiDataType_Float =>  return DataTypeCompareT<c_float >((*const c_float )arg_1, (*const c_float )arg_2);
-    ImGuiDataType_Double => return DataTypeCompareT<double>((*const double)arg_1, (*const double)arg_2);
-    ImGuiDataType_COUNT =>  break;
-    }
-    // IM_ASSERT(0);
-    return 0;
+    // switch (data_type)
+    // {
+    // ImGuiDataType_S8 =>     return DataTypeCompareT<i8  >((*const i8  )arg_1, (*const i8  )arg_2);
+    // ImGuiDataType_U8 =>     return DataTypeCompareT<u8  >((*const u8  )arg_1, (*const u8  )arg_2);
+    // ImGuiDataType_S16 =>    return DataTypeCompareT<i16 >((*const i16 )arg_1, (*const i16 )arg_2);
+    // ImGuiDataType_U16 =>    return DataTypeCompareT<ImU16 >((*const ImU16 )arg_1, (*const ImU16 )arg_2);
+    // ImGuiDataType_S32 =>    return DataTypeCompareT<i32 >((*const i32 )arg_1, (*const i32 )arg_2);
+    // ImGuiDataType_U32 =>    return DataTypeCompareT<u32 >((*const u32 )arg_1, (*const u32 )arg_2);
+    // ImGuiDataType_S64 =>    return DataTypeCompareT<i64 >((*const i64 )arg_1, (*const i64 )arg_2);
+    // ImGuiDataType_U64 =>    return DataTypeCompareT<u64 >((*const u64 )arg_1, (*const u64 )arg_2);
+    // ImGuiDataType_Float =>  return DataTypeCompareT<c_float >((*const c_float )arg_1, (*const c_float )arg_2);
+    // ImGuiDataType_Double => return DataTypeCompareT<double>((*const double)arg_1, (*const double)arg_2);
+    // ImGuiDataType_COUNT =>  break;
+    // }
+    // // IM_ASSERT(0);
+    // return 0;
+    DataTypeCompareT(arg_1, arg_2)
 }
 
-template<typename T>
-pub unsafe fn DataTypeClampT(*mut T v, *const T v_min, *const T v_max) -> bool
-{
+// template<typename T>
+pub unsafe fn DataTypeClampT<T>(v: &mut T, v_min: &T, v_max: &T) -> bool {
     // Clamp, both sides are optional, return true if modified
-    if (v_min && *v < *v_min) { *v = *v_min; return true; }
-    if (v_max && *v > *v_max) { *v = *v_max; return true; }
-    return false;
-}
-
-pub unsafe fn DataTypeClamp(ImGuiDataType data_type, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void) -> bool
-{
-    switch (data_type)
-    {
-    ImGuiDataType_S8 =>     return DataTypeClampT<i8  >((*mut i8  )p_data, (*const i8  )p_min, (*const i8  )p_max);
-    ImGuiDataType_U8 =>     return DataTypeClampT<u8  >((*mut u8  )p_data, (*const u8  )p_min, (*const u8  )p_max);
-    ImGuiDataType_S16 =>    return DataTypeClampT<i16 >((*mut i16 )p_data, (*const i16 )p_min, (*const i16 )p_max);
-    ImGuiDataType_U16 =>    return DataTypeClampT<ImU16 >((*mut ImU16 )p_data, (*const ImU16 )p_min, (*const ImU16 )p_max);
-    ImGuiDataType_S32 =>    return DataTypeClampT<i32 >((*mut i32 )p_data, (*const i32 )p_min, (*const i32 )p_max);
-    ImGuiDataType_U32 =>    return DataTypeClampT<u32 >((*mut u32 )p_data, (*const u32 )p_min, (*const u32 )p_max);
-    ImGuiDataType_S64 =>    return DataTypeClampT<i64 >((*mut i64 )p_data, (*const i64 )p_min, (*const i64 )p_max);
-    ImGuiDataType_U64 =>    return DataTypeClampT<u64 >((*mut u64 )p_data, (*const u64 )p_min, (*const u64 )p_max);
-    ImGuiDataType_Float =>  return DataTypeClampT<c_float >((*mut c_float )p_data, (*const c_float )p_min, (*const c_float )p_max);
-    ImGuiDataType_Double => return DataTypeClampT<double>((*mut double)p_data, (*const double)p_min, (*const double)p_max);
-    ImGuiDataType_COUNT =>  break;
+    // if (v_min && *v < *v_min) { *v = *v_min; return true; }
+    if *v < v_min {
+        *v = v_min;
+        return true;
     }
-    // IM_ASSERT(0);
+    if *v > v_max {
+        *v = v_max;
+        return true;
+    }
+    // if (v_max && *v > *v_max) { *v = *v_max; return true; }
+
     return false;
 }
 
-staticGetMinimumStepAtDecimalPrecision: c_float(decimal_precision: c_int)
+pub unsafe fn DataTypeClamp<T>(data_type: ImGuiDataType, p_data: &mut T, p_min: &T, p_max: &T) -> bool
 {
-    static min_steps: c_float[10] = { 1.0, 0.1f, 0.01f, 0.001f, 0.01f, 0.001f, 0.0001f, 0.00001f, 0.000001f, 0.0000001f };
-    if decimal_precision < 0 { return  FLT_MIN; }
-    return if (decimal_precision < min_steps.len()) { min_steps[decimal_precision]} else {ImPow(10f32, - decimal_precision)};
+    // switch (data_type)
+    // {
+    // ImGuiDataType_S8 =>     return DataTypeClampT<i8  >((*mut i8  )p_data, (*const i8  )p_min, (*const i8  )p_max);
+    // ImGuiDataType_U8 =>     return DataTypeClampT<u8  >((*mut u8  )p_data, (*const u8  )p_min, (*const u8  )p_max);
+    // ImGuiDataType_S16 =>    return DataTypeClampT<i16 >((*mut i16 )p_data, (*const i16 )p_min, (*const i16 )p_max);
+    // ImGuiDataType_U16 =>    return DataTypeClampT<ImU16 >((*mut ImU16 )p_data, (*const ImU16 )p_min, (*const ImU16 )p_max);
+    // ImGuiDataType_S32 =>    return DataTypeClampT<i32 >((*mut i32 )p_data, (*const i32 )p_min, (*const i32 )p_max);
+    // ImGuiDataType_U32 =>    return DataTypeClampT<u32 >((*mut u32 )p_data, (*const u32 )p_min, (*const u32 )p_max);
+    // ImGuiDataType_S64 =>    return DataTypeClampT<i64 >((*mut i64 )p_data, (*const i64 )p_min, (*const i64 )p_max);
+    // ImGuiDataType_U64 =>    return DataTypeClampT<u64 >((*mut u64 )p_data, (*const u64 )p_min, (*const u64 )p_max);
+    // ImGuiDataType_Float =>  return DataTypeClampT<c_float >((*mut c_float )p_data, (*const c_float )p_min, (*const c_float )p_max);
+    // ImGuiDataType_Double => return DataTypeClampT<double>((*mut double)p_data, (*const double)p_min, (*const double)p_max);
+    // ImGuiDataType_COUNT =>  break;
+    // }
+    // // IM_ASSERT(0);
+    // return false;
+    DataTypeClampT(p_data, p_min, p_max)
 }
 
-template<typename TYPE>
-TYPE RoundScalarWithFormatT(format: *const c_char, ImGuiDataType data_type, TYPE v)
+pub fn GetMinimumStepAtDecimalPrecision(decimal_precision: usize) -> c_float
 {
-    IM_UNUSED(data_type);
-    // IM_ASSERT(data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double);
-    let mut  fmt_start: *const c_char = ImParseFormatFindStart(format);
-    if (fmt_start[0] != '%' || fmt_start[1] == '%') // Don't apply if the value is not visible in the format string
-        return v;
+    let min_steps: [c_float;10] = [ 1.0, 0.1, 0.01, 0.001, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001 ];
+    if decimal_precision < 0 { return  f32::MIN; }
+    return if decimal_precision < min_steps.len() {
+        min_steps[decimal_precision]}
+    else {
+        // ImPow(10.0, - decimal_precision)
+        let mut x = 10.0;
+        x.powf(-decimal_precision as f64)
+    };
+}
 
-    // Sanitize format
-    fmt_sanitized: [c_char;32];
-    ImParseFormatSanitizeForPrinting(fmt_start, fmt_sanitized, fmt_sanitized.len());
-    fmt_start = fmt_sanitized;
-
-    // Format value with our rounding, and read back
-    v_str: [c_char;64];
-    ImFormatString(v_str, v_str.len(), fmt_start, v);
-    let mut  p: *const c_char = v_str;
-    while (*p == ' ')
-        p+= 1;
-    v = (TYPE)ImAtof(p);
-
-    return v;
+// template<typename TYPE>
+pub fn RoundScalarWithFormatT(format: &str, data_type: ImGuiDataType, v: T) -> T
+{
+    // // IM_UNUSED(data_type);
+    // // IM_ASSERT(data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double);
+    // let mut  fmt_start: *const c_char = ImParseFormatFindStart(format);
+    // if (fmt_start[0] != '%' || fmt_start[1] == '%') { // Don't apply if the value is not visible in the format string
+    //     return v;
+    // }
+    //
+    // // Sanitize format
+    // fmt_sanitized: [c_char;32];
+    // ImParseFormatSanitizeForPrinting(fmt_start, fmt_sanitized, fmt_sanitized.len());
+    // fmt_start = fmt_sanitized;
+    //
+    // // Format value with our rounding, and read back
+    // v_str: [c_char;64];
+    // ImFormatString(v_str, v_str.len(), fmt_start, v);
+    // let mut  p: *const c_char = v_str;
+    // while (*p == ' ')
+    //     p+= 1;
+    // v = ImAtof(p);
+    //
+    // return v;
+    todo!()
 }
 
 //-------------------------------------------------------------------------
@@ -2322,58 +2373,63 @@ TYPE RoundScalarWithFormatT(format: *const c_char, ImGuiDataType data_type, TYPE
 //-------------------------------------------------------------------------
 
 // This is called by DragBehavior() when the widget is active (held by mouse or being manipulated with Nav controls)
-template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-pub unsafe fn DragBehaviorT(ImGuiDataType data_type, *mut TYPE v,v_speed: c_float, const TYPE v_min, const TYPE v_max, format: *const c_char, ImGuiSliderFlags flags) -> bool
+// template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
+pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut T, mut v_speed: c_float, v_min: &T, v_max: &T, format: &str, flags: ImGuiSliderFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    const axis: ImGuiAxis = if flags & ImGuiSliderFlags_Vertical { ImGuiAxis_Y} else { ImGuiAxis_X};
+    const axis: ImGuiAxis = if flag_set(flags , ImGuiSliderFlags_Vertical) { ImGuiAxis_Y} else { ImGuiAxis_X};
     let is_clamped: bool = (v_min < v_max);
     let is_logarithmic: bool = flag_set(flags, ImGuiSliderFlags_Logarithmic);
     let is_floating_point: bool = (data_type == ImGuiDataType_Float) || (data_type == ImGuiDataType_Double);
 
     // Default tweak speed
-    if (v_speed == 0.0 && is_clamped && (v_max - v_min < f32::MAX))
+    if v_speed == 0.0 && is_clamped && (v_max - v_min < f32::MAX) {
         v_speed = ((v_max - v_min) * g.DragSpeedDefaultRatio);
+    }
 
     // Inputs accumulates into g.DragCurrentAccum, which is flushed into the current value as soon as it makes a difference with our precision settings
-    let adjust_delta: c_float =  0.0;
-    if (g.ActiveIdSource == ImGuiInputSource_Mouse && IsMousePosValid() && IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold * DRAG_MOUSE_THRESHOLD_FACTOR))
+    let mut adjust_delta: c_float =  0.0;
+    if g.ActiveIdSource == ImGuiInputSource_Mouse && IsMousePosValid(null()) && IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold * DRAG_MOUSE_THRESHOLD_FACTOR)
     {
         adjust_delta = g.IO.MouseDelta[axis];
-        if (g.IO.KeyAlt)
+        if g.IO.KeyAlt {
             adjust_delta *= 1.0 / 100;
-        if (g.IO.KeyShift)
-            adjust_delta *= 10f32;
+        }
+        if g.IO.KeyShift {
+            adjust_delta *= 10.0;
+        }
     }
-    else if (g.ActiveIdSource == ImGuiInputSource_Nav)
+    else if g.ActiveIdSource == ImGuiInputSource_Nav
     {
-        let decimal_precision: c_int = if is_floating_point { ImParseFormatPrecision(format, 3)} else {0};
-        let tweak_slow: bool = IsKeyDown(if (g.NavInputSource == ImGuiInputSource_Gamepad) { ImGuiKey_NavGamepadTweakSlow} else {ImGuiKey_NavKeyboardTweakSlow});
-        let tweak_fast: bool = IsKeyDown(if (g.NavInputSource == ImGuiInputSource_Gamepad) { ImGuiKey_NavGamepadTweakFast} else {ImGuiKey_NavKeyboardTweakFast});
-        let tweak_factor: c_float =  if tweak_slow { 1.0 / 1.0} else {if tweak_fast {10f32} else { 1.0}};
+        let decimal_precision: usize = if is_floating_point { ImParseFormatPrecision(format, 3)} else {0};
+        let tweak_slow: bool = IsKeyDown(if g.NavInputSource == ImGuiInputSource_Gamepad { ImGuiKey_NavGamepadTweakSlow} else {ImGuiKey_NavKeyboardTweakSlow});
+        let tweak_fast: bool = IsKeyDown(if g.NavInputSource == ImGuiInputSource_Gamepad { ImGuiKey_NavGamepadTweakFast} else {ImGuiKey_NavKeyboardTweakFast});
+        let tweak_factor: c_float =  if tweak_slow { 1.0 / 1.0} else {if tweak_fast {10.0} else { 1.0}};
         adjust_delta = GetNavTweakPressedAmount(axis) * tweak_factor;
         v_speed = ImMax(v_speed, GetMinimumStepAtDecimalPrecision(decimal_precision));
     }
     adjust_delta *= v_speed;
 
     // For vertical drag we currently assume that Up=higher value (like we do with vertical sliders). This may become a parameter.
-    if (axis == ImGuiAxis_Y)
+    if axis == ImGuiAxis_Y {
         adjust_delta = -adjust_delta;
+    }
 
     // For logarithmic use our range is effectively 0..1 so scale the delta into that range
-    if (is_logarithmic && (v_max - v_min < f32::MAX) && ((v_max - v_min) > 0.00010f32)) // Epsilon to avoid /0
+    if is_logarithmic && (v_max - v_min < f32::MAX) && ((v_max - v_min) > 0.00010f32) { // Epsilon to avoid /0
         adjust_delta /= (v_max - v_min);
+    }
 
     // Clear current value on activation
     // Avoid altering values and clamping when we are _already_ past the limits and heading in the same direction, so e.g. if range is 0..255, current value is 300 and we are pushing to the right side, keep the 300.
     let mut is_just_activated: bool =  g.ActiveIdIsJustActivated;
     let mut is_already_past_limits_and_pushing_outward: bool =  is_clamped && ((*v >= v_max && adjust_delta > 0.0) || (*v <= v_min && adjust_delta < 0.0));
-    if (is_just_activated || is_already_past_limits_and_pushing_outward)
+    if is_just_activated || is_already_past_limits_and_pushing_outward
     {
         g.DragCurrentAccum = 0.0;
         g.DragCurrentAccumDirty = false;
     }
-    else if (adjust_delta != 0.0)
+    else if adjust_delta != 0.0
     {
         g.DragCurrentAccum += adjust_delta;
         g.DragCurrentAccumDirty = true;
@@ -2381,51 +2437,53 @@ pub unsafe fn DragBehaviorT(ImGuiDataType data_type, *mut TYPE v,v_speed: c_floa
 
     if !g.DragCurrentAccumDirty { return  false; }
 
-    TYPE v_cur = *v;
-    FLOATTYPE v_old_ref_for_accum_remainder = (FLOATTYPE)0.0;
+    let mut v_cur: T = (*v).clone();
+    let mut v_old_ref_for_accum_remainder = 0.0;
 
-    let logarithmic_zero_epsilon: c_float =  0.0; // Only valid when is_logarithmic is true
+    let mut logarithmic_zero_epsilon: f64 =  0.0; // Only valid when is_logarithmic is true
     let zero_deadzone_halfsize: c_float =  0.0; // Drag widgets have no deadzone (as it doesn't make sense)
-    if (is_logarithmic)
+    if is_logarithmic
     {
         // When using logarithmic sliders, we need to clamp to avoid hitting zero, but our choice of clamp value greatly affects slider precision. We attempt to use the specified precision to estimate a good lower bound.
-        let decimal_precision: c_int = if is_floating_point { ImParseFormatPrecision(format, 3)} else {1};
-        logarithmic_zero_epsilon = ImPow(0.1f, decimal_precision);
+        let decimal_precision: f32 = if is_floating_point { ImParseFormatPrecision(format, 3)} else {1.0};
+        logarithmic_zero_epsilon = 0.1.powf(decimal_precision as f64);
 
         // Convert to parametric space, apply delta, convert back
-        let v_old_parametric: c_float =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+        let v_old_parametric: c_float =  ScaleRatioFromValueT(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         let v_new_parametric: c_float =  v_old_parametric + g.DragCurrentAccum;
-        v_cur = ScaleValueFromRatioT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_new_parametric, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+        v_cur = ScaleValueFromRatioT(data_type, v_new_parametric, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         v_old_ref_for_accum_remainder = v_old_parametric;
     }
     else
     {
-        v_cur += (SIGNEDTYPE)g.DragCurrentAccum;
+        v_cur += g.DragCurrentAccum;
     }
 
     // Round to user desired precision based on format string
-    if (is_floating_point && flag_clear(flags, ImGuiSliderFlags_NoRoundToFormat))
-        v_cur = RoundScalarWithFormatT<TYPE>(format, data_type, v_cur);
+    if is_floating_point && flag_clear(flags, ImGuiSliderFlags_NoRoundToFormat) {
+        v_cur = RoundScalarWithFormatT(format, data_type, v_cur);
+    }
 
     // Preserve remainder after rounding has been applied. This also allow slow tweaking of values.
     g.DragCurrentAccumDirty = false;
-    if (is_logarithmic)
+    if is_logarithmic
     {
         // Convert to parametric space, apply delta, convert back
-        let v_new_parametric: c_float =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+        let v_new_parametric: c_float =  ScaleRatioFromValueT(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         g.DragCurrentAccum -= (v_new_parametric - v_old_ref_for_accum_remainder);
     }
     else
     {
-        g.DragCurrentAccum -= ((SIGNEDTYPE)v_cur - (SIGNEDTYPE)*v);
+        g.DragCurrentAccum -= (v_cur - *v.clone());
     }
 
     // Lose zero sign for float/double
-    if (v_cur == (TYPE)-0)
-        v_cur = (TYPE)0;
+    if (v_cur == 0) {
+        v_cur = 0;
+    }
 
     // Clamp values (+ handle overflow/wrap-around for integer types)
-    if (*v != v_cur && is_clamped)
+    if *v != v_cur && is_clamped
     {
         if v_cur < v_min || (v_cur > *v && adjust_delta < 0.0 && !is_floating_point) {
             v_cur = v_min;}
@@ -2435,48 +2493,53 @@ pub unsafe fn DragBehaviorT(ImGuiDataType data_type, *mut TYPE v,v_speed: c_floa
 
     // Apply result
     if *v == v_cur { return  false; }
-    *v = v_cur;
+    *v = v_cur.clone();
     return true;
 }
 
-pub unsafe fn DragBehavior(id: ImGuiID, ImGuiDataType data_type, p_v: *mut c_void,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragBehavior<T>(id: ImGuiID, data_type: ImGuiDataType, p_v: &mut T,v_speed: c_float, p_min: &T, p_max: &T, format: &str, flags: ImGuiSliderFlags) -> bool
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
-    // IM_ASSERT((flags == 1 || flag_set(flags, ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
+    // IM_ASSERT((flags == 1 || flag_set(flags, ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid flags: ImGuiSliderFlags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (g.ActiveId == id)
+    if g.ActiveId == id
     {
         // Those are the things we can do easily outside the DragBehaviorT<> template, saves code generation.
-        if (g.ActiveIdSource == ImGuiInputSource_Mouse && !g.IO.MouseDown[0])
+        if g.ActiveIdSource == ImGuiInputSource_Mouse && !g.IO.MouseDown[0] {
             ClearActiveID();
-        else if (g.ActiveIdSource == ImGuiInputSource_Nav && g.NavActivatePressedId == id && !g.ActiveIdIsJustActivated)
+        }
+        else if g.ActiveIdSource == ImGuiInputSource_Nav && g.NavActivatePressedId == id && !g.ActiveIdIsJustActivated {
             ClearActiveID();
+        }
     }
     if g.ActiveId != id { return  false; }
-    if (g.LastItemData.InFlags & ImGuiItemFlags_ReadOnly) || flag_set(flags, ImGuiSliderFlags_ReadOnly) { return  false; }
+    if flag_set(g.LastItemData.InFlags , ImGuiItemFlags_ReadOnly) || flag_set(flags, ImGuiSliderFlags_ReadOnly) { return  false; }
 
-    switch (data_type)
-    {
-    ImGuiDataType_S8 =>     { i32 v32 = (i32)*(*mut i8)p_v;  let mut r: bool =  DragBehaviorT<i32, i32, c_float>(ImGuiDataType_S32, &v32, v_speed, if p_min { *(*const i8) p_min }else { IM_S8_MIN }, if { p_max } { *(*const i8)p_max }  else { IM_S8_MAX },  format, flags); if r) *(*mut i8 { p_v = v32;} return r; }
-    ImGuiDataType_U8 =>     { v32: u32 = *(*mut u8)p_v;  let mut r: bool =  DragBehaviorT<u32, i32, c_float>(ImGuiDataType_U32, &v32, v_speed, if p_min { *(*const u8) p_min }else { IM_U8_MIN }, if { p_max } { *(*const u8)p_max } else { IM_U8_MAX },  format, flags); if r) *(*mut u8 { p_v = v32;} return r; }
-    ImGuiDataType_S16 =>    { i32 v32 = (i32)*(*mut i16)p_v; let mut r: bool =  DragBehaviorT<i32, i32, c_float>(ImGuiDataType_S32, &v32, v_speed, if p_min { *(*const i16)p_min }else { IM_S16_MIN }, if p_max { *(*const i16)p_max }else { IM_S16_MAX }, format, flags); if (r) *(*mut i16)p_v = v32; return r; }
-ImGuiDataType_U16 =>    { v32: u32 = *(*mut ImU16)p_v; let mut r: bool =  DragBehaviorT<u32, i32, c_float>(ImGuiDataType_U32, &v32, v_speed, if p_min { *(*const ImU16)p_min } else { IM_U16_MIN }, if  p_max { *(*const ImU16)p_max } else { IM_U16_MAX }, format, flags); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
-    ImGuiDataType_S32 =>    return DragBehaviorT<i32, i32, c_float >(data_type, (*mut i32)p_v,  v_speed, if p_min { *(*const i32 )p_min } else { IM_S32_MIN }, if p_max { *(*const i32 )p_max } else { IM_S32_MAX }, format, flags);
-    ImGuiDataType_U32 =>    return DragBehaviorT<u32, i32, c_float >(data_type, (*mut u32)p_v,  v_speed, if p_min { *(*const u32 )p_min } else { IM_U32_MIN }, if p_max { *(*const u32 )p_max } else { IM_U32_MAX }, format, flags);
-    ImGuiDataType_S64 =>    return DragBehaviorT<i64, i64, double>(data_type, (*mut i64)p_v,  v_speed, if p_min { *(*const i64 )p_min } else { IM_S64_MIN }, if p_max { *(*const i64 )p_max } else { IM_S64_MAX, format, flags) };
-    ImGuiDataType_U64 =>    return DragBehaviorT<u64, i64, double>(data_type, (*mut u64)p_v,  v_speed, if p_min { *(*const u64 )p_min } else { IM_U64_MIN }, if p_max { *(*const u64 )p_max } else { IM_U64_MAX, format, flags) };
-    ImGuiDataType_Float =>  return DragBehaviorT<c_float, c_float, c_float >(data_type, (*mut c_float)p_v,  v_speed, if p_min { *(*const c_float )p_min } else { -f32::MAX },  if  p_max { *(*const c_float )p_max } else { f32::MAX },    format, flags);
-    ImGuiDataType_Double => return DragBehaviorT<double,double,double>(data_type, (*mut double)p_v, v_speed, if p_min { *(*const double)p_min } else { -DBL_MAX },   if p_max { *(*const double)p_max }else { DBL_MAX },    format, flags);
-    ImGuiDataType_COUNT =>  break;
-    }
-    // IM_ASSERT(0);
-    return false;
+//     match data_type
+//     {
+//     ImGuiDataType_S8 =>     {
+//         let v32 = p_v;
+//         let mut r: bool =  DragBehaviorT(ImGuiDataType_S32, &v32, v_speed, if p_min {  p_min }else { IM_S8_MIN }, if { p_max } { p_max }  else { IM_S8_MAX },  format, flags); if r) *(*mut i8 { p_v = v32;} return r; }
+//     ImGuiDataType_U8 =>     { v32: u32 = *(*mut u8)p_v;  let mut r: bool =  DragBehaviorT<u32, i32, c_float>(ImGuiDataType_U32, &v32, v_speed, if p_min { *(*const u8) p_min }else { IM_U8_MIN }, if { p_max } { *(*const u8)p_max } else { IM_U8_MAX },  format, flags); if r) *(*mut u8 { p_v = v32;} return r; }
+//     ImGuiDataType_S16 =>    { i32 v32 = *(*mut i16)p_v; let mut r: bool =  DragBehaviorT<i32, i32, c_float>(ImGuiDataType_S32, &v32, v_speed, if p_min { p_min }else { IM_S16_MIN }, if p_max { p_max }else { IM_S16_MAX }, format, flags); if (r) *(*mut i16)p_v = v32; return r; }
+// ImGuiDataType_U16 =>    { v32: u32 = *(*mut ImU16)p_v; let mut r: bool =  DragBehaviorT<u32, i32, c_float>(ImGuiDataType_U32, &v32, v_speed, if p_min { p_min } else { IM_U16_MIN }, if  p_max { p_max } else { IM_U16_MAX }, format, flags); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
+//     ImGuiDataType_S32 =>    return DragBehaviorT<i32, i32, c_float >(data_type, (*mut i32)p_v,  v_speed, if p_min { *(*const i32 )p_min } else { IM_S32_MIN }, if p_max { *(*const i32 )p_max } else { IM_S32_MAX }, format, flags);
+//     ImGuiDataType_U32 =>    return DragBehaviorT<u32, i32, c_float >(data_type, (*mut u32)p_v,  v_speed, if p_min { *(*const u32 )p_min } else { IM_U32_MIN }, if p_max { *(*const u32 )p_max } else { IM_U32_MAX }, format, flags);
+//     ImGuiDataType_S64 =>    return DragBehaviorT<i64, i64, double>(data_type, (*mut i64)p_v,  v_speed, if p_min { *(*const i64 )p_min } else { IM_S64_MIN }, if p_max { *(*const i64 )p_max } else { IM_S64_MAX, format, flags) };
+//     ImGuiDataType_U64 =>    return DragBehaviorT<u64, i64, double>(data_type, (*mut u64)p_v,  v_speed, if p_min { *(*const u64 )p_min } else { IM_U64_MIN }, if p_max { *(*const u64 )p_max } else { IM_U64_MAX, format, flags) };
+//     ImGuiDataType_Float =>  return DragBehaviorT<c_float, c_float, c_float >(data_type, (*mut c_float)p_v,  v_speed, if p_min { *(*const c_float )p_min } else { -f32::MAX },  if  p_max { *(*const c_float )p_max } else { f32::MAX },    format, flags);
+//     ImGuiDataType_Double => return DragBehaviorT<double,double,double>(data_type, (*mut double)p_v, v_speed, if p_min { p_min } else { -DBL_MAX },   if p_max { p_max }else { DBL_MAX },    format, flags);
+//     ImGuiDataType_COUNT =>  break;
+//     }
+//     // IM_ASSERT(0);
+    DragBehaviorT(data_type, p_v, v_speed, p_min, p_max, format, flags)
+    // return false;
 }
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut T, v_speed: c_float, p_min: &T, p_max: &T, format: &mut String, flags: ImGuiSliderFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -2486,43 +2549,49 @@ pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, p_data: 
     let mut id: ImGuiID =  window.id_from_str(label);
     let w: c_float =  CalcItemWidth();
 
-    let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
+    let label_size: ImVec2 = CalcTextSize(label,  true, 0.0);
     let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + ImVec2::from_floats(w, label_size.y + style.FramePadding.y * 2.0));
     let mut total_bb: ImRect = ImRect::new(frame_bb.Min, frame_bb.Max + ImVec2::from_floats(if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x } else { 0.0 }, 0.0));
 
     let temp_input_allowed: bool = flag_clear(flags, ImGuiSliderFlags_NoInput);
-    ItemSize(total_bb, style.FramePadding.y);
-    if !ItemAdd(total_bb, id, &frame_bb, if temp_input_allowed {ImGuiItemFlags_Inputable} else { 0 }) { return  false; }
+    ItemSize(&total_bb.GetSize(), style.FramePadding.y);
+    if !ItemAdd(&mut total_bb, id, &frame_bb, if temp_input_allowed {ImGuiItemFlags_Inputable} else { 0 }) { return  false; }
 
     // Default format string when passing NULL
-    if (format == null_mut())
-        format = DataTypeGetInfo(data_type)->PrintFmt;
-    else if (data_type == ImGuiDataType_S32 && strcmp(format, "%d") != 0) // (FIXME-LEGACY: Patch old "%.0f" format string to use "%d", read function more details.)
-        format = PatchFormatStringFloatToInt(format);
+    if format.is_empty() {
+        *format = DataTypeGetInfo(data_type).PrintFmt;
+    }
+    else if data_type == ImGuiDataType_S32 && format != String::format("%d") {
+        // (FIXME-LEGACY: Patch old "%.0f" format string to use "%d", read function more details.)
+        *format = PatchFormatStringFloatToInt(format);
+    }
 
-    let hovered: bool = ItemHoverable(frame_bb, id);
+    let hovered: bool = ItemHoverable(&frame_bb, id);
     let mut temp_input_is_active: bool =  temp_input_allowed && TempInputIsActive(id);
-    if (!temp_input_is_active)
+    if !temp_input_is_active
     {
         // Tabbing or CTRL-clicking on Drag turns it into an InputText
         let input_requested_by_tabbing: bool = temp_input_allowed && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
         let clicked: bool = (hovered && g.IO.MouseClicked[0]);
         let double_clicked: bool = (hovered && g.IO.MouseClickedCount[0] == 2);
         let make_active: bool = (input_requested_by_tabbing || clicked || double_clicked || g.NavActivateId == id || g.NavActivateInputId == id);
-        if (make_active && temp_input_allowed)
+        if make_active && temp_input_allowed {
             if input_requested_by_tabbing || (clicked && g.IO.KeyCtrl) || double_clicked || g.NavActivateInputId == id {
-                temp_input_is_active = true;}
+                temp_input_is_active = true;
+            }
+        }
 
         // (Optional) simple click (without moving) turns Drag into an InputText
-        if (g.IO.ConfigDragClickToInputText && temp_input_allowed && !temp_input_is_active)
-            if (g.ActiveId == id && hovered && g.IO.MouseReleased[0] && !IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold * DRAG_MOUSE_THRESHOLD_FACTOR))
-            {
-                g.NavActivateId = g.NavActivateInputId = id;
+        if g.IO.ConfigDragClickToInputText && temp_input_allowed && !temp_input_is_active {
+            if g.ActiveId == id && hovered && g.IO.MouseReleased[0] && !IsMouseDragPastThreshold(0, g.IO.MouseDragThreshold * DRAG_MOUSE_THRESHOLD_FACTOR) {
+                g.NavActivateId = id;
+                g.NavActivateInputId = id;
                 g.NavActivateFlags = ImGuiActivateFlags_PreferInput;
                 temp_input_is_active = true;
             }
+        }
 
-        if (make_active && !temp_input_is_active)
+        if make_active && !temp_input_is_active
         {
             SetActiveID(id, window);
             SetFocusID(id, window);
@@ -2531,7 +2600,7 @@ pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, p_data: 
         }
     }
 
-    if (temp_input_is_active)
+    if temp_input_is_active
     {
         // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
         let is_clamp_input: bool = flag_set(flags, ImGuiSliderFlags_AlwaysClamp) && (p_min == null_mut() || p_max == null_mut() || DataTypeCompare(data_type, p_min, p_max) < 0);
@@ -2543,30 +2612,42 @@ pub unsafe fn DragScalar(label: *const c_char, ImGuiDataType data_type, p_data: 
         if hovered {
             ImGuiCol_FrameBgHovered
         } else { ImGuiCol_FrameBg }
-    });
-    RenderNavHighlight(frame_bb, id);
+    }, 0.0);
+    RenderNavHighlight(&frame_bb, id, 0);
     RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, style.FrameRounding);
 
     // Drag behavior
     let value_changed: bool = DragBehavior(id, data_type, p_data, v_speed, p_min, p_max, format, flags);
     if value_changed {
-        MarkItemEdited(id)(); }
+        MarkItemEdited(id); }
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     value_buf: [c_char;64];
     let mut  value_buf_end: *const c_char = value_buf + DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
-    if (g.LogEnabled)
-        LogSetNextTextDecoration("{", "}");
-    RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, null_mut(), ImVec2::from_floats(0.5, 0.5));
+    if g.LogEnabled {
+        // LogSetNextTextDecoration("{", "}");
+    }
+    let clip_rect = ImRect::from_vec2(&ImVec2::from_floats(0.5, 0.5), &ImVec2::from_floats(0.5, 0.5));
+    RenderTextClipped(&frame_bb.Min, &frame_bb.Max, value_buf, value_buf.len(), None, &clip_rect);
 
-    if (label_size.x > 0.0)
-        RenderText(ImVec2::from_floats(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
+    if label_size.x > 0.0 {
+        RenderText(ImVec2::from_floats(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label, false);
+    }
 
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+    // IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
     return value_changed;
 }
 
-pub unsafe fn DragScalarN(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, components: c_int,v_speed: c_float, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragScalarN<T>(
+    label: &str,
+    data_type: ImGuiDataType,
+    p_data: &mut T,
+    components: c_int,
+    v_speed: c_float,
+    p_min: &T,
+    p_max: &T,
+    format: &str,
+    flags: ImGuiSliderFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -2574,78 +2655,79 @@ pub unsafe fn DragScalarN(label: *const c_char, ImGuiDataType data_type, p_data:
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut value_changed: bool =  false;
     BeginGroup();
-    PushID(label);
+    push_str_id(label);
     PushMultiItemsWidths(components, CalcItemWidth());
-    type_size: size_t = GDataTypeInfo[data_type].Size;
-    for (let i: c_int = 0; i < components; i++)
+    let type_size: size_t = GDataTypeInfo[data_type].Size;
+    // for (let i: c_int = 0; i < components; i++)
+    for i in 0 .. components
     {
-        PushID(i);
-        if (i > 0)
+        push_int_id(i);
+        if i > 0 {
             SameLine(0, g.Style.ItemInnerSpacing.x);
-        value_changed |= DragScalar("", data_type, p_data, v_speed, p_min, p_max, format, flags);
+        }
+        value_changed |= DragScalar("", data_type, p_data, v_speed, p_min, p_max, &mut String::from(format), flags);
         PopID();
         PopItemWidth();
-        p_data = (p_data + type_size);
+        *p_data = (*p_data.clone() + type_size);
     }
     PopID();
 
-    let mut  label_end: *const c_char = FindRenderedTextEnd(label);
-    if (label != label_end)
+    let mut  label_end = FindRenderedTextEnd(label);
+    if label.is_empty() == false
     {
         SameLine(0, g.Style.ItemInnerSpacing.x);
-        TextEx(label, label_end);
+        TextEx(label, ImGuiTextFlags_None);
     }
 
     EndGroup();
     return value_changed;
 }
 
-pub unsafe fn DragFloat(label: *const c_char, *mutv: c_float,v_speed: c_float,v_min: c_float,v_max: c_float, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragFloat(label: &str, v: &mut c_float,v_speed: c_float,v_min: c_float,v_max: c_float, format: &mut String, flags: ImGuiSliderFlags) -> bool
 {
     return DragScalar(label, ImGuiDataType_Float, v, v_speed, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn DragFloat2(label: *const c_char,v: [c_float;2],v_speed: c_float,v_min: c_float,v_max: c_float, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragFloat2(label: &str,v: &mut [c_float;2],v_speed: c_float,v_min: &[c_float;2],v_max: &[c_float;2], format: &str, flags: ImGuiSliderFlags) -> bool
 {
-    return DragScalarN(label, ImGuiDataType_Float, v, 2, v_speed, &v_min, &v_max, format, flags);
+    return DragScalarN(label, ImGuiDataType_Float, v, 2, v_speed, v_min, v_max, format, flags);
 }
 
-pub unsafe fn DragFloat3(label: *const c_char,v: c_float[3],v_speed: c_float,v_min: c_float,v_max: c_float, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragFloat3(label: &str,v: &mut [c_float;3],v_speed: c_float,v_min: &[c_float;3],v_max: &[c_float;3], format: &str, flags: ImGuiSliderFlags) -> bool
 {
     return DragScalarN(label, ImGuiDataType_Float, v, 3, v_speed, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn DragFloat4(label: *const c_char,v: c_float[4],v_speed: c_float,v_min: c_float,v_max: c_float, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragFloat4(label: &str,v: &mut [c_float;4],v_speed: c_float,v_min: &[c_float;4],v_max: &[c_float;4], format: &str, flags: ImGuiSliderFlags) -> bool
 {
     return DragScalarN(label, ImGuiDataType_Float, v, 4, v_speed, &v_min, &v_max, format, flags);
 }
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
-pub unsafe fn DragFloatRange2(label: *const c_char, *mutv_current_min: c_float, *mutv_current_max: c_float,v_speed: c_float,v_min: c_float,v_max: c_float, format: *const c_char, format_max: *const c_char, ImGuiSliderFlags flags) -> bool
-{
+pub unsafe fn DragFloatRange2(label: &str, v_current_min: &mut c_float, v_current_max: &mut c_float, v_speed: c_float, v_min: c_float, v_max: c_float, format: &str, format_max: &str, flags: ImGuiSliderFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    if window.SkipItems { return  false; }
+    if window.SkipItems { return false; }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     PushID(label);
     BeginGroup();
     PushMultiItemsWidths(2, CalcItemWidth());
 
-    let min_min: c_float =  if (v_min >= v_max) { -f32::MAX } else { v_min };
-    let min_max: c_float =  if (v_min >= v_max) { *v_current_max } else { ImMin(v_max, *v_current_max) };
-    ImGuiSliderFlags min_flags = flags | ( if (min_min == min_max) { ImGuiSliderFlags_ReadOnly } else { 0 });
-    let mut value_changed: bool =  DragScalar("##min", ImGuiDataType_Float, v_current_min, v_speed, &min_min, &min_max, format, min_flags);
+    let min_min: c_float = if v_min >= v_max { -f32::MAX } else { v_min };
+    let min_max: c_float = if v_min >= v_max { *v_current_max } else { v_max.min(*v_current_max) };
+    let min_flags: ImGuiSliderFlags = flags | (if min_min == min_max { ImGuiSliderFlags_ReadOnly } else { 0 });
+    let mut value_changed: bool = DragScalar("##min", ImGuiDataType_Float, v_current_min, v_speed, &min_min, &min_max, format, min_flags);
     PopItemWidth();
     SameLine(0, g.Style.ItemInnerSpacing.x);
 
-    let max_min: c_float =  if (v_min >= v_max) { *v_current_min } else { ImMax(v_min, *v_current_min) };
-    let max_max: c_float =  if (v_min >= v_max) { f32::MAX } else { v_max };
-    ImGuiSliderFlags max_flags = flags | (if (max_min == max_max) { ImGuiSliderFlags_ReadOnly } else { 0 });
-    value_changed |= DragScalar("##max", ImGuiDataType_Float, v_current_max, v_speed, &max_min, &max_max, if format_max {format_max} else { format }, max_flags);
+    let max_min: c_float = if (v_min >= v_max) { *v_current_min } else { ImMax(v_min, *v_current_min) };
+    let max_max: c_float = if (v_min >= v_max) { f32::MAX } else { v_max };
+    max_flags: ImGuiSliderFlags = flags | (if max_min == max_max { ImGuiSliderFlags_ReadOnly } else { 0 });
+    value_changed |= DragScalar("##max", ImGuiDataType_Float, v_current_max, v_speed, &max_min, &max_max, if format_max.is_empty() == false { &mut String::from(format_max) } else { &mut String::from(format) }, max_flags);
     PopItemWidth();
     SameLine(0, g.Style.ItemInnerSpacing.x);
 
-    TextEx(label, FindRenderedTextEnd(label));
+    TextEx(label, ImGuiTextFlags_None);
     EndGroup();
     PopID();
 
@@ -2653,52 +2735,48 @@ pub unsafe fn DragFloatRange2(label: *const c_char, *mutv_current_min: c_float, 
 }
 
 // NB: v_speed is float to allow adjusting the drag speed with more precision
-pub unsafe fn DragInt(label: *const c_char, v: *mut c_int,v_speed: c_float, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags) -> bool
-{
-    return DragScalar(label, ImGuiDataType_S32, v, v_speed, &v_min, &v_max, format, flags);
+pub unsafe fn DragInt(label: &str, v: &mut c_int, v_speed: c_float, v_min: c_int, v_max: c_int, format: &str, flags: ImGuiSliderFlags) -> bool {
+    return DragScalar(label, ImGuiDataType_S32, v, v_speed, &v_min, &v_max, &mut String::from(format), flags);
 }
 
-pub unsafe fn DragInt2(label: *const c_char, v: c_int[2],v_speed: c_float, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags) -> bool
-{
+pub unsafe fn DragInt2(label: &str, v: &mut [c_int; 2], v_speed: c_float, v_min: &[c_int; 2], v_max: &[c_int; 2], format: &str, flags: ImGuiSliderFlags) -> bool {
     return DragScalarN(label, ImGuiDataType_S32, v, 2, v_speed, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn DragInt3(label: *const c_char, v: c_int[3],v_speed: c_float, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags) -> bool
-{
+pub unsafe fn DragInt3(label: &str, v: &mut [c_int; 3], v_speed: c_float, v_min: &[c_int; 3], v_max: &[c_int; 3], format: &str, flags: ImGuiSliderFlags) -> bool {
     return DragScalarN(label, ImGuiDataType_S32, v, 3, v_speed, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn DragInt4(label: *const c_char, v: c_int[4],v_speed: c_float, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn DragInt4(label: &str, v: &mut [c_int;4],v_speed: c_float, v_min: &[c_int;4], v_max: &[c_int;4], format: &str, flags: ImGuiSliderFlags) -> bool
 {
     return DragScalarN(label, ImGuiDataType_S32, v, 4, v_speed, &v_min, &v_max, format, flags);
 }
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
-pub unsafe fn DragIntRange2(label: *const c_char, v_current_min: *mut c_int, v_current_max: *mut c_int,v_speed: c_float, v_min: c_int, v_max: c_int, format: *const c_char, format_max: *const c_char, ImGuiSliderFlags flags) -> bool
-{
+pub unsafe fn DragIntRange2(label: &str, v_current_min: &mut c_int, v_current_max: &mut c_int, v_speed: c_float, v_min: c_int, v_max: c_int, format: &str, format_max: &str, flags: ImGuiSliderFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    if window.SkipItems { return  false; }
+    if window.SkipItems { return false; }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     PushID(label);
     BeginGroup();
     PushMultiItemsWidths(2, CalcItemWidth());
 
-    let min_min: c_int = if v_min >= v_max { INT_MIN} else { v_min};
-    let min_max: c_int = if v_min >= v_max { *v_current_max} else { ImMin(v_max, *v_current_max)};
-    ImGuiSliderFlags min_flags = flags | (if (min_min == min_max) { ImGuiSliderFlags_ReadOnly } else { 0 });
-    let mut value_changed: bool =  DragInt("##min", v_current_min, v_speed, min_min, min_max, format, min_flags);
+    let min_min: c_int = if v_min >= v_max { INT_MIN } else { v_min };
+    let min_max: c_int = if v_min >= v_max { *v_current_max } else { ImMin(v_max, *v_current_max) };
+    min_flags: ImGuiSliderFlags = flags | (if min_min == min_max { ImGuiSliderFlags_ReadOnly } else { 0 });
+    let mut value_changed: bool = DragInt("##min", v_current_min, v_speed, min_min, min_max, format, min_flags);
     PopItemWidth();
     SameLine(0, g.Style.ItemInnerSpacing.x);
 
-    let max_min: c_int = if v_min >= v_max { *v_current_min} else { ImMax(v_min, *v_current_min)};
-    let max_max: c_int = if v_min >= v_max { INT_MAX} else { v_max};
-    ImGuiSliderFlags max_flags = flags | (if (max_min == max_max) { ImGuiSliderFlags_ReadOnly } else { 0 });
+    let max_min: c_int = if v_min >= v_max { *v_current_min } else { ImMax(v_min, *v_current_min) };
+    let max_max: c_int = if v_min >= v_max { INT_MAX } else { v_max };
+    max_flags: ImGuiSliderFlags = flags | (if max_min == max_max { ImGuiSliderFlags_ReadOnly } else { 0 });
     value_changed |= DragInt("##max", v_current_max, v_speed, max_min, max_max, if format_max { format_max } else { format }, max_flags);
     PopItemWidth();
     SameLine(0, g.Style.ItemInnerSpacing.x);
 
-    TextEx(label, FindRenderedTextEnd(label));
+    TextEx(label, ImGuiTextFlags_None);
     EndGroup();
     PopID();
 
@@ -2729,120 +2807,165 @@ pub unsafe fn DragIntRange2(label: *const c_char, v_current_min: *mut c_int, v_c
 //-------------------------------------------------------------------------
 
 // Convert a value v in the output space of a slider into a parametric position on the slider itself (the logical opposite of ScaleValueFromRatioT)
-template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>ScaleRatioFromValueT: c_float(ImGuiDataType data_type, TYPE v, TYPE v_min, TYPE v_max, is_logarithmic: bool,logarithmic_zero_epsilon: c_float,zero_deadzone_halfsize: c_float)
-{
-    if v_min == v_max{
-        return 0.0;}
-    IM_UNUSED(data_type);
+pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, v_min: &mut c_float, v_max: &mut c_float, is_logarithmic: bool, logarithmic_zero_epsilon: c_float, zero_deadzone_halfsize: c_float) -> c_float {
+    if v_min == v_max {
+        return 0.0;
+    }
+    // IM_UNUSED(data_type);
 
-    const TYPE v_clamped = if v_min < v_max { ImClamp(v, v_min, v_max)} else { ImClamp(v, v_max, v_min)};
-    if (is_logarithmic)
-    {
-        let mut flipped: bool =  v_max < v_min;
+    let v_clamped = if v_min < v_max { ImClamp(v, v_min, v_max) } else { ImClamp(v, v_max, v_min) };
+    return if is_logarithmic {
+        let mut flipped: bool = v_max < v_min;
 
-        if (flipped) // Handle the case where the range is backwards
+        if flipped { // Handle the case where the range is backwards
             ImSwap(v_min, v_max);
+        }
 
         // Fudge min/max to avoid getting close to log(0)
-        FLOATTYPE v_min_fudged = if ImAbs((FLOATTYPE)v_min) < logarithmic_zero_epsilon) { ( (if v_min < 0.0 { - logarithmic_zero_epsilon else  {logarithmic_zero_epsilon})} else { (FLOATTYPE)v_min}};
-        FLOATTYPE v_max_fudged = if ImAbs((FLOATTYPE)v_max) < logarithmic_zero_epsilon) { (if (v_max < 0.0 { -logarithmic_zero_epsilon } else {logarithmic_zero_epsilon})} else { (FLOATTYPE)v_max};
+        let mut v_min_fudged: c_float = if v_min.abs() < logarithmic_zero_epsilon {
+            if *v_min < 0.0 as c_float {
+                logarithmic_zero_epsilon * -1
+            } else {
+                logarithmic_zero_epsilon
+            }
+        } else {
+            v_min
+        };
+        let mut v_max_fudged = if v_max.abs() < logarithmic_zero_epsilon {
+            if *v_max < 0.0 as c_float {
+                -logarithmic_zero_epsilon
+            } else {
+                logarithmic_zero_epsilon
+            }
+        } else { v_max };
 
         // Awkward special cases - we need ranges of the form (-100 .. 0) to convert to (-100 .. -epsilon), not (-100 .. epsilon)
-        if ((v_min == 0.0) && (v_max < 0.0))
-            v_min_fudged = -logarithmic_zero_epsilon;
-        else if ((v_max == 0.0) && (v_min < 0.0))
-            v_max_fudged = -logarithmic_zero_epsilon;
+        if (v_min == 0.0) && (*v_max < 0.0) {
+            v_min_fudged = logarithmic_zero_epsilon * -1;
+        } else if (v_max == 0.0) && (*v_min < 0.0) {
+            v_max_fudged = logarithmic_zero_epsilon;
+        }
 
         let mut result: c_float = 0.0;
-        if v_clamped <= v_min_fudged{
-            result = 0.0;} // Workaround for values that are in-range but below our fudge
-        else if v_clamped >= v_max_fudged{
-            result = 1.0;} // Workaround for values that are in-range but above our fudge
-        else if ((v_min * v_max) < 0.0) // Range crosses zero, so split into two portions
-        {
-            let zero_point_center: c_float =  (-v_min) / (v_max - v_min); // The zero point in parametric space.  There's an argument we should take the logarithmic nature into account when calculating this, but for now this should do (and the most common case of a symmetrical range works fine)
-            let zero_point_snap_L: c_float =  zero_point_center - zero_deadzone_halfsize;
-            let zero_point_snap_R: c_float =  zero_point_center + zero_deadzone_halfsize;
+        if *v_clamped <= v_min_fudged {
+            result = 0.0;
+        } // Workaround for values that are in-range but below our fudge
+        else if *v_clamped >= v_max_fudged {
+            result = 1.0;
+        } // Workaround for values that are in-range but above our fudge
+        // Range crosses zero, so split into two portions
+        else if (v_min * v_max) < 0.0 {
+            let zero_point_center: c_float = (-v_min) / (v_max - v_min); // The zero point in parametric space.  There's an argument we should take the logarithmic nature into account when calculating this, but for now this should do (and the most common case of a symmetrical range works fine)
+            let zero_point_snap_L: c_float = zero_point_center - zero_deadzone_halfsize;
+            let zero_point_snap_R: c_float = zero_point_center + zero_deadzone_halfsize;
             if v == 0.0 {
-                result = zero_point_center;} // Special case for exactly zero
-            else if (v < 0.0)
-                result = (1.0 - (ImLog(-(FLOATTYPE)v_clamped / logarithmic_zero_epsilon) / ImLog(-v_min_fudged / logarithmic_zero_epsilon))) * zero_point_snap_L;
-            else
-                result = zero_point_snap_R + ((ImLog((FLOATTYPE)v_clamped / logarithmic_zero_epsilon) / ImLog(v_max_fudged / logarithmic_zero_epsilon)) * (1.0 - zero_point_snap_R));
+                result = zero_point_center;
+            } // Special case for exactly zero
+            else if *v < 0.0 {
+                result = (1.0 - (ImLog(-v_clamped / logarithmic_zero_epsilon) / ImLog(-v_min_fudged / logarithmic_zero_epsilon))) * zero_point_snap_L;
+            } else {
+                result = zero_point_snap_R + ((ImLog(v_clamped / logarithmic_zero_epsilon) / ImLog(v_max_fudged / logarithmic_zero_epsilon)) * (1.0 - zero_point_snap_R));
+            }
+        } else if (*v_min < 0.0) || (*v_max < 0.0) {// Entirely negative slider
+            result = 1.0 - (ImLog(-v_clamped / -v_max_fudged) / ImLog(-v_min_fudged / -v_max_fudged));
+        } else {
+            result = (ImLog(v_clamped / v_min_fudged) / ImLog(v_max_fudged / v_min_fudged));
         }
-        else if ((v_min < 0.0) || (v_max < 0.0)) // Entirely negative slider
-            result = 1.0 - (ImLog(-(FLOATTYPE)v_clamped / -v_max_fudged) / ImLog(-v_min_fudged / -v_max_fudged));
-        else
-            result = (ImLog((FLOATTYPE)v_clamped / v_min_fudged) / ImLog(v_max_fudged / v_min_fudged));
 
-        return if flipped { (1.0 - result)} else {result};
-    }
-    else
-    {
-        // Linear slider
-        return ((FLOATTYPE)(SIGNEDTYPE)(v_clamped - v_min) / (FLOATTYPE)(SIGNEDTYPE)(v_max - v_min));
+        if flipped { (1.0 - result) } else { result }
+    } else {
+        // Linear slider 
+        (v_clamped - v_min) / (v_max - v_min)
     }
 }
 
 // Convert a parametric position on a slider into a value v in the output space (the logical opposite of ScaleRatioFromValueT)
-template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-TYPE ScaleValueFromRatioT(ImGuiDataType data_type,t: c_float, TYPE v_min, TYPE v_max, is_logarithmic: bool,logarithmic_zero_epsilon: c_float,zero_deadzone_halfsize: c_float)
+// template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
+pub fn ScaleValueFromRatioT(
+    data_type: ImGuiDataType,
+    t: c_float, 
+    v_min: c_float, 
+    v_max: c_float, 
+    is_logarithmic: bool,
+    logarithmic_zero_epsilon: c_float,
+    zero_deadzone_halfsize: c_float) -> c_float
 {
     // We special-case the extents because otherwise our logarithmic fudging can lead to "mathematically correct"
     // but non-intuitive behaviors like a fully-left slider not actually reaching the minimum value. Also generally simpler.
     if t <= 0.0 || v_min == v_max { return  v_min; }
     if t >= 1.0 { return  v_max; }
 
-    TYPE result = (TYPE)0;
-    if (is_logarithmic)
+    let mut result = 0.0 as c_float;
+    if is_logarithmic
     {
         // Fudge min/max to avoid getting silly results close to zero
-        FLOATTYPE v_min_fudged = if ImAbs((FLOATTYPE)v_min) < logarithmic_zero_epsilon) { (if (v_min < 0.0 { - logarithmic_zero_epsilon else { logarithmic_zero_epsilon)}} else { (FLOATTYPE)v_min};
-        FLOATTYPE v_max_fudged = if ImAbs((FLOATTYPE)v_max) < logarithmic_zero_epsilon) { (if (v_max < 0.0 { - logarithmic_zero_epsilon} else { logarithmic_zero_epsilon)}} else { (FLOATTYPE)v_max};
+        let v_min_fudged = if v_min.abs() < logarithmic_zero_epsilon { 
+            if v_min < 0.0 as c_float { 
+                logarithmic_zero_epsilon * -1 }
+            else { 
+                    logarithmic_zero_epsilon
+                }
+            } 
+            else { v_min};
+        let v_max_fudged = if v_max.abs() < logarithmic_zero_epsilon { 
+            if v_max < 0.0 {
+                logarithmic_zero_epsilon * -1
+            } else { 
+                logarithmic_zero_epsilon
+            }
+        } else { 
+            v_max};
 
         let flipped: bool = v_max < v_min; // Check if range is "backwards"
-        if (flipped)
+        if flipped {
             ImSwap(v_min_fudged, v_max_fudged);
+        }
 
         // Awkward special case - we need ranges of the form (-100 .. 0) to convert to (-100 .. -epsilon), not (-100 .. epsilon)
-        if ((v_max == 0.0) && (v_min < 0.0))
+        if (v_max == 0.0) && (v_min < 0.0) {
             v_max_fudged = -logarithmic_zero_epsilon;
+        }
 
         let t_with_flip: c_float =  if flipped { (1.0 - t)} else{ t}; // t, but flipped if necessary to account for us flipping the range
 
-        if ((v_min * v_max) < 0.0) // Range crosses zero, so we have to do this in two parts
+        if (v_min * v_max) < 0.0 // Range crosses zero, so we have to do this in two parts
         {
-            let zero_point_center: c_float =  (-ImMin(v_min, v_max)) / ImAbs(v_max - v_min); // The zero point in parametric space
+            let zero_point_center: c_float =  (v_min.min(v_max) * -1) / (v_max - v_min).abs(); // The zero point in parametric space
             let zero_point_snap_L: c_float =  zero_point_center - zero_deadzone_halfsize;
             let zero_point_snap_R: c_float =  zero_point_center + zero_deadzone_halfsize;
             if t_with_flip >= zero_point_snap_L && t_with_flip <= zero_point_snap_R{
-                result = (TYPE)0.0;} // Special case to make getting exactly zero possible (the epsilon prevents it otherwise)
-            else if (t_with_flip < zero_point_center)
-                result = (TYPE)-(logarithmic_zero_epsilon * ImPow(-v_min_fudged / logarithmic_zero_epsilon, (FLOATTYPE)(1.0 - (t_with_flip / zero_point_snap_L))));
-            else
-                result = (TYPE)(logarithmic_zero_epsilon * ImPow(v_max_fudged / logarithmic_zero_epsilon, (FLOATTYPE)((t_with_flip - zero_point_snap_R) / (1.0 - zero_point_snap_R))));
+                result = 0.0;} // Special case to make getting exactly zero possible (the epsilon prevents it otherwise)
+            else if t_with_flip < zero_point_center {
+                result = -(logarithmic_zero_epsilon * ImPow(-v_min_fudged / logarithmic_zero_epsilon, (1.0 - (t_with_flip / zero_point_snap_L))));
+            }
+            else {
+                result = (logarithmic_zero_epsilon * ImPow(v_max_fudged / logarithmic_zero_epsilon, ((t_with_flip - zero_point_snap_R) / (1.0 - zero_point_snap_R))));
+            }
         }
-        else if ((v_min < 0.0) || (v_max < 0.0)) // Entirely negative slider
-            result = (TYPE)-(-v_max_fudged * ImPow(-v_min_fudged / -v_max_fudged, (FLOATTYPE)(1.0 - t_with_flip)));
-        else
-            result = (TYPE)(v_min_fudged * ImPow(v_max_fudged / v_min_fudged, (FLOATTYPE)t_with_flip));
+        else if (v_min < 0.0) || (v_max < 0.0) {
+            // Entirely negative slider
+            result = -(-v_max_fudged * ImPow(-v_min_fudged / -v_max_fudged, (1.0 - t_with_flip)));
+        }
+        else {
+            result = (v_min_fudged * ImPow(v_max_fudged / v_min_fudged, t_with_flip));
+        }
     }
     else
     {
         // Linear slider
         let is_floating_point: bool = (data_type == ImGuiDataType_Float) || (data_type == ImGuiDataType_Double);
-        if (is_floating_point)
+        if is_floating_point
         {
             result = ImLerp(v_min, v_max, t);
         }
-        else if (t < 1.0)
+        else if t < 1.0
         {
             // - For integer values we want the clicking position to match the grab box so we round above
             //   This code is carefully tuned to work with large values (e.g. high ranges of U64) while preserving this property..
             // - Not doing a *1.0 multiply at the end of a range as it tends to be lossy. While absolute aiming at a large s64/u64
             //   range is going to be imprecise anyway, with this check we at least make the edge values matches expected limits.
-            FLOATTYPE v_new_off_f = (SIGNEDTYPE)(v_max - v_min) * t;
-            result = (TYPE)((SIGNEDTYPE)v_min + (SIGNEDTYPE)(v_new_off_f + (FLOATTYPE)(if v_min > v_max { - 0.5} else {0.5})));
+            let v_new_off_f = (v_max - v_min) * t;
+            result = (v_min + (v_new_off_f + (if v_min > v_max { - 0.5} else {0.5})));
         }
     }
 
@@ -2850,8 +2973,8 @@ TYPE ScaleValueFromRatioT(ImGuiDataType data_type,t: c_float, TYPE v_min, TYPE v
 }
 
 // FIXME: Try to move more of the code into shared SliderBehavior()
-template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, *mut TYPE v, const TYPE v_min, const TYPE v_max, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb) -> bool
+// template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
+pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType, v: &mut c_float, v_min: c_float, v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags, out_grab_bb: &mut ImRect) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let setyle = &mut g.Style;
@@ -2859,32 +2982,34 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type,
     const axis: ImGuiAxis = if flags & ImGuiSliderFlags_Vertical { ImGuiAxis_Y} else { ImGuiAxis_X};
     let is_logarithmic: bool = flag_set(flags, ImGuiSliderFlags_Logarithmic);
     let is_floating_point: bool = (data_type == ImGuiDataType_Float) || (data_type == ImGuiDataType_Double);
-    const SIGNEDTYPE v_range = (if v_min < v_max { v_max - v_min } else {v_min - v_max});
+    let v_range = (if v_min < v_max { v_max - v_min } else {v_min - v_max});
 
     // Calculate bounds
     let grab_padding: c_float =  2.0; // FIXME: Should be part of style.
     let slider_sz: c_float =  (bb.Max[axis] - bb.Min[axis]) - grab_padding * 2.0;
-    let grab_sz: c_float =  style.GrabMinSize;
-    if (!is_floating_point && v_range >= 0)                                     // v_range < 0 may happen on integer overflows
-        grab_sz = ImMax((slider_sz / (v_range + 1)), style.GrabMinSize); // For integer sliders: if possible have the grab size represent 1 unit
-    grab_sz = ImMin(grab_sz, slider_sz);
+    let mut grab_sz: c_float =  style.GrabMinSize;
+    if !is_floating_point && v_range >= 0.0 as c_float {
+        // v_range < 0 may happen on integer overflows
+        grab_sz = ImMax((slider_sz / (v_range + 1)), style.GrabMinSize);
+    }// For integer sliders: if possible have the grab size represent 1 unit
+    grab_sz = grab_sz.min(slider_sz);
     let slider_usable_sz: c_float =  slider_sz - grab_sz;
     let slider_usable_pos_min: c_float =  bb.Min[axis] + grab_padding + grab_sz * 0.5;
     let slider_usable_pos_max: c_float =  bb.Max[axis] - grab_padding - grab_sz * 0.5;
 
-    let logarithmic_zero_epsilon: c_float =  0.0; // Only valid when is_logarithmic is true
-    let zero_deadzone_halfsize: c_float =  0.0; // Only valid when is_logarithmic is true
-    if (is_logarithmic)
+    let mut logarithmic_zero_epsilon: c_float =  0.0; // Only valid when is_logarithmic is true
+    let mut zero_deadzone_halfsize: c_float =  0.0; // Only valid when is_logarithmic is true
+    if is_logarithmic
     {
         // When using logarithmic sliders, we need to clamp to avoid hitting zero, but our choice of clamp value greatly affects slider precision. We attempt to use the specified precision to estimate a good lower bound.
         let decimal_precision: c_int = if is_floating_point { ImParseFormatPrecision(format, 3) } else {1};
-        logarithmic_zero_epsilon = ImPow(0.1f, decimal_precision);
+        logarithmic_zero_epsilon = (0.1 as c_float).powf(decimal_precision as f32);
         zero_deadzone_halfsize = (style.LogSliderDeadzone * 0.5) / ImMax(slider_usable_sz, 1.0);
     }
 
     // Process interacting with the slider
     let mut value_changed: bool =  false;
-    if (g.ActiveId == id)
+    if g.ActiveId == id
     {
         let mut set_new_value: bool =  false;
         let clicked_t: c_float =  0.0;
@@ -2931,7 +3056,7 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type,
                 {
                     input_delta /= 100;    // Gamepad/keyboard tweak speeds in % of slider bounds
                     if (tweak_slow)
-                        input_delta /= 10f32;
+                        input_delta /= 10.0;
                 }
                 else
                 {
@@ -2941,7 +3066,7 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type,
                         input_delta /= 100;
                 }
                 if (tweak_fast)
-                    input_delta *= 10f32;
+                    input_delta *= 10.0;
 
                 g.SliderCurrentAccum += input_delta;
                 g.SliderCurrentAccumDirty = true;
@@ -3023,10 +3148,10 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type,
 // For 32-bit and larger types, slider bounds are limited to half the natural type range.
 // So e.g. an integer Slider between INT_MAX-10 and INT_MAX will fail, but an integer Slider between INT_MAX/2-10 and INT_MAX/2 will be ok.
 // It would be possible to lift that limitation with some work but it doesn't seem to be worth it for sliders.
-pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, p_v: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags, *mut ImRect out_grab_bb) -> bool
+pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType, p_v: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, flags: ImGuiSliderFlags, *mut ImRect out_grab_bb) -> bool
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
-    // IM_ASSERT((flags == 1 || flag_set(flags, ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid ImGuiSliderFlags flag!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
+    // IM_ASSERT((flags == 1 || flag_set(flags, ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid flag: ImGuiSliderFlags!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
 
     // Those are the things we can do easily outside the SliderBehaviorT<> template, saves code generation.
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -3034,28 +3159,28 @@ pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, 
 
     switch (data_type)
     {
-    ImGuiDataType_S8 =>  { i32 v32 = (i32)*(*mut i8)p_v;  let mut r: bool =  SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, *(*const i8)p_min,  *(*const i8)p_max,  format, flags, out_grab_bb); if r) *(*mut i8 { p_v = v32;}  return r; }
+    ImGuiDataType_S8 =>  { i32 v32 = p_v;  let mut r: bool =  SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, p_min,  p_max,  format, flags, out_grab_bb); if r) *(*mut i8 { p_v = v32;}  return r; }
     ImGuiDataType_U8 =>  { v32: u32 = *(*mut u8)p_v;  let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, *(*const u8)p_min,  *(*const u8)p_max,  format, flags, out_grab_bb); if r) *(*mut u8 { p_v = v32;}  return r; }
-    ImGuiDataType_S16 => { i32 v32 = (i32)*(*mut i16)p_v; let mut r: bool =  SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, *(*const i16)p_min, *(*const i16)p_max, format, flags, out_grab_bb); if (r) *(*mut i16)p_v = v32; return r; }
-    ImGuiDataType_U16 => { v32: u32 = *(*mut ImU16)p_v; let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, *(*const ImU16)p_min, *(*const ImU16)p_max, format, flags, out_grab_bb); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
+    ImGuiDataType_S16 => { i32 v32 = *(*mut i16)p_v; let mut r: bool =  SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, p_min, p_max, format, flags, out_grab_bb); if (r) *(*mut i16)p_v = v32; return r; }
+    ImGuiDataType_U16 => { v32: u32 = *(*mut ImU16)p_v; let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, p_min, p_max, format, flags, out_grab_bb); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
     ImGuiDataType_S32 =>
-        // IM_ASSERT(*(*const i32)p_min >= IM_S32_MIN / 2 && *(*const i32)p_max <= IM_S32_MAX / 2);
-        return SliderBehaviorT<i32, i32, c_float >(bb, id, data_type, (*mut i32)p_v,  *(*const i32)p_min,  *(*const i32)p_max,  format, flags, out_grab_bb);
+        // IM_ASSERT(p_min >= IM_S32_MIN / 2 && p_max <= IM_S32_MAX / 2);
+        return SliderBehaviorT<i32, i32, c_float >(bb, id, data_type, (*mut i32)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
     ImGuiDataType_U32 =>
-        // IM_ASSERT(*(*const u32)p_max <= IM_U32_MAX / 2);
-        return SliderBehaviorT<u32, i32, c_float >(bb, id, data_type, (*mut u32)p_v,  *(*const u32)p_min,  *(*const u32)p_max,  format, flags, out_grab_bb);
+        // IM_ASSERT(p_max <= IM_U32_MAX / 2);
+        return SliderBehaviorT<u32, i32, c_float >(bb, id, data_type, (*mut u32)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
     ImGuiDataType_S64 =>
         // IM_ASSERT(*(*const ImS64)p_min >= IM_S64_MIN / 2 && *(*const ImS64)p_max <= IM_S64_MAX / 2);
-        return SliderBehaviorT<i64, i64, double>(bb, id, data_type, (*mut i64)p_v,  *(*const i64)p_min,  *(*const i64)p_max,  format, flags, out_grab_bb);
+        return SliderBehaviorT<i64, i64, double>(bb, id, data_type, (*mut i64)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
     ImGuiDataType_U64 =>
-        // IM_ASSERT(*(*const u64)p_max <= IM_U64_MAX / 2);
-        return SliderBehaviorT<u64, i64, double>(bb, id, data_type, (*mut u64)p_v,  *(*const u64)p_min,  *(*const u64)p_max,  format, flags, out_grab_bb);
+        // IM_ASSERT(p_max <= IM_U64_MAX / 2);
+        return SliderBehaviorT<u64, i64, double>(bb, id, data_type, (*mut u64)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
     ImGuiDataType_Float =>
-        // IM_ASSERT(*(*const c_float)p_min >= -f32::MAX / 2.0 && *(*const c_float)p_max <= f32::MAX / 2.0);
-        return SliderBehaviorT<c_float, c_float, c_float >(bb, id, data_type, (*mut c_float)p_v,  *(*const c_float)p_min,  *(*const c_float)p_max,  format, flags, out_grab_bb);
+        // IM_ASSERT(p_min >= -f32::MAX / 2.0 && p_max <= f32::MAX / 2.0);
+        return SliderBehaviorT<c_float, c_float, c_float >(bb, id, data_type, (*mut c_float)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
     ImGuiDataType_Double =>
-        // IM_ASSERT(*(*const double)p_min >= -DBL_MAX / 2.0 && *(*const double)p_max <= DBL_MAX / 2.0);
-        return SliderBehaviorT<double, double, double>(bb, id, data_type, (*mut double)p_v, *(*const double)p_min, *(*const double)p_max, format, flags, out_grab_bb);
+        // IM_ASSERT(p_min >= -DBL_MAX / 2.0 && p_max <= DBL_MAX / 2.0);
+        return SliderBehaviorT<double, double, double>(bb, id, data_type, (*mut double)p_v, p_min, p_max, format, flags, out_grab_bb);
     ImGuiDataType_COUNT => break;
     }
     // IM_ASSERT(0);
@@ -3064,7 +3189,7 @@ pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, ImGuiDataType data_type, 
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a slider, they are all required.
 // Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn SliderScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderScalar(label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -3146,7 +3271,7 @@ pub unsafe fn SliderScalar(label: *const c_char, ImGuiDataType data_type, p_data
 }
 
 // Add multiple sliders on 1 line for compact edition of multiple components
-pub unsafe fn SliderScalarN(label: *const c_char, ImGuiDataType data_type, v: *mut c_void, components: c_int, v_min: *const c_void, v_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderScalarN(label: *const c_char, data_type: ImGuiDataType, v: *mut c_void, components: c_int, v_min: *const c_void, v_max: *const c_void, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -3180,27 +3305,27 @@ pub unsafe fn SliderScalarN(label: *const c_char, ImGuiDataType data_type, v: *m
     return value_changed;
 }
 
-pub unsafe fn SliderFloat(label: *const c_char, *mutv: c_float,v_min: c_float,v_max: c_float, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderFloat(label: *const c_char, *mutv: c_float,v_min: c_float,v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     return SliderScalar(label, ImGuiDataType_Float, v, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn SliderFloat2(label: *const c_char,v: [c_float;2],v_min: c_float,v_max: c_float, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderFloat2(label: *const c_char,v: [c_float;2],v_min: c_float,v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     return SliderScalarN(label, ImGuiDataType_Float, v, 2, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn SliderFloat3(label: *const c_char,v: c_float[3],v_min: c_float,v_max: c_float, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderFloat3(label: *const c_char,v: c_float[3],v_min: c_float,v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     return SliderScalarN(label, ImGuiDataType_Float, v, 3, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn SliderFloat4(label: *const c_char,v: c_float[4],v_min: c_float,v_max: c_float, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderFloat4(label: *const c_char,v: c_float[4],v_min: c_float,v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     return SliderScalarN(label, ImGuiDataType_Float, v, 4, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn SliderAngle(label: *const c_char, *mutv_rad: c_float,v_degrees_min: c_float,v_degrees_max: c_float, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderAngle(label: *const c_char, *mutv_rad: c_float,v_degrees_min: c_float,v_degrees_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     if (format == null_mut())
         format = "%.0 deg";
@@ -3210,27 +3335,27 @@ pub unsafe fn SliderAngle(label: *const c_char, *mutv_rad: c_float,v_degrees_min
     return value_changed;
 }
 
-pub unsafe fn SliderInt(label: *const c_char, v: *mut c_int, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderInt(label: *const c_char, v: *mut c_int, v_min: c_int, v_max: c_int, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     return SliderScalar(label, ImGuiDataType_S32, v, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn SliderInt2(label: *const c_char, v: c_int[2], v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderInt2(label: *const c_char, v: c_int[2], v_min: c_int, v_max: c_int, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     return SliderScalarN(label, ImGuiDataType_S32, v, 2, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn SliderInt3(label: *const c_char, v: c_int[3], v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderInt3(label: *const c_char, v: c_int[3], v_min: c_int, v_max: c_int, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     return SliderScalarN(label, ImGuiDataType_S32, v, 3, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn SliderInt4(label: *const c_char, v: c_int[4], v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn SliderInt4(label: *const c_char, v: c_int[4], v_min: c_int, v_max: c_int, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     return SliderScalarN(label, ImGuiDataType_S32, v, 4, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn VSliderScalar(label: *const c_char, size: &ImVec2, ImGuiDataType data_type, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn VSliderScalar(label: *const c_char, size: &ImVec2, data_type: ImGuiDataType, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -3287,12 +3412,12 @@ pub unsafe fn VSliderScalar(label: *const c_char, size: &ImVec2, ImGuiDataType d
     return value_changed;
 }
 
-pub unsafe fn VSliderFloat(label: *const c_char, size: &ImVec2, *mutv: c_float,v_min: c_float,v_max: c_float, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn VSliderFloat(label: *const c_char, size: &ImVec2, *mutv: c_float,v_min: c_float,v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     return VSliderScalar(label, size, ImGuiDataType_Float, v, &v_min, &v_max, format, flags);
 }
 
-pub unsafe fn VSliderInt(label: *const c_char, size: &ImVec2, v: *mut c_int, v_min: c_int, v_max: c_int, format: *const c_char, ImGuiSliderFlags flags) -> bool
+pub unsafe fn VSliderInt(label: *const c_char, size: &ImVec2, v: *mut c_int, v_min: c_int, v_max: c_int, format: *const c_char, flags: ImGuiSliderFlags) -> bool
 {
     return VSliderScalar(label, size, ImGuiDataType_S32, v, &v_min, &v_max, format, flags);
 }
@@ -3461,7 +3586,7 @@ pub unsafe fn TempInputText(bb: &ImRect, id: ImGuiID, label: *const c_char, buf:
     return value_changed;
 }
 
-static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(ImGuiDataType data_type, format: *const c_char)
+static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(data_type: ImGuiDataType, format: *const c_char)
 {
     if data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double { return  ImGuiInputTextFlags_CharsScientific; }
     const  format_last_char: c_char = if format[0] { format[strlen(format) - 1]} else {0};
@@ -3471,7 +3596,7 @@ static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(ImGuiDataType d
 // Note that Drag/Slider functions are only forwarding the min/max values clamping values if the ImGuiSliderFlags_AlwaysClamp flag is set!
 // This is intended: this way we allow CTRL+Click manual input to set a value out of bounds, for maximum flexibility.
 // However this may not be ideal for all uses, as some user code may break on out of bound values.
-pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, format: *const c_char, p_clamp_min: *const c_void, p_clamp_max: *const c_void) -> bool
+pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, format: *const c_char, p_clamp_min: *const c_void, p_clamp_max: *const c_void) -> bool
 {
     fmt_buf: [c_char;32];
     data_buf: [c_char;32];
@@ -3509,7 +3634,7 @@ pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, Im
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
 // Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn InputScalar(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputScalar(label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -3583,7 +3708,7 @@ pub unsafe fn InputScalar(label: *const c_char, ImGuiDataType data_type, p_data:
     return value_changed;
 }
 
-pub unsafe fn InputScalarN(label: *const c_char, ImGuiDataType data_type, p_data: *mut c_void, components: c_int, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputScalarN(label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, components: c_int, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -5620,7 +5745,7 @@ pub unsafe fn ColorPicker4(label: *const c_char,col: c_float[4], ImGuiColorEditF
     }
 
     // Render cursor/preview circle (clamp S/V within 0..1 range because floating points colors may lead HSV values to be out of range)
-    let sv_cursor_rad: c_float =  if value_changed_sv {10f32} else { 6f32 };
+    let sv_cursor_rad: c_float =  if value_changed_sv {10.0} else { 6f32 };
     draw_list.AddCircleFilled(sv_cursor_pos, sv_cursor_rad, user_col32_striped_of_alpha, 12);
     draw_list.AddCircle(sv_cursor_pos, sv_cursor_rad + 1, col_midgrey, 12);
     draw_list.AddCircle(sv_cursor_pos, sv_cursor_rad, col_white, 12);
@@ -6743,7 +6868,7 @@ struct ImGuiPlotArrayGetterData
 staticPlot_ArrayGetter: c_float(data: *mut c_void, idx: c_int)
 {
     ImGuiPlotArrayGetterData* plot_data = (ImGuiPlotArrayGetterData*)data;
-    let v: c_float =  *(*const c_float)(*const c_void)(plot_Data.Values + idx * plot_Data.Stride);
+    let v: c_float =  (*const c_void)(plot_Data.Values + idx * plot_Data.Stride);
     return v;
 }
 
@@ -7738,7 +7863,7 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
         // Teleport if we are aiming far off the visible line
         tab_bar->ScrollingSpeed = ImMax(tab_bar->ScrollingSpeed, 70f32 * g.FontSize);
         tab_bar->ScrollingSpeed = ImMax(tab_bar->ScrollingSpeed, ImFabs(tab_bar->ScrollingTarget - tab_bar->ScrollingAnim) / 0.3f32);
-        let teleport: bool = (tab_bar->PrevFrameVisible + 1 < g.FrameCount) || (tab_bar->ScrollingTargetDistToVisibility > 10f32 * g.FontSize);
+        let teleport: bool = (tab_bar->PrevFrameVisible + 1 < g.FrameCount) || (tab_bar->ScrollingTargetDistToVisibility > 10.0 * g.FontSize);
         tab_bar->ScrollingAnim = if teleport { tab_bar -> ScrollingTarget }else{ ImLinearSweep(tab_bar -> ScrollingAnim, tab_bar -> ScrollingTarget, g.IO.DeltaTime * tab_bar -> ScrollingSpeed)};
     }
     else
@@ -8208,7 +8333,7 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
     else
     {
         // IM_ASSERT(tab.Window == NULL);
-        tab.NameOffset = (i32)tab_bar.TabsNames.size();
+        tab.NameOffset = tab_bar.TabsNames.size();
         tab_bar.TabsNames.append(label, label + strlen(label) + 1); // Append name _with_ the zero-terminator.
     }
 

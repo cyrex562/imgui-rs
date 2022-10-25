@@ -60,7 +60,7 @@ use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoR
 use crate::window::window_settings::ImGuiWindowSettings;
 
 // [DEBUG] Stack tool: hooks called by GetID() family functions
-// c_void DebugHookIdInfo(ImGuiID id, ImGuiDataType data_type, data_id: *const c_void, data_id_end: *const c_void)
+// c_void DebugHookIdInfo(ImGuiID id, data_type: ImGuiDataType, data_id: *const c_void, data_id_end: *const c_void)
 pub unsafe fn DebugHookIdInfo(id: ImGuiID, data_type: ImGuiDataType, data_id: *const c_void, data_id_ned: *const c_void) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -422,7 +422,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             for (let rect_n: c_int = 0; rect_n < WRT_Count; rect_n++)
             {
                 let r: ImRect =  Funcs::GetWindowRect(g.NavWindow, rect_n);
-                Text("(%6.1f,%6.10f32) (%6.1f,%6.10f32) Size (%6.1f,%6.10f32) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), wrt_rects_names[rect_n]);
+                Text("(%6.1f,%6.10.0) (%6.1f,%6.10.0) Size (%6.1f,%6.10.0) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), wrt_rects_names[rect_n]);
             }
             Unindent();
         }
@@ -453,7 +453,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
                         for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
                         {
                             let r: ImRect =  Funcs::GetTableRect(table, rect_n, column_n);
-                            ImFormatString(buf, buf.len(), "(%6.1f,%6.10f32) (%6.1f,%6.10f32) Size (%6.1f,%6.10f32) Col %d %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), column_n, trt_rects_names[rect_n]);
+                            ImFormatString(buf, buf.len(), "(%6.1f,%6.10.0) (%6.1f,%6.10.0) Size (%6.1f,%6.10.0) Col %d %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), column_n, trt_rects_names[rect_n]);
                             Selectable(buf);
                             if (IsItemHovered())
                                 GetForegroundDrawList().AddRect(r.Min - ImVec2::new(1, 1), r.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
@@ -462,7 +462,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
                     else
                     {
                         let r: ImRect =  Funcs::GetTableRect(table, rect_n, -1);
-                        ImFormatString(buf, buf.len(), "(%6.1f,%6.10f32) (%6.1f,%6.10f32) Size (%6.1f,%6.10f32) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), trt_rects_names[rect_n]);
+                        ImFormatString(buf, buf.len(), "(%6.1f,%6.10.0) (%6.1f,%6.10.0) Size (%6.1f,%6.10.0) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), trt_rects_names[rect_n]);
                         Selectable(buf);
                         if (IsItemHovered())
                             GetForegroundDrawList().AddRect(r.Min - ImVec2::new(1, 1), r.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
@@ -827,7 +827,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
 pub unsafe fn DebugNodeColumns(ImGuiOldColumns* columns)
 {
     if !TreeNode((uintptr_t)columns.ID, "Columns Id: 0x%08X, Count: %d, Flags: 0x%04X", columns.ID, columns->Count, columns.Flags) { return ; }
-    BulletText("Width: %.1f (MinX: %.1f, MaxX: %.10f32)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
+    BulletText("Width: %.1f (MinX: %.1f, MaxX: %.10.0)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
     for (let column_n: c_int = 0; column_n < columns->Columns.Size; column_n++)
         BulletText("Column %02d: OffsetNorm %.3f (= %.1f px)", column_n, columns->Columns[column_n].OffsetNorm, GetColumnOffsetFromNorm(columns, columns->Columns[column_n].OffsetNorm));
     TreePop();
@@ -1080,7 +1080,7 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
     for (let config_i: c_int = 0; config_i < font->ConfigDataCount; config_i++)
         if (font->ConfigData)
             if (*const ImFontConfig cfg = &font->ConfigData[config_i])
-                BulletText("Input %d: \'%s\', Oversample: (%d,%d), PixelSnapH: %d, Offset: (%.1f,%.10f32)",
+                BulletText("Input %d: \'%s\', Oversample: (%d,%d), PixelSnapH: %d, Offset: (%.1f,%.10.0)",
                     config_i, cfg.Name, cfg->OversampleH, cfg->OversampleV, cfg->PixelSnapH, cfg->GlyphOffset.x, cfg->GlyphOffset.y);
 
     // Display all glyphs of the fonts in separate pages of 256 characters
@@ -1258,7 +1258,7 @@ pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
 
     flags: ImGuiWindowFlags = window.Flags;
     DebugNodeDrawList(window, window.Viewport, window.DrawList, "DrawList");
-    BulletText("Pos: (%.1f,%.10f32), Size: (%.1f,%.10f32), ContentSize (%.1f,%.10f32) Ideal (%.1f,%.10f32)", window.Pos.x, window.Pos.y, window.Size.x, window.Size.y, window.ContentSize.x, window.ContentSize.y, window.ContentSizeIdeal.x, window.ContentSizeIdeal.y);
+    BulletText("Pos: (%.1f,%.10.0), Size: (%.1f,%.10.0), ContentSize (%.1f,%.10.0) Ideal (%.1f,%.10.0)", window.Pos.x, window.Pos.y, window.Size.x, window.Size.y, window.ContentSize.x, window.ContentSize.y, window.ContentSizeIdeal.x, window.ContentSizeIdeal.y);
     BulletText("Flags: 0x%08X (%s%s%s%s%s%s%s%s%s..)", flags,
         flag_set(flags, ImGuiWindowFlags_ChildWindow)  ? "Child " : "",      flag_set(flags, ImGuiWindowFlags_Tooltip)     ? "Tooltip "   : "",  flag_set(flags, ImGuiWindowFlags_Popup) ? "Popup " : "",
         flag_set(flags, ImGuiWindowFlags_Modal)        ? "Modal " : "",      flag_set(flags, ImGuiWindowFlags_ChildMenu)   ? "ChildMenu " : "",  flag_set(flags, ImGuiWindowFlags_NoSavedSettings) ? "NoSavedSettings " : "",
@@ -1275,13 +1275,13 @@ pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
             BulletText("NavLastIds[%d]: 0x%08X", layer, window.NavLastIds[layer]);
             continue;
         }
-        BulletText("NavLastIds[%d]: 0x%08X at +(%.1f,%.10f32)(%.1f,%.10f32)", layer, window.NavLastIds[layer], r.Min.x, r.Min.y, r.Max.x, r.Max.y);
+        BulletText("NavLastIds[%d]: 0x%08X at +(%.1f,%.10.0)(%.1f,%.10.0)", layer, window.NavLastIds[layer], r.Min.x, r.Min.y, r.Max.x, r.Max.y);
         if (IsItemHovered())
             GetForegroundDrawList(window).AddRect(r.Min + window.Pos, r.Max + window.Pos, IM_COL32(255, 255, 0, 255));
     }
     BulletText("NavLayersActiveMask: %X, NavLastChildNavWindow: %s", window.DC.NavLayersActiveMask, if window.NavLastChildNavWindow { window.NavLastChildNavwindow.Name } else { "NULL" });
 
-    BulletText("Viewport: %d%s, ViewportId: 0x%08X, ViewportPos: (%.1f,%.10f32)", if window.Viewport { window.Viewport.Idx } else { -1 }, if window.ViewportOwned { " (Owned)" } else { "" }, window.ViewportId, window.ViewportPos.x, window.ViewportPos.y);
+    BulletText("Viewport: %d%s, ViewportId: 0x%08X, ViewportPos: (%.1f,%.10.0)", if window.Viewport { window.Viewport.Idx } else { -1 }, if window.ViewportOwned { " (Owned)" } else { "" }, window.ViewportId, window.ViewportPos.x, window.ViewportPos.y);
     BulletText("ViewportMonitor: %d", if window.Viewport { window.Viewport.PlatformMonitor } else { -1 });
     BulletText("DockId: 0x%04X, DockOrder: %d, Act: %d, Vis: %d", window.DockId, window.DockOrder, window.DockIsActive, window.DockTabIsVisible);
     if (window.DockNode || window.DockNodeAsHost)

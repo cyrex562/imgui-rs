@@ -1194,7 +1194,7 @@ pub unsafe fn Begin(name: *const c_char, p_open: *mut bool, mut flags: ImGuiWind
         let mut border_held: c_int = -1;
         resize_grip_col: u32[4] = {};
         let resize_grip_count: c_int = if g.IO.ConfigWindowsResizeFromEdges { 2 } else { 1 }; // Allow resize from lower-left if we have the mouse cursor feedback for it.
-        let resize_grip_draw_size: c_float =  IM_FLOOR(ImMax(g.FontSize * 1.10f32, window.WindowRounding + 1.0 + g.FontSize * 0.20));
+        let resize_grip_draw_size: c_float =  IM_FLOOR(ImMax(g.FontSize * 1.10.0, window.WindowRounding + 1.0 + g.FontSize * 0.20));
         if handle_borders_and_resize_grips && !window.Collapsed {
             if UpdateWindowManualResize(window, &size_auto_fit, &mut border_held, resize_grip_count, resize_grip_col[0], &visibility_rect) {
                 use_current_size_for_scrollbar_x = true;

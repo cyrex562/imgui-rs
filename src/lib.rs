@@ -271,6 +271,7 @@ pub unsafe fn Initialize()
     DockContextInitialize(g);
 // #endif
 
+
     g.Initialized = true;
 }
 

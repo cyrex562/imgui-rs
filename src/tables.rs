@@ -2126,7 +2126,7 @@ pub unsafe fn TableSetColumnWidth(column_n: c_int,width: c_float)
     let mut column_0_width = ImClamp(column_0_width, min_width, max_width);
     if column_0.WidthGiven == column_0_width || column_0.WidthRequest == column_0_width { return ; }
 
-    //IMGUI_DEBUG_PRINT("TableSetColumnWidth(%d, %.1f->%.10f32)\n", column_0_idx, column_0->WidthGiven, column_0_width);
+    //IMGUI_DEBUG_PRINT("TableSetColumnWidth(%d, %.1f->%.10.0)\n", column_0_idx, column_0->WidthGiven, column_0_width);
     let mut column_1: *mut ImGuiTableColumn = if column_0.NextEnabledColumn != -1 { &mut table.Columns[column_0.NextEnabledColumn]} else { null_mut()};
 
     // In this surprisingly not simple because of how we support mixing Fixed and multiple Stretch columns.
@@ -3740,7 +3740,7 @@ pub unsafe fn DebugNodeTable(table: *mut ImGuiTable)
 //     if (table.InstanceCurrent > 0)
 //         Text("** %d instances of same table! Some data below will refer to last instance.", table.InstanceCurrent + 1);
 //     let mut clear_settings: bool =  SmallButton("Clear settings");
-//     BulletText("OuterRect: Pos: (%.1f,%.10f32) Size: (%.1f,%.10f32) Sizing: '%s'", table.OuterRect.Min.x, table.OuterRect.Min.y, table.OuterRect.GetWidth(), table.OuterRect.GetHeight(), DebugNodeTableGetSizingPolicyDesc(table.Flags));
+//     BulletText("OuterRect: Pos: (%.1f,%.10.0) Size: (%.1f,%.10.0) Sizing: '%s'", table.OuterRect.Min.x, table.OuterRect.Min.y, table.OuterRect.GetWidth(), table.OuterRect.GetHeight(), DebugNodeTableGetSizingPolicyDesc(table.Flags));
 //     BulletText("ColumnsGivenWidth: %.1f, ColumnsAutoFitWidth: %.1f, InnerWidth: %.1f%s", table.ColumnsGivenWidth, table.ColumnsAutoFitWidth, table.InnerWidth, table.InnerWidth == 0.0 ? " (auto)" : "");
 //     BulletText("CellPaddingX: %.1f, CellSpacingX: %.1f/%.1f, OuterPaddingX: %.1f", table.CellPaddingX, table.CellSpacingX1, table.CellSpacingX2, table.OuterPaddingX);
 //     BulletText("HoveredColumnBody: %d, HoveredColumnBorder: %d", table.HoveredColumnBody, table.HoveredColumnBorder);
@@ -3758,7 +3758,7 @@ pub unsafe fn DebugNodeTable(table: *mut ImGuiTable)
 //             "Column %d order %d '%s': offset %+.2f to %+.2f%s\n"
 //             "Enabled: %d, VisibleX/Y: %d/%d, RequestOutput: %d, SkipItems: %d, DrawChannels: %d,%d\n"
 //             "WidthGiven: %.1f, Request/Auto: %.1f/%.1f, StretchWeight: %.3f (%.1f%%)\n"
-//             "MinX: %.1f, MaxX: %.1f (%+.10f32), ClipRect: %.1f to %.1f (+%.10f32)\n"
+//             "MinX: %.1f, MaxX: %.1f (%+.10.0), ClipRect: %.1f to %.1f (+%.10.0)\n"
 //             "ContentWidth: %.1f,%.1f, HeadersUsed/Ideal %.1f/%.1f\n"
 //             "Sort: %d%s, UserID: 0x%08X, Flags: 0x%04X: %s%s%s..",
 //             n, column.DisplayOrder, name, column.MinX - table.WorkRect.Min.x, column.MaxX - table.WorkRect.Min.x, (n < table.FreezeColumnsRequest) ? " (Frozen)" : "",

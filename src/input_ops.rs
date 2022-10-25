@@ -454,13 +454,13 @@ pub fn GetInputSourceName(source: ImGuiInputSource) -> *const c_char {
 pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if e.Type == ImGuiInputEventType_MousePos {
-        IMGUI_DEBUG_LOG_IO("%s: MousePos (%.1f, %.10f32)\n", prefix, e.MousePos.PosX, e.MousePos.PosY);
+        IMGUI_DEBUG_LOG_IO("%s: MousePos (%.1f, %.10.0)\n", prefix, e.MousePos.PosX, e.MousePos.PosY);
         return;
     }
     if e.Type == ImGuiInputEventType_MouseButton {
         // IMGUI_DEBUG_LOG_IO("%s: MouseButton %d %s\n", prefix, e.MouseButton.Button, e.MouseButton.Down ? "Down": "Up"); return; }
         if e.Type == ImGuiInputEventType_MouseWheel {
-            IMGUI_DEBUG_LOG_IO("%s: MouseWheel (%.1f, %.10f32)\n", prefix, e.MouseWheel.WheelX, e.MouseWheel.WheelY);
+            IMGUI_DEBUG_LOG_IO("%s: MouseWheel (%.1f, %.10.0)\n", prefix, e.MouseWheel.WheelX, e.MouseWheel.WheelY);
             return;
         }
         if e.Type == ImGuiInputEventType_Key {

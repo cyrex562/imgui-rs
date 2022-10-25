@@ -772,7 +772,7 @@ pub unsafe fn ShowDemoWindowWidgets()
 
             static let f1: c_float =  0.123f, f2 = 0.0;
             SliderFloat("slider float", &f1, 0.0, 1.0, "ratio = %.3f");
-            SliderFloat("slider float (log)", &f2, -10f32, 10f32, "%.4f", ImGuiSliderFlags_Logarithmic);
+            SliderFloat("slider float (log)", &f2, -10.0, 10.0, "%.4f", ImGuiSliderFlags_Logarithmic);
 
             IMGUI_DEMO_MARKER("Widgets/Basic/SliderAngle");
             static let angle: c_float =  0.0;
@@ -1403,7 +1403,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 {
                     let alignment: ImVec2 = ImVec2::new(x / 2.0, y / 2.0);
                     name: [c_char;32];
-                    sprintf(name, "(%.1f,%.10f32)", alignment.x, alignment.y);
+                    sprintf(name, "(%.1f,%.10.0)", alignment.x, alignment.y);
                     if x > 0 {  SameLine(); }
                     PushStyleVar(ImGuiStyleVar_SelectableTextAlign, alignment);
                     Selectable(name, &selected[3 * y + x], ImGuiSelectableFlags_None, ImVec2::new(80, 80));
@@ -1793,7 +1793,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         if (animate)
         {
             progress += progress_dir * 0.4f * GetIO().DeltaTime;
-            if (progress >= 1.10f32) { progress = 1.1f; progress_dir *= -1.0; }
+            if (progress >= 1.10.0) { progress = 1.1f; progress_dir *= -1.0; }
             if (progress <= -0.1.0) { progress = -0.1f; progress_dir *= -1.0; }
         }
 
@@ -2004,7 +2004,7 @@ pub unsafe fn ShowDemoWindowWidgets()
     if (TreeNode("Drag/Slider Flags"))
     {
         // Demonstrate using advanced flags for DragXXX and SliderXXX functions. Note that the flags are the same!
-        static ImGuiSliderFlags flags = ImGuiSliderFlags_None;
+        static flags: ImGuiSliderFlags = ImGuiSliderFlags_None;
         CheckboxFlags("ImGuiSliderFlags_AlwaysClamp", &flags, ImGuiSliderFlags_AlwaysClamp);
         SameLine(); HelpMarker("Always clamp value to min/max bounds (if any) when input manually with CTRL+Click.");
         CheckboxFlags("ImGuiSliderFlags_Logarithmic", &flags, ImGuiSliderFlags_Logarithmic);
@@ -2052,7 +2052,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         // - signed/unsigned
         // - 8/16/32/64-bits
         // - integer/float/double
-        // To avoid polluting the public API with all possible combinations, we use the ImGuiDataType enum
+        // To avoid polluting the public API with all possible combinations, we use the enum: ImGuiDataType
         // to pass the type, and passing all arguments by pointer.
         // This is the reason the test code below creates local variables to hold "zero" "one" etc. for each types.
         // In practice, if you frequently use a given type that is not covered by the normal API entry points,
@@ -2112,8 +2112,8 @@ pub unsafe fn ShowDemoWindowWidgets()
         DragScalar("drag u64",       ImGuiDataType_U64,    &u64_v, drag_speed, if drag_clamp { & u64_zero} else {null_mut()}, if drag_clamp { & u64_fifty} else {null_mut()});
         DragScalar("drag float",     ImGuiDataType_Float,  &f32_v, 0.005f,  &f32_zero, &f32_one, "%f");
         DragScalar("drag float log", ImGuiDataType_Float,  &f32_v, 0.005f,  &f32_zero, &f32_one, "%f", ImGuiSliderFlags_Logarithmic);
-        DragScalar("drag double",    ImGuiDataType_Double, &f64_v, 0.05f, &f64_zero, null_mut(),     "%.10f32 grams");
-        DragScalar("drag double log",ImGuiDataType_Double, &f64_v, 0.05f, &f64_zero, &f64_one, "0 < %.10f32 < 1", ImGuiSliderFlags_Logarithmic);
+        DragScalar("drag double",    ImGuiDataType_Double, &f64_v, 0.05f, &f64_zero, null_mut(),     "%.10.0 grams");
+        DragScalar("drag double log",ImGuiDataType_Double, &f64_v, 0.05f, &f64_zero, &f64_one, "0 < %.10.0 < 1", ImGuiSliderFlags_Logarithmic);
 
         IMGUI_DEMO_MARKER("Widgets/Data Types/Sliders");
         Text("Sliders");
@@ -2137,7 +2137,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         SliderScalar("slider float low",     ImGuiDataType_Float,  &f32_v, &f32_zero, &f32_one);
         SliderScalar("slider float low log", ImGuiDataType_Float,  &f32_v, &f32_zero, &f32_one,  "%.10f", ImGuiSliderFlags_Logarithmic);
         SliderScalar("slider float high",    ImGuiDataType_Float,  &f32_v, &f32_lo_a, &f32_hi_a, "%e");
-        SliderScalar("slider double low",    ImGuiDataType_Double, &f64_v, &f64_zero, &f64_one,  "%.10f32 grams");
+        SliderScalar("slider double low",    ImGuiDataType_Double, &f64_v, &f64_zero, &f64_one,  "%.10.0 grams");
         SliderScalar("slider double low log",ImGuiDataType_Double, &f64_v, &f64_zero, &f64_one,  "%.10f", ImGuiSliderFlags_Logarithmic);
         SliderScalar("slider double high",   ImGuiDataType_Double, &f64_v, &f64_lo_a, &f64_hi_a, "%e grams");
 
@@ -2447,9 +2447,9 @@ pub unsafe fn ShowDemoWindowWidgets()
             "IsItemVisible() = %d\n"
             "IsItemClicked() = %d\n"
             "IsItemToggledOpen() = %d\n"
-            "GetItemRectMin() = (%.1f, %.10f32)\n"
-            "GetItemRectMax() = (%.1f, %.10f32)\n"
-            "GetItemRectSize() = (%.1f, %.10f32)",
+            "GetItemRectMin() = (%.1f, %.10.0)\n"
+            "GetItemRectMax() = (%.1f, %.10.0)\n"
+            "GetItemRectSize() = (%.1f, %.10.0)",
             ret,
             IsItemFocused(),
             IsItemHovered(),
@@ -4248,7 +4248,7 @@ pub unsafe fn ShowDemoWindowTables()
         CheckboxFlags("ImGuiTableFlags_RowBg", &flags2, ImGuiTableFlags_RowBg);
         CheckboxFlags("ImGuiTableFlags_Resizable", &flags2, ImGuiTableFlags_Resizable);
         Checkbox("show_widget_frame_bg", &show_widget_frame_bg);
-        SliderFloat2("CellPadding", &cell_padding.x, 0.0, 10f32, "%.0f");
+        SliderFloat2("CellPadding", &cell_padding.x, 0.0, 10.0, "%.0f");
         PopStyleCompact();
 
         PushStyleVar(ImGuiStyleVar_CellPadding, cell_padding);
@@ -4607,7 +4607,7 @@ pub unsafe fn ShowDemoWindowTables()
                 {
                     TableSetColumnIndex(column);
                     if (row == 0)
-                        Text("(w: %5.10f32)", GetContentRegionAvail().x);
+                        Text("(w: %5.10.0)", GetContentRegionAvail().x);
                     else
                         Text("Hello %d,%d", column, row);
                 }
@@ -4637,7 +4637,7 @@ pub unsafe fn ShowDemoWindowTables()
                 {
                     TableSetColumnIndex(column);
                     if (row == 0)
-                        Text("(w: %5.10f32)", GetContentRegionAvail().x);
+                        Text("(w: %5.10.0)", GetContentRegionAvail().x);
                     else
                         Text("Hello %d,%d", column, row);
                 }
@@ -5846,7 +5846,7 @@ pub unsafe fn ShowDemoWindowMisc()
                 key_row_offset: c_float = 9.0;
 
                 let board_min: ImVec2 = GetCursorScreenPos();
-                let board_max: ImVec2 = ImVec2::new(board_min.x + 3 * key_step.x + 2 * key_row_offset + 10f32, board_min.y + 3 * key_step.y + 10f32);
+                let board_max: ImVec2 = ImVec2::new(board_min.x + 3 * key_step.x + 2 * key_row_offset + 10.0, board_min.y + 3 * key_step.y + 10.0);
                 let start_pos: ImVec2 = ImVec2::new(board_min.x + 5f32 - key_step.x, board_min.y);
 
                 struct KeyLayoutData { Row: c_int, Col; Label: *const c_char; ImGuiKey Key; };
@@ -6001,9 +6001,9 @@ pub unsafe fn ShowDemoWindowMisc()
             let value_with_lock_threshold: ImVec2 = GetMouseDragDelta(0);
             let mouse_delta: ImVec2 = io.MouseDelta;
             Text("GetMouseDragDelta(0):");
-            Text("  w/ default threshold: (%.1f, %.10f32)", value_with_lock_threshold.x, value_with_lock_threshold.y);
-            Text("  w/ zero threshold: (%.1f, %.10f32)", value_raw.x, value_raw.y);
-            Text("io.MouseDelta: (%.1f, %.10f32)", mouse_delta.x, mouse_delta.y);
+            Text("  w/ default threshold: (%.1f, %.10.0)", value_with_lock_threshold.x, value_with_lock_threshold.y);
+            Text("  w/ zero threshold: (%.1f, %.10.0)", value_raw.x, value_raw.y);
+            Text("io.MouseDelta: (%.1f, %.10.0)", mouse_delta.x, mouse_delta.y);
             TreePop();
         }
 
@@ -6309,7 +6309,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             SliderFloat2("CellPadding", &style.CellPadding, 0.0, 20f32, "%.0f");
             SliderFloat2("ItemSpacing", &style.ItemSpacing, 0.0, 20f32, "%.0f");
             SliderFloat2("ItemInnerSpacing", &style.ItemInnerSpacing, 0.0, 20f32, "%.0f");
-            SliderFloat2("TouchExtraPadding", &style.TouchExtraPadding, 0.0, 10f32, "%.0f");
+            SliderFloat2("TouchExtraPadding", &style.TouchExtraPadding, 0.0, 10.0, "%.0f");
             SliderFloat("IndentSpacing", &style.IndentSpacing, 0.0, 30f32, "%.0f");
             SliderFloat("ScrollbarSize", &style.ScrollbarSize, 1.0, 20f32, "%.0f");
             SliderFloat("GrabMinSize", &style.GrabMinSize, 1.0, 20f32, "%.0f");
@@ -6445,7 +6445,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
 
             Checkbox("Anti-aliased fill", &style.AntiAliasedFill);
             PushItemWidth(GetFontSize() * 8);
-            DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02f, 0.1.0, 10f32, "%.2f");
+            DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02f, 0.1.0, 10.0, "%.2f");
             if style.CurveTessellationTol < 0.100{ style.CurveTessellationTol = 0.1.0;}
 
             // When editing the "Circle Segment Max Error" value, draw a preview of its effect on auto-tessellated circles.
@@ -7475,7 +7475,7 @@ pub unsafe fn ShowExampleAppSimpleOverlay(bool* p_open)
     window_flags: ImGuiWindowFlags = ImGuiWindowFlags_NoDecoration | ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoNav;
     if (location >= 0)
     {
-        let PAD: c_float =  10f32;
+        let PAD: c_float =  10.0;
         let viewport: *const ImGuiViewport = GetMainViewport();
         let work_pos: ImVec2 = viewport.WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
         let work_size: ImVec2 = viewport.WorkSize;
@@ -7501,7 +7501,7 @@ pub unsafe fn ShowExampleAppSimpleOverlay(bool* p_open)
         Text("Simple overlay\n" "(right-click to change position)");
         Separator();
         if (IsMousePosValid())
-            Text("Mouse Position: (%.1f,%.10f32)", io.MousePos.x, io.MousePos.y);
+            Text("Mouse Position: (%.1f,%.10.0)", io.MousePos.x, io.MousePos.y);
         else
             Text("Mouse Position: <invalid>");
         if (BeginPopupContextWindow())
@@ -7662,7 +7662,7 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
 
             let p: ImVec2 = GetCursorScreenPos();
             col: u32 = ImColor(col0f32);
-            let spacing: c_float =  10f32;
+            let spacing: c_float =  10.0;
             const corners_tl_br: ImDrawFlags = ImDrawFlags_RoundCornersTopLeft | ImDrawFlags_RoundCornersBottomRight;
             let rounding: c_float =  sz / 5f32;
             let circle_segments: c_int = if circle_segments_override { circle_segments_override_v} else {0};
@@ -7698,8 +7698,8 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             draw_list.AddNgonFilled(ImVec2::new(x + sz * 0.5, y + sz * 0.5), sz*0.5, col, ngon_sides);               x += sz + spacing;  // N-gon
             draw_list.AddCircleFilled(ImVec2::new(x + sz*0.5, y + sz*0.5), sz*0.5, col, circle_segments);            x += sz + spacing;  // Circle
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col);                                    x += sz + spacing;  // Square
-            draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, 10f32);                             x += sz + spacing;  // Square with all rounded corners
-            draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, 10f32, corners_tl_br);              x += sz + spacing;  // Square with two rounded corners
+            draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, 10.0);                             x += sz + spacing;  // Square with all rounded corners
+            draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + sz), col, 10.0, corners_tl_br);              x += sz + spacing;  // Square with two rounded corners
             draw_list.AddTriangleFilled(ImVec2::new(x+sz*0.5,y), ImVec2::new(x+sz, y+sz-0.5), ImVec2::new(x, y+sz-0.5), col);  x += sz + spacing;  // Triangle
             //draw_list.AddTriangleFilled(ImVec2::new(x+sz*0.2f,y), ImVec2::new(x, y+sz-0.5), ImVec2::new(x+sz*0.4f, y+sz-0.5), col); x += sz*0.4f + spacing; // Thin triangle
             draw_list.AddRectFilled(ImVec2::new(x, y), ImVec2::new(x + sz, y + thickness), col);                             x += sz + spacing;  // Horizontal line (faster than AddLine, but only handle integer thickness)
