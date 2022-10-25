@@ -14,9 +14,9 @@ use libc::{c_char, c_void, size_t};
 // - ImGuiInputTextFlags_CallbackResize:      Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow.
 #[derive(Default, Debug, Clone, Copy)]
 pub struct ImGuiInputTextCallbackData {
-    // ImGuiInputTextFlags EventFlag;      // One ImGuiInputTextFlags_Callback*    // Read-only
+    // EventFlag: ImGuiInputTextFlags;      // One ImGuiInputTextFlags_Callback*    // Read-only
     pub EventFlag: ImGuiInputTextFlags,
-    // ImGuiInputTextFlags Flags;          // What user passed to InputText()      // Read-only
+    // Flags: ImGuiInputTextFlags;          // What user passed to InputText()      // Read-only
     pub Flags: ImGuiInputTextFlags,
     // *mut c_void               UserData;       // What user passed to InputText()      // Read-only
     pub UserData: *mut c_void,

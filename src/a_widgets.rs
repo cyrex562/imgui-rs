@@ -115,6 +115,7 @@ use crate::hovered_flags::ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 use crate::id_ops::{ClearActiveID, KeepAliveID, PopID, push_int_id, push_str_id, PushID, SetActiveID, SetHoveredID};
 use crate::input_ops::{CalcTypematicRepeatAmount, GetKeyData, IsKeyDown, IsMouseClicked, IsMouseDragging, IsMouseDragPastThreshold, IsMousePosValid, SetMouseCursor};
 use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
+use crate::input_text_flags::{ImGuiInputTextFlags, ImGuiInputTextFlags_AutoSelectAll, ImGuiInputTextFlags_NoMarkEdited};
 use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_ButtonRepeat, ImGuiItemFlags_Inputable, ImGuiItemFlags_MixedValue, ImGuiItemFlags_NoNav, ImGuiItemFlags_NoNavDefaultFocus, ImGuiItemFlags_ReadOnly};
 use crate::item_ops::{CalcItemSize, CalcItemWidth, CalcWrapWidthForPos, IsClippedEx, IsItemActive, IsItemHovered, ItemAdd, ItemHoverable, ItemSize, MarkItemEdited, PopItemWidth, PushMultiItemsWidths};
 use crate::item_status_flags::{ImGuiItemStatusFlags_Checkable, ImGuiItemStatusFlags_Checked, ImGuiItemStatusFlags_FocusedByTabbing, ImGuiItemStatusFlags_HoveredRect};
@@ -136,7 +137,7 @@ use crate::render_ops::{FindRenderedTextEnd, RenderArrow, RenderArrowDockMenu, R
 use crate::separator_flags::{ImGuiSeparatorFlags, ImGuiSeparatorFlags_Horizontal, ImGuiSeparatorFlags_SpanAllColumns, ImGuiSeparatorFlags_Vertical};
 use crate::shrink_width_item::ImGuiShrinkWidthItem;
 use crate::slider_flags::{ImGuiSliderFlags, ImGuiSliderFlags_AlwaysClamp, ImGuiSliderFlags_Logarithmic, ImGuiSliderFlags_NoInput, ImGuiSliderFlags_NoRoundToFormat, ImGuiSliderFlags_ReadOnly, ImGuiSliderFlags_Vertical};
-use crate::string_ops::{ImFormatString, ImFormatStringToTempBufferV, str_to_const_c_char_ptr};
+use crate::string_ops::{ImFormatString, ImFormatStringToTempBufferV, ImStrTrimBlanks, str_to_const_c_char_ptr};
 use crate::style_ops::{GetColorU32, GetColorU32FromImVec4, PopStyleColor, PushStyleColor, PushStyleColor2};
 use crate::style_var::{ImGuiStyleVar_FramePadding, ImGuiStyleVar_WindowPadding};
 use crate::table::ImGuiTable;
@@ -192,7 +193,7 @@ static DRAG_MOUSE_THRESHOLD_FACTOR: c_float = 0.50f32;    // Multiplier for the 
 //-------------------------------------------------------------------------
 
 // // For InputTextEx()
-// static bool             InputTextFilterCharacter(*mut p_char: c_uint, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, user_data: *mut c_void, ImGuiInputSource input_source);
+// static bool             InputTextFilterCharacter(*mut p_char: c_uint, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void, ImGuiInputSource input_source);
 // static c_int              InputTextCalcTextLenAndLineCount(text_begin: *const c_char, *const out_text_end: *mut c_char);
 // static ImVec2           InputTextCalcTextSizeW(text_begin: *const ImWchar, text_end: *const ImWchar, *const *mut let remaining: ImWchar = null_mut(), *mut let mut out_offset: ImVec2 =  null_mut(), let mut stop_on_new_line: bool =  false);
 
@@ -2105,7 +2106,7 @@ pub fn DataTypeGetInfo(data_type: ImGuiDataType) -> ImGuiDataTypeInfo
 }
 
 // DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, data_type: ImGuiDataType, p_data: *const c_void, format: *const c_char)
-pub fn DataTypeFormatString(buf: &mut String, buf_size: usize, data_type: ImGuiDataType, p_data: &String, format: &String) -> usize
+pub fn DataTypeFormatString(buf: &mut String, buf_size: usize, data_type: ImGuiDataType, p_data: &c_float, format: &String) -> usize
 {
     todo!();
     // Signedness doesn't matter when pushing integer arguments
@@ -2204,7 +2205,7 @@ pub unsafe fn DataTypeApplyOp<T>(data_type: ImGuiDataType, op: DataTypeOperation
 
 // User can input math operators (e.g. +100) to edit a numerical values.
 // NB: This is _not_ a full expression evaluator. We should probably add one and replace this dumb mess..
-pub unsafe fn DataTypeApplyFromText(buf: &str, data_type: ImGuiDataType, p_data: &str, format: &str) -> bool
+pub unsafe fn DataTypeApplyFromText(buf: &str, data_type: ImGuiDataType, p_data: &mut c_float, format: &str) -> bool
 {
     // while (ImCharIsBlankA(*buf))
     //     buf+= 1;
@@ -2212,7 +2213,7 @@ pub unsafe fn DataTypeApplyFromText(buf: &str, data_type: ImGuiDataType, p_data:
     //
     // // Copy the value in an opaque buffer so we can compare at the end of the function if it changed at all.
     // let type_info: *const ImGuiDataTypeInfo = DataTypeGetInfo(data_type);
-    // ImGuiDataTypeTempStorage data_backup;
+    // data_backup: ImGuiDataTypeTempStorage;
     // memcpy(&data_backup, p_data, type_info.Size);
     //
     // // Sanitize format
@@ -2374,7 +2375,7 @@ pub fn RoundScalarWithFormatT(format: &str, data_type: ImGuiDataType, v: T) -> T
 
 // This is called by DragBehavior() when the widget is active (held by mouse or being manipulated with Nav controls)
 // template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut T, mut v_speed: c_float, v_min: &T, v_max: &T, format: &str, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut c_float, mut v_speed: c_float, v_min: &mut c_float, v_max: &mut c_float, format: &str, flags: ImGuiSliderFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const axis: ImGuiAxis = if flag_set(flags , ImGuiSliderFlags_Vertical) { ImGuiAxis_Y} else { ImGuiAxis_X};
@@ -2423,7 +2424,7 @@ pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut T, mut v_spee
     // Clear current value on activation
     // Avoid altering values and clamping when we are _already_ past the limits and heading in the same direction, so e.g. if range is 0..255, current value is 300 and we are pushing to the right side, keep the 300.
     let mut is_just_activated: bool =  g.ActiveIdIsJustActivated;
-    let mut is_already_past_limits_and_pushing_outward: bool =  is_clamped && ((*v >= v_max && adjust_delta > 0.0) || (*v <= v_min && adjust_delta < 0.0));
+    let mut is_already_past_limits_and_pushing_outward: bool =  is_clamped && ((*v >= *v_max && adjust_delta > 0.0) || (*v <= *v_min && adjust_delta < 0.0));
     if is_just_activated || is_already_past_limits_and_pushing_outward
     {
         g.DragCurrentAccum = 0.0;
@@ -2440,18 +2441,18 @@ pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut T, mut v_spee
     let mut v_cur: T = (*v).clone();
     let mut v_old_ref_for_accum_remainder = 0.0;
 
-    let mut logarithmic_zero_epsilon: f64 =  0.0; // Only valid when is_logarithmic is true
+    let mut logarithmic_zero_epsilon: c_float =  0.0; // Only valid when is_logarithmic is true
     let zero_deadzone_halfsize: c_float =  0.0; // Drag widgets have no deadzone (as it doesn't make sense)
     if is_logarithmic
     {
         // When using logarithmic sliders, we need to clamp to avoid hitting zero, but our choice of clamp value greatly affects slider precision. We attempt to use the specified precision to estimate a good lower bound.
         let decimal_precision: f32 = if is_floating_point { ImParseFormatPrecision(format, 3)} else {1.0};
-        logarithmic_zero_epsilon = 0.1.powf(decimal_precision as f64);
+        logarithmic_zero_epsilon = (0.1 as c_float).powf(decimal_precision);
 
         // Convert to parametric space, apply delta, convert back
         let v_old_parametric: c_float =  ScaleRatioFromValueT(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         let v_new_parametric: c_float =  v_old_parametric + g.DragCurrentAccum;
-        v_cur = ScaleValueFromRatioT(data_type, v_new_parametric, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+        v_cur = ScaleValueFromRatioT(data_type, v_new_parametric, v_min.clone(), v_max.clone(), is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         v_old_ref_for_accum_remainder = v_old_parametric;
     }
     else
@@ -2474,7 +2475,7 @@ pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut T, mut v_spee
     }
     else
     {
-        g.DragCurrentAccum -= (v_cur - *v.clone());
+        g.DragCurrentAccum -= (v_cur - v.clone());
     }
 
     // Lose zero sign for float/double
@@ -2497,7 +2498,7 @@ pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut T, mut v_spee
     return true;
 }
 
-pub unsafe fn DragBehavior<T>(id: ImGuiID, data_type: ImGuiDataType, p_v: &mut T,v_speed: c_float, p_min: &T, p_max: &T, format: &str, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragBehavior(id: ImGuiID, data_type: ImGuiDataType, p_v: &mut c_float,v_speed: c_float, p_min: &mut c_float, p_max: &mut c_float, format: &str, flags: ImGuiSliderFlags) -> bool
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
     // IM_ASSERT((flags == 1 || flag_set(flags, ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid flags: ImGuiSliderFlags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
@@ -2539,7 +2540,7 @@ pub unsafe fn DragBehavior<T>(id: ImGuiID, data_type: ImGuiDataType, p_v: &mut T
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut T, v_speed: c_float, p_min: &T, p_max: &T, format: &mut String, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut c_float, v_speed: c_float, p_min: &mut c_float, p_max: &mut c_float, format: &mut String, flags: ImGuiSliderFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -2604,7 +2605,7 @@ pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut 
     {
         // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
         let is_clamp_input: bool = flag_set(flags, ImGuiSliderFlags_AlwaysClamp) && (p_min == null_mut() || p_max == null_mut() || DataTypeCompare(data_type, p_min, p_max) < 0);
-        return TempInputScalar(frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min } else { null_mut() }, if is_clamp_input { p_max } else { null_mut() });
+        return TempInputScalar(&frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min } else { null_mut() }, if is_clamp_input { p_max } else { null_mut() });
     }
 
     // Draw frame
@@ -2641,11 +2642,11 @@ pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut 
 pub unsafe fn DragScalarN<T>(
     label: &str,
     data_type: ImGuiDataType,
-    p_data: &mut T,
+    p_data: &mut [c_float],
     components: c_int,
     v_speed: c_float,
-    p_min: &T,
-    p_max: &T,
+    p_min: &mut [c_float],
+    p_max: &mut [c_float],
     format: &str,
     flags: ImGuiSliderFlags) -> bool
 {
@@ -2665,10 +2666,10 @@ pub unsafe fn DragScalarN<T>(
         if i > 0 {
             SameLine(0, g.Style.ItemInnerSpacing.x);
         }
-        value_changed |= DragScalar("", data_type, p_data, v_speed, p_min, p_max, &mut String::from(format), flags);
+        value_changed |= DragScalar("", data_type, p_data[i], v_speed, p_min[i], p_max[i], &mut String::from(format), flags);
         PopID();
         PopItemWidth();
-        *p_data = (*p_data.clone() + type_size);
+        *p_data[i] = (p_data.clone() + type_size);
     }
     PopID();
 
@@ -2683,28 +2684,35 @@ pub unsafe fn DragScalarN<T>(
     return value_changed;
 }
 
-pub unsafe fn DragFloat(label: &str, v: &mut c_float,v_speed: c_float,v_min: c_float,v_max: c_float, format: &mut String, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragFloat(label: &str, v: &mut c_float,v_speed: c_float,v_min: &mut c_float,v_max: &mut c_float, format: &mut String, flags: ImGuiSliderFlags) -> bool
 {
-    return DragScalar(label, ImGuiDataType_Float, v, v_speed, &v_min, &v_max, format, flags);
+    return DragScalar(label, ImGuiDataType_Float, v, v_speed, v_min, v_max, format, flags);
 }
 
-pub unsafe fn DragFloat2(label: &str,v: &mut [c_float;2],v_speed: c_float,v_min: &[c_float;2],v_max: &[c_float;2], format: &str, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragFloat2(label: &str,v: &mut [c_float;2],v_speed: c_float,v_min: &mut [c_float;2],v_max: &mut [c_float;2], format: &str, flags: ImGuiSliderFlags) -> bool
 {
     return DragScalarN(label, ImGuiDataType_Float, v, 2, v_speed, v_min, v_max, format, flags);
 }
 
-pub unsafe fn DragFloat3(label: &str,v: &mut [c_float;3],v_speed: c_float,v_min: &[c_float;3],v_max: &[c_float;3], format: &str, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragFloat3(label: &str,v: &mut [c_float;3],v_speed: c_float,v_min: &mut [c_float;3],v_max: &mut [c_float;3], format: &str, flags: ImGuiSliderFlags) -> bool
 {
-    return DragScalarN(label, ImGuiDataType_Float, v, 3, v_speed, &v_min, &v_max, format, flags);
+    return DragScalarN(label, ImGuiDataType_Float, v, 3, v_speed, v_min, v_max, format, flags);
 }
 
-pub unsafe fn DragFloat4(label: &str,v: &mut [c_float;4],v_speed: c_float,v_min: &[c_float;4],v_max: &[c_float;4], format: &str, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragFloat4(label: &str,v: &mut [c_float;4],v_speed: c_float,v_min: &mut [c_float;4],v_max: &mut [c_float;4], format: &str, flags: ImGuiSliderFlags) -> bool
 {
-    return DragScalarN(label, ImGuiDataType_Float, v, 4, v_speed, &v_min, &v_max, format, flags);
+    return DragScalarN(label, ImGuiDataType_Float, v, 4, v_speed, v_min, v_max, format, flags);
 }
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
-pub unsafe fn DragFloatRange2(label: &str, v_current_min: &mut c_float, v_current_max: &mut c_float, v_speed: c_float, v_min: c_float, v_max: c_float, format: &str, format_max: &str, flags: ImGuiSliderFlags) -> bool {
+pub unsafe fn DragFloatRange2(
+    label: &str,
+    v_current_min: &mut c_float,
+    v_current_max: &mut c_float,
+    v_speed: c_float,
+    v_min: c_float, v_max: c_float,
+    format: &mut String,
+    format_max: &str, flags: ImGuiSliderFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return false; }
 
@@ -2713,17 +2721,17 @@ pub unsafe fn DragFloatRange2(label: &str, v_current_min: &mut c_float, v_curren
     BeginGroup();
     PushMultiItemsWidths(2, CalcItemWidth());
 
-    let min_min: c_float = if v_min >= v_max { -f32::MAX } else { v_min };
-    let min_max: c_float = if v_min >= v_max { *v_current_max } else { v_max.min(*v_current_max) };
+    let mut min_min: c_float = if v_min >= v_max { -f32::MAX } else { v_min };
+    let mut min_max: c_float = if v_min >= v_max { *v_current_max } else { v_max.min(*v_current_max) };
     let min_flags: ImGuiSliderFlags = flags | (if min_min == min_max { ImGuiSliderFlags_ReadOnly } else { 0 });
-    let mut value_changed: bool = DragScalar("##min", ImGuiDataType_Float, v_current_min, v_speed, &min_min, &min_max, format, min_flags);
+    let mut value_changed: bool = DragScalar("##min", ImGuiDataType_Float, v_current_min, v_speed, &mut min_min, &mut min_max, format, min_flags);
     PopItemWidth();
     SameLine(0, g.Style.ItemInnerSpacing.x);
 
-    let max_min: c_float = if (v_min >= v_max) { *v_current_min } else { ImMax(v_min, *v_current_min) };
-    let max_max: c_float = if (v_min >= v_max) { f32::MAX } else { v_max };
+    let mut max_min: c_float = if v_min >= v_max { *v_current_min } else { ImMax(v_min, *v_current_min) };
+    let mut max_max: c_float = if v_min >= v_max { f32::MAX } else { v_max };
     max_flags: ImGuiSliderFlags = flags | (if max_min == max_max { ImGuiSliderFlags_ReadOnly } else { 0 });
-    value_changed |= DragScalar("##max", ImGuiDataType_Float, v_current_max, v_speed, &max_min, &max_max, if format_max.is_empty() == false { &mut String::from(format_max) } else { &mut String::from(format) }, max_flags);
+    value_changed |= DragScalar("##max", ImGuiDataType_Float, v_current_max, v_speed, &mut max_min, &mut max_max, if format_max.is_empty() == false { &mut String::from(format_max) } else { &mut String::from(format) }, max_flags);
     PopItemWidth();
     SameLine(0, g.Style.ItemInnerSpacing.x);
 
@@ -2813,7 +2821,7 @@ pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, v_min: &m
     }
     // IM_UNUSED(data_type);
 
-    let v_clamped = if v_min < v_max { ImClamp(v, v_min, v_max) } else { ImClamp(v, v_max, v_min) };
+    let v_clamped = if v_min < v_max { v.clamp(*v_min, *v_max) } else { v.clamp(*v_max, *v_min) };
     return if is_logarithmic {
         let mut flipped: bool = v_max < v_min;
 
@@ -2847,10 +2855,10 @@ pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, v_min: &m
         }
 
         let mut result: c_float = 0.0;
-        if *v_clamped <= v_min_fudged {
+        if v_clamped <= v_min_fudged {
             result = 0.0;
         } // Workaround for values that are in-range but below our fudge
-        else if *v_clamped >= v_max_fudged {
+        else if v_clamped >= v_max_fudged {
             result = 1.0;
         } // Workaround for values that are in-range but above our fudge
         // Range crosses zero, so split into two portions
@@ -3566,7 +3574,7 @@ ImParseFormatPrecision: c_int(fmt: *const c_char, default_precision: c_int)
 
 // Create text input in place of another active widget (e.g. used when doing a CTRL+Click on drag/slider widgets)
 // FIXME: Facilitate using this in variety of other situations.
-pub unsafe fn TempInputText(bb: &ImRect, id: ImGuiID, label: *const c_char, buf: *mut c_char, buf_size: c_int, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn TempInputText(bb: &ImRect, id: ImGuiID, label: &str, buf: &mut String, buf_size: usize, flags: ImGuiInputTextFlags) -> bool
 {
     // On the first frame, g.TempInputTextId == 0, then on subsequent frames it becomes == id.
     // We clear ActiveID on the first frame to allow the InputText() taking it back.
@@ -3586,7 +3594,7 @@ pub unsafe fn TempInputText(bb: &ImRect, id: ImGuiID, label: *const c_char, buf:
     return value_changed;
 }
 
-static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(data_type: ImGuiDataType, format: *const c_char)
+static inline InputScalar_DefaultCharsFilter: ImGuiInputTextFlags(data_type: ImGuiDataType, format: *const c_char)
 {
     if data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double { return  ImGuiInputTextFlags_CharsScientific; }
     const  format_last_char: c_char = if format[0] { format[strlen(format) - 1]} else {0};
@@ -3596,45 +3604,59 @@ static inline ImGuiInputTextFlags InputScalar_DefaultCharsFilter(data_type: ImGu
 // Note that Drag/Slider functions are only forwarding the min/max values clamping values if the ImGuiSliderFlags_AlwaysClamp flag is set!
 // This is intended: this way we allow CTRL+Click manual input to set a value out of bounds, for maximum flexibility.
 // However this may not be ideal for all uses, as some user code may break on out of bound values.
-pub unsafe fn TempInputScalar(bb: &ImRect, id: ImGuiID, label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, format: *const c_char, p_clamp_min: *const c_void, p_clamp_max: *const c_void) -> bool
+pub unsafe fn TempInputScalar(
+    bb: &ImRect,
+    id: ImGuiID,
+    label: &str,
+    data_type: ImGuiDataType,
+    p_data: &mut c_float,
+    format: &mut String,
+    p_clamp_min: &mut c_float,
+    p_clamp_max: &mut c_float) -> bool
 {
-    fmt_buf: [c_char;32];
-    data_buf: [c_char;32];
-    format = ImParseFormatTrimDecorations(format, fmt_buf, fmt_buf.len());
-    DataTypeFormatString(data_buf, data_buf.len(), data_type, p_data, format);
-    ImStrTrimBlanks(data_buf);
+    let mut fmt_buf = String::with_capacity(32);
+    // data_buf: [c_char;32];
+    let mut data_buf = String::with_capacity(32);
+    *format = ImParseFormatTrimDecorations(format, fmt_buf, fmt_buf.len());
+    DataTypeFormatString(&mut data_buf, data_buf.len(), data_type, p_data, format);
+    ImStrTrimBlanks(&mut data_buf);
 
-    ImGuiInputTextFlags flags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited;
+    let mut flags: ImGuiInputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited;
     flags |= InputScalar_DefaultCharsFilter(data_type, format);
 
     let mut value_changed: bool =  false;
-    if (TempInputText(bb, id, label, data_buf, data_buf.len(), flags))
+    if TempInputText(bb, id, label, &mut data_buf, data_buf.len(), flags)
     {
         // Backup old value
         data_type_size: size_t = DataTypeGetInfo(data_type).Size;
-        ImGuiDataTypeTempStorage data_backup;
-        memcpy(&data_backup, p_data, data_type_size);
+        let mut data_backup: ImGuiDataTypeTempStorage = ImGuiDataTypeTempStorage::default();
+        // memcpy(&data_backup, p_data, data_type_size);
+
 
         // Apply new value (or operations) then clamp
-        DataTypeApplyFromText(data_buf, data_type, p_data, format);
-        if (p_clamp_min || p_clamp_max)
+        DataTypeApplyFromText(&data_buf, data_type, p_data, format);
+        if p_clamp_min || p_clamp_max
         {
-            if (p_clamp_min && p_clamp_max && DataTypeCompare(data_type, p_clamp_min, p_clamp_max) > 0)
-                ImSwap(p_clamp_min, p_clamp_max);
+            if p_clamp_min && p_clamp_max && DataTypeCompare(data_type, p_clamp_min, p_clamp_max) > 0 {
+                // ImSwap(p_clamp_min, p_clamp_max);
+                let mut temp = p_clamp_min.clone();
+                *p_clamp_min = *p_clamp_max;
+                *p_clamp_max = *p_clamp_min;
+            }
             DataTypeClamp(data_type, p_data, p_clamp_min, p_clamp_max);
         }
 
         // Only mark as edited if new value is different
         value_changed = memcmp(&data_backup, p_data, data_type_size) != 0;
         if value_changed {
-            MarkItemEdited(id)(); }
+            MarkItemEdited(id); }
     }
     return value_changed;
 }
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
 // Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn InputScalar(label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputScalar(label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, flags: ImGuiInputTextFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -3708,7 +3730,7 @@ pub unsafe fn InputScalar(label: *const c_char, data_type: ImGuiDataType, p_data
     return value_changed;
 }
 
-pub unsafe fn InputScalarN(label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, components: c_int, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputScalarN(label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, components: c_int, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, flags: ImGuiInputTextFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -3742,50 +3764,50 @@ pub unsafe fn InputScalarN(label: *const c_char, data_type: ImGuiDataType, p_dat
     return value_changed;
 }
 
-pub unsafe fn InputFloat(label: *const c_char, *mutv: c_float,step: c_float,step_fast: c_float, format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputFloat(label: *const c_char, *mutv: c_float,step: c_float,step_fast: c_float, format: *const c_char, flags: ImGuiInputTextFlags) -> bool
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
     return InputScalar(label, ImGuiDataType_Float, v, (if step > 0.0 { & step } else {null_mut()}), (if step_fast > 0.0 { & step_fast} else {null_mut()}), format, flags);
 }
 
-pub unsafe fn InputFloat2(label: *const c_char,v: [c_float;2], format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputFloat2(label: *const c_char,v: [c_float;2], format: *const c_char, flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_Float, v, 2, null_mut(), null_mut(), format, flags);
 }
 
-pub unsafe fn InputFloat3(label: *const c_char,v: c_float[3], format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputFloat3(label: *const c_char,v: c_float[3], format: *const c_char, flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_Float, v, 3, null_mut(), null_mut(), format, flags);
 }
 
-pub unsafe fn InputFloat4(label: *const c_char,v: c_float[4], format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputFloat4(label: *const c_char,v: c_float[4], format: *const c_char, flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_Float, v, 4, null_mut(), null_mut(), format, flags);
 }
 
-pub unsafe fn InputInt(label: *const c_char, v: *mut c_int, step: c_int, step_fast: c_int, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputInt(label: *const c_char, v: *mut c_int, step: c_int, step_fast: c_int, flags: ImGuiInputTextFlags) -> bool
 {
     // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
     let mut  format: *const c_char = if flags & ImGuiInputTextFlags_CharsHexadecimal { "%08X"} else { "%d"};
     return InputScalar(label, ImGuiDataType_S32, v, (if step > 0 { & step } else{ null_mut()}), (if step_fast > 0 { & step_fast} else {null_mut()}), format, flags);
 }
 
-pub unsafe fn InputInt2(label: *const c_char, v: c_int[2], ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputInt2(label: *const c_char, v: c_int[2], flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_S32, v, 2, null_mut(), null_mut(), "%d", flags);
 }
 
-pub unsafe fn InputInt3(label: *const c_char, v: c_int[3], ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputInt3(label: *const c_char, v: c_int[3], flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_S32, v, 3, null_mut(), null_mut(), "%d", flags);
 }
 
-pub unsafe fn InputInt4(label: *const c_char, v: c_int[4], ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputInt4(label: *const c_char, v: c_int[4], flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_S32, v, 4, null_mut(), null_mut(), "%d", flags);
 }
 
-pub unsafe fn InputDouble(label: *const c_char, *mut double v, double step, double step_fast, format: *const c_char, ImGuiInputTextFlags flags) -> bool
+pub unsafe fn InputDouble(label: *const c_char, *mut double v, double step, double step_fast, format: *const c_char, flags: ImGuiInputTextFlags) -> bool
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
     return InputScalar(label, ImGuiDataType_Double, v, (if step > 0.0 { & step} else {null_mut()}), (if step_fast > 0.0 { & step_fast} else {null_mut()}), format, flags);
@@ -3804,18 +3826,18 @@ pub unsafe fn InputDouble(label: *const c_char, *mut double v, double step, doub
 // - DebugNodeInputTextState() [Internal]
 //-------------------------------------------------------------------------
 
-pub unsafe fn InputText(label: *const c_char, buf: *mut c_char, buf_size: size_t, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
+pub unsafe fn InputText(label: *const c_char, buf: *mut c_char, buf_size: size_t, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
 {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline()
     return InputTextEx(label, null_mut(), buf, buf_size, ImVec2::new(0, 0), flags, callback, user_data);
 }
 
-pub unsafe fn InputTextMultiline(label: *const c_char, buf: *mut c_char, buf_size: size_t, size: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
+pub unsafe fn InputTextMultiline(label: *const c_char, buf: *mut c_char, buf_size: size_t, size: &ImVec2, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
 {
     return InputTextEx(label, null_mut(), buf, buf_size, size, flags | ImGuiInputTextFlags_Multiline, callback, user_data);
 }
 
-pub unsafe fn InputTextWithHint(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: size_t, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
+pub unsafe fn InputTextWithHint(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: size_t, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
 {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline() or  InputTextEx() manually if you need multi-line + hint.
     return InputTextEx(label, hint, buf, buf_size, ImVec2::new(0, 0), flags, callback, user_data);
@@ -4064,7 +4086,7 @@ c_void ImGuiInputTextCallbackData::InsertChars(pos: c_int, new_text: *const c_ch
 }
 
 // Return false to discard a character.
-pub unsafe fn InputTextFilterCharacter(*mut p_char: c_uint, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, user_data: *mut c_void, ImGuiInputSource input_source) -> bool
+pub unsafe fn InputTextFilterCharacter(*mut p_char: c_uint, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void, ImGuiInputSource input_source) -> bool
 {
     // IM_ASSERT(input_source == ImGuiInputSource_Keyboard || input_source == ImGuiInputSource_Clipboard);
     let mut c: c_uint =  *p_char;
@@ -4193,7 +4215,7 @@ pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
 // - If you want to use InputText() with std::string, see misc/cpp/imgui_stdlib.h
 // (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
 //  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
-pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: c_int, size_arg: &ImVec2, ImGuiInputTextFlags flags, ImGuiInputTextCallback callback, callback_user_data: *mut c_void) -> bool
+pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: c_int, size_arg: &ImVec2, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, callback_user_data: *mut c_void) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -4712,7 +4734,7 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
                 // IM_ASSERT(callback != NULL);
 
                 // The reason we specify the usage semantic (Completion/History) is that Completion needs to disable keyboard TABBING at the moment.
-                ImGuiInputTextFlags event_flag = 0;
+                event_flag: ImGuiInputTextFlags = 0;
                 let mut event_key: ImGuiKey =  ImGuiKey_None;
                 if (flag_set(flags, ImGuiInputTextFlags_CallbackCompletion) && IsKeyPressed(ImGuiKey_Tab))
                 {

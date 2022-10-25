@@ -129,22 +129,23 @@ pub unsafe fn ImStristr(mut haystack: * c_char, haystack_end: * c_char, needle: 
 
 // Trim str by offsetting contents when there's leading data + writing a \0 at the trailing position. We use this in situation where the cost is negligible.
 // void ImStrTrimBlanks(char* bu0f32)
-pub unsafe fn ImStrTrimBlanks(buf: *mut c_char) {
-    let mut p = buf;
-    while p[0] == ' ' || p[0] == '\t' {    // Leading blanks
-        p += 1;
-    }
-    let mut p_start = p;
-    while *p != 0 {                        // Find end of string
-        p += 1;
-    }
-    while p > p_start && (p[-1] == ' ' || p[-1] == '\t') {  // Trailing blanks
-        p -= 1;
-    }
-    if p_start != buf {                   // Copy memory if we had leading blanks
-        libc::memmove(buf, p_start, p - p_start);
-    }
-    buf[p - p_start] = 0;                   // Zero terminate
+pub unsafe fn ImStrTrimBlanks(buf: &mut String) {
+    // let mut p = buf;
+    // while p[0] == ' ' || p[0] == '\t' {    // Leading blanks
+    //     p += 1;
+    // }
+    // let mut p_start = p;
+    // while *p != 0 {                        // Find end of string
+    //     p += 1;
+    // }
+    // while p > p_start && (p[-1] == ' ' || p[-1] == '\t') {  // Trailing blanks
+    //     p -= 1;
+    // }
+    // if p_start != buf {                   // Copy memory if we had leading blanks
+    //     libc::memmove(buf, p_start, p - p_start);
+    // }
+    // buf[p - p_start] = 0;                   // Zero terminate
+    *buf = buf.trim().to_string()
 }
 
 // const char* ImStrSkipBlank(const char* str)

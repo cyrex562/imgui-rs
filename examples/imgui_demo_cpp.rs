@@ -1437,7 +1437,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 "label:\n"
                 "\tlock cmpxchg8b eax\n";
 
-            static ImGuiInputTextFlags flags = ImGuiInputTextFlags_AllowTabInput;
+            static flags: ImGuiInputTextFlags = ImGuiInputTextFlags_AllowTabInput;
             HelpMarker("You can use the ImGuiInputTextFlags_CallbackResize facility if you need to wire InputTextMultiline() to a dynamic string type. See misc/cpp/imgui_stdlib.h for an example. (This is not demonstrated in imgui_demo.cpp because we don't want to include <string> in here)");
             CheckboxFlags("ImGuiInputTextFlags_ReadOnly", &flags, ImGuiInputTextFlags_ReadOnly);
             CheckboxFlags("ImGuiInputTextFlags_AllowTabInput", &flags, ImGuiInputTextFlags_AllowTabInput);
@@ -1560,7 +1560,7 @@ pub unsafe fn ShowDemoWindowWidgets()
 
                 // Note: Because  is a namespace you would typically add your own function into the namespace.
                 // For example, you code may declare a function 'InputText(const char* label, MyString* my_str)'
-                static MyInputTextMultiline: bool(label: *const c_char, Vec<char>* my_str, size: &ImVec2 = ImVec2::new(0, 0), ImGuiInputTextFlags flags = 0)
+                static MyInputTextMultiline: bool(label: *const c_char, Vec<char>* my_str, size: &ImVec2 = ImVec2::new(0, 0), flags: ImGuiInputTextFlags = 0)
                 {
                     // IM_ASSERT(flag_set(flags, ImGuiInputTextFlags_CallbackResize) == 0);
                     return InputTextMultiline(label, my_str.begin(), my_str.size(), size, flags | ImGuiInputTextFlags_CallbackResize, Funcs::MyResizeCallback, my_str);
@@ -6802,7 +6802,7 @@ struct ExampleAppConsole
 
         // Command-line
         let mut reclaim_focus: bool =  false;
-        ImGuiInputTextFlags input_text_flags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
+        input_text_flags: ImGuiInputTextFlags = ImGuiInputTextFlags_EnterReturnsTrue | ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory;
         if (InputText("Input", InputBuf, InputBu0f32.len(), input_text_flags, &TextEditCallbackStub, this))
         {
             char* s = InputBuf;
