@@ -2744,11 +2744,18 @@ pub unsafe fn DragFloatRange2(
 
 // NB: v_speed is float to allow adjusting the drag speed with more precision
 pub unsafe fn DragInt(label: &str, v: &mut c_int, v_speed: c_float, v_min: c_int, v_max: c_int, format: &str, flags: ImGuiSliderFlags) -> bool {
-    return DragScalar(label, ImGuiDataType_S32, v, v_speed, &v_min, &v_max, &mut String::from(format), flags);
+    let mut v_float = c_float::from(*v);
+    let mut v_min_float = c_float::from(v_min);
+    let mut v_max_float = c_float::from(v_max);
+    return DragScalar(label, ImGuiDataType_S32, &mut v_float, v_speed, &mut v_min_float, &mut v_max_float, &mut String::from(format), flags);
 }
 
 pub unsafe fn DragInt2(label: &str, v: &mut [c_int; 2], v_speed: c_float, v_min: &[c_int; 2], v_max: &[c_int; 2], format: &str, flags: ImGuiSliderFlags) -> bool {
-    return DragScalarN(label, ImGuiDataType_S32, v, 2, v_speed, &v_min, &v_max, format, flags);
+    let mut v_array: [c_float;2] = [c_float::from(v[0]),c_float::from(v[1])];
+    let mut v_min_array: [c_float;2] = [c_float::from(v_min[0]), c_float::from(v_min[1])];
+    let mut v_max_array: [c_float;2] = [c_float::from(v_max[0]), c_float::from(v_max[1])];
+
+    return DragScalarN(label, ImGuiDataType_S32, &mut v_array, 2, v_speed, &mut v_min_array, &mut v_max_array, format, flags);
 }
 
 pub unsafe fn DragInt3(label: &str, v: &mut [c_int; 3], v_speed: c_float, v_min: &[c_int; 3], v_max: &[c_int; 3], format: &str, flags: ImGuiSliderFlags) -> bool {
