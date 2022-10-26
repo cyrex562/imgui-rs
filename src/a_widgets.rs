@@ -90,18 +90,19 @@ Index of this file:
 // Data
 //-------------------------------------------------------------------------
 
+use std::borrow::Borrow;
 use std::env::args;
 use std::ops::Index;
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int, c_uint, c_void, INT_MAX, INT_MIN, memcmp, memcpy, size_t, strcmp, strlen};
 use crate::activate_flags::ImGuiActivateFlags_PreferInput;
-use crate::color::{IM_COL32_A_MASK, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_CheckMark, ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered, ImGuiCol_PlotHistogram, ImGuiCol_ScrollbarBg, ImGuiCol_ScrollbarGrab, ImGuiCol_ScrollbarGrabActive, ImGuiCol_ScrollbarGrabHovered, ImGuiCol_Separator, ImGuiCol_SeparatorActive, ImGuiCol_SeparatorHovered, ImGuiCol_Text, ImGuiCol_TextDisabled};
+use crate::color::{IM_COL32_A_MASK, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_CheckMark, ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered, ImGuiCol_PlotHistogram, ImGuiCol_ScrollbarBg, ImGuiCol_ScrollbarGrab, ImGuiCol_ScrollbarGrabActive, ImGuiCol_ScrollbarGrabHovered, ImGuiCol_Separator, ImGuiCol_SeparatorActive, ImGuiCol_SeparatorHovered, ImGuiCol_SliderGrab, ImGuiCol_SliderGrabActive, ImGuiCol_Text, ImGuiCol_TextDisabled};
 use crate::combo_flags::{ImGuiComboFlags, ImGuiComboFlags_CustomPreview, ImGuiComboFlags_HeightLarge, ImGuiComboFlags_HeightMask_, ImGuiComboFlags_HeightRegular, ImGuiComboFlags_HeightSmall, ImGuiComboFlags_NoArrowButton, ImGuiComboFlags_None, ImGuiComboFlags_NoPreview, ImGuiComboFlags_PopupAlignLeft};
 use crate::combo_preview_data::ImGuiComboPreviewData;
 use crate::data_type::{ImGuiDataType, ImGuiDataType_COUNT, ImGuiDataType_Double, ImGuiDataType_Float, ImGuiDataType_S16, ImGuiDataType_S32, ImGuiDataType_S64, ImGuiDataType_S8, ImGuiDataType_U16, ImGuiDataType_U32, ImGuiDataType_U64, ImGuiDataType_U8};
 use crate::data_type_info::{GDataTypeInfo, ImGuiDataTypeInfo};
 use crate::data_type_temp_storage::ImGuiDataTypeTempStorage;
-use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_Right};
+use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_Right, ImGuiDir_Up};
 use crate::draw_flags::{ImDrawFlags, ImDrawFlags_RoundCornersAll, ImDrawFlags_RoundCornersBottomLeft, ImDrawFlags_RoundCornersBottomRight, ImDrawFlags_RoundCornersLeft, ImDrawFlags_RoundCornersNone, ImDrawFlags_RoundCornersRight, ImDrawFlags_RoundCornersTopRight};
 use crate::draw_list::ImDrawList;
 use crate::{GImGui, ImHashStr};
@@ -194,7 +195,7 @@ static DRAG_MOUSE_THRESHOLD_FACTOR: c_float = 0.50f32;    // Multiplier for the 
 
 // // For InputTextEx()
 // static bool             InputTextFilterCharacter(*mut p_char: c_uint, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void, ImGuiInputSource input_source);
-// static c_int              InputTextCalcTextLenAndLineCount(text_begin: *const c_char, *const out_text_end: *mut c_char);
+// static c_int              InputTextCalcTextLenAndLineCount(text_begin: &str, *const out_text_end: *mut c_char);
 // static ImVec2           InputTextCalcTextSizeW(text_begin: *const ImWchar, text_end: *const ImWchar, *const *mut let remaining: ImWchar = null_mut(), *mut let mut out_offset: ImVec2 =  null_mut(), let mut stop_on_new_line: bool =  false);
 
 //-------------------------------------------------------------------------
@@ -256,7 +257,7 @@ pub unsafe fn TextEx(mut text: &str, flags: ImGuiTextFlags)
         // - From this point we will only compute the width of lines that are visible. Optimization only available when word-wrapping is disabled.
         // - We also don't vertically center the text within the line full height, which is unlikely to matter because we are likely the biggest and only item on the line.
         // - We use memchr(), pay attention that well optimized versions of those str/mem functions are much faster than a casually written loop.
-        let mut  line = text;
+        let mut line: String = text.to_string();
         let line_height: c_float =  GetTextLineHeight();
         let mut text_size = ImVec2::from_floats(0.0, 0.0);
 
@@ -270,14 +271,14 @@ pub unsafe fn TextEx(mut text: &str, flags: ImGuiTextFlags)
                 let mut lines_skipped: c_int = 0;
                 while line < text_end && lines_skipped < lines_skippable
                 {
-                    // let mut  line_end: *const c_char = libc::memchr(line, '\n' as c_int, text_end - line);
+                    // let mut  line_end: &str = libc::memchr(line, '\n' as c_int, text_end - line);
                     let line_end = line.find('\n').unwrap_or(line.len() - 1);
                     // if !line_end {
                     //     line_end = text_end;}
                     if flag_clear(flags, ImGuiTextFlags_NoWidthForLargeClippedText) {
-                        text_size.x = ImMax(text_size.x, CalcTextSize(line,  false, 0.0).x);
+                        text_size.x = ImMax(text_size.x, CalcTextSize(line.as_str(),  false, 0.0).x);
                     }
-                    line = &line[line_end + 1..];
+                    line = line[line_end + 1..].into_string();
                     lines_skipped+= 1;
                 }
                 pos.y += lines_skipped * line_height;
@@ -290,16 +291,17 @@ pub unsafe fn TextEx(mut text: &str, flags: ImGuiTextFlags)
             let mut line_rect: ImRect = ImRect::new(pos, pos + ImVec2::from_floats(f32::MAX, line_height));
             while line < text_end
             {
-                if (IsClippedEx(&mut line_rect, 0)) {
+                if IsClippedEx(&mut line_rect, 0) {
                     break;
                 }
 
-                let mut  line_end: *const c_char = libc::memchr(line, '\n' as c_int, text_end - line);
-                if !line_end {
+                // let mut  line_end: &str = libc::memchr(line, '\n' as c_int, text_end - line);
+                let mut line_end = line.find('\n').unwrap_or(usize::MAX);
+                if line_end == usize::MAX {
                     line_end = text_end;}
-                text_size.x = ImMax(text_size.x, CalcTextSize(line,  false, 0.0).x);
-                RenderText(pos, line, false);
-                line = line_end + 1;
+                text_size.x = ImMax(text_size.x, CalcTextSize(line.as_str(),  false, 0.0).x);
+                RenderText(pos, line.as_str(), false);
+                line = line[line_end + 1..].to_string();
                 line_rect.Min.y += line_height;
                 line_rect.Max.y += line_height;
                 pos.y += line_height;
@@ -309,13 +311,14 @@ pub unsafe fn TextEx(mut text: &str, flags: ImGuiTextFlags)
             let mut lines_skipped: c_int = 0;
             while (line < text_end)
             {
-                let mut  line_end: *const c_char = libc::memchr(line, '\n' as c_int, text_end - line);
-                if !line_end {
+                // let mut  line_end: &str = libc::memchr(line, '\n' as c_int, text_end - line);
+                let mut line_end = line.find('\n').unwrap_or(usize::MAX);
+                if line_end == usize::MAX {
                     line_end = text_end;}
                 if flag_clear(flags, ImGuiTextFlags_NoWidthForLargeClippedText) {
-                    text_size.x = ImMax(text_size.x, CalcTextSize(line,  false, 0.0).x);
+                    text_size.x = ImMax(text_size.x, CalcTextSize(line.as_str(),  false, 0.0).x);
                 }
-                line = line_end + 1;
+                ine = line[line_end + 1..].to_string();
                 lines_skipped+= 1;
             }
             pos.y += lines_skipped * line_height;
@@ -470,7 +473,7 @@ pub unsafe fn BulletTextV(fmt: &str)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let setyle = &mut g.Style;
 
-    // text_begin: *const c_char, *text_end;
+    // text_begin: &str, *text_end;
     // let mut text_begin: *mut c_char = null_mut();
     // let mut text_end: *mut c_char = null_mut();
     let text_begin = ImFormatStringToTempBufferV(fmt);
@@ -1182,7 +1185,7 @@ pub unsafe fn ImageButtonEx(id: ImGuiID, texture_id: ImTextureID, size: &ImVec2,
     return pressed;
 }
 
-pub unsafe fn ImageButton(str_id: *const c_char, user_texture_id: ImTextureID, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, bg_col: &ImVec4, tint_col: &ImVec4) -> bool
+pub unsafe fn ImageButton(str_id: &str, user_texture_id: ImTextureID, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, bg_col: &ImVec4, tint_col: &ImVec4) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow = g.CurrentWindow;
@@ -1683,7 +1686,8 @@ pub unsafe fn ShrinkWidths(items: *mut ImGuiShrinkWidthItem, count: c_int, mut w
         }
         return;
     }
-    ImQsort(items, count as size_t, sizeof(ImGuiShrinkWidthItem), ShrinkWidthItemComparer);
+    // TODO:
+    // ImQsort(items, count as size_t, sizeof(ImGuiShrinkWidthItem), ShrinkWidthItemComparer);
     let mut count_same_width: c_int = 1;
     while width_excess > 0.0 && count_same_width < count
     {
@@ -1955,9 +1959,9 @@ pub unsafe fn Items_ArrayGetter(data: &[String], idx: usize, out_text: &mut Stri
 pub unsafe fn Items_SingleStringGetter(data: &[String], idx: usize, out_text: &mut String) -> bool
 {
     // FIXME-OPT: we could pre-compute the indices to fasten this. But only 1 active combo means the waste is limited.
-    // let mut  items_separated_by_zeros: *const c_char =data;
+    // let mut  items_separated_by_zeros: &str =data;
     // let mut items_count: c_int = 0;
-    // let mut  p: *const c_char = items_separated_by_zeros;
+    // let mut  p: &str = items_separated_by_zeros;
     while *p
     {
         if idx == items_count {
@@ -2030,7 +2034,7 @@ pub unsafe fn Combo2(label: &str, current_item: *mut usize, items: &[String], it
 // Combo box helper allowing to pass all items in a single string literal holding multiple zero-terminated items "item1\0item2\0"
 pub unsafe fn Combo3(label: &str, current_item: *mut usize, items_separated_by_zeros: &[String], height_in_items: c_int) -> bool {
     let mut items_count = items_separated_by_zeros.len();
-    // let mut  p: *const c_char = items_separated_by_zeros;       // FIXME-OPT: Avoid computing this, or at least only when combo is open
+    // let mut  p: &str = items_separated_by_zeros;       // FIXME-OPT: Avoid computing this, or at least only when combo is open
     // while (*p)
     // {
     //     p += strlen(p) + 1;
@@ -2081,14 +2085,14 @@ pub fn PatchFormatStringFloatToInt(fmt: &str) -> String
 {
 //     if (fmt[0] == '%' && fmt[1] == '.' && fmt[2] == '0' && fmt[3] == 'f' && fmt[4] == 0) // Fast legacy path for "%.0f" which is expected to be the most common case.
 //         return "%d";
-//     let mut  fmt_start: *const c_char = ImParseFormatFindStart(fmt);    // Find % (if any, and ignore %%)
-//     let mut  fmt_end: *const c_char = ImParseFormatFindEnd(fmt_start);  // Find end of format specifier, which itself is an exercise of confidence/recklessness (because snprintf is dependent on libc or user).
+//     let mut  fmt_start: &str = ImParseFormatFindStart(fmt);    // Find % (if any, and ignore %%)
+//     let mut  fmt_end: &str = ImParseFormatFindEnd(fmt_start);  // Find end of format specifier, which itself is an exercise of confidence/recklessness (because snprintf is dependent on libc or user).
 //     if (fmt_end > fmt_start && fmt_end[-1] == 'f')
 //     {
 // // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 //         if (fmt_start == fmt && fmt_end[0] == 0)
 //             return "%d";
-// let tmp_format: *const c_char;
+// let tmp_format: &str;
 //         ImFormatStringToTempBuffer(&tmp_format, null_mut(), "%.*s%%d%s", (fmt_start - fmt), fmt, fmt_end); // Honor leading and trailing decorations, but lose alignment/precision.
 //         return tmp_format;
 // // #else
@@ -2105,7 +2109,7 @@ pub fn DataTypeGetInfo(data_type: ImGuiDataType) -> ImGuiDataTypeInfo
     return GDataTypeInfo[data_type].clone();
 }
 
-// DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, data_type: ImGuiDataType, p_data: *const c_void, format: *const c_char)
+// DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, data_type: ImGuiDataType, p_data: *const c_void, format: &str)
 pub fn DataTypeFormatString(buf: &mut String, buf_size: usize, data_type: ImGuiDataType, p_data: &c_float, format: &String) -> usize
 {
     todo!();
@@ -2332,7 +2336,7 @@ pub fn RoundScalarWithFormatT(format: &str, data_type: ImGuiDataType, v: T) -> T
 {
     // // IM_UNUSED(data_type);
     // // IM_ASSERT(data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double);
-    // let mut  fmt_start: *const c_char = ImParseFormatFindStart(format);
+    // let mut  fmt_start: &str = ImParseFormatFindStart(format);
     // if (fmt_start[0] != '%' || fmt_start[1] == '%') { // Don't apply if the value is not visible in the format string
     //     return v;
     // }
@@ -2345,7 +2349,7 @@ pub fn RoundScalarWithFormatT(format: &str, data_type: ImGuiDataType, v: T) -> T
     // // Format value with our rounding, and read back
     // v_str: [c_char;64];
     // ImFormatString(v_str, v_str.len(), fmt_start, v);
-    // let mut  p: *const c_char = v_str;
+    // let mut  p: &str = v_str;
     // while (*p == ' ')
     //     p+= 1;
     // v = ImAtof(p);
@@ -2452,7 +2456,7 @@ pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut c_float, mut 
         // Convert to parametric space, apply delta, convert back
         let v_old_parametric: c_float =  ScaleRatioFromValueT(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         let v_new_parametric: c_float =  v_old_parametric + g.DragCurrentAccum;
-        v_cur = ScaleValueFromRatioT(data_type, v_new_parametric, v_min.clone(), v_max.clone(), is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+        v_cur = ScaleValueFromRatioT(data_type, v_new_parametric, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         v_old_ref_for_accum_remainder = v_old_parametric;
     }
     else
@@ -2624,7 +2628,7 @@ pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut 
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     value_buf: [c_char;64];
-    let mut  value_buf_end: *const c_char = value_buf + DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
+    let mut  value_buf_end: &str = value_buf + DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
     if g.LogEnabled {
         // LogSetNextTextDecoration("{", "}");
     }
@@ -2639,11 +2643,11 @@ pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut 
     return value_changed;
 }
 
-pub unsafe fn DragScalarN<T>(
+pub unsafe fn DragScalarN(
     label: &str,
     data_type: ImGuiDataType,
     p_data: &mut [c_float],
-    components: c_int,
+    components: usize,
     v_speed: c_float,
     p_min: &mut [c_float],
     p_max: &mut [c_float],
@@ -2662,14 +2666,14 @@ pub unsafe fn DragScalarN<T>(
     // for (let i: c_int = 0; i < components; i++)
     for i in 0 .. components
     {
-        push_int_id(i);
+        push_int_id(i as c_int);
         if i > 0 {
             SameLine(0, g.Style.ItemInnerSpacing.x);
         }
-        value_changed |= DragScalar("", data_type, p_data[i], v_speed, p_min[i], p_max[i], &mut String::from(format), flags);
+        value_changed |= DragScalar("", data_type, &mut p_data[i], v_speed, &mut p_min[i], &mut p_max[i], &mut String::from(format), flags);
         PopID();
         PopItemWidth();
-        *p_data[i] = (p_data.clone() + type_size);
+        p_data[i] = (p_data.clone() + type_size);
     }
     PopID();
 
@@ -2751,20 +2755,25 @@ pub unsafe fn DragInt(label: &str, v: &mut c_int, v_speed: c_float, v_min: c_int
 }
 
 pub unsafe fn DragInt2(label: &str, v: &mut [c_int; 2], v_speed: c_float, v_min: &[c_int; 2], v_max: &[c_int; 2], format: &str, flags: ImGuiSliderFlags) -> bool {
-    let mut v_array: [c_float;2] = [c_float::from(v[0]),c_float::from(v[1])];
-    let mut v_min_array: [c_float;2] = [c_float::from(v_min[0]), c_float::from(v_min[1])];
-    let mut v_max_array: [c_float;2] = [c_float::from(v_max[0]), c_float::from(v_max[1])];
+    let mut v_array: [c_float; 2] = [c_float::from(v[0]), c_float::from(v[1])];
+    let mut v_min_array: [c_float; 2] = [c_float::from(v_min[0]), c_float::from(v_min[1])];
+    let mut v_max_array: [c_float; 2] = [c_float::from(v_max[0]), c_float::from(v_max[1])];
 
     return DragScalarN(label, ImGuiDataType_S32, &mut v_array, 2, v_speed, &mut v_min_array, &mut v_max_array, format, flags);
 }
 
 pub unsafe fn DragInt3(label: &str, v: &mut [c_int; 3], v_speed: c_float, v_min: &[c_int; 3], v_max: &[c_int; 3], format: &str, flags: ImGuiSliderFlags) -> bool {
-    return DragScalarN(label, ImGuiDataType_S32, v, 3, v_speed, &v_min, &v_max, format, flags);
+    let mut v_array: [c_float; 3] = [c_float::from(v[0]), c_float::from(v[1]), c_float::from(v[2])];
+    let mut v_min_array: [c_float; 3] = [c_float::from(v_min[0]), c_float::from(v_min[1]), c_float::from(v_min[2])];
+    let mut v_max_array: [c_float; 3] = [c_float::from(v_max[0]), c_float::from(v_max[1]), c_float::from(v_min[3])];
+    return DragScalarN(label, ImGuiDataType_S32, &mut v_array, 3, v_speed, &mut v_min_array, &mut v_max_array, format, flags);
 }
 
-pub unsafe fn DragInt4(label: &str, v: &mut [c_int;4],v_speed: c_float, v_min: &[c_int;4], v_max: &[c_int;4], format: &str, flags: ImGuiSliderFlags) -> bool
-{
-    return DragScalarN(label, ImGuiDataType_S32, v, 4, v_speed, &v_min, &v_max, format, flags);
+pub unsafe fn DragInt4(label: &str, v: &mut [c_int; 4], v_speed: c_float, v_min: &[c_int; 4], v_max: &[c_int; 4], format: &str, flags: ImGuiSliderFlags) -> bool {
+    let mut v_array: [c_float; 4] = [c_float::from(v[0]), c_float::from(v[1]), c_float::from(v[2]), c_float::from(v[3])];
+    let mut v_min_array: [c_float; 4] = [c_float::from(v_min[0]), c_float::from(v_min[1]), c_float::from(v_min[2]), c_float::from(v_min[3])];
+    let mut v_max_array: [c_float; 4] = [c_float::from(v_max[0]), c_float::from(v_max[1]), c_float::from(v_min[3]), c_float::from(v_min[4])];
+    return DragScalarN(label, ImGuiDataType_S32, &mut v_array, 4, v_speed, &mut v_min_array, &mut v_max_array, format, flags);
 }
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
@@ -2899,23 +2908,23 @@ pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, v_min: &m
 pub fn ScaleValueFromRatioT(
     data_type: ImGuiDataType,
     t: c_float, 
-    v_min: c_float, 
-    v_max: c_float, 
+    v_min: &mut c_float,
+    v_max: &mut c_float,
     is_logarithmic: bool,
     logarithmic_zero_epsilon: c_float,
     zero_deadzone_halfsize: c_float) -> c_float
 {
     // We special-case the extents because otherwise our logarithmic fudging can lead to "mathematically correct"
     // but non-intuitive behaviors like a fully-left slider not actually reaching the minimum value. Also generally simpler.
-    if t <= 0.0 || v_min == v_max { return  v_min; }
-    if t >= 1.0 { return  v_max; }
+    if t <= 0.0 || v_min == v_max { return  v_min.clone(); }
+    if t >= 1.0 { return  v_max.clone(); }
 
     let mut result = 0.0 as c_float;
     if is_logarithmic
     {
         // Fudge min/max to avoid getting silly results close to zero
         let v_min_fudged = if v_min.abs() < logarithmic_zero_epsilon { 
-            if v_min < 0.0 as c_float { 
+            if *v_min < 0.0 as c_float {
                 logarithmic_zero_epsilon * -1 }
             else { 
                     logarithmic_zero_epsilon
@@ -2923,7 +2932,7 @@ pub fn ScaleValueFromRatioT(
             } 
             else { v_min};
         let v_max_fudged = if v_max.abs() < logarithmic_zero_epsilon { 
-            if v_max < 0.0 {
+            if *v_max < 0.0 as c_float {
                 logarithmic_zero_epsilon * -1
             } else { 
                 logarithmic_zero_epsilon
@@ -2937,7 +2946,7 @@ pub fn ScaleValueFromRatioT(
         }
 
         // Awkward special case - we need ranges of the form (-100 .. 0) to convert to (-100 .. -epsilon), not (-100 .. epsilon)
-        if (v_max == 0.0) && (v_min < 0.0) {
+        if (v_max == 0.0) && (*v_min < 0.0) {
             v_max_fudged = -logarithmic_zero_epsilon;
         }
 
@@ -2945,7 +2954,7 @@ pub fn ScaleValueFromRatioT(
 
         if (v_min * v_max) < 0.0 // Range crosses zero, so we have to do this in two parts
         {
-            let zero_point_center: c_float =  (v_min.min(v_max) * -1) / (v_max - v_min).abs(); // The zero point in parametric space
+            let zero_point_center: c_float =  (v_min.min(*v_max) * -1) / (v_max - v_min).abs(); // The zero point in parametric space
             let zero_point_snap_L: c_float =  zero_point_center - zero_deadzone_halfsize;
             let zero_point_snap_R: c_float =  zero_point_center + zero_deadzone_halfsize;
             if t_with_flip >= zero_point_snap_L && t_with_flip <= zero_point_snap_R{
@@ -2957,7 +2966,7 @@ pub fn ScaleValueFromRatioT(
                 result = (logarithmic_zero_epsilon * ImPow(v_max_fudged / logarithmic_zero_epsilon, ((t_with_flip - zero_point_snap_R) / (1.0 - zero_point_snap_R))));
             }
         }
-        else if (v_min < 0.0) || (v_max < 0.0) {
+        else if (*v_min < 0.0) || (*v_max < 0.0) {
             // Entirely negative slider
             result = -(-v_max_fudged * ImPow(-v_min_fudged / -v_max_fudged, (1.0 - t_with_flip)));
         }
@@ -2971,7 +2980,7 @@ pub fn ScaleValueFromRatioT(
         let is_floating_point: bool = (data_type == ImGuiDataType_Float) || (data_type == ImGuiDataType_Double);
         if is_floating_point
         {
-            result = ImLerp(v_min, v_max, t);
+            result = ImLerp(*v_min, *v_max, t);
         }
         else if t < 1.0
         {
@@ -2985,456 +2994,6 @@ pub fn ScaleValueFromRatioT(
     }
 
     return result;
-}
-
-// FIXME: Try to move more of the code into shared SliderBehavior()
-// template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType, v: &mut c_float, v_min: c_float, v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags, out_grab_bb: &mut ImRect) -> bool
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let setyle = &mut g.Style;
-
-    const axis: ImGuiAxis = if flags & ImGuiSliderFlags_Vertical { ImGuiAxis_Y} else { ImGuiAxis_X};
-    let is_logarithmic: bool = flag_set(flags, ImGuiSliderFlags_Logarithmic);
-    let is_floating_point: bool = (data_type == ImGuiDataType_Float) || (data_type == ImGuiDataType_Double);
-    let v_range = (if v_min < v_max { v_max - v_min } else {v_min - v_max});
-
-    // Calculate bounds
-    let grab_padding: c_float =  2.0; // FIXME: Should be part of style.
-    let slider_sz: c_float =  (bb.Max[axis] - bb.Min[axis]) - grab_padding * 2.0;
-    let mut grab_sz: c_float =  style.GrabMinSize;
-    if !is_floating_point && v_range >= 0.0 as c_float {
-        // v_range < 0 may happen on integer overflows
-        grab_sz = ImMax((slider_sz / (v_range + 1)), style.GrabMinSize);
-    }// For integer sliders: if possible have the grab size represent 1 unit
-    grab_sz = grab_sz.min(slider_sz);
-    let slider_usable_sz: c_float =  slider_sz - grab_sz;
-    let slider_usable_pos_min: c_float =  bb.Min[axis] + grab_padding + grab_sz * 0.5;
-    let slider_usable_pos_max: c_float =  bb.Max[axis] - grab_padding - grab_sz * 0.5;
-
-    let mut logarithmic_zero_epsilon: c_float =  0.0; // Only valid when is_logarithmic is true
-    let mut zero_deadzone_halfsize: c_float =  0.0; // Only valid when is_logarithmic is true
-    if is_logarithmic
-    {
-        // When using logarithmic sliders, we need to clamp to avoid hitting zero, but our choice of clamp value greatly affects slider precision. We attempt to use the specified precision to estimate a good lower bound.
-        let decimal_precision: c_int = if is_floating_point { ImParseFormatPrecision(format, 3) } else {1};
-        logarithmic_zero_epsilon = (0.1 as c_float).powf(decimal_precision as f32);
-        zero_deadzone_halfsize = (style.LogSliderDeadzone * 0.5) / ImMax(slider_usable_sz, 1.0);
-    }
-
-    // Process interacting with the slider
-    let mut value_changed: bool =  false;
-    if g.ActiveId == id
-    {
-        let mut set_new_value: bool =  false;
-        let clicked_t: c_float =  0.0;
-        if (g.ActiveIdSource == ImGuiInputSource_Mouse)
-        {
-            if (!g.IO.MouseDown[0])
-            {
-                ClearActiveID();
-            }
-            else
-            {
-                let mouse_abs_pos: c_float =  g.IO.MousePos[axis];
-                if (g.ActiveIdIsJustActivated)
-                {
-                    let grab_t: c_float =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, *v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-                    if (axis == ImGuiAxis_Y)
-                        grab_t = 1.0 - grab_t;
-                    let grab_pos: c_float =  ImLerp(slider_usable_pos_min, slider_usable_pos_max, grab_t);
-                    let clicked_around_grab: bool = (mouse_abs_pos >= grab_pos - grab_sz * 0.5 - 1.0) && (mouse_abs_pos <= grab_pos + grab_sz * 0.5 + 1.0); // No harm being extra generous here.
-                    g.SliderGrabClickOffset = if clicked_around_grab && is_floating_point { mouse_abs_pos - grab_pos} else { 0.0};
-                }
-                if (slider_usable_sz > 0.0)
-                    clicked_t = ImSaturate((mouse_abs_pos - g.SliderGrabClickOffset - slider_usable_pos_min) / slider_usable_sz);
-                if (axis == ImGuiAxis_Y)
-                    clicked_t = 1.0 - clicked_t;
-                set_new_value = true;
-            }
-        }
-        else if (g.ActiveIdSource == ImGuiInputSource_Nav)
-        {
-            if (g.ActiveIdIsJustActivated)
-            {
-                g.SliderCurrentAccum = 0.0; // Reset any stored nav delta upon activation
-                g.SliderCurrentAccumDirty = false;
-            }
-
-            let input_delta: c_float = if (axis == ImGuiAxis_X) { GetNavTweakPressedAmount(axis)} else {- GetNavTweakPressedAmount(axis)};
-            if (input_delta != 0.0)
-            {
-                let tweak_slow: bool = IsKeyDown(if (g.NavInputSource == ImGuiInputSource_Gamepad) { ImGuiKey_NavGamepadTweakSlow} else {ImGuiKey_NavKeyboardTweakSlow});
-                let tweak_fast: bool = IsKeyDown(if (g.NavInputSource == ImGuiInputSource_Gamepad) { ImGuiKey_NavGamepadTweakFast} else {ImGuiKey_NavKeyboardTweakFast});
-                let decimal_precision: c_int = if is_floating_point { ImParseFormatPrecision(format, 3)} else {0};
-                if (decimal_precision > 0)
-                {
-                    input_delta /= 100;    // Gamepad/keyboard tweak speeds in % of slider bounds
-                    if (tweak_slow)
-                        input_delta /= 10.0;
-                }
-                else
-                {
-                    if ((v_range >= -100 && v_range <= 100) || tweak_slow)
-                        input_delta = if (input_delta < 0.0 { -1.0} else { 1.0) / v_range}; // Gamepad/keyboard tweak speeds in integer steps
-                    else
-                        input_delta /= 100;
-                }
-                if (tweak_fast)
-                    input_delta *= 10.0;
-
-                g.SliderCurrentAccum += input_delta;
-                g.SliderCurrentAccumDirty = true;
-            }
-
-            let delta: c_float =  g.SliderCurrentAccum;
-            if (g.NavActivatePressedId == id && !g.ActiveIdIsJustActivated)
-            {
-                ClearActiveID();
-            }
-            else if (g.SliderCurrentAccumDirty)
-            {
-                clicked_t = ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, *v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-
-                if ((clicked_t >= 1.0 && delta > 0.0) || (clicked_t <= 0.0 && delta < 0.0)) // This is to avoid applying the saturation when already past the limits
-                {
-                    set_new_value = false;
-                    g.SliderCurrentAccum = 0.0; // If pushing up against the limits, don't continue to accumulate
-                }
-                else
-                {
-                    set_new_value = true;
-                    let old_clicked_t: c_float =  clicked_t;
-                    clicked_t = ImSaturate(clicked_t + delta);
-
-                    // Calculate what our "new" clicked_t will be, and thus how far we actually moved the slider, and subtract this from the accumulator
-                    TYPE v_new = ScaleValueFromRatioT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-                    if (is_floating_point && flag_clear(flags, ImGuiSliderFlags_NoRoundToFormat))
-                        v_new = RoundScalarWithFormatT<TYPE>(format, data_type, v_new);
-                    let new_clicked_t: c_float =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, v_new, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-
-                    if (delta > 0)
-                        g.SliderCurrentAccum -= ImMin(new_clicked_t - old_clicked_t, delta);
-                    else
-                        g.SliderCurrentAccum -= ImMax(new_clicked_t - old_clicked_t, delta);
-                }
-
-                g.SliderCurrentAccumDirty = false;
-            }
-        }
-
-        if (set_new_value)
-        {
-            TYPE v_new = ScaleValueFromRatioT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-
-            // Round to user desired precision based on format string
-            if (is_floating_point && flag_clear(flags, ImGuiSliderFlags_NoRoundToFormat))
-                v_new = RoundScalarWithFormatT<TYPE>(format, data_type, v_new);
-
-            // Apply result
-            if (*v != v_new)
-            {
-                *v = v_new;
-                value_changed = true;
-            }
-        }
-    }
-
-    if (slider_sz < 1.0)
-    {
-        *out_grab_bb = ImRect(bb.Min, bb.Min);
-    }
-    else
-    {
-        // Output grab position so it can be displayed by the caller
-        let grab_t: c_float =  ScaleRatioFromValueT<TYPE, SIGNEDTYPE, FLOATTYPE>(data_type, *v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
-        if (axis == ImGuiAxis_Y)
-            grab_t = 1.0 - grab_t;
-        let grab_pos: c_float =  ImLerp(slider_usable_pos_min, slider_usable_pos_max, grab_t);
-        if (axis == ImGuiAxis_X)
-            *out_grab_bb = ImRect(grab_pos - grab_sz * 0.5, bb.Min.y + grab_padding, grab_pos + grab_sz * 0.5, bb.Max.y - grab_padding);
-        else
-            *out_grab_bb = ImRect(bb.Min.x + grab_padding, grab_pos - grab_sz * 0.5, bb.Max.x - grab_padding, grab_pos + grab_sz * 0.5);
-    }
-
-    return value_changed;
-}
-
-// For 32-bit and larger types, slider bounds are limited to half the natural type range.
-// So e.g. an integer Slider between INT_MAX-10 and INT_MAX will fail, but an integer Slider between INT_MAX/2-10 and INT_MAX/2 will be ok.
-// It would be possible to lift that limitation with some work but it doesn't seem to be worth it for sliders.
-pub unsafe fn SliderBehavior(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType, p_v: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, flags: ImGuiSliderFlags, *mut ImRect out_grab_bb) -> bool
-{
-    // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
-    // IM_ASSERT((flags == 1 || flag_set(flags, ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid flag: ImGuiSliderFlags!  Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
-
-    // Those are the things we can do easily outside the SliderBehaviorT<> template, saves code generation.
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (g.LastItemData.InFlags & ImGuiItemFlags_ReadOnly) || flag_set(flags, ImGuiSliderFlags_ReadOnly) { return  false; }
-
-    switch (data_type)
-    {
-    ImGuiDataType_S8 =>  { i32 v32 = p_v;  let mut r: bool =  SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, p_min,  p_max,  format, flags, out_grab_bb); if r) *(*mut i8 { p_v = v32;}  return r; }
-    ImGuiDataType_U8 =>  { v32: u32 = *(*mut u8)p_v;  let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, *(*const u8)p_min,  *(*const u8)p_max,  format, flags, out_grab_bb); if r) *(*mut u8 { p_v = v32;}  return r; }
-    ImGuiDataType_S16 => { i32 v32 = *(*mut i16)p_v; let mut r: bool =  SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, p_min, p_max, format, flags, out_grab_bb); if (r) *(*mut i16)p_v = v32; return r; }
-    ImGuiDataType_U16 => { v32: u32 = *(*mut ImU16)p_v; let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, p_min, p_max, format, flags, out_grab_bb); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
-    ImGuiDataType_S32 =>
-        // IM_ASSERT(p_min >= IM_S32_MIN / 2 && p_max <= IM_S32_MAX / 2);
-        return SliderBehaviorT<i32, i32, c_float >(bb, id, data_type, (*mut i32)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
-    ImGuiDataType_U32 =>
-        // IM_ASSERT(p_max <= IM_U32_MAX / 2);
-        return SliderBehaviorT<u32, i32, c_float >(bb, id, data_type, (*mut u32)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
-    ImGuiDataType_S64 =>
-        // IM_ASSERT(*(*const ImS64)p_min >= IM_S64_MIN / 2 && *(*const ImS64)p_max <= IM_S64_MAX / 2);
-        return SliderBehaviorT<i64, i64, double>(bb, id, data_type, (*mut i64)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
-    ImGuiDataType_U64 =>
-        // IM_ASSERT(p_max <= IM_U64_MAX / 2);
-        return SliderBehaviorT<u64, i64, double>(bb, id, data_type, (*mut u64)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
-    ImGuiDataType_Float =>
-        // IM_ASSERT(p_min >= -f32::MAX / 2.0 && p_max <= f32::MAX / 2.0);
-        return SliderBehaviorT<c_float, c_float, c_float >(bb, id, data_type, (*mut c_float)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
-    ImGuiDataType_Double =>
-        // IM_ASSERT(p_min >= -DBL_MAX / 2.0 && p_max <= DBL_MAX / 2.0);
-        return SliderBehaviorT<double, double, double>(bb, id, data_type, (*mut double)p_v, p_min, p_max, format, flags, out_grab_bb);
-    ImGuiDataType_COUNT => break;
-    }
-    // IM_ASSERT(0);
-    return false;
-}
-
-// Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a slider, they are all required.
-// Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn SliderScalar(label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    if window.SkipItems { return  false; }
-
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let setyle = &mut g.Style;
-    let mut id: ImGuiID =  window.GetID(label);
-    let w: c_float =  CalcItemWidth();
-
-    let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
-    let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + ImVec2::new(w, label_size.y + style.FramePadding.y * 2.0));
-    let mut total_bb: ImRect = ImRect::new(frame_bb.Min, frame_bb.Max + ImVec2::new(if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x} else {0.0}, 0.0));
-
-    let temp_input_allowed: bool = flag_clear(flags, ImGuiSliderFlags_NoInput);
-    ItemSize(total_bb, style.FramePadding.y);
-    if !ItemAdd(total_bb, id, &frame_bb, if temp_input_allowed {ImGuiItemFlags_Inputable} else { 0 }) { return  false; }
-
-    // Default format string when passing NULL
-    if (format == null_mut())
-        format = DataTypeGetInfo(data_type)->PrintFmt;
-    else if (data_type == ImGuiDataType_S32 && strcmp(format, "%d") != 0) // (FIXME-LEGACY: Patch old "%.0f" format string to use "%d", read function more details.)
-        format = PatchFormatStringFloatToInt(format);
-
-    let hovered: bool = ItemHoverable(frame_bb, id);
-    let mut temp_input_is_active: bool =  temp_input_allowed && TempInputIsActive(id);
-    if (!temp_input_is_active)
-    {
-        // Tabbing or CTRL-clicking on Slider turns it into an input box
-        let input_requested_by_tabbing: bool = temp_input_allowed && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
-        let clicked: bool = (hovered && g.IO.MouseClicked[0]);
-        let make_active: bool = (input_requested_by_tabbing || clicked || g.NavActivateId == id || g.NavActivateInputId == id);
-        if (make_active && temp_input_allowed)
-            if input_requested_by_tabbing || (clicked && g.IO.KeyCtrl) || g.NavActivateInputId == id {
-                temp_input_is_active = true;}
-
-        if (make_active && !temp_input_is_active)
-        {
-            SetActiveID(id, window);
-            SetFocusID(id, window);
-            FocusWindow(window);
-            g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right);
-        }
-    }
-
-    if (temp_input_is_active)
-    {
-        // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
-        let is_clamp_input: bool = flag_set(flags, ImGuiSliderFlags_AlwaysClamp);
-        return TempInputScalar(frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min} else {null_mut()}, if is_clamp_input { p_max} else {null_mut()});
-    }
-
-    // Draw frame
-    frame_col: u32 = GetColorU32(if g.ActiveId == id { ImGuiCol_FrameBgActive} else { if hovered { ImGuiCol_FrameBgHovered} else {ImGuiCol_FrameBg}});
-    RenderNavHighlight(frame_bb, id);
-    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding);
-
-    // Slider behavior
-    let mut grab_bb: ImRect = ImRect::default();
-    let value_changed: bool = SliderBehavior(frame_bb, id, data_type, p_data, p_min, p_max, format, flags, &grab_bb);
-    if value_changed {
-        MarkItemEdited(id)(); }
-
-    // Render grab
-    if (grab_bb.Max.x > grab_bb.Min.x)
-        window.DrawList.AddRectFilled(grab_bb.Min, grab_bb.Max, if GetColorU32(g.ActiveId == id { ImGuiCol_SliderGrabActive} else {ImGuiCol_SliderGrab}), style.GrabRounding);
-
-    // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
-    value_buf: [c_char;64];
-    let mut  value_buf_end: *const c_char = value_buf + DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
-    if (g.LogEnabled)
-        LogSetNextTextDecoration("{", "}");
-    RenderTextClipped(frame_bb.Min, frame_bb.Max, value_buf, value_buf_end, null_mut(), ImVec2::new(0.5, 0.5));
-
-    if (label_size.x > 0.0)
-        RenderText(ImVec2::new(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
-
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
-    return value_changed;
-}
-
-// Add multiple sliders on 1 line for compact edition of multiple components
-pub unsafe fn SliderScalarN(label: *const c_char, data_type: ImGuiDataType, v: *mut c_void, components: c_int, v_min: *const c_void, v_max: *const c_void, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    if window.SkipItems { return  false; }
-
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut value_changed: bool =  false;
-    BeginGroup();
-    PushID(label);
-    PushMultiItemsWidths(components, CalcItemWidth());
-    type_size: size_t = GDataTypeInfo[data_type].Size;
-    for (let i: c_int = 0; i < components; i++)
-    {
-        PushID(i);
-        if (i > 0)
-            SameLine(0, g.Style.ItemInnerSpacing.x);
-        value_changed |= SliderScalar("", data_type, v, v_min, v_max, format, flags);
-        PopID();
-        PopItemWidth();
-        v = (v + type_size);
-    }
-    PopID();
-
-    let mut  label_end: *const c_char = FindRenderedTextEnd(label);
-    if (label != label_end)
-    {
-        SameLine(0, g.Style.ItemInnerSpacing.x);
-        TextEx(label, label_end);
-    }
-
-    EndGroup();
-    return value_changed;
-}
-
-pub unsafe fn SliderFloat(label: *const c_char, *mutv: c_float,v_min: c_float,v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    return SliderScalar(label, ImGuiDataType_Float, v, &v_min, &v_max, format, flags);
-}
-
-pub unsafe fn SliderFloat2(label: *const c_char,v: [c_float;2],v_min: c_float,v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    return SliderScalarN(label, ImGuiDataType_Float, v, 2, &v_min, &v_max, format, flags);
-}
-
-pub unsafe fn SliderFloat3(label: *const c_char,v: c_float[3],v_min: c_float,v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    return SliderScalarN(label, ImGuiDataType_Float, v, 3, &v_min, &v_max, format, flags);
-}
-
-pub unsafe fn SliderFloat4(label: *const c_char,v: c_float[4],v_min: c_float,v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    return SliderScalarN(label, ImGuiDataType_Float, v, 4, &v_min, &v_max, format, flags);
-}
-
-pub unsafe fn SliderAngle(label: *const c_char, *mutv_rad: c_float,v_degrees_min: c_float,v_degrees_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    if (format == null_mut())
-        format = "%.0 deg";
-    let v_deg: c_float =  (*v_rad) * 360f32 / (2 * IM_PI);
-    let mut value_changed: bool =  SliderFloat(label, &v_deg, v_degrees_min, v_degrees_max, format, flags);
-    *v_rad = v_deg * (2 * IM_PI) / 360f32;
-    return value_changed;
-}
-
-pub unsafe fn SliderInt(label: *const c_char, v: *mut c_int, v_min: c_int, v_max: c_int, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    return SliderScalar(label, ImGuiDataType_S32, v, &v_min, &v_max, format, flags);
-}
-
-pub unsafe fn SliderInt2(label: *const c_char, v: c_int[2], v_min: c_int, v_max: c_int, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    return SliderScalarN(label, ImGuiDataType_S32, v, 2, &v_min, &v_max, format, flags);
-}
-
-pub unsafe fn SliderInt3(label: *const c_char, v: c_int[3], v_min: c_int, v_max: c_int, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    return SliderScalarN(label, ImGuiDataType_S32, v, 3, &v_min, &v_max, format, flags);
-}
-
-pub unsafe fn SliderInt4(label: *const c_char, v: c_int[4], v_min: c_int, v_max: c_int, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    return SliderScalarN(label, ImGuiDataType_S32, v, 4, &v_min, &v_max, format, flags);
-}
-
-pub unsafe fn VSliderScalar(label: *const c_char, size: &ImVec2, data_type: ImGuiDataType, p_data: *mut c_void, p_min: *const c_void, p_max: *const c_void, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    if window.SkipItems { return  false; }
-
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let setyle = &mut g.Style;
-    let mut id: ImGuiID =  window.GetID(label);
-
-    let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
-    let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size);
-    let mut bb: ImRect = ImRect::new(frame_bb.Min, frame_bb.Max + ImVec2::new(if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x} else {0.0}, 0.0));
-
-    ItemSize(bb, style.FramePadding.y);
-    if !ItemAdd(frame_bb, id) { return  false; }
-
-    // Default format string when passing NULL
-    if (format == null_mut())
-        format = DataTypeGetInfo(data_type)->PrintFmt;
-    else if (data_type == ImGuiDataType_S32 && strcmp(format, "%d") != 0) // (FIXME-LEGACY: Patch old "%.0f" format string to use "%d", read function more details.)
-        format = PatchFormatStringFloatToInt(format);
-
-    let hovered: bool = ItemHoverable(frame_bb, id);
-    if ((hovered && g.IO.MouseClicked[0]) || g.NavActivateId == id || g.NavActivateInputId == id)
-    {
-        SetActiveID(id, window);
-        SetFocusID(id, window);
-        FocusWindow(window);
-        g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Up) | (1 << ImGuiDir_Down);
-    }
-
-    // Draw frame
-    frame_col: u32 = GetColorU32(if g.ActiveId == id { ImGuiCol_FrameBgActive} else {if hovered { ImGuiCol_FrameBgHovered}else{ ImGuiCol_FrameBg}});
-    RenderNavHighlight(frame_bb, id);
-    RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, g.Style.FrameRounding);
-
-    // Slider behavior
-    let mut grab_bb: ImRect = ImRect::default();
-    let value_changed: bool = SliderBehavior(frame_bb, id, data_type, p_data, p_min, p_max, format, flags | ImGuiSliderFlags_Vertical, &grab_bb);
-    if value_changed {
-        MarkItemEdited(id)(); }
-
-    // Render grab
-    if (grab_bb.Max.y > grab_bb.Min.y)
-        window.DrawList.AddRectFilled(grab_bb.Min, grab_bb.Max, GetColorU32(if g.ActiveId == id { ImGuiCol_SliderGrabActive }else {ImGuiCol_SliderGrab}), style.GrabRounding);
-
-    // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
-    // For the vertical slider we allow centered text to overlap the frame padding
-    value_buf: [c_char;64];
-    let mut  value_buf_end: *const c_char = value_buf + DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
-    RenderTextClipped(ImVec2::new(frame_bb.Min.x, frame_bb.Min.y + style.FramePadding.y), frame_bb.Max, value_buf, value_buf_end, null_mut(), ImVec2::new(0.5, 0.0));
-    if (label_size.x > 0.0)
-        RenderText(ImVec2::new(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
-
-    return value_changed;
-}
-
-pub unsafe fn VSliderFloat(label: *const c_char, size: &ImVec2, *mutv: c_float,v_min: c_float,v_max: c_float, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    return VSliderScalar(label, size, ImGuiDataType_Float, v, &v_min, &v_max, format, flags);
-}
-
-pub unsafe fn VSliderInt(label: *const c_char, size: &ImVec2, v: *mut c_int, v_min: c_int, v_max: c_int, format: *const c_char, flags: ImGuiSliderFlags) -> bool
-{
-    return VSliderScalar(label, size, ImGuiDataType_S32, v, &v_min, &v_max, format, flags);
 }
 
 //-------------------------------------------------------------------------
@@ -3461,7 +3020,7 @@ pub unsafe fn VSliderInt(label: *const c_char, size: &ImVec2, v: *mut c_int, v_m
 //-------------------------------------------------------------------------
 
 // We don't use strchr() because our strings are usually very short and often start with '%'
-ImParseFormatFindStart: *const c_char(fmt: *const c_char)
+ImParseFormatFindStart: &str(fmt: &str)
 {
     while ( c: c_char = fmt[0])
     {
@@ -3473,7 +3032,7 @@ ImParseFormatFindStart: *const c_char(fmt: *const c_char)
     return fmt;
 }
 
-ImParseFormatFindEnd: *const c_char(fmt: *const c_char)
+ImParseFormatFindEnd: &str(fmt: &str)
 {
     // Printf/scanf types modifiers: I/L/h/j/l/t/w/z. Other uppercase letters qualify as types aka end of the format.
     if fmt[0] != '%' { return  fmt; }
@@ -3494,11 +3053,11 @@ ImParseFormatFindEnd: *const c_char(fmt: *const c_char)
 //  fmt = "%.3f"       -> return fmt
 //  fmt = "hello %.3f" -> return fmt + 6
 //  fmt = "%.3f hello" -> return buf written with "%.3f"
-ImParseFormatTrimDecorations: *const c_char(fmt: *const c_char, buf: *mut c_char, buf_size: size_t)
+ImParseFormatTrimDecorations: &str(fmt: &str, buf: *mut c_char, buf_size: size_t)
 {
-    let mut  fmt_start: *const c_char = ImParseFormatFindStart(fmt);
+    let mut  fmt_start: &str = ImParseFormatFindStart(fmt);
     if fmt_start[0] != '%' { return  fmt; }
-    let mut  fmt_end: *const c_char = ImParseFormatFindEnd(fmt_start);
+    let mut  fmt_end: &str = ImParseFormatFindEnd(fmt_start);
     if (fmt_end[0] == 0) // If we only have leading decoration, we don't need to copy the data.
         return fmt_start;
     ImStrncpy(buf, fmt_start, ImMin((fmt_end - fmt_start) + 1, buf_size));
@@ -3508,9 +3067,9 @@ ImParseFormatTrimDecorations: *const c_char(fmt: *const c_char, buf: *mut c_char
 // Sanitize format
 // - Zero terminate so extra characters after format (e.g. "%f123") don't confuse atof/atoi
 // - stb_sprintf.h supports several new modifiers which format numbers in a way that also makes them incompatible atof/atoi.
-pub unsafe fn ImParseFormatSanitizeForPrinting(fmt_in: *const c_char, fmt_out: *mut c_char, fmt_out_size: size_t)
+pub unsafe fn ImParseFormatSanitizeForPrinting(fmt_in: &str, fmt_out: *mut c_char, fmt_out_size: size_t)
 {
-    let mut  fmt_end: *const c_char = ImParseFormatFindEnd(fmt_in);
+    let mut  fmt_end: &str = ImParseFormatFindEnd(fmt_in);
     IM_UNUSED(fmt_out_size);
     // IM_ASSERT((fmt_end - fmt_in + 1) < fmt_out_size); // Format is too long, let us know if this happens to you!
     while (fmt_in < fmt_end)
@@ -3523,10 +3082,10 @@ pub unsafe fn ImParseFormatSanitizeForPrinting(fmt_in: *const c_char, fmt_out: *
 }
 
 // - For scanning we need to remove all width and precision fields "%3.7f" -> "%f". BUT don't strip types like "%I64d" which includes digits. ! "%07I64d" -> "%I64d"
-ImParseFormatSanitizeForScanning: *const c_char(fmt_in: *const c_char, fmt_out: *mut c_char, fmt_out_size: size_t)
+ImParseFormatSanitizeForScanning: &str(fmt_in: &str, fmt_out: *mut c_char, fmt_out_size: size_t)
 {
-    let mut  fmt_end: *const c_char = ImParseFormatFindEnd(fmt_in);
-    let mut  fmt_out_begin: *const c_char = fmt_out;
+    let mut  fmt_end: &str = ImParseFormatFindEnd(fmt_in);
+    let mut  fmt_out_begin: &str = fmt_out;
     IM_UNUSED(fmt_out_size);
     // IM_ASSERT((fmt_end - fmt_in + 1) < fmt_out_size); // Format is too long, let us know if this happens to you!
     let mut has_type: bool =  false;
@@ -3544,7 +3103,7 @@ ImParseFormatSanitizeForScanning: *const c_char(fmt_in: *const c_char, fmt_out: 
 }
 
 template<typename TYPE>
-static ImAtoi: *const c_char(src: *const c_char, *mut TYPE output)
+static ImAtoi: &str(src: &str, *mut TYPE output)
 {
     let negative: c_int = 0;
     if (*src == '-') { negative = 1; src+= 1; }
@@ -3558,7 +3117,7 @@ static ImAtoi: *const c_char(src: *const c_char, *mut TYPE output)
 
 // Parse display precision back from the display format string
 // FIXME: This is still used by some navigation code path to infer a minimum tweak step, but we should aim to rework widgets so it isn't needed.
-ImParseFormatPrecision: c_int(fmt: *const c_char, default_precision: c_int)
+ImParseFormatPrecision: c_int(fmt: &str, default_precision: c_int)
 {
     fmt = ImParseFormatFindStart(fmt);
     if fmt[0] != '%' { return  default_precision; }
@@ -3601,7 +3160,7 @@ pub unsafe fn TempInputText(bb: &ImRect, id: ImGuiID, label: &str, buf: &mut Str
     return value_changed;
 }
 
-static inline InputScalar_DefaultCharsFilter: ImGuiInputTextFlags(data_type: ImGuiDataType, format: *const c_char)
+static inline InputScalar_DefaultCharsFilter: ImGuiInputTextFlags(data_type: ImGuiDataType, format: &str)
 {
     if data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double { return  ImGuiInputTextFlags_CharsScientific; }
     const  format_last_char: c_char = if format[0] { format[strlen(format) - 1]} else {0};
@@ -3663,7 +3222,7 @@ pub unsafe fn TempInputScalar(
 
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
 // Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn InputScalar(label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputScalar(label: &str, data_type: ImGuiDataType, p_data: *mut c_void, p_step: *const c_void, p_step_fast: *const c_void, format: &str, flags: ImGuiInputTextFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -3715,7 +3274,7 @@ pub unsafe fn InputScalar(label: *const c_char, data_type: ImGuiDataType, p_data
         if flags & ImGuiInputTextFlags_ReadOnly {
             EndDisabled(); }
 
-        let mut  label_end: *const c_char = FindRenderedTextEnd(label);
+        let mut  label_end: &str = FindRenderedTextEnd(label);
         if (label != label_end)
         {
             SameLine(0, style.ItemInnerSpacing.x);
@@ -3737,7 +3296,7 @@ pub unsafe fn InputScalar(label: *const c_char, data_type: ImGuiDataType, p_data
     return value_changed;
 }
 
-pub unsafe fn InputScalarN(label: *const c_char, data_type: ImGuiDataType, p_data: *mut c_void, components: c_int, p_step: *const c_void, p_step_fast: *const c_void, format: *const c_char, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputScalarN(label: &str, data_type: ImGuiDataType, p_data: *mut c_void, components: c_int, p_step: *const c_void, p_step_fast: *const c_void, format: &str, flags: ImGuiInputTextFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -3760,7 +3319,7 @@ pub unsafe fn InputScalarN(label: *const c_char, data_type: ImGuiDataType, p_dat
     }
     PopID();
 
-    let mut  label_end: *const c_char = FindRenderedTextEnd(label);
+    let mut  label_end: &str = FindRenderedTextEnd(label);
     if (label != label_end)
     {
         SameLine(0.0, g.Style.ItemInnerSpacing.x);
@@ -3771,50 +3330,50 @@ pub unsafe fn InputScalarN(label: *const c_char, data_type: ImGuiDataType, p_dat
     return value_changed;
 }
 
-pub unsafe fn InputFloat(label: *const c_char, *mutv: c_float,step: c_float,step_fast: c_float, format: *const c_char, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputFloat(label: &str, v: *mut c_float,step: c_float,step_fast: c_float, format: &str, flags: ImGuiInputTextFlags) -> bool
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
     return InputScalar(label, ImGuiDataType_Float, v, (if step > 0.0 { & step } else {null_mut()}), (if step_fast > 0.0 { & step_fast} else {null_mut()}), format, flags);
 }
 
-pub unsafe fn InputFloat2(label: *const c_char,v: [c_float;2], format: *const c_char, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputFloat2(label: &str,v: [c_float;2], format: &str, flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_Float, v, 2, null_mut(), null_mut(), format, flags);
 }
 
-pub unsafe fn InputFloat3(label: *const c_char,v: c_float[3], format: *const c_char, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputFloat3(label: &str,v: [c_float;3], format: &str, flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_Float, v, 3, null_mut(), null_mut(), format, flags);
 }
 
-pub unsafe fn InputFloat4(label: *const c_char,v: c_float[4], format: *const c_char, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputFloat4(label: &str,v: [c_float;4], format: &str, flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_Float, v, 4, null_mut(), null_mut(), format, flags);
 }
 
-pub unsafe fn InputInt(label: *const c_char, v: *mut c_int, step: c_int, step_fast: c_int, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputInt(label: &str, v: *mut c_int, step: c_int, step_fast: c_int, flags: ImGuiInputTextFlags) -> bool
 {
     // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
-    let mut  format: *const c_char = if flags & ImGuiInputTextFlags_CharsHexadecimal { "%08X"} else { "%d"};
+    let mut  format: &str = if flags & ImGuiInputTextFlags_CharsHexadecimal { "%08X"} else { "%d"};
     return InputScalar(label, ImGuiDataType_S32, v, (if step > 0 { & step } else{ null_mut()}), (if step_fast > 0 { & step_fast} else {null_mut()}), format, flags);
 }
 
-pub unsafe fn InputInt2(label: *const c_char, v: c_int[2], flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputInt2(label: &str, v: [c_int;2], flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_S32, v, 2, null_mut(), null_mut(), "%d", flags);
 }
 
-pub unsafe fn InputInt3(label: *const c_char, v: c_int[3], flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputInt3(label: &str, v: [c_int;3], flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_S32, v, 3, null_mut(), null_mut(), "%d", flags);
 }
 
-pub unsafe fn InputInt4(label: *const c_char, v: c_int[4], flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputInt4(label: &str, v: [c_int;4], flags: ImGuiInputTextFlags) -> bool
 {
     return InputScalarN(label, ImGuiDataType_S32, v, 4, null_mut(), null_mut(), "%d", flags);
 }
 
-pub unsafe fn InputDouble(label: *const c_char, *mut double v, double step, double step_fast, format: *const c_char, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputDouble(label: &str, *mut double v, double step, double step_fast, format: &str, flags: ImGuiInputTextFlags) -> bool
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
     return InputScalar(label, ImGuiDataType_Double, v, (if step > 0.0 { & step} else {null_mut()}), (if step_fast > 0.0 { & step_fast} else {null_mut()}), format, flags);
@@ -3833,27 +3392,27 @@ pub unsafe fn InputDouble(label: *const c_char, *mut double v, double step, doub
 // - DebugNodeInputTextState() [Internal]
 //-------------------------------------------------------------------------
 
-pub unsafe fn InputText(label: *const c_char, buf: *mut c_char, buf_size: size_t, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
+pub unsafe fn InputText(label: &str, buf: *mut c_char, buf_size: size_t, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
 {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline()
     return InputTextEx(label, null_mut(), buf, buf_size, ImVec2::new(0, 0), flags, callback, user_data);
 }
 
-pub unsafe fn InputTextMultiline(label: *const c_char, buf: *mut c_char, buf_size: size_t, size: &ImVec2, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
+pub unsafe fn InputTextMultiline(label: &str, buf: *mut c_char, buf_size: size_t, size: &ImVec2, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
 {
     return InputTextEx(label, null_mut(), buf, buf_size, size, flags | ImGuiInputTextFlags_Multiline, callback, user_data);
 }
 
-pub unsafe fn InputTextWithHint(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: size_t, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
+pub unsafe fn InputTextWithHint(label: &str, hint: &str, buf: *mut c_char, buf_size: size_t, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, user_data: *mut c_void) -> bool
 {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline() or  InputTextEx() manually if you need multi-line + hint.
     return InputTextEx(label, hint, buf, buf_size, ImVec2::new(0, 0), flags, callback, user_data);
 }
 
-pub fn InputTextCalcTextLenAndLineCount(text_begin: *const c_char, *const out_text_end: *mut c_char) -> c_int
+pub fn InputTextCalcTextLenAndLineCount(text_begin: &str, *const out_text_end: *mut c_char) -> c_int
 {
     let line_count: c_int = 0;
-    let mut  s: *const c_char = text_begin;
+    let mut  s: &str = text_begin;
     while ( c: c_char = *s++) // We are only matching for \n so we can ignore UTF-8 decoding
         if (c == '\n')
             line_count+= 1;
@@ -4047,7 +3606,7 @@ c_void ImGuiInputTextCallbackData::DeleteChars(pos: c_int, bytes_count: c_int)
 {
     // IM_ASSERT(pos + bytes_count <= BufTextLen);
     dst: *mut c_char = Buf + pos;
-    let mut  src: *const c_char = Buf + pos + bytes_count;
+    let mut  src: &str = Buf + pos + bytes_count;
     while ( c: c_char = *src++)
         *dst++ = c;
     *dst = '\0';
@@ -4061,7 +3620,7 @@ c_void ImGuiInputTextCallbackData::DeleteChars(pos: c_int, bytes_count: c_int)
     BufTextLen -= bytes_count;
 }
 
-c_void ImGuiInputTextCallbackData::InsertChars(pos: c_int, new_text: *const c_char, new_text_end: *const c_char)
+c_void ImGuiInputTextCallbackData::InsertChars(pos: c_int, new_text: &str, new_text_end: &str)
 {
     let is_resizable: bool = (Flags & ImGuiInputTextFlags_CallbackResize) != 0;
     let new_text_len: c_int = if new_text_end { (new_text_end - new_text)} else {"strlen(new_text)"};
@@ -4183,7 +3742,7 @@ pub unsafe fn InputTextFilterCharacter(*mut p_char: c_uint, flags: ImGuiInputTex
 // Find the shortest single replacement we can make to get the new text from the old text.
 // Important: needs to be run before TextW is rewritten with the new characters because calling STB_TEXTEDIT_GETCHAR() at the end.
 // FIXME: Ideally we should transition toward (1) making InsertChars()/DeleteChars() update undo-stack (2) discourage (and keep reconcile) or obsolete (and remove reconcile) accessing buffer directly.
-pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextState state, new_buf_a: *const c_char, new_length_a: c_int)
+pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextState state, new_buf_a: &str, new_length_a: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let old_buf: *const ImWchar = state.TextW.Data;
@@ -4222,7 +3781,7 @@ pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextSt
 // - If you want to use InputText() with std::string, see misc/cpp/imgui_stdlib.h
 // (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
 //  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
-pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c_char, buf_size: c_int, size_arg: &ImVec2, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, callback_user_data: *mut c_void) -> bool
+pub unsafe fn InputTextEx(label: &str, hint: &str, buf: *mut c_char, buf_size: c_int, size_arg: &ImVec2, flags: ImGuiInputTextFlags, ImGuiInputTextCallback callback, callback_user_data: *mut c_void) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -4339,7 +3898,7 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
             recycle_state = false;}
 
         // Start edition
-        let mut  buf_end: *const c_char= null_mut();
+        let mut  buf_end: &str= null_mut();
         state.ID = id;
         state.TextW.resize(buf_size + 1);          // wchar count <= UTF-8 count. we use +1 to make sure that .Data is always pointing to at least an empty string.
         state.TextA.clear();
@@ -4417,7 +3976,7 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
     // FIXME-OPT: Because our selection/cursor code currently needs the wide text we need to convert it when active, which is not ideal :(
     if (is_readonly && state != null_mut() && (render_cursor || render_selection))
     {
-        let mut  buf_end: *const c_char= null_mut();
+        let mut  buf_end: &str= null_mut();
         state.TextW.resize(buf_size + 1);
         state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, state.TextW.Size, buf, null_mut(), &buf_end);
         state.CurLenA = (buf_end - buf);
@@ -4662,13 +4221,13 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
         }
         else if (is_paste)
         {
-            if (clipboard: *const c_char = GetClipboardText())
+            if (clipboard: &str = GetClipboardText())
             {
                 // Filter pasted buffer
                 let clipboard_len: c_int = strlen(clipboard);
                 *mut let clipboard_filtered: ImWchar = (*mut ImWchar)IM_ALLOC((clipboard_len + 1) * sizeof);
                 let clipboard_filtered_len: c_int = 0;
-                for (s: *const c_char = clipboard; *s; )
+                for (s: &str = clipboard; *s; )
                 {
                     c: c_uint;
                     s += ImTextCharFromUtf8(&c, s, null_mut());
@@ -4693,7 +4252,7 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
     }
 
     // Process callbacks and apply result back to user's buffer.
-    let mut  apply_new_text: *const c_char= null_mut();
+    let mut  apply_new_text: &str= null_mut();
     let apply_new_text_length: c_int = 0;
     if (g.ActiveId == id)
     {
@@ -4874,8 +4433,8 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
     // without any carriage return, which would makes ImFont::RenderText() reserve too many vertices and probably crash. Avoid it altogether.
     // Note that we only use this limit on single-line InputText(), so a pathologically large line on a InputTextMultiline() would still crash.
     let buf_display_max_length: c_int = 2 * 1024 * 1024;
-    let mut  buf_display: *const c_char = if buf_display_from_state { state.TextA.Data} else {buf}; //-V595
-    let mut  buf_display_end: *const c_char= null_mut(); // We have specialized paths below for setting the length
+    let mut  buf_display: &str = if buf_display_from_state { state.TextA.Data} else {buf}; //-V595
+    let mut  buf_display_end: &str= null_mut(); // We have specialized paths below for setting the length
     if (is_displaying_hint)
     {
         buf_display = hint;
@@ -4903,7 +4462,7 @@ pub unsafe fn InputTextEx(label: *const c_char, hint: *const c_char, buf: *mut c
         {
             // Find lines numbers straddling 'cursor' (slot 0) and 'select_start' (slot 1) positions.
             *const ImWsearches_input_ptr: [c_char;2] = { null_mut(), null_mut() };
-            searches_result_line_no: c_int[2] = { -1000, -1000 };
+            searches_result_line_no: [c_int;2] = { -1000, -1000 };
             let searches_remaining: c_int = 0;
             if (render_cursor)
             {
@@ -5158,14 +4717,14 @@ pub unsafe fn DebugNodeInputTextState(*mut ImGuiInputTextState state)
 // - ColorPickerOptionsPopup() [Internal]
 //-------------------------------------------------------------------------
 
-pub unsafe fn ColorEdit3(label: *const c_char,col: c_float[3], ImGuiColorEditFlags flags) -> bool
+pub unsafe fn ColorEdit3(label: &str,col: [c_float;3], ImGuiColorEditFlags flags) -> bool
 {
     return ColorEdit4(label, col, flags | ImGuiColorEditFlags_NoAlpha);
 }
 
 // ColorEdit supports RGB and HSV inputs. In case of RGB input resulting color may have undefined hue and/or saturation.
 // Since widget displays both RGB and HSV values we must preserve hue and saturation to prevent these values resetting.
-pub unsafe fn ColorEditRestoreHS(*col: c_float, *mutH: c_float, *mutS: c_float, *mutV: c_float)
+pub unsafe fn ColorEditRestoreHS(*col: c_float, H: *mut c_float, S: *mut c_float, V: *mut c_float)
 {
     // This check is optional. Suppose we have two color widgets side by side, both widgets display different colors, but both colors have hue and/or saturation undefined.
     // With color check: hue/saturation is preserved in one widget. Editing color in one widget would reset hue/saturation in another one.
@@ -5189,7 +4748,7 @@ pub unsafe fn ColorEditRestoreHS(*col: c_float, *mutH: c_float, *mutS: c_float, 
 // Edit colors components (each component in 0.0..1.0 range).
 // See enum ImGuiColorEditFlags_ for available options. e.g. Only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
 // With typical options: Left-click on color square to open color picker. Right-click to open option menu. CTRL-Click over input fields to edit them and TAB to go to next item.
-pub unsafe fn ColorEdit4(label: *const c_char,col: c_float[4], ImGuiColorEditFlags flags) -> bool
+pub unsafe fn ColorEdit4(label: &str,col: [c_float;4], ImGuiColorEditFlags flags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -5200,7 +4759,7 @@ pub unsafe fn ColorEdit4(label: *const c_char,col: c_float[4], ImGuiColorEditFla
     let w_full: c_float =  CalcItemWidth();
     let w_button: c_float =  if flag_set(flags, ImGuiColorEditFlags_NoSmallPreview) { 0.0} else{ (square_sz + style.ItemInnerSpacing.x)};
     let w_inputs: c_float =  w_full - w_button;
-    let mut  label_display_end: *const c_char = FindRenderedTextEnd(label);
+    let mut  label_display_end: &str = FindRenderedTextEnd(label);
     g.NextItemData.ClearFlags();
 
     BeginGroup();
@@ -5232,7 +4791,7 @@ pub unsafe fn ColorEdit4(label: *const c_char,col: c_float[4], ImGuiColorEditFla
     let hdr: bool = flag_set(flags, ImGuiColorEditFlags_HDR);
     let components: c_int = if alpha {4} else { 3 };
 
-    // Convert to the formats we needf: c_float[4] = { col[0], col[1], col[2], alpha ? col[3] : 1.0 };
+    // Convert to the formats we needf: [c_float;4] = { col[0], col[1], col[2], alpha ? col[3] : 1.0 };
     if (flag_set(flags, ImGuiColorEditFlags_InputHSV) && (flags & ImGuiColorEditFlags_DisplayRGB))
         ColorConvertHSVtoRGB(f[0], f[1], f[2], f[0], f[1], f[2]);
     else if (flag_set(flags, ImGuiColorEditFlags_InputRGB) && (flags & ImGuiColorEditFlags_DisplayHSV))
@@ -5241,7 +4800,7 @@ pub unsafe fn ColorEdit4(label: *const c_char,col: c_float[4], ImGuiColorEditFla
         ColorConvertRGBtoHSV(f[0], f[1], f[2], f[0], f[1], f[2]);
         ColorEditRestoreHS(col, &f[0], &f[1], &f[2]);
     }
-    i: c_int[4] = { IM_F32_TO_INT8_UNBOUND(f[0]), IM_F32_TO_INT8_UNBOUND(f[1]), IM_F32_TO_INT8_UNBOUND(f[2]), IM_F32_TO_INT8_UNBOUND(f[3]) };
+    i: [c_int;4] = { IM_F32_TO_INT8_UNBOUND(f[0]), IM_F32_TO_INT8_UNBOUND(f[1]), IM_F32_TO_INT8_UNBOUND(f[2]), IM_F32_TO_INT8_UNBOUND(f[3]) };
 
     let mut value_changed: bool =  false;
     let mut value_changed_as_float: bool =  false;
@@ -5420,8 +4979,8 @@ pub unsafe fn ColorEdit4(label: *const c_char,col: c_float[4], ImGuiColorEditFla
     return value_changed;
 }
 
-pub unsafe fn ColorPicker3(label: *const c_char,col: c_float[3], ImGuiColorEditFlags flags) -> bool
-{col4: c_float[4] = { col[0], col[1], col[2], 1.0 };
+pub unsafe fn ColorPicker3(label: &str,col: [c_float;3], ImGuiColorEditFlags flags) -> bool
+{col4: [c_float;4] = { col[0], col[1], col[2], 1.0 };
     if !ColorPicker4(label, col4, flags | ImGuiColorEditFlags_NoAlpha) { return  false; }
     col[0] = col4[0]; col[1] = col4[1]; col[2] = col4[2];
     return true;
@@ -5441,7 +5000,7 @@ pub unsafe fn RenderArrowsForVerticalBar(draw_list: *mut ImDrawList, pos: ImVec2
 // (In C++ the 'float col[4]' notation for a function argument is equivalent to 'float* col', we only specify a size to facilitate understanding of the code.)
 // FIXME: we adjust the big color square height based on item width, which may cause a flickering feedback loop (if automatic height makes a vertical scrollbar appears, affecting automatic width..)
 // FIXME: this is trying to be aware of style.Alpha but not fully correct. Also, the color wheel will have overlapping glitches with (style.Alpha < 1.0)
-pub unsafe fn ColorPicker4(label: *const c_char,col: c_float[4], ImGuiColorEditFlags flags, *ref_col: c_float) -> bool
+pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags flags, *ref_col: c_float) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
@@ -5483,7 +5042,7 @@ pub unsafe fn ColorPicker4(label: *const c_char,col: c_float[4], ImGuiColorEditF
     let sv_picker_size: c_float =  ImMax(bars_width * 1, width - (if alpha_bar {2} else { 1 }) * (bars_width + style.ItemInnerSpacing.x)); // Saturation/Value picking box
     let bar0_pos_x: c_float =  picker_pos.x + sv_picker_size + style.ItemInnerSpacing.x;
     let bar1_pos_x: c_float =  bar0_pos_x + bars_width + style.ItemInnerSpacing.x;
-    let bars_triangles_half_sz: c_float =  IM_FLOOR(bars_width * 0.200);backup_initial_col: c_float[4];
+    let bars_triangles_half_sz: c_float =  IM_FLOOR(bars_width * 0.200);backup_initial_col: [c_float;4];
     memcpy(backup_initial_col, col, components * sizeof);
 
     let wheel_thickness: c_float =  sv_picker_size * 0.08f;
@@ -5595,7 +5154,7 @@ pub unsafe fn ColorPicker4(label: *const c_char,col: c_float[4], ImGuiColorEditF
 
     if (flag_clear(flags, ImGuiColorEditFlags_NoLabel))
     {
-        let mut  label_display_end: *const c_char = FindRenderedTextEnd(label);
+        let mut  label_display_end: &str = FindRenderedTextEnd(label);
         if (label != label_display_end)
         {
             if ((flags & ImGuiColorEditFlags_NoSidePreview))
@@ -5807,7 +5366,7 @@ pub unsafe fn ColorPicker4(label: *const c_char,col: c_float[4], ImGuiColorEditF
 // FIXME: May want to display/ignore the alpha component in the color display? Yet show it in the tooltip.
 // 'desc_id' is not called 'label' because we don't display it next to the button, but only in the tooltip.
 // Note that 'col' may be encoded in HSV if ImGuiColorEditFlags_InputHSV is set.
-pub unsafe fn ColorButton(desc_id: *const c_char, col: &ImVec4, ImGuiColorEditFlags flags, size_arg: &ImVec2) -> bool
+pub unsafe fn ColorButton(desc_id: &str, col: &ImVec4, ImGuiColorEditFlags flags, size_arg: &ImVec2) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -5905,12 +5464,12 @@ pub unsafe fn SetColorEditOptions(ImGuiColorEditFlags flags)
 }
 
 // Note: only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
-pub unsafe fn ColorTooltip(text: *const c_char, *col: c_float, ImGuiColorEditFlags flags)
+pub unsafe fn ColorTooltip(text: &str, *col: c_float, ImGuiColorEditFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     BeginTooltipEx(ImGuiTooltipFlags_OverridePreviousTooltip, ImGuiWindowFlags_None);
-    let mut  text_end: *const c_char = if text { FindRenderedTextEnd(text, null_mut()) }else {text};
+    let mut  text_end: &str = if text { FindRenderedTextEnd(text, null_mut()) }else {text};
     if (text_end > text)
     {
         TextEx(text, text_end);
@@ -6041,7 +5600,7 @@ pub unsafe fn ColorPickerOptionsPopup(*ref_col: c_float, ImGuiColorEditFlags fla
 // - CollapsingHeader()
 //-------------------------------------------------------------------------
 
-pub unsafe fn TreeNode(str_id: *const c_char, fmt: *const c_char, ...) -> bool
+pub unsafe fn TreeNode(str_id: &str, fmt: &str, ...) -> bool
 {
     va_list args;
     va_start(args, fmt);
@@ -6050,7 +5609,7 @@ pub unsafe fn TreeNode(str_id: *const c_char, fmt: *const c_char, ...) -> bool
     return is_open;
 }
 
-pub unsafe fn TreeNode(ptr_id: *const c_void, fmt: *const c_char, ...) -> bool
+pub unsafe fn TreeNode(ptr_id: *const c_void, fmt: &str, ...) -> bool
 {
     va_list args;
     va_start(args, fmt);
@@ -6059,24 +5618,24 @@ pub unsafe fn TreeNode(ptr_id: *const c_void, fmt: *const c_char, ...) -> bool
     return is_open;
 }
 
-pub unsafe fn TreeNode(label: *const c_char) -> bool
+pub unsafe fn TreeNode(label: &str) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
     return TreeNodeBehavior(window.GetID(label), 0, label, null_mut());
 }
 
-pub unsafe fn TreeNodeV(str_id: *const c_char, fmt: *const c_char, va_list args) -> bool
+pub unsafe fn TreeNodeV(str_id: &str, fmt: &str, va_list args) -> bool
 {
     return TreeNodeExV(str_id, 0, fmt, args);
 }
 
-pub unsafe fn TreeNodeV(ptr_id: *const c_void, fmt: *const c_char, va_list args) -> bool
+pub unsafe fn TreeNodeV(ptr_id: *const c_void, fmt: &str, va_list args) -> bool
 {
     return TreeNodeExV(ptr_id, 0, fmt, args);
 }
 
-pub unsafe fn TreeNodeEx(label: *const c_char, ImGuiTreeNodeFlags flags) -> bool
+pub unsafe fn TreeNodeEx(label: &str, ImGuiTreeNodeFlags flags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -6084,7 +5643,7 @@ pub unsafe fn TreeNodeEx(label: *const c_char, ImGuiTreeNodeFlags flags) -> bool
     return TreeNodeBehavior(window.GetID(label), flags, label, null_mut());
 }
 
-pub unsafe fn TreeNodeEx(str_id: *const c_char, ImGuiTreeNodeFlags flags, fmt: *const c_char, ...) -> bool
+pub unsafe fn TreeNodeEx(str_id: &str, ImGuiTreeNodeFlags flags, fmt: &str, ...) -> bool
 {
     va_list args;
     va_start(args, fmt);
@@ -6093,7 +5652,7 @@ pub unsafe fn TreeNodeEx(str_id: *const c_char, ImGuiTreeNodeFlags flags, fmt: *
     return is_open;
 }
 
-pub unsafe fn TreeNodeEx(ptr_id: *const c_void, ImGuiTreeNodeFlags flags, fmt: *const c_char, ...) -> bool
+pub unsafe fn TreeNodeEx(ptr_id: *const c_void, ImGuiTreeNodeFlags flags, fmt: &str, ...) -> bool
 {
     va_list args;
     va_start(args, fmt);
@@ -6102,22 +5661,22 @@ pub unsafe fn TreeNodeEx(ptr_id: *const c_void, ImGuiTreeNodeFlags flags, fmt: *
     return is_open;
 }
 
-pub unsafe fn TreeNodeExV(str_id: *const c_char, ImGuiTreeNodeFlags flags, fmt: *const c_char, va_list args) -> bool
+pub unsafe fn TreeNodeExV(str_id: &str, ImGuiTreeNodeFlags flags, fmt: &str, va_list args) -> bool
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if window.SkipItems { return  false; }
 
-    label: *const c_char, *label_end;
+    label: &str, *label_end;
     ImFormatStringToTempBufferV(&label, &label_end, fmt, args);
     return TreeNodeBehavior(window.GetID(str_id), flags, label, label_end);
 }
 
-pub unsafe fn TreeNodeExV(ptr_id: *const c_void, ImGuiTreeNodeFlags flags, fmt: *const c_char, va_list args) -> bool
+pub unsafe fn TreeNodeExV(ptr_id: *const c_void, ImGuiTreeNodeFlags flags, fmt: &str, va_list args) -> bool
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if window.SkipItems { return  false; }
 
-    label: *const c_char, *label_end;
+    label: &str, *label_end;
     ImFormatStringToTempBufferV(&label, &label_end, fmt, args);
     return TreeNodeBehavior(window.GetID(ptr_id), flags, label, label_end);
 }
@@ -6174,7 +5733,7 @@ pub unsafe fn TreeNodeUpdateNextOpen(id: ImGuiID, ImGuiTreeNodeFlags flags) -> b
     return is_open;
 }
 
-pub unsafe fn TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: *const c_char, label_end: *const c_char) -> bool
+pub unsafe fn TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: &str, label_end: &str) -> bool
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -6360,7 +5919,7 @@ pub unsafe fn TreeNodeBehavior(id: ImGuiID, ImGuiTreeNodeFlags flags, label: *co
     return is_open;
 }
 
-pub unsafe fn TreePush(str_id: *const c_char)
+pub unsafe fn TreePush(str_id: &str)
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     Indent();
@@ -6425,7 +5984,7 @@ pub unsafe fn SetNextItemOpen(is_open: bool, cond: ImGuiCond)
 
 // CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGuiTreeNodeFlags_NoTreePushOnOpen flag).
 // This is basically the same as calling TreeNodeEx(label, ImGuiTreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
-pub unsafe fn CollapsingHeader(label: *const c_char, ImGuiTreeNodeFlags flags) -> bool
+pub unsafe fn CollapsingHeader(label: &str, ImGuiTreeNodeFlags flags) -> bool
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -6437,7 +5996,7 @@ pub unsafe fn CollapsingHeader(label: *const c_char, ImGuiTreeNodeFlags flags) -
 // p_visible != NULL && *p_visible == true  : show a small close button on the corner of the header, clicking the button will set *p_visible = false
 // p_visible != NULL && *p_visible == false : do not show the header at all
 // Do not mistake this with the Open state of the header itself, which you can adjust with SetNextItemOpen() or ImGuiTreeNodeFlags_DefaultOpen.
-pub unsafe fn CollapsingHeader(label: *const c_char,p_visible: *mut bool, ImGuiTreeNodeFlags flags) -> bool
+pub unsafe fn CollapsingHeader(label: &str,p_visible: *mut bool, ImGuiTreeNodeFlags flags) -> bool
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -6478,7 +6037,7 @@ pub unsafe fn CollapsingHeader(label: *const c_char,p_visible: *mut bool, ImGuiT
 // But you need to make sure the ID is unique, e.g. enclose calls in PushID/PopID or use ##unique_id.
 // With this scheme, ImGuiSelectableFlags_SpanAllColumns and ImGuiSelectableFlags_AllowItemOverlap are also frequently used flags.
 // FIXME: Selectable() with (size.x == 0.0) and (SelectableTextAlign.x > 0.0) followed by SameLine() is currently not supported.
-pub unsafe fn Selectable(label: *const c_char, selected: bool, ImGuiSelectableFlags flags, size_arg: &ImVec2) -> bool
+pub unsafe fn Selectable(label: &str, selected: bool, ImGuiSelectableFlags flags, size_arg: &ImVec2) -> bool
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -6584,7 +6143,7 @@ pub unsafe fn Selectable(label: *const c_char, selected: bool, ImGuiSelectableFl
         }
     }
     if pressed {
-        MarkItemEdited(id)(); }
+        MarkItemEdited(id); }
 
     if flags & ImGuiSelectableFlags_AllowItemOverlap {
         SetItemAllowOverlap(); }
@@ -6621,7 +6180,7 @@ pub unsafe fn Selectable(label: *const c_char, selected: bool, ImGuiSelectableFl
     return pressed; //-V1020
 }
 
-pub unsafe fn Selectable(label: *const c_char,p_selected: *mut bool, ImGuiSelectableFlags flags, size_arg: &ImVec2) -> bool
+pub unsafe fn Selectable(label: &str,p_selected: *mut bool, ImGuiSelectableFlags flags, size_arg: &ImVec2) -> bool
 {
     if (Selectable(label, *p_selected, flags, size_arg))
     {
@@ -6641,7 +6200,7 @@ pub unsafe fn Selectable(label: *const c_char,p_selected: *mut bool, ImGuiSelect
 
 // Tip: To have a list filling the entire window width, use size.x = -FLT_MIN and pass an non-visible label e.g. "##empty"
 // Tip: If your vertical size is calculated from an item count (e.g. 10 * item_height) consider adding a fractional part to facilitate seeing scrolling boundaries (e.g. 10.25 * item_height).
-pub unsafe fn BeginListBox(label: *const c_char, size_arg: &ImVec2) -> bool
+pub unsafe fn BeginListBox(label: &str, size_arg: &ImVec2) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
@@ -6681,7 +6240,7 @@ pub unsafe fn BeginListBox(label: *const c_char, size_arg: &ImVec2) -> bool
 
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 // OBSOLETED in 1.81 (from February 2021)
-pub unsafe fn ListBoxHeader(label: *const c_char, items_count: c_int, height_in_items: c_int) -> bool
+pub unsafe fn ListBoxHeader(label: &str, items_count: c_int, height_in_items: c_int) -> bool
 {
     // If height_in_items == -1, default height is maximum 7.
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -6704,7 +6263,7 @@ pub unsafe fn EndListBox()
     EndGroup(); // This is only required to be able to do IsItemXXX query on the whole ListBox including label
 }
 
-pub unsafe fn ListBox(label: *const c_char, current_item:  *mut c_int, const: *const c_char items[], items_count: c_int, height_items: c_int) -> bool
+pub unsafe fn ListBox(label: &str, current_item:  *mut c_int, const: &str items[], items_count: c_int, height_items: c_int) -> bool
 {
     let value_changed: bool = ListBox(label, current_item, Items_ArrayGetter, items, items_count, height_items);
     return value_changed;
@@ -6712,7 +6271,7 @@ pub unsafe fn ListBox(label: *const c_char, current_item:  *mut c_int, const: *c
 
 // This is merely a helper around BeginListBox(), EndListBox().
 // Considering using those directly to submit custom data or store selection differently.
-pub unsafe fn ListBox(label: *const c_char, current_item:  *mut c_int, bool (*items_getter)(*mut c_void, c_int, *const char*), data: *mut c_void, items_count: c_int, height_in_items: c_int) -> bool
+pub unsafe fn ListBox(label: &str, current_item:  *mut c_int, bool (*items_getter)(*mut c_void, c_int, *const char*), data: *mut c_void, items_count: c_int, height_in_items: c_int) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -6732,7 +6291,7 @@ pub unsafe fn ListBox(label: *const c_char, current_item:  *mut c_int, bool (*it
     while (clipper.Step())
         for (let i: c_int = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
         {
-let item_text: *const c_char;
+let item_text: &str;
             if (!items_getter(data, i, &item_text))
                 item_text = "*Unknown item*";
 
@@ -6768,7 +6327,7 @@ let item_text: *const c_char;
 // - others https://github.com/ocornut/imgui/wiki/Useful-Extensions
 //-------------------------------------------------------------------------
 
-PlotEx: c_int(ImGuiPlotType plot_type, label: *const c_char, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: *const c_char,scale_min: c_float,scale_max: c_float, frame_size: ImVec2)
+PlotEx: c_int(ImGuiPlotType plot_type, label: &str, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: &str,scale_min: c_float,scale_max: c_float, frame_size: ImVec2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
@@ -6901,24 +6460,24 @@ staticPlot_ArrayGetter: c_float(data: *mut c_void, idx: c_int)
     return v;
 }
 
-pub unsafe fn PlotLines(label: *const c_char, *values: c_float, values_count: c_int, values_offset: c_int, overlay_text: *const c_char,scale_min: c_float,scale_max: c_float, graph_size: ImVec2, stride: c_int)
+pub unsafe fn PlotLines(label: &str, *values: c_float, values_count: c_int, values_offset: c_int, overlay_text: &str,scale_min: c_float,scale_max: c_float, graph_size: ImVec2, stride: c_int)
 {
     ImGuiPlotArrayGetterData data(values, stride);
     PlotEx(ImGuiPlotType_Lines, label, &Plot_ArrayGetter, &data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 
-pub unsafe fn PlotLines(label: *const c_char, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: *const c_char,scale_min: c_float,scale_max: c_float, graph_size: ImVec2)
+pub unsafe fn PlotLines(label: &str, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: &str,scale_min: c_float,scale_max: c_float, graph_size: ImVec2)
 {
     PlotEx(ImGuiPlotType_Lines, label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 
-pub unsafe fn PlotHistogram(label: *const c_char, *values: c_float, values_count: c_int, values_offset: c_int, overlay_text: *const c_char,scale_min: c_float,scale_max: c_float, graph_size: ImVec2, stride: c_int)
+pub unsafe fn PlotHistogram(label: &str, *values: c_float, values_count: c_int, values_offset: c_int, overlay_text: &str,scale_min: c_float,scale_max: c_float, graph_size: ImVec2, stride: c_int)
 {
     ImGuiPlotArrayGetterData data(values, stride);
     PlotEx(ImGuiPlotType_Histogram, label, &Plot_ArrayGetter, &data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
 
-pub unsafe fn PlotHistogram(label: *const c_char, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: *const c_char,scale_min: c_float,scale_max: c_float, graph_size: ImVec2)
+pub unsafe fn PlotHistogram(label: &str, c_float (*values_getter)(data: *mut c_void, idx: c_int), data: *mut c_void, values_count: c_int, values_offset: c_int, overlay_text: &str,scale_min: c_float,scale_max: c_float, graph_size: ImVec2)
 {
     PlotEx(ImGuiPlotType_Histogram, label, values_getter, data, values_count, values_offset, overlay_text, scale_min, scale_max, graph_size);
 }
@@ -6930,22 +6489,22 @@ pub unsafe fn PlotHistogram(label: *const c_char, c_float (*values_getter)(data:
 // - Value()
 //-------------------------------------------------------------------------
 
-pub unsafe fn Value(prefix: *const c_char, b: bool)
+pub unsafe fn Value(prefix: &str, b: bool)
 {
     Text("%s: %s", prefix, (b ? "true" : "false"));
 }
 
-pub unsafe fn Value(prefix: *const c_char, v: c_int)
+pub unsafe fn Value(prefix: &str, v: c_int)
 {
     Text("%s: %d", prefix, v);
 }
 
-pub unsafe fn Value(prefix: *const c_char, v: c_uint)
+pub unsafe fn Value(prefix: &str, v: c_uint)
 {
     Text("%s: %d", prefix, v);
 }
 
-pub unsafe fn Value(prefix: *const c_char,v: c_float, float_format: *const c_char)
+pub unsafe fn Value(prefix: &str,v: c_float, float_format: &str)
 {
     if (float_format)
     {
@@ -7089,7 +6648,7 @@ pub unsafe fn EndMenuBar()
 // Important: calling order matters!
 // FIXME: Somehow overlapping with docking tech.
 // FIXME: The "rect-cut" aspect of this could be formalized into a lower-level helper (rect-cut: https://halt.software/dead-simple-layouts)
-pub unsafe fn BeginViewportSideBar(name: *const c_char, viewport_p: *mut ImGuiViewport, dir: ImGuiDir,axis_size: c_float, window_flags: ImGuiWindowFlags) -> bool
+pub unsafe fn BeginViewportSideBar(name: &str, viewport_p: *mut ImGuiViewport, dir: ImGuiDir,axis_size: c_float, window_flags: ImGuiWindowFlags) -> bool
 {
     // IM_ASSERT(dir != ImGuiDir_None);
 
@@ -7183,7 +6742,7 @@ pub unsafe fn IsRootOfOpenMenuSet() -> bool
     return (window.DC.NavLayerCurrent == upper_popup->ParentNavLayer && upper_popup.Window && (upper_popup->window.Flags & ImGuiWindowFlags_ChildMenu));
 }
 
-pub unsafe fn BeginMenuEx(label: *const c_char, icon: *const c_char, enabled: bool) -> bool
+pub unsafe fn BeginMenuEx(label: &str, icon: &str, enabled: bool) -> bool
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -7368,7 +6927,7 @@ pub unsafe fn BeginMenuEx(label: *const c_char, icon: *const c_char, enabled: bo
     return menu_is_open;
 }
 
-pub unsafe fn BeginMenu(label: *const c_char, enabled: bool) -> bool
+pub unsafe fn BeginMenu(label: &str, enabled: bool) -> bool
 {
     return BeginMenuEx(label, null_mut(), enabled);
 }
@@ -7391,7 +6950,7 @@ pub unsafe fn EndMenu()
     EndPopup();
 }
 
-pub unsafe fn MenuItemEx(label: *const c_char, icon: *const c_char, shortcut: *const c_char, selected: bool, enabled: bool) -> bool
+pub unsafe fn MenuItemEx(label: &str, icon: &str, shortcut: &str, selected: bool, enabled: bool) -> bool
 {
     let mut window: *mut ImGuiWindow =  GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -7461,12 +7020,12 @@ pub unsafe fn MenuItemEx(label: *const c_char, icon: *const c_char, shortcut: *c
     return pressed;
 }
 
-pub unsafe fn MenuItem(label: *const c_char, shortcut: *const c_char, selected: bool, enabled: bool) -> bool
+pub unsafe fn MenuItem(label: &str, shortcut: &str, selected: bool, enabled: bool) -> bool
 {
     return MenuItemEx(label, null_mut(), shortcut, selected, enabled);
 }
 
-pub unsafe fn MenuItem(label: *const c_char, shortcut: *const c_char,p_selected: *mut bool, enabled: bool) -> bool
+pub unsafe fn MenuItem(label: &str, shortcut: &str,p_selected: *mut bool, enabled: bool) -> bool
 {
     if (MenuItemEx(label, null_mut(), shortcut, if p_selected { * p_selected }else{ false}, enabled))
     {
@@ -7507,7 +7066,7 @@ struct ImGuiTabBarSection
 namespace ImGui
 {
     static c_void             TabBarLayout(ImGuiTabBar* tab_bar);
-    static u32            TabBarCalcTabID(ImGuiTabBar* tab_bar, label: *const c_char, docked_window: *mut ImGuiWindow);
+    static u32            TabBarCalcTabID(ImGuiTabBar* tab_bar, label: &str, docked_window: *mut ImGuiWindow);
     staticTabBarCalcMaxTabWidth: c_float();
     staticTabBarScrollClamp: c_float(ImGuiTabBar* tab_bar,scrolling: c_float);
     static c_void             TabBarScrollToTab(ImGuiTabBar* tab_bar, tab_id: ImGuiID, ImGuiTabBarSection* sections);
@@ -7559,7 +7118,7 @@ static ImGuiPtrOrIndex GetTabBarRefFromTabBar(ImGuiTabBar* tab_bar)
     return ImGuiPtrOrIndex(tab_bar);
 }
 
-bool    BeginTabBar(str_id: *const c_char, ImGuiTabBarFlags flags)
+bool    BeginTabBar(str_id: &str, ImGuiTabBarFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -7755,7 +7314,7 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
 
     // Leading/Trailing tabs will be shrink only if central one aren't visible anymore, so layout the shrink data as: leading, trailing, central
     // (whereas our tabs are stored as: leading, central, trailing)
-    shrink_buffer_indexes: c_int[3] = { 0, sections[0].TabCount + sections[2].TabCount, sections[0].TabCount };
+    shrink_buffer_indexes: [c_int;3] = { 0, sections[0].TabCount + sections[2].TabCount, sections[0].TabCount };
     g.ShrinkWidthBuffer.resize(tab_bar.Tabs.Size);
 
     // Compute ideal tabs widths + store them into shrink buffer
@@ -7777,7 +7336,7 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
         // Refresh tab width immediately, otherwise changes of style e.g. style.FramePadding.x would noticeably lag in the tab bar.
         // Additionally, when using TabBarAddTab() to manipulate tab bar order we occasionally insert new tabs that don't have a width yet,
         // and we cannot wait for the next BeginTabItem() call. We cannot compute this width within TabBarAddTab() because font size depends on the active window.
-        let mut  tab_name: *const c_char = tab_bar.GetTabNametab);
+        let mut  tab_name: &str = tab_bar.GetTabNametab);
         let has_close_button: bool = if tab.Flags & ImGuiTabItemFlags_NoCloseButton { false} else { true};
         tab->ContentWidth = if tab->RequestedWidth >= 0.0 { tab->RequestedWidth} else { TabItemCalcSize(tab_name, has_close_button).x};
 
@@ -7910,7 +7469,7 @@ pub unsafe fn TabBarLayout(ImGuiTabBar* tab_bar)
 }
 
 // Dockable uses Name/ID in the global namespace. Non-dockable items use the ID stack.
-static u32   TabBarCalcTabID(ImGuiTabBar* tab_bar, label: *const c_char, docked_window: *mut ImGuiWindow)
+static u32   TabBarCalcTabID(ImGuiTabBar* tab_bar, label: &str, docked_window: *mut ImGuiWindow)
 {
     if (docked_window != null_mut())
     {
@@ -8208,7 +7767,7 @@ static ImGuiTabItem* TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
             if flag_set(tab.Flags, ImGuiTabItemFlags_Button)
                 continue;
 
-            let mut  tab_name: *const c_char = tab_bar.GetTabNametab);
+            let mut  tab_name: &str = tab_bar.GetTabNametab);
             if Selectable(tab_name, tab_bar.SelectedTabId == tab.ID) {
                 tab_to_select = tab;}
         }
@@ -8232,7 +7791,7 @@ static ImGuiTabItem* TabBarTabListPopupButton(ImGuiTabBar* tab_bar)
 // - TabItemLabelAndCloseButton() [Internal]
 //-------------------------------------------------------------------------
 
-bool    BeginTabItem(label: *const c_char,p_open: *mut bool, ImGuiTabItemFlags flags)
+bool    BeginTabItem(label: &str,p_open: *mut bool, ImGuiTabItemFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -8273,7 +7832,7 @@ c_void    EndTabItem()
         PopID();
 }
 
-bool    TabItemButton(label: *const c_char, ImGuiTabItemFlags flags)
+bool    TabItemButton(label: &str, ImGuiTabItemFlags flags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
@@ -8288,7 +7847,7 @@ bool    TabItemButton(label: *const c_char, ImGuiTabItemFlags flags)
     return TabItemEx(tab_bar, label, null_mut(), flags | ImGuiTabItemFlags_Button | ImGuiTabItemFlags_NoReorder, null_mut());
 }
 
-bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, ImGuiTabItemFlags flags, docked_window: *mut ImGuiWindow)
+bool    TabItemEx(ImGuiTabBar* tab_bar, label: &str,p_open: *mut bool, ImGuiTabItemFlags flags, docked_window: *mut ImGuiWindow)
 {
     // Layout whole tab bar if not already done
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -8575,7 +8134,7 @@ bool    TabItemEx(ImGuiTabBar* tab_bar, label: *const c_char,p_open: *mut bool, 
 // [Public] This is call is 100% optional but it allows to remove some one-frame glitches when a tab has been unexpectedly removed.
 // To use it to need to call the function SetTabItemClosed() between BeginTabBar() and EndTabBar().
 // Tabs closed by the close button will automatically be flagged to avoid this issue.
-c_void    SetTabItemClosed(label: *const c_char)
+c_void    SetTabItemClosed(label: &str)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut is_within_manual_tab_bar: bool =  g.CurrentTabBar && !(g.CurrentTabBar.Flags & ImGuiTabBarFlags_DockNode);
@@ -8598,7 +8157,7 @@ c_void    SetTabItemClosed(label: *const c_char)
     }
 }
 
-pub unsafe fn TabItemCalcSize(label: *const c_char, has_close_button: bool) -> ImVec2
+pub unsafe fn TabItemCalcSize(label: &str, has_close_button: bool) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);
@@ -8637,7 +8196,7 @@ pub unsafe fn TabItemBackground(draw_list: *mut ImDrawList, bb: &ImRect, ImGuiTa
 
 // Render text label (with custom clipping) + Unsaved Document marker + Close Button logic
 // We tend to lock style.FramePadding for a given tab-bar, hence the 'frame_padding' parameter.
-pub unsafe fn TabItemLabelAndCloseButton(draw_list: *mut ImDrawList, bb: &ImRect, ImGuiTabItemFlags flags, frame_padding: ImVec2, label: *const c_char, tab_id: ImGuiID, close_button_id: ImGuiID, is_contents_visible: bool,out_just_closed: *mut bool,out_text_clipped: *mut bool)
+pub unsafe fn TabItemLabelAndCloseButton(draw_list: *mut ImDrawList, bb: &ImRect, ImGuiTabItemFlags flags, frame_padding: ImVec2, label: &str, tab_id: ImGuiID, close_button_id: ImGuiID, is_contents_visible: bool,out_just_closed: *mut bool,out_text_clipped: *mut bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let label_size: ImVec2 = CalcTextSize(label, null_mut(), true);

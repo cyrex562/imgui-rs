@@ -589,7 +589,7 @@ pub unsafe fn PushItemWidth(item_width: c_float)
     g.NextItemData.Flags &= !ImGuiNextItemDataFlags_HasWidth;
 }
 
-pub unsafe fn PushMultiItemsWidths(components: c_int,w_full: c_float)
+pub unsafe fn PushMultiItemsWidths(components: usize,w_full: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
