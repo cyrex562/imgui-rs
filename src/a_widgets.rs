@@ -560,7 +560,7 @@ pub fn InputTextCalcTextLenAndLineCount(text_begin: &String, out_text_end: &mut 
 
 pub unsafe fn InputTextCalcTextSizeW(
     text_begin: &String,
-    remaining: usize,
+    remaining: &mut usize,
     out_offset: &mut ImVec2,
     stop_on_new_line: bool) -> ImVec2
 {
@@ -569,15 +569,15 @@ pub unsafe fn InputTextCalcTextSizeW(
     let line_height =  g.FontSize;
     let scale =  line_height / font.FontSize;
 
-    let text_size: ImVec2 = ImVec2::new(0, 0);
-    let line_width: c_float =  0.0;
+    let mut text_size = ImVec2::new(0, 0);
+    let mut line_width: c_float =  0.0;
     let mut text_end = text_begin.len();
 
     let mut s= 0usize;
-    while (s < text_end)
+    while s < text_end
     {
-        let mut c: c_uint =  (*s++);
-        if (c == '\n')
+        let mut c = text_begin[s];
+        if c == '\n'
         {
             text_size.x = ImMax(text_size.x, line_width);
             text_size.y += line_height;
@@ -586,62 +586,88 @@ pub unsafe fn InputTextCalcTextSizeW(
                 break(); }
             continue;
         }
-        if (c == '\r')
+        if c == '\r' {
             continue;
+        }
 
-        let char_width: c_float =  font->GetCharAdvance(c) * scale;
+        let char_width: c_float =  font.GetCharAdvance(c) * scale;
         line_width += char_width;
+        s += 1;
     }
 
     if text_size.x < line_width{
         text_size.x = line_width;}
 
-    if (out_offset)
-        *out_offset = ImVec2::new(line_width, text_size.y + line_height);  // offset allow for the possibility of sitting after a trailing \n
+    if out_offset {
+        // offset allow for the possibility of sitting after a trailing
+        *out_offset = ImVec2::new(line_width, text_size.y + line_height);
+    }
 
-    if (line_width > 0 || text_size.y == 0.0)                        // whereas size.y will ignore the trailing \n
+    if line_width > 0.0 as c_float || text_size.y == 0.0 {
+        // whereas size.y will ignore the trailing \n
         text_size.y += line_height;
+    }
 
-    if (remaining)
+    if remaining {
         *remaining = s;
+    }
 
     return text_size;
 }
 
 // Wrapper for stb_textedit.h to edit text (our wrapper is for: statically sized buffer, single-line, wchar characters. InputText converts between UTF-8 and wchar)
-namespace ImStb
-{
+// namespace ImStb
+// {
 
-static c_int     STB_TEXTEDIT_STRINGLEN(*const ImGuiInputTextState obj)                             { return obj->CurLenW; }
-static ImWchar STB_TEXTEDIT_GETCHAR(*const ImGuiInputTextState obj, idx: c_int)                      { return obj.TextW[idx]; }
-staticSTB_TEXTEDIT_GETWIDTH: c_float(*mut ImGuiInputTextState obj, line_start_idx: c_int, char_idx: c_int)  { let c: ImWchar = obj.TextW[line_start_idx + char_idx]; if c == '\n' { return  STB_TEXTEDIT_GETWIDTH_NEWLINE; } let g = GImGui; // ImGuiContext& g = *GImGui; return g.Font->GetCharAdvance(c) * (g.FontSize / g.Font->FontSize); }
-static c_int     STB_TEXTEDIT_KEYTOTEXT(key: c_int)                                                    { return if key >= 0x200000 { 0} else {key}; }
-static let STB_TEXTEDIT_NEWLINE: ImWchar = '\n';
-pub unsafe fn STB_TEXTEDIT_LAYOUTROW(*mut StbTexteditRow r, *mut ImGuiInputTextState obj, line_start_idx: c_int)
+pub fn STB_TEXTEDIT_STRINGLEN(obj: &ImGuiInputTextState) -> c_int {
+    return obj.CurLenW;
+}
+
+
+pub fn STB_TEXTEDIT_GETCHAR(obj: &ImGuiInputTextState, idx: c_int) -> char {
+    return obj.TextW[idx];
+}
+
+pub unsafe fn STB_TEXTEDIT_GETWIDTH(obj: &mut ImGuiInputTextState,
+                                    line_start_idx: c_int,
+                                    char_idx: c_int) -> c_float {
+    let c = obj.TextW[line_start_idx + char_idx];
+    if c == '\n' { return STB_TEXTEDIT_GETWIDTH_NEWLINE; }
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    return g.Font.GetCharAdvance(c) * (g.FontSize / g.Font.FontSize);
+}
+
+pub fn STB_TEXTEDIT_KEYTOTEXT(key: c_int) -> c_int { return if key >= 0x200000 { 0} else {key}; }
+
+pub const STB_TEXTEDIT_NEWLINE: char = '\n';
+
+pub unsafe fn STB_TEXTEDIT_LAYOUTROW(r: &mut StbTexteditRow,
+                                     obj: &mut ImGuiInputTextState,
+                                     line_start_idx: c_int)
 {
     let text: *const ImWchar = obj.TextW.Data;
     let text_remaining: *const ImWchar= null_mut();
-    let size: ImVec2 = InputTextCalcTextSizeW(text + line_start_idx, text + obj->CurLenW, &text_remaining, null_mut(), true);
-    r->x0 = 0.0;
-    r->x1 = size.x;
-    r->baseline_y_delta = size.y;
-    r->ymin = 0.0;
-    r->ymax = size.y;
-    r->num_chars = (text_remaining - (text + line_start_idx));
+    let size: ImVec2 = InputTextCalcTextSizeW(text + line_start_idx, text + obj.CurLenW, &text_remaining, null_mut(), true);
+    r.x0 = 0.0;
+    r.x1 = size.x;
+    r.baseline_y_delta = size.y;
+    r.ymin = 0.0;
+    r.ymax = size.y;
+    r.num_chars = (text_remaining - (text + line_start_idx));
 }
 
 // When ImGuiInputTextFlags_Password is set, we don't want actions such as CTRL+Arrow to leak the fact that underlying data are blanks or separators.
 pub unsafe fn is_separator(c: c_uint)                                        { return ImCharIsBlankW(c) || c==',' || c==';' || c=='(' || c==') -> bool' || c=='{' || c=='}' || c=='[' || c==']' || c=='|' || c=='\n' || c=='\r'; }
-static c_int  is_word_boundary_from_right(*mut ImGuiInputTextState obj, idx: c_int)      { if obj.Flags & ImGuiInputTextFlags_Password { return  0; } return if idx > 0 { (is_separator(obj.TextW[idx - 1]) & & ! is_separator(obj.TextW[idx]) )} else {1}; }
-static c_int  is_word_boundary_from_left(*mut ImGuiInputTextState obj, idx: c_int)       { if obj.Flags & ImGuiInputTextFlags_Password { return  0; } return if idx > 0 { ( ! is_separator(obj.TextW[idx - 1]) & & is_separator(obj.TextW[idx]))} else {1}; }
-static c_int  STB_TEXTEDIT_MOVEWORDLEFT_IMPL(*mut ImGuiInputTextState obj, idx: c_int)   { idx-= 1; while (idx >= 0 && !is_word_boundary_from_right(obj, idx)) idx-= 1; return if idx < 0 { 0} else {idx}; }
-static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_MAC(*mut ImGuiInputTextState obj, idx: c_int)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_left(obj, idx)) idx+= 1; return if idx > len { len} else {idx}; }
-static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(*mut ImGuiInputTextState obj, idx: c_int)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx+= 1; return if idx > len { len} else {idx}; }
-static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(*mut ImGuiInputTextState obj, idx: c_int)  { if (GetIO().ConfigMacOSXBehaviors) return STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx); else return STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx); }
+static c_int  is_word_boundary_from_right(obj: &mut ImGuiInputTextState, idx: c_int)      { if obj.Flags & ImGuiInputTextFlags_Password { return  0; } return if idx > 0 { (is_separator(obj.TextW[idx - 1]) & & ! is_separator(obj.TextW[idx]) )} else {1}; }
+static c_int  is_word_boundary_from_left(obj: &mut ImGuiInputTextState, idx: c_int)       { if obj.Flags & ImGuiInputTextFlags_Password { return  0; } return if idx > 0 { ( ! is_separator(obj.TextW[idx - 1]) & & is_separator(obj.TextW[idx]))} else {1}; }
+static c_int  STB_TEXTEDIT_MOVEWORDLEFT_IMPL(obj: &mut ImGuiInputTextState, idx: c_int)   { idx-= 1; while (idx >= 0 && !is_word_boundary_from_right(obj, idx)) idx-= 1; return if idx < 0 { 0} else {idx}; }
+static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj: &mut ImGuiInputTextState, idx: c_int)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_left(obj, idx)) idx+= 1; return if idx > len { len} else {idx}; }
+static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj: &mut ImGuiInputTextState, idx: c_int)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx+= 1; return if idx > len { len} else {idx}; }
+static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(obj: &mut ImGuiInputTextState, idx: c_int)  { if (GetIO().ConfigMacOSXBehaviors) return STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx); else return STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx); }
 // #define STB_TEXTEDIT_MOVEWORDLEFT   STB_TEXTEDIT_MOVEWORDLEFT_IMPL  // They need to be #define for stb_textedit.h
 // #define STB_TEXTEDIT_MOVEWORDRIGHT  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL
 
-pub unsafe fn STB_TEXTEDIT_DELETECHARS(*mut ImGuiInputTextState obj, pos: c_int, n: c_int)
+pub unsafe fn STB_TEXTEDIT_DELETECHARS(obj: &mut ImGuiInputTextState, pos: c_int, n: c_int)
 {
     *mut let dst: ImWchar = obj.TextW.Data + pos;
 
@@ -657,7 +683,7 @@ pub unsafe fn STB_TEXTEDIT_DELETECHARS(*mut ImGuiInputTextState obj, pos: c_int,
     *dst = '\0';
 }
 
-pub unsafe fn STB_TEXTEDIT_INSERTCHARS(*mut ImGuiInputTextState obj, pos: c_int, new_text: *const ImWchar, new_text_len: c_int) -> bool
+pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: &mut ImGuiInputTextState, pos: c_int, new_text: *const ImWchar, new_text_len: c_int) -> bool
 {
     let is_resizable: bool = flag_set(obj.Flags, ImGuiInputTextFlags_CallbackResize) != 0;
     let text_len: c_int = obj->CurLenW;
@@ -711,7 +737,7 @@ pub unsafe fn STB_TEXTEDIT_INSERTCHARS(*mut ImGuiInputTextState obj, pos: c_int,
 
 // stb_textedit internally allows for a single undo record to do addition and deletion, but somehow, calling
 // the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
-pub unsafe fn stb_textedit_replace(*mut ImGuiInputTextState str, *mut STB_TexteditState state, *const text: STB_TEXTEDIT_CHARTYPE, text_len: c_int)
+pub unsafe fn stb_textedit_replace(str: &mut ImGuiInputTextState, &mut STB_TexteditState state, *const text: STB_TEXTEDIT_CHARTYPE, text_len: c_int)
 {
     stb_text_makeundo_replace(str, state, 0, str->CurLenW, text_len);
     ImStb::STB_TEXTEDIT_DELETECHARS(str, 0, str->CurLenW);
@@ -725,7 +751,7 @@ pub unsafe fn stb_textedit_replace(*mut ImGuiInputTextState str, *mut STB_Texted
     // IM_ASSERT(0); // Failed to insert character, normally shouldn't happen because of how we currently use stb_textedit_replace()
 }
 
-} // namespace ImStb
+// } // namespace ImStb
 
 c_void ImGuiInputTextState::OnKeyPressed(key: c_int)
 {
@@ -770,7 +796,7 @@ c_void ImGuiInputTextCallbackData::InsertChars(pos: c_int, new_text: &str, new_t
 
         // Contrary to STB_TEXTEDIT_INSERTCHARS() this is working in the UTF8 buffer, hence the mildly similar code (until we remove the U16 buffer altogether!)
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        *mut ImGuiInputTextState edit_state = &g.InputTextState;
+        edit_state: &mut ImGuiInputTextState = &g.InputTextState;
         // IM_ASSERT(edit_state.ID != 0 && g.ActiveId == edit_state.ID);
         // IM_ASSERT(Buf == edit_state->TextA.Data);
         let new_buf_size: c_int = BufTextLen + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1;
@@ -882,7 +908,7 @@ pub unsafe fn InputTextFilterCharacter(*mut p_char: c_uint, flags: ImGuiInputTex
 // Find the shortest single replacement we can make to get the new text from the old text.
 // Important: needs to be run before TextW is rewritten with the new characters because calling STB_TEXTEDIT_GETCHAR() at the end.
 // FIXME: Ideally we should transition toward (1) making InsertChars()/DeleteChars() update undo-stack (2) discourage (and keep reconcile) or obsolete (and remove reconcile) accessing buffer directly.
-pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(*mut ImGuiInputTextState state, new_buf_a: &str, new_length_a: c_int)
+pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(state: &mut ImGuiInputTextState, new_buf_a: &str, new_length_a: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let old_buf: *const ImWchar = state.TextW.Data;
@@ -1011,7 +1037,7 @@ pub unsafe fn InputTextEx(label: &str,
         g.MouseCursor = ImGuiMouseCursor_TextInput;}
 
     // We are only allowed to access the state if we are already the active widget.
-    *mut ImGuiInputTextState state = GetInputTextState(id);
+    state: &mut ImGuiInputTextState = GetInputTextState(id);
 
     let input_requested_by_tabbing: bool = (item_status_flags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
     let input_requested_by_nav: bool = (g.ActiveId != id) && ((g.NavActivateInputId == id) || (g.NavActivateId == id && g.NavInputSource == ImGuiInputSource_Keyboard));
@@ -1816,11 +1842,11 @@ pub unsafe fn InputTextEx(label: &str,
         return value_changed;
 }
 
-pub unsafe fn DebugNodeInputTextState(*mut ImGuiInputTextState state)
+pub unsafe fn DebugNodeInputTextState(state: &mut ImGuiInputTextState)
 {
 // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    ImStb::*mut STB_TexteditState stb_state = &state.Stb;
+    ImStb::&mut STB_TexteditState stb_state = &state.Stb;
     ImStb::*mut StbUndoState undo_state = &stb_state.undostate;
     text_ops::Text("ID: 0x%08X, ActiveID: 0x%08X", state.ID, g.ActiveId);
     text_ops::Text("CurLenW: %d, CurLenA: %d, Cursor: %d, Selection: %d..%d", state.CurLenA, state.CurLenW, stb_state.cursor, stb_state.select_start, stb_state.select_end);

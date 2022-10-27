@@ -201,13 +201,13 @@
 //
 // API
 //
-//    void stb_textedit_initialize_state(state: *mut STB_TexteditState, int is_single_line)
+//    void stb_textedit_initialize_state(state: &mut STB_TexteditState, int is_single_line)
 //
-//    void stb_textedit_click(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, float x, float y)
-//    void stb_textedit_drag(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, float x, float y)
-//    int  stb_textedit_cut(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState)
-//    int  stb_textedit_paste(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, text: *mut STB_TEXTEDIT_CHARTYPE, int len)
-//    void stb_textedit_key(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, STB_TEXEDIT_KEYTYPE key)
+//    void stb_textedit_click(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, float x, float y)
+//    void stb_textedit_drag(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, float x, float y)
+//    int  stb_textedit_cut(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState)
+//    int  stb_textedit_paste(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, text: &mut STB_TEXTEDIT_CHARTYPE, int len)
+//    void stb_textedit_key(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, STB_TEXEDIT_KEYTYPE key)
 //
 //    Each of these functions potentially updates the string and updates the
 //    state.
@@ -288,6 +288,10 @@
 
 use std::ptr::null_mut;
 use libc::{c_char, c_float, c_int, c_short, c_uchar, size_t};
+use crate::a_widgets::{STB_TEXTEDIT_DELETECHARS, STB_TEXTEDIT_GETCHAR, STB_TEXTEDIT_GETWIDTH, STB_TEXTEDIT_INSERTCHARS, STB_TEXTEDIT_LAYOUTROW, STB_TEXTEDIT_NEWLINE, STB_TEXTEDIT_STRINGLEN};
+use crate::input_text_state::ImGuiInputTextState;
+use crate::stb::stb_find_state::StbFindState;
+use crate::stb::stb_text_edit_state::STB_TexteditState;
 use crate::stb_find_state::StbFindState;
 use crate::stb_text_edit_state::STB_TexteditState;
 use crate::stb_undo_record::StbUndoRecord;
@@ -305,7 +309,7 @@ pub const STB_TEXTEDIT_UNDOCHARCOUNT: usize = 999;
 // #ifndef STB_TEXTEDIT_CHARTYPE
 // #define STB_TEXTEDIT_CHARTYPE        int
 // #endif
-pub type STB_TEXTEDIT_CHARTYPE = c_int;
+pub type STB_TEXTEDIT_CHARTYPE = char;
 
 // #ifndef STB_TEXTEDIT_POSITIONTYPE
 // #define STB_TEXTEDIT_POSITIONTYPE    int
@@ -313,12 +317,7 @@ pub type STB_TEXTEDIT_CHARTYPE = c_int;
 pub type STB_TEXTEDIT_POSITIONTYPE  = c_int;
 
 
-
-
-
-
-
-
+pub type STB_TEXTEDIT_STRING = String;
 
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
@@ -344,7 +343,7 @@ pub type STB_TEXTEDIT_POSITIONTYPE  = c_int;
 //
 
 // traverse the layout to locate the nearest character to a display position
-pub fn stb_text_locate_coord(str_var: *mut STB_TEXTEDIT_STRING, x: c_float, y: c_float) -> c_int {
+pub unsafe fn stb_text_locate_coord(str_var: &mut ImGuiInputTextState, x: c_float, y: c_float) -> c_int {
     let mut r = StbTexteditRow::default();
     let n: c_int = STB_TEXTEDIT_STRINGLEN(str_var);
     let mut base_y: c_float = 0.0;
@@ -360,7 +359,7 @@ pub fn stb_text_locate_coord(str_var: *mut STB_TEXTEDIT_STRING, x: c_float, y: c
 
     // search rows to find one that straddles 'y'
     while i < n {
-        STB_TEXTEDIT_LAYOUTROW(&r, str_var, i);
+        STB_TEXTEDIT_LAYOUTROW(&mut r, str_var, i);
         if r.num_chars <= 0 {
             return n;
         }
@@ -415,12 +414,15 @@ pub fn stb_text_locate_coord(str_var: *mut STB_TEXTEDIT_STRING, x: c_float, y: c
 }
 
 // API click: on mouse down, move the cursor to the clicked location, and reset the selection
-pub unsafe fn stb_textedit_click(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, x: c_float, mut y: c_float) {
+pub unsafe fn stb_textedit_click(str_var: &mut ImGuiInputTextState,
+                                 state: &mut STB_TexteditState,
+                                 x: c_float,
+                                 mut y: c_float) {
     // In single-line mode, just always make y = 0. This lets the drag keep working if the mouse
     // goes off the top or bottom of the text
     if state.single_line {
         let mut r = StbTexteditRow::default();
-        STB_TEXTEDIT_LAYOUTROW(&r, str_var, 0);
+        STB_TEXTEDIT_LAYOUTROW(&mut r, str_var, 0);
         y = r.ymin;
     }
 
@@ -431,18 +433,18 @@ pub unsafe fn stb_textedit_click(str_var: *mut STB_TEXTEDIT_STRING, state: *mut 
 }
 
 // API drag: on mouse drag, move the cursor and selection endpoint to the clicked location
-pub unsafe fn stb_textedit_drag(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, x: c_float, mut y: c_float) {
+pub unsafe fn stb_textedit_drag(str_var: &mut ImGuiInputTextState, state: &mut STB_TexteditState, x: c_float, mut y: c_float) {
     let mut p: c_int = 0;
 
     // In single-line mode, just always make y = 0. This lets the drag keep working if the mouse
     // goes off the top or bottom of the text
-    if (state.single_line) {
+    if state.single_line {
         let mut r = StbTexteditRow::default();
-        STB_TEXTEDIT_LAYOUTROW(&r, str_var, 0);
+        STB_TEXTEDIT_LAYOUTROW(&mut r, str_var, 0);
         y = r.ymin;
     }
 
-    if (state.select_start == state.select_end) {
+    if state.select_start == state.select_end {
         state.select_start = state.cursor;
     }
 
@@ -460,7 +462,10 @@ pub unsafe fn stb_textedit_drag(str_var: *mut STB_TEXTEDIT_STRING, state: *mut S
 
 // find the x/y location of a character, and remember info about the previous row in
 // case we get a move-up event (for page up, we'll have to rescan)
-pub fn stb_textedit_find_charpos(find: *mut StbFindState, str_var: *mut STB_TEXTEDIT_STRING, n: c_int, single_line: c_int) {
+pub unsafe fn stb_textedit_find_charpos(find: &mut StbFindState,
+                                 str_var: &mut ImGuiInputTextState,
+                                 n: c_int,
+                                 single_line: c_int) {
     let mut r = StbTexteditRow::default();
     let mut prev_start: c_int = 0;
     let z: c_int = STB_TEXTEDIT_STRINGLEN(str_var);
@@ -471,7 +476,7 @@ pub fn stb_textedit_find_charpos(find: *mut StbFindState, str_var: *mut STB_TEXT
         // if it's at the end, then find the last line -- simpler than trying to
         // explicitly handle this case in the regular code
         if single_line {
-            STB_TEXTEDIT_LAYOUTROW(&r, str_var, 0);
+            STB_TEXTEDIT_LAYOUTROW(&mut r, str_var, 0);
             find.y = 0.0;
             find.first_char = 0;
             find.length = z;
@@ -482,7 +487,7 @@ pub fn stb_textedit_find_charpos(find: *mut StbFindState, str_var: *mut STB_TEXT
             find.x = 0.0;
             find.height = 1.0;
             while i < z {
-                STB_TEXTEDIT_LAYOUTROW(&r, str_var, i);
+                STB_TEXTEDIT_LAYOUTROW(&mut r, str_var, i);
                 prev_start = i;
                 i += r.num_chars;
             }
@@ -497,8 +502,8 @@ pub fn stb_textedit_find_charpos(find: *mut StbFindState, str_var: *mut STB_TEXT
     find.y = 0.0;
 
     loop {
-        STB_TEXTEDIT_LAYOUTROW(&r, str_var, i);
-        if (n < i + r.num_chars) {
+        STB_TEXTEDIT_LAYOUTROW(&mut r, str_var, i);
+        if n < i + r.num_chars {
             break;
         }
         prev_start = i;
@@ -525,7 +530,7 @@ pub fn stb_textedit_find_charpos(find: *mut StbFindState, str_var: *mut STB_TEXT
 // #define STB_TEXT_HAS_SELECTION(s)   ((s)->select_start != (s)->select_end)
 
 // make the selection/cursor state valid if client altered the string
-pub fn stb_textedit_clamp(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState) {
+pub fn stb_textedit_clamp(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState) {
     let n: c_int = STB_TEXTEDIT_STRINGLEN(str_var);
     if STB_TEXT_HAS_SELECTION(state) {
         if state.select_start > n { state.select_start = n; }
@@ -539,7 +544,7 @@ pub fn stb_textedit_clamp(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_Tex
 }
 
 // delete characters while updating undo
-pub unsafe fn stb_textedit_delete(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, stb_where_int: c_int, len: c_int)
+pub unsafe fn stb_textedit_delete(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, stb_where_int: c_int, len: c_int)
 {
    stb_text_makeundo_delete(str_var, state, stb_where_int, len);
    STB_TEXTEDIT_DELETECHARS(str_var, stb_where_int, len);
@@ -547,7 +552,7 @@ pub unsafe fn stb_textedit_delete(str_var: *mut STB_TEXTEDIT_STRING, state: *mut
 }
 
 // delete the section
-pub unsafe fn stb_textedit_delete_selection(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState) {
+pub unsafe fn stb_textedit_delete_selection(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState) {
     stb_textedit_clamp(str_var, state);
     if STB_TEXT_HAS_SELECTION(state) {
         if state.select_start < state.select_end {
@@ -564,7 +569,7 @@ pub unsafe fn stb_textedit_delete_selection(str_var: *mut STB_TEXTEDIT_STRING, s
 }
 
 // canoncialize the selection so start <= end
-pub unsafe fn stb_textedit_sortselection(state: *mut STB_TexteditState) {
+pub unsafe fn stb_textedit_sortselection(state: &mut STB_TexteditState) {
     if state.select_end < state.select_start {
         let temp: c_int = state.select_end;
         state.select_end = state.select_start;
@@ -573,7 +578,7 @@ pub unsafe fn stb_textedit_sortselection(state: *mut STB_TexteditState) {
 }
 
 // move cursor to first character of selection
-pub unsafe fn stb_textedit_move_to_first(state: *mut STB_TexteditState) {
+pub unsafe fn stb_textedit_move_to_first(state: &mut STB_TexteditState) {
     if STB_TEXT_HAS_SELECTION(state) {
         stb_textedit_sortselection(state);
         state.cursor = state.select_start;
@@ -583,7 +588,7 @@ pub unsafe fn stb_textedit_move_to_first(state: *mut STB_TexteditState) {
 }
 
 // move cursor to last character of selection
-pub unsafe fn stb_textedit_move_to_last(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState) {
+pub unsafe fn stb_textedit_move_to_last(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState) {
     if STB_TEXT_HAS_SELECTION(state) {
         stb_textedit_sortselection(state);
         stb_textedit_clamp(str_var, state);
@@ -594,7 +599,7 @@ pub unsafe fn stb_textedit_move_to_last(str_var: *mut STB_TEXTEDIT_STRING, state
 }
 
 // #ifdef STB_TEXTEDIT_IS_SPACE
-pub fn is_word_boundary(str_var: *mut STB_TEXTEDIT_STRING, idx: c_int) -> bool {
+pub fn is_word_boundary(str_var: &mut STB_TEXTEDIT_STRING, idx: c_int) -> bool {
     return if idx > 0 {
         STB_TEXTEDIT_IS_SPACE(STB_TEXTEDIT_GETCHAR(str_var, idx - 1))
         && !STB_TEXTEDIT_IS_SPACE(STB_TEXTEDIT_GETCHAR(str_var, idx)) }
@@ -604,7 +609,7 @@ pub fn is_word_boundary(str_var: *mut STB_TEXTEDIT_STRING, idx: c_int) -> bool {
 }
 
 // #ifndef STB_TEXTEDIT_MOVEWORDLEFT
-pub fn stb_textedit_move_to_word_previous(str_var: *mut STB_TEXTEDIT_STRING, mut c: c_int) -> c_int {
+pub fn stb_textedit_move_to_word_previous(str_var: &mut STB_TEXTEDIT_STRING, mut c: c_int) -> c_int {
     c -= 1; // always move at least one character
     while c >= 0 && !is_word_boundary(str_var, c) {
         c -= 1;
@@ -620,7 +625,7 @@ pub fn stb_textedit_move_to_word_previous(str_var: *mut STB_TEXTEDIT_STRING, mut
 // #endif
 
 // #ifndef STB_TEXTEDIT_MOVEWORDRIGHT
-pub fn stb_textedit_move_to_word_next( str_var: *mut STB_TEXTEDIT_STRING, mut c: c_int ) -> c_int
+pub fn stb_textedit_move_to_word_next( str_var: &mut STB_TEXTEDIT_STRING, mut c: c_int ) -> c_int
 {
    let len: c_int = STB_TEXTEDIT_STRINGLEN(str_var);
    c += 1; // always move at least one character
@@ -640,7 +645,7 @@ pub fn stb_textedit_move_to_word_next( str_var: *mut STB_TEXTEDIT_STRING, mut c:
 // #endif
 
 // update selection and cursor to match each other
-pub unsafe fn stb_textedit_prep_selection_at_cursor(state: *mut STB_TexteditState) {
+pub unsafe fn stb_textedit_prep_selection_at_cursor(state: &mut STB_TexteditState) {
     if !STB_TEXT_HAS_SELECTION(state) {
         state.select_start = state.cursor;
         state.select_end = state.cursor;
@@ -650,7 +655,7 @@ pub unsafe fn stb_textedit_prep_selection_at_cursor(state: *mut STB_TexteditStat
 }
 
 // API cut: delete selection
-pub unsafe fn stb_textedit_cut(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState) -> bool
+pub unsafe fn stb_textedit_cut(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState) -> bool
 {
    if STB_TEXT_HAS_SELECTION(state) {
       stb_textedit_delete_selection(str_var,state); // implicitly clamps
@@ -661,9 +666,9 @@ pub unsafe fn stb_textedit_cut(str_var: *mut STB_TEXTEDIT_STRING, state: *mut ST
 }
 
 // API paste: replace existing selection with passed-in text
-pub unsafe fn stb_textedit_paste_internal(str_var: *mut STB_TEXTEDIT_STRING,
-                                   state: *mut STB_TexteditState,
-                                   text: *mut STB_TEXTEDIT_CHARTYPE,
+pub unsafe fn stb_textedit_paste_internal(str_var: &mut STB_TEXTEDIT_STRING,
+                                   state: &mut STB_TexteditState,
+                                   text: &mut STB_TEXTEDIT_CHARTYPE,
                                    len: c_int) -> bool
 {
    // if there's a selection, the paste should delete it
@@ -685,7 +690,7 @@ pub unsafe fn stb_textedit_paste_internal(str_var: *mut STB_TEXTEDIT_STRING,
 // #endif
 
 // API key: process a keyboard input
-pub unsafe fn stb_textedit_key(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, key: STB_TEXTEDIT_KEYTYPE)
+pub unsafe fn stb_textedit_key(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, key: STB_TEXTEDIT_KEYTYPE)
 {
 // retry:
    match key {
@@ -1237,7 +1242,7 @@ pub unsafe fn stb_text_create_undo_record(state: *mut StbUndoState, numchars: c_
     return out;
 }
 
-pub unsafe fn stb_text_createundo(state: *mut StbUndoState, pos: c_int, insert_len: c_int, delete_len: c_int) -> *mut STB_TEXTEDIT_CHARTYPE {
+pub unsafe fn stb_text_createundo(state: *mut StbUndoState, pos: c_int, insert_len: c_int, delete_len: c_int) -> &mut STB_TEXTEDIT_CHARTYPE {
     let mut r: *mut StbUndoRecord = stb_text_create_undo_record(state, insert_len);
     if r == null_mut() {
         return null_mut();
@@ -1257,7 +1262,7 @@ pub unsafe fn stb_text_createundo(state: *mut StbUndoState, pos: c_int, insert_l
     };
 }
 
-pub unsafe fn stb_text_undo(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState) {
+pub unsafe fn stb_text_undo(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState) {
     let s: *mut StbUndoState = &mut state.undostate;
     // StbUndoRecord u, *r;
     let mut u: StbUndoRecord = StbUndoRecord::defualt();
@@ -1330,7 +1335,7 @@ pub unsafe fn stb_text_undo(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_T
     s.redo_point -= 1;
 }
 
-pub unsafe fn stb_text_redo(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState) {
+pub unsafe fn stb_text_redo(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState) {
     let mut s: *mut StbUndoState = &mut state.undostate;
     let mut u: *mut StbUndoRecord = null_mut();
     let mut r: *mut StbUndoRecord = null_mut();
@@ -1384,15 +1389,15 @@ pub unsafe fn stb_text_redo(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_T
     s.redo_point += 1;
 }
 
-pub unsafe fn stb_text_makeundo_insert(state: *mut STB_TexteditState, stb_where: c_int, length: c_int)
+pub unsafe fn stb_text_makeundo_insert(state: &mut STB_TexteditState, stb_where: c_int, length: c_int)
 {
    stb_text_createundo(&mut state.undostate, stb_where, 0, length);
 }
 
-pub unsafe fn stb_text_makeundo_delete(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, stb_where: c_int, length: c_int)
+pub unsafe fn stb_text_makeundo_delete(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, stb_where: c_int, length: c_int)
 {
    let mut i: c_int = 0;
-   p: *mut STB_TEXTEDIT_CHARTYPE = stb_text_createundo(&mut state.undostate, stb_where, length, 0);
+   p: &mut STB_TEXTEDIT_CHARTYPE = stb_text_createundo(&mut state.undostate, stb_where, length, 0);
    if p {
       // for (i=0; i < length; ++i)
       for i in 0 .. length
@@ -1402,10 +1407,10 @@ pub unsafe fn stb_text_makeundo_delete(str_var: *mut STB_TEXTEDIT_STRING, state:
    }
 }
 
-pub unsafe fn stb_text_makeundo_replace(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, stb_where: c_int, old_length: c_int, new_length: c_int)
+pub unsafe fn stb_text_makeundo_replace(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, stb_where: c_int, old_length: c_int, new_length: c_int)
 {
    let mut i: c_int = 0;
-   p: *mut STB_TEXTEDIT_CHARTYPE = stb_text_createundo(&mut state.undostate, stb_where, old_length, new_length);
+   p: &mut STB_TEXTEDIT_CHARTYPE = stb_text_createundo(&mut state.undostate, stb_where, old_length, new_length);
    if p {
       // for (i=0; i < old_length; ++i)
       for i in 0 .. old_length
@@ -1416,7 +1421,7 @@ pub unsafe fn stb_text_makeundo_replace(str_var: *mut STB_TEXTEDIT_STRING, state
 }
 
 // reset the state to default
-pub unsafe fn stb_textedit_clear_state(state: *mut STB_TexteditState, is_single_line: c_int) {
+pub unsafe fn stb_textedit_clear_state(state: &mut STB_TexteditState, is_single_line: c_int) {
     state.undostate.undo_point = 0;
     state.undostate.undo_char_point = 0;
     state.undostate.redo_point = STB_TEXTEDIT_UNDOSTATECOUNT as c_short;
@@ -1434,7 +1439,7 @@ pub unsafe fn stb_textedit_clear_state(state: *mut STB_TexteditState, is_single_
 }
 
 // API initialize
-pub unsafe fn stb_textedit_initialize_state(state: *mut STB_TexteditState, is_single_line: c_int)
+pub unsafe fn stb_textedit_initialize_state(state: &mut STB_TexteditState, is_single_line: c_int)
 {
    stb_textedit_clear_state(state, is_single_line);
 }
@@ -1444,7 +1449,7 @@ pub unsafe fn stb_textedit_initialize_state(state: *mut STB_TexteditState, is_si
 // #pragma GCC diagnostic ignored "-Wcast-qual"
 // #endif
 
-pub unsafe fn stb_textedit_paste(str_var: *mut STB_TEXTEDIT_STRING, state: *mut STB_TexteditState, ctext: *mut STB_TEXTEDIT_CHARTYPE, len: c_int) -> bool
+pub unsafe fn stb_textedit_paste(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, ctext: &mut STB_TEXTEDIT_CHARTYPE, len: c_int) -> bool
 {
    return stb_textedit_paste_internal(str_var, state, ctext, len);
 }

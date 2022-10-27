@@ -3,6 +3,8 @@
 use libc::{c_float, c_int};
 use crate::input_text_flags::ImGuiInputTextFlags;
 use crate::math_ops::ImMin;
+use crate::stb::stb_text_edit_state::STB_TexteditState;
+use crate::stb::stb_textedit::STB_TEXTEDIT_UNDOSTATECOUNT;
 use crate::type_defs::{ImGuiID, ImWchar};
 use crate::stb_text_edit_state::STB_TexteditState;
 use crate::stb_textedit::STB_TEXTEDIT_UNDOSTATECOUNT;
@@ -16,7 +18,7 @@ pub struct ImGuiInputTextState {
 // c_int                     CurLenW, CurLenA;       // we need to maintain our buffer length in both UTF-8 and wchar format. UTF-8 length is valid even if TextA is not.
     pub CurLenW: c_int,
     pub CurLenA: c_int,
-    pub TextW: Vec<ImWchar>,
+    pub TextW: Vec<u8>,
     // edit buffer, we need to persist but can't guarantee the persistence of the user-provided buffer. so we copy into own buffer.
     pub TextA: Vec<char>,
     // temporary UTF8 buffer for callbacks and other operations. this is not updated in every code-path! size=capacity.
