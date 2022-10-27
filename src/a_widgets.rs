@@ -169,6 +169,7 @@ use crate::settings_ops::MarkIniSettingsDirty;
 use crate::shade_verts_ops::ShadeVertsLinearColorGradientKeepAlpha;
 use crate::shrink_width_item::ImGuiShrinkWidthItem;
 use crate::slider_flags::{ImGuiSliderFlags, ImGuiSliderFlags_AlwaysClamp, ImGuiSliderFlags_Logarithmic, ImGuiSliderFlags_NoInput, ImGuiSliderFlags_NoRoundToFormat, ImGuiSliderFlags_ReadOnly, ImGuiSliderFlags_Vertical};
+use crate::stb::stb_text_edit_row::StbTexteditRow;
 use crate::stb::stb_text_edit_state::STB_TexteditState;
 use crate::stb::stb_textedit::{stb_text_createundo, STB_TEXTEDIT_CHARTYPE, stb_textedit_click, stb_textedit_cut, stb_textedit_drag, stb_textedit_initialize_state, stb_textedit_paste};
 use crate::stb::stb_undo_record::StbUndoRecord;
@@ -561,7 +562,7 @@ pub fn InputTextCalcTextLenAndLineCount(text_begin: &String, out_text_end: &mut 
 pub unsafe fn InputTextCalcTextSizeW(
     text_begin: &String,
     remaining: &mut usize,
-    out_offset: &mut ImVec2,
+    out_offset: Option<&mut ImVec2>,
     stop_on_new_line: bool) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -643,11 +644,10 @@ pub const STB_TEXTEDIT_NEWLINE: char = '\n';
 
 pub unsafe fn STB_TEXTEDIT_LAYOUTROW(r: &mut StbTexteditRow,
                                      obj: &mut ImGuiInputTextState,
-                                     line_start_idx: c_int)
-{
+                                     line_start_idx: c_int) {
     let text: *const ImWchar = obj.TextW.Data;
-    let text_remaining: *const ImWchar= null_mut();
-    let size: ImVec2 = InputTextCalcTextSizeW(text + line_start_idx, text + obj.CurLenW, &text_remaining, null_mut(), true);
+    let mut text_remaining: usize = 0;
+    let size: ImVec2 = InputTextCalcTextSizeW(text + line_start_idx, &mut text_remaining, None, true);
     r.x0 = 0.0;
     r.x1 = size.x;
     r.baseline_y_delta = size.y;
@@ -657,10 +657,20 @@ pub unsafe fn STB_TEXTEDIT_LAYOUTROW(r: &mut StbTexteditRow,
 }
 
 // When ImGuiInputTextFlags_Password is set, we don't want actions such as CTRL+Arrow to leak the fact that underlying data are blanks or separators.
-pub unsafe fn is_separator(c: c_uint)                                        { return ImCharIsBlankW(c) || c==',' || c==';' || c=='(' || c==') -> bool' || c=='{' || c=='}' || c=='[' || c==']' || c=='|' || c=='\n' || c=='\r'; }
-static c_int  is_word_boundary_from_right(obj: &mut ImGuiInputTextState, idx: c_int)      { if obj.Flags & ImGuiInputTextFlags_Password { return  0; } return if idx > 0 { (is_separator(obj.TextW[idx - 1]) & & ! is_separator(obj.TextW[idx]) )} else {1}; }
-static c_int  is_word_boundary_from_left(obj: &mut ImGuiInputTextState, idx: c_int)       { if obj.Flags & ImGuiInputTextFlags_Password { return  0; } return if idx > 0 { ( ! is_separator(obj.TextW[idx - 1]) & & is_separator(obj.TextW[idx]))} else {1}; }
-static c_int  STB_TEXTEDIT_MOVEWORDLEFT_IMPL(obj: &mut ImGuiInputTextState, idx: c_int)   { idx-= 1; while (idx >= 0 && !is_word_boundary_from_right(obj, idx)) idx-= 1; return if idx < 0 { 0} else {idx}; }
+pub unsafe fn is_separator(c: char) -> bool {
+    return ImCharIsBlankW(c) || c == ',' || c == ';' || c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '|' || c == '\n' || c == '\r';
+}
+
+pub unsafe fn is_word_boundary_from_right(obj: &mut ImGuiInputTextState, idx: c_int)  -> c_int     {
+    if obj.Flags & ImGuiInputTextFlags_Password { return  0; }
+    return if idx > 0 { (is_separator(obj.TextW[idx - 1]) & & ! is_separator(obj.TextW[idx]) )} else {1};
+}
+
+pub unsafe fn is_word_boundary_from_left(obj: &mut ImGuiInputTextState, idx: c_int) -> c_int {
+    if obj.Flags & ImGuiInputTextFlags_Password { return 0; }
+    return if idx > 0 { (!is_separator(obj.TextW[idx - 1]) & &is_separator(obj.TextW[idx])) } else { 1 };
+}
+static c_int  STB_TEXTEDIT_MOVEWORDLEFT_IMPL(obj: &mut ImGuiInputTextState, idx: c_int) -> c_int  { idx-= 1; while (idx >= 0 && !is_word_boundary_from_right(obj, idx)) idx-= 1; return if idx < 0 { 0} else {idx}; }
 static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj: &mut ImGuiInputTextState, idx: c_int)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_left(obj, idx)) idx+= 1; return if idx > len { len} else {idx}; }
 static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj: &mut ImGuiInputTextState, idx: c_int)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx+= 1; return if idx > len { len} else {idx}; }
 static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(obj: &mut ImGuiInputTextState, idx: c_int)  { if (GetIO().ConfigMacOSXBehaviors) return STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx); else return STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx); }

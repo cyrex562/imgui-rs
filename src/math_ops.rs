@@ -475,9 +475,9 @@ pub fn ImUpperPowerOfTwo(mut v: c_int) -> c_int {
     return v;
 }
 
-pub fn ImCharIsBlankA(c: c_char) -> bool {
-    return c == ' ' as c_char || c == '\t' as c_char;
-}
-pub fn ImCharIsBlankW(c: c_uint) -> bool {
-    return c == ' ' as c_uint || c == '\t' as c_uint || c == 0x3000;
+// pub fn ImCharIsBlankA(c: c_char) -> bool {
+//     return c == ' ' as c_char || c == '\t' as c_char;
+// }
+pub fn ImCharIsBlankW(c: char) -> bool {
+    return c == ' ' || c == '\t' || c == 0x3000;
 }

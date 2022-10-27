@@ -19,7 +19,7 @@
 use libc::{c_float, c_int};
 
 #[derive(Default,Debug,Copy,Clone)]
-pub struct StbTextEditRow {
+pub struct StbTexteditRow {
     pub x0: c_float,
     pub x1: c_float,
     pub baseline_y_delta: c_float,
