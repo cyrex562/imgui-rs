@@ -15,14 +15,21 @@ pub unsafe fn staticCalcScrollEdgeSnap(target: c_float,snap_min: c_float,snap_ma
 }
 
 use libc::c_float;
-use crate::GImGui;
-use crate::math_ops::{ImLerp, ImMax, ImMin};
+use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
+use crate::draw_flags::{ImDrawFlags, ImDrawFlags_RoundCornersBottomLeft, ImDrawFlags_RoundCornersBottomRight, ImDrawFlags_RoundCornersNone, ImDrawFlags_RoundCornersTopRight};
+use crate::{button_ops, GImGui};
+use crate::button_flags::ImGuiButtonFlags_NoNavFocus;
+use crate::color::{ImGuiCol_ScrollbarBg, ImGuiCol_ScrollbarGrab, ImGuiCol_ScrollbarGrabActive, ImGuiCol_ScrollbarGrabHovered};
+use crate::id_ops::{KeepAliveID, SetHoveredID};
+use crate::math_ops::{ImClamp, ImLerp, ImMax, ImMin};
 use crate::rect::ImRect;
 use crate::scroll_flags::{ImGuiScrollFlags, ImGuiScrollFlags_AlwaysCenterX, ImGuiScrollFlags_AlwaysCenterY, ImGuiScrollFlags_KeepVisibleCenterX, ImGuiScrollFlags_KeepVisibleCenterY, ImGuiScrollFlags_KeepVisibleEdgeX, ImGuiScrollFlags_KeepVisibleEdgeY, ImGuiScrollFlags_MaskX_, ImGuiScrollFlags_MaskY_, ImGuiScrollFlags_NoScrollParent};
+use crate::style_ops::GetColorU32;
+use crate::type_defs::ImGuiID;
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
-use crate::window::window_flags::ImGuiWindowFlags_ChildWindow;
+use crate::window::window_flags::{ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_NoTitleBar};
 
 // static CalcNextScrollFromScrollTargetAndClamp: ImVec2(window: *mut ImGuiWindow)
 pub unsafe fn CalcNextScrollFromScrollTargetAndClamp(window: *mut ImGuiWindow) -> ImVec2
@@ -270,4 +277,158 @@ pub unsafe fn SetScrollHereY(center_y_ratio: c_float)
 
     // Tweak: snap on edges when aiming at an item very close to the edge
     window.ScrollTargetEdgeSnapDist.y = ImMax(0.0, window.WindowPadding.y - spacing_y);
+}
+
+pub unsafe fn GetWindowScrollbarID(window: *mut ImGuiWindow, axis: ImGuiAxis) -> ImGuiID
+{
+    return window.id_from_str(if axis == ImGuiAxis_X { "#SCROLLX" } else { "#SCROLLY" });
+}
+
+// Return scrollbar rectangle, must only be called for corresponding axis if window.ScrollbarX/Y is set.
+pub unsafe fn GetWindowScrollbarRect(window: *mut ImGuiWindow, axis: ImGuiAxis) -> ImRect
+{
+    let outer_rect: ImRect =  window.Rect();
+    let inner_rect: ImRect =  window.InnerRect;
+    let border_size: c_float =  window.WindowBorderSize;
+    let scrollbar_size: c_float =  window.ScrollbarSizes[axis ^ 1]; // (ScrollbarSizes.x = width of Y scrollbar; ScrollbarSizes.y = height of X scrollbar)
+    // IM_ASSERT(scrollbar_size > 0.0);
+    if (axis == ImGuiAxis_X) {
+        return ImRect(inner_rect.Min.x, ImMax(outer_rect.Min.y, outer_rect.Max.y - border_size - scrollbar_size), inner_rect.Max.x, outer_rect.Max.y);
+    }
+    else {
+        return ImRect(ImMax(outer_rect.Min.x, outer_rect.Max.x - border_size - scrollbar_size), inner_rect.Min.y, outer_rect.Max.x, inner_rect.Max.y);
+    }
+}
+
+pub unsafe fn Scrollbar(axis: ImGuiAxis)
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut id: ImGuiID =  GetWindowScrollbarID(window, axis);
+
+    // Calculate scrollbar bounding box
+    let mut bb: ImRect =  GetWindowScrollbarRect(window, axis);
+    rounding_corners: ImDrawFlags = ImDrawFlags_RoundCornersNone;
+    if axis == ImGuiAxis_X
+    {
+        rounding_corners |= ImDrawFlags_RoundCornersBottomLeft;
+        if !window.ScrollbarY {
+            rounding_corners |= ImDrawFlags_RoundCornersBottomRight;
+        }
+    }
+    else
+    {
+        if flag_set(window.Flags , ImGuiWindowFlags_NoTitleBar) && flag_clear(window.Flags, ImGuiWindowFlags_MenuBar) {
+            rounding_corners |= ImDrawFlags_RoundCornersTopRight;
+        }
+        if !window.ScrollbarX {
+            rounding_corners |= ImDrawFlags_RoundCornersBottomRight;
+        }
+    }
+    let size_avail: c_float =  window.InnerRect.Max[axis] - window.InnerRect.Min[axis];
+    let size_contents: c_float =  window.ContentSize[axis] + window.WindowPadding[axis] * 2.0;
+    let scroll = window.Scroll[axis];
+    ScrollbarEx(&mut bb, id, axis, &mut scroll, size_avail as i64, size_contents as i64, rounding_corners);
+    window.Scroll[axis] = scroll;
+}
+
+// Vertical/Horizontal scrollbar
+// The entire piece of code below is rather confusing because:
+// - We handle absolute seeking (when first clicking outside the grab) and relative manipulation (afterward or when clicking inside the grab)
+// - We store values as normalized ratio and in a form that allows the window content to change while we are holding on a scrollbar
+// - We handle both horizontal and vertical scrollbars, which makes the terminology not ideal.
+// Still, the code should probably be made simpler..
+pub unsafe fn ScrollbarEx(bb_frame: &mut ImRect, id: ImGuiID, axis: ImGuiAxis, p_scroll_v: *mut i64, size_avail_v: i64, size_contents_v: i64, flags: ImDrawFlags) -> bool
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    if window.SkipItems { return  false; }
+
+    KeepAliveID(id);
+
+    let bb_frame_width: c_float =  bb_frame.GetWidth();
+    let bb_frame_height: c_float =  bb_frame.GetHeight();
+    if bb_frame_width <= 0.0 || bb_frame_height <= 0.0 { return  false; }
+
+    // When we are too small, start hiding and disabling the grab (this reduce visual noise on very small window and facilitate using the window resize grab)
+    let mut alpha: c_float =  1.0;
+    if (axis == ImGuiAxis_Y) && bb_frame_height < g.FontSize + g.Style.FramePadding.y * 2.0 {
+        alpha = ImSaturate((bb_frame_height - g.FontSize) / (g.Style.FramePadding.y * 2.0));
+    }
+    if alpha <= 0.0 { return  false; }
+
+    let setyle = &mut g.Style;
+    let allow_interaction: bool = (alpha >= 1.0);
+
+    let bb =  bb_frame;
+    bb.expand_from_vec(&ImVec2::from_floats(-ImClamp(IM_FLOOR((bb_frame_width - 2.0) * 0.5), 0.0, 3.0), -ImClamp(IM_FLOOR((bb_frame_height - 2.0) * 0.5), 0.0, 3.0)));
+
+    // V denote the main, longer axis of the scrollbar (= height for a vertical scrollbar)
+    let scrollbar_size_v: c_float =  if (axis == ImGuiAxis_X) { bb.GetWidth() } else { bb.GetHeight() };
+
+    // Calculate the height of our grabbable box. It generally represent the amount visible (vs the total scrollable amount)
+    // But we maintain a minimum size in pixel to allow for the user to still aim inside.
+    // IM_ASSERT(ImMax(size_contents_v, size_avail_v) > 0.0); // Adding this assert to check if the ImMax(XXX,1.0) is still needed. PLEASE CONTACT ME if this triggers.
+    let win_size_v = ImMax(ImMax(size_contents_v, size_avail_v), 1);
+    let grab_h_pixels: c_float =  ImClamp(scrollbar_size_v * (size_avail_v / win_size_v), style.GrabMinSize, scrollbar_size_v);
+    let grab_h_norm: c_float =  grab_h_pixels / scrollbar_size_v;
+
+    // Handle input right away. None of the code of Begin() is relying on scrolling position before calling Scrollbar().
+    let mut held: bool =  false;
+    let mut hovered: bool =  false;
+    button_ops::ButtonBehavior(bb, id, &mut hovered, &mut held, ImGuiButtonFlags_NoNavFocus);
+
+    let scroll_max = ImMax(1, size_contents_v - size_avail_v);
+    let mut scroll_ratio: c_float =  ImSaturate(*p_scroll_v / scroll_max);
+    let mut grab_v_norm: c_float =  scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v; // Grab position in normalized space
+    if (held && allow_interaction && grab_h_norm < 1.0)
+    {
+        let scrollbar_pos_v: c_float =  bb.Min[axis];
+        let mouse_pos_v: c_float =  g.IO.MousePos[axis];
+
+        // Click position in scrollbar normalized space (0.0->1.0)
+        let clicked_v_norm: c_float =  ImSaturate((mouse_pos_v - scrollbar_pos_v) / scrollbar_size_v);
+        SetHoveredID(id);
+
+        let mut seek_absolute: bool =  false;
+        if (g.ActiveIdIsJustActivated)
+        {
+            // On initial click calculate the distance between mouse and the center of the grab
+            seek_absolute = (clicked_v_norm < grab_v_norm || clicked_v_norm > grab_v_norm + grab_h_norm);
+            if seek_absolute{
+                g.ScrollbarClickDeltaToGrabCenter = 0.0;}
+            else {
+                g.ScrollbarClickDeltaToGrabCenter = clicked_v_norm - grab_v_norm - grab_h_norm * 0.5;
+            }
+        }
+
+        // Apply scroll (p_scroll_v will generally point on one member of window.Scroll)
+        // It is ok to modify Scroll here because we are being called in Begin() after the calculation of ContentSize and before setting up our starting position
+        let scroll_v_norm: c_float =  ImSaturate((clicked_v_norm - g.ScrollbarClickDeltaToGrabCenter - grab_h_norm * 0.5) / (1.0 - grab_h_norm));
+        *p_scroll_v = (scroll_v_norm * scroll_max);
+
+        // Update values for rendering
+        scroll_ratio = ImSaturate(*p_scroll_v / scroll_max);
+        grab_v_norm = scroll_ratio * (scrollbar_size_v - grab_h_pixels) / scrollbar_size_v;
+
+        // Update distance to grab now that we have seeked and saturated
+        if seek_absolute {
+            g.ScrollbarClickDeltaToGrabCenter = clicked_v_norm - grab_v_norm - grab_h_norm * 0.5;
+        }
+    }
+
+    // Render
+    bg_col: u32 = GetColorU32(ImGuiCol_ScrollbarBg, 0.0);
+    grab_col: u32 = GetColorU32(if held {ImGuiCol_ScrollbarGrabActive} else { if hovered { ImGuiCol_ScrollbarGrabHovered } else { ImGuiCol_ScrollbarGrab }}, alpha);
+    window.DrawList.AddRectFilled(&bb_frame.Min, &bb_frame.Max, bg_col, window.WindowRounding, flags);
+    let mut grab_rect: ImRect = ImRect::default();
+    if (axis == ImGuiAxis_X) {
+        grab_rect = ImRect(ImLerp(bb.Min.x, bb.Max.x, grab_v_norm), bb.Min.y, ImLerp(bb.Min.x, bb.Max.x, grab_v_norm) + grab_h_pixels, bb.Max.y);
+    }
+    else {
+        grab_rect = ImRect(bb.Min.x, ImLerp(bb.Min.y, bb.Max.y, grab_v_norm), bb.Max.x, ImLerp(bb.Min.y, bb.Max.y, grab_v_norm) + grab_h_pixels);
+    }
+    window.DrawList.AddRectFilled(&grab_rect.Min, &grab_rect.Max, grab_col, style.ScrollbarRounding, 0);
+
+    return held;
 }

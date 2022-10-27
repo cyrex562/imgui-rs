@@ -233,7 +233,17 @@ mod tables;
 mod merge_group;
 mod a_widgets;
 mod slider_ops;
-
+mod button_ops;
+mod image_ops;
+mod checkbox_ops;
+mod radio_button;
+mod progress_bar;
+mod bullet;
+mod separator;
+mod splitter;
+mod combo_box;
+mod data_type_ops;
+mod drag;
 
 // c_void Initialize()
 pub unsafe fn Initialize()

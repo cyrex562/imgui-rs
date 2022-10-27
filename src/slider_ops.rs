@@ -1,7 +1,7 @@
 use libc::{c_char, c_float, c_int, size_t};
 use std::ptr::{null, null_mut};
 use std::borrow::Borrow;
-use crate::a_widgets;
+use crate::{a_widgets, data_type_ops, text_ops};
 use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
 use crate::color::{ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered, ImGuiCol_SliderGrab, ImGuiCol_SliderGrabActive};
 use crate::data_type::{ImGuiDataType, ImGuiDataType_Double, ImGuiDataType_Float, ImGuiDataType_S32};
@@ -18,7 +18,7 @@ use crate::item_status_flags::ImGuiItemStatusFlags_FocusedByTabbing;
 use crate::key::{ImGuiKey_NavGamepadTweakFast, ImGuiKey_NavGamepadTweakSlow, ImGuiKey_NavKeyboardTweakFast, ImGuiKey_NavKeyboardTweakSlow};
 use crate::layout_ops::SameLine;
 use crate::logging_ops::LogSetNextTextDecoration;
-use crate::math_ops::{ImLerp, ImMax};
+use crate::math_ops::{ImLerp, ImMax, ImSwap};
 use crate::nav_ops::{GetNavTweakPressedAmount, SetFocusID};
 use crate::rect::ImRect;
 use crate::render_ops::{FindRenderedTextEnd, RenderFrame, RenderNavHighlight, RenderText, RenderTextClipped};
@@ -84,7 +84,7 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType
                 let mouse_abs_pos: c_float =  g.IO.MousePos[axis];
                 if g.ActiveIdIsJustActivated
                 {
-                    let mut grab_t: c_float =  a_widgets::ScaleRatioFromValueT(data_type, v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+                    let mut grab_t: c_float =  ScaleRatioFromValueT(data_type, v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
                     if axis == ImGuiAxis_Y {
                         grab_t = 1.0 - grab_t;
                     }
@@ -158,7 +158,7 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType
             }
             else if g.SliderCurrentAccumDirty
             {
-                clicked_t = a_widgets::ScaleRatioFromValueT(data_type, v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+                clicked_t = ScaleRatioFromValueT(data_type, v, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
 
                 if (clicked_t >= 1.0 && delta > 0.0) || (clicked_t <= 0.0 && delta < 0.0) // This is to avoid applying the saturation when already past the limits
                 {
@@ -172,11 +172,11 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType
                     clicked_t = ImSaturate(clicked_t + delta);
 
                     // Calculate what our "new" clicked_t will be, and thus how far we actually moved the slider, and subtract this from the accumulator
-                    let mut v_new = a_widgets::ScaleValueFromRatioT(data_type, clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+                    let mut v_new = ScaleValueFromRatioT(data_type, clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
                     if is_floating_point && flag_clear(flags, ImGuiSliderFlags_NoRoundToFormat) {
-                        v_new = a_widgets::RoundScalarWithFormatT(format, data_type, v_new);
+                        v_new = data_type_ops::RoundScalarWithFormatT(format, data_type, v_new);
                     }
-                    let new_clicked_t: c_float =  a_widgets::ScaleRatioFromValueT(data_type, &mut v_new, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+                    let new_clicked_t: c_float =  ScaleRatioFromValueT(data_type, &mut v_new, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
 
                     if delta > 0.0 as c_float {
                         g.SliderCurrentAccum -= (new_clicked_t - old_clicked_t).min(delta);
@@ -192,11 +192,11 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType
 
         if set_new_value
         {
-            let mut v_new = a_widgets::ScaleValueFromRatioT(data_type, clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+            let mut v_new = ScaleValueFromRatioT(data_type, clicked_t, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
 
             // Round to user desired precision based on format string
             if is_floating_point && flag_clear(flags, ImGuiSliderFlags_NoRoundToFormat) {
-                v_new = a_widgets::RoundScalarWithFormatT(format, data_type, v_new);
+                v_new = data_type_ops::RoundScalarWithFormatT(format, data_type, v_new);
             }
 
             // Apply result
@@ -215,7 +215,7 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType
     else
     {
         // Output grab position so it can be displayed by the caller
-        let mut grab_t: c_float =  a_widgets::ScaleRatioFromValueT(
+        let mut grab_t: c_float =  ScaleRatioFromValueT(
             data_type,
             v,
             v_min,
@@ -330,12 +330,12 @@ pub unsafe fn SliderScalar(label: &str,
 
     // Default format string when passing NULL
     if format == null_mut() {
-        *format = a_widgets::DataTypeGetInfo(data_type).PrintFmt;
+        *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
     }
 
     else if data_type == ImGuiDataType_S32 && format != String::from("%d") {
         // (FIXME-LEGACY: Patch old "%.0f" format string to use "%d", read function more details.)
-        *format = a_widgets::PatchFormatStringFloatToInt(format);
+        *format = data_type_ops::PatchFormatStringFloatToInt(format);
     }
     let hovered: bool = ItemHoverable(&frame_bb, id);
     let mut temp_input_is_active: bool =  temp_input_allowed && TempInputIsActive(id);
@@ -393,7 +393,7 @@ pub unsafe fn SliderScalar(label: &str,
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     value_buf: [c_char;64];
-    let mut  value_buf_end: &str = value_buf + a_widgets::DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
+    let mut  value_buf_end: &str = value_buf + data_type_ops::DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
     if g.LogEnabled {
         LogSetNextTextDecoration("{", "}");
     }
@@ -458,7 +458,7 @@ pub unsafe fn SliderScalarN(label: &str,
     if label.len() > 0
     {
         SameLine(0, g.Style.ItemInnerSpacing.x);
-        a_widgets::TextEx(label, 0);
+        text_ops::TextEx(label, 0);
     }
 
     EndGroup();
@@ -586,10 +586,10 @@ pub unsafe fn VSliderScalar(label: &str,
 
     // Default format string when passing NULL
     if format.is_empty() {
-        *format = a_widgets::DataTypeGetInfo(data_type).PrintFmt;
+        *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
     }
     else if data_type == ImGuiDataType_S32 && format != "%d".into_string() { // (FIXME-LEGACY: Patch old "%.0f" format string to use "%d", read function more details.)
-        *format = a_widgets::PatchFormatStringFloatToInt(format);
+        *format = data_type_ops::PatchFormatStringFloatToInt(format);
     }
 
     let hovered: bool = ItemHoverable(&frame_bb, id);
@@ -620,7 +620,7 @@ pub unsafe fn VSliderScalar(label: &str,
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     // For the vertical slider we allow centered text to overlap the frame padding
     value_buf: [c_char;64];
-    let mut  value_buf_end: &str = value_buf + a_widgets::DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
+    let mut  value_buf_end: &str = value_buf + data_type_ops::DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
     RenderTextClipped(ImVec2::new(frame_bb.Min.x, frame_bb.Min.y + style.FramePadding.y), &frame_bb.Max, value_buf, null_mut(), ImVec2::new(0.5, 0.0), null_mut());
     if label_size.x > 0.0 {
         RenderText(ImVec2::new(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y),
@@ -642,4 +642,170 @@ pub unsafe fn VSliderInt(label: &str, size: &ImVec2, v: &mut c_int, v_min: &mut 
     let mut v_min_float = v as c_float;
     let mut v_max_float = v as c_float;
     return VSliderScalar(label, size, ImGuiDataType_S32, &mut v_float, &mut v_min_float, &mut v_max_float, format, flags);
+}
+
+// Convert a value v in the output space of a slider into a parametric position on the slider itself (the logical opposite of ScaleValueFromRatioT)
+pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, v_min: &mut c_float, v_max: &mut c_float, is_logarithmic: bool, logarithmic_zero_epsilon: c_float, zero_deadzone_halfsize: c_float) -> c_float {
+    if v_min == v_max {
+        return 0.0;
+    }
+    // IM_UNUSED(data_type);
+
+    let v_clamped = if v_min < v_max { v.clamp(*v_min, *v_max) } else { v.clamp(*v_max, *v_min) };
+    return if is_logarithmic {
+        let mut flipped: bool = v_max < v_min;
+
+        if flipped { // Handle the case where the range is backwards
+            ImSwap(v_min, v_max);
+        }
+
+        // Fudge min/max to avoid getting close to log(0)
+        let mut v_min_fudged: c_float = if v_min.abs() < logarithmic_zero_epsilon {
+            if *v_min < 0.0 as c_float {
+                logarithmic_zero_epsilon * -1
+            } else {
+                logarithmic_zero_epsilon
+            }
+        } else {
+            v_min
+        };
+        let mut v_max_fudged = if v_max.abs() < logarithmic_zero_epsilon {
+            if *v_max < 0.0 as c_float {
+                -logarithmic_zero_epsilon
+            } else {
+                logarithmic_zero_epsilon
+            }
+        } else { v_max };
+
+        // Awkward special cases - we need ranges of the form (-100 .. 0) to convert to (-100 .. -epsilon), not (-100 .. epsilon)
+        if (v_min == 0.0) && (*v_max < 0.0) {
+            v_min_fudged = logarithmic_zero_epsilon * -1;
+        } else if (v_max == 0.0) && (*v_min < 0.0) {
+            v_max_fudged = logarithmic_zero_epsilon;
+        }
+
+        let mut result: c_float = 0.0;
+        if v_clamped <= v_min_fudged {
+            result = 0.0;
+        } // Workaround for values that are in-range but below our fudge
+        else if v_clamped >= v_max_fudged {
+            result = 1.0;
+        } // Workaround for values that are in-range but above our fudge
+        // Range crosses zero, so split into two portions
+        else if (v_min * v_max) < 0.0 {
+            let zero_point_center: c_float = (-v_min) / (v_max - v_min); // The zero point in parametric space.  There's an argument we should take the logarithmic nature into account when calculating this, but for now this should do (and the most common case of a symmetrical range works fine)
+            let zero_point_snap_L: c_float = zero_point_center - zero_deadzone_halfsize;
+            let zero_point_snap_R: c_float = zero_point_center + zero_deadzone_halfsize;
+            if v == 0.0 {
+                result = zero_point_center;
+            } // Special case for exactly zero
+            else if *v < 0.0 {
+                result = (1.0 - (ImLog(-v_clamped / logarithmic_zero_epsilon) / ImLog(-v_min_fudged / logarithmic_zero_epsilon))) * zero_point_snap_L;
+            } else {
+                result = zero_point_snap_R + ((ImLog(v_clamped / logarithmic_zero_epsilon) / ImLog(v_max_fudged / logarithmic_zero_epsilon)) * (1.0 - zero_point_snap_R));
+            }
+        } else if (*v_min < 0.0) || (*v_max < 0.0) {// Entirely negative slider
+            result = 1.0 - (ImLog(-v_clamped / -v_max_fudged) / ImLog(-v_min_fudged / -v_max_fudged));
+        } else {
+            result = (ImLog(v_clamped / v_min_fudged) / ImLog(v_max_fudged / v_min_fudged));
+        }
+
+        if flipped { (1.0 - result) } else { result }
+    } else {
+        // Linear slider
+        (v_clamped - v_min) / (v_max - v_min)
+    }
+}
+
+// Convert a parametric position on a slider into a value v in the output space (the logical opposite of ScaleRatioFromValueT)
+// template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
+pub fn ScaleValueFromRatioT(
+    data_type: ImGuiDataType,
+    t: c_float,
+    v_min: &mut c_float,
+    v_max: &mut c_float,
+    is_logarithmic: bool,
+    logarithmic_zero_epsilon: c_float,
+    zero_deadzone_halfsize: c_float) -> c_float
+{
+    // We special-case the extents because otherwise our logarithmic fudging can lead to "mathematically correct"
+    // but non-intuitive behaviors like a fully-left slider not actually reaching the minimum value. Also generally simpler.
+    if t <= 0.0 || v_min == v_max { return  v_min.clone(); }
+    if t >= 1.0 { return  v_max.clone(); }
+
+    let mut result = 0.0 as c_float;
+    if is_logarithmic
+    {
+        // Fudge min/max to avoid getting silly results close to zero
+        let v_min_fudged = if v_min.abs() < logarithmic_zero_epsilon {
+            if *v_min < 0.0 as c_float {
+                logarithmic_zero_epsilon * -1 }
+            else {
+                    logarithmic_zero_epsilon
+                }
+            }
+            else { v_min};
+        let v_max_fudged = if v_max.abs() < logarithmic_zero_epsilon {
+            if *v_max < 0.0 as c_float {
+                logarithmic_zero_epsilon * -1
+            } else {
+                logarithmic_zero_epsilon
+            }
+        } else {
+            v_max};
+
+        let flipped: bool = v_max < v_min; // Check if range is "backwards"
+        if flipped {
+            ImSwap(v_min_fudged, v_max_fudged);
+        }
+
+        // Awkward special case - we need ranges of the form (-100 .. 0) to convert to (-100 .. -epsilon), not (-100 .. epsilon)
+        if (v_max == 0.0) && (*v_min < 0.0) {
+            v_max_fudged = -logarithmic_zero_epsilon;
+        }
+
+        let t_with_flip: c_float =  if flipped { (1.0 - t)} else{ t}; // t, but flipped if necessary to account for us flipping the range
+
+        if (v_min * v_max) < 0.0 // Range crosses zero, so we have to do this in two parts
+        {
+            let zero_point_center: c_float =  (v_min.min(*v_max) * -1) / (v_max - v_min).abs(); // The zero point in parametric space
+            let zero_point_snap_L: c_float =  zero_point_center - zero_deadzone_halfsize;
+            let zero_point_snap_R: c_float =  zero_point_center + zero_deadzone_halfsize;
+            if t_with_flip >= zero_point_snap_L && t_with_flip <= zero_point_snap_R{
+                result = 0.0;} // Special case to make getting exactly zero possible (the epsilon prevents it otherwise)
+            else if t_with_flip < zero_point_center {
+                result = -(logarithmic_zero_epsilon * ImPow(-v_min_fudged / logarithmic_zero_epsilon, (1.0 - (t_with_flip / zero_point_snap_L))));
+            }
+            else {
+                result = (logarithmic_zero_epsilon * ImPow(v_max_fudged / logarithmic_zero_epsilon, ((t_with_flip - zero_point_snap_R) / (1.0 - zero_point_snap_R))));
+            }
+        }
+        else if (*v_min < 0.0) || (*v_max < 0.0) {
+            // Entirely negative slider
+            result = -(-v_max_fudged * ImPow(-v_min_fudged / -v_max_fudged, (1.0 - t_with_flip)));
+        }
+        else {
+            result = (v_min_fudged * ImPow(v_max_fudged / v_min_fudged, t_with_flip));
+        }
+    }
+    else
+    {
+        // Linear slider
+        let is_floating_point: bool = (data_type == ImGuiDataType_Float) || (data_type == ImGuiDataType_Double);
+        if is_floating_point
+        {
+            result = ImLerp(*v_min, *v_max, t);
+        }
+        else if t < 1.0
+        {
+            // - For integer values we want the clicking position to match the grab box so we round above
+            //   This code is carefully tuned to work with large values (e.g. high ranges of U64) while preserving this property..
+            // - Not doing a *1.0 multiply at the end of a range as it tends to be lossy. While absolute aiming at a large s64/u64
+            //   range is going to be imprecise anyway, with this check we at least make the edge values matches expected limits.
+            let v_new_off_f = (v_max - v_min) * t;
+            result = (v_min + (v_new_off_f + (if v_min > v_max { - 0.5} else {0.5})));
+        }
+    }
+
+    return result;
 }

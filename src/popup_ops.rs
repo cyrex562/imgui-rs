@@ -656,3 +656,12 @@ pub unsafe fn FindBestWindowPosForPopup(window: *mut ImGuiWindow) -> ImVec2
     // IM_ASSERT(0);
     return window.Pos;
 }
+
+pub unsafe fn CalcMaxPopupHeightFromItemCount(items_count: c_int) -> c_float
+{
+    let g = GImGui; // ImGuiContext& g = *GImGui;
+    if items_count <= 0 {
+        return f32::MAX;
+    }
+    return (g.FontSize + g.Style.ItemSpacing.y) * items_count - g.Style.ItemSpacing.y + (g.Style.WindowPadding.y * 2);
+}
