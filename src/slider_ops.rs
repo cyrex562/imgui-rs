@@ -288,7 +288,7 @@ pub unsafe fn SliderBehavior(bb: &ImRect,
     //     return SliderBehaviorT<u64, i64, double>(bb, id, data_type, (*mut u64)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
     // ImGuiDataType_Float =>
     //     // IM_ASSERT(p_min >= -f32::MAX / 2.0 && p_max <= f32::MAX / 2.0);
-    //     return SliderBehaviorT<c_float, c_float, c_float >(bb, id, data_type, (*mut c_float)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
+    //     return SliderBehaviorT<c_float, c_float, c_float >(bb, id, data_type, (&mut c_float)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
     // ImGuiDataType_Double =>
     //     // IM_ASSERT(p_min >= -DBL_MAX / 2.0 && p_max <= DBL_MAX / 2.0);
     //     return SliderBehaviorT<double, double, double>(bb, id, data_type, (*mut double)p_v, p_min, p_max, format, flags, out_grab_bb);

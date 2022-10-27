@@ -35,7 +35,7 @@ pub fn DataTypeGetInfo(data_type: ImGuiDataType) -> ImGuiDataTypeInfo
 }
 
 // DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, data_type: ImGuiDataType, p_data: *const c_void, format: &str)
-pub fn DataTypeFormatString(buf: &mut String, buf_size: usize, data_type: ImGuiDataType, p_data: &c_float, format: &String) -> usize
+pub fn DataTypeFormatString(buf: &mut String, buf_size: usize, data_type: ImGuiDataType, p_data: c_float, format: &String) -> usize
 {
     todo!();
     // Signedness doesn't matter when pushing integer arguments
@@ -72,7 +72,7 @@ pub type DataTypeOperation = c_int;
 pub const DataTypeOperationAdd: DataTypeOperation = 0;
 pub const DataTypeOperationSub: DataTypeOperation = 1;
 
-pub unsafe fn DataTypeApplyOp<T>(data_type: ImGuiDataType, op: DataTypeOperation, output: &mut T, arg1: &T, arg2: &T)
+pub unsafe fn DataTypeApplyOp<T>(data_type: ImGuiDataType, op: DataTypeOperation, output: &mut T, arg1: T, arg2: T)
 {
     // IM_ASSERT(op == '+' || op == '-');
     match data_type
@@ -235,7 +235,7 @@ pub unsafe fn DataTypeClamp<T>(data_type: ImGuiDataType, p_data: &mut T, p_min: 
     // ImGuiDataType_U32 =>    return DataTypeClampT<u32 >((*mut u32 )p_data, (*const u32 )p_min, (*const u32 )p_max);
     // ImGuiDataType_S64 =>    return DataTypeClampT<i64 >((*mut i64 )p_data, (*const i64 )p_min, (*const i64 )p_max);
     // ImGuiDataType_U64 =>    return DataTypeClampT<u64 >((*mut u64 )p_data, (*const u64 )p_min, (*const u64 )p_max);
-    // ImGuiDataType_Float =>  return DataTypeClampT<c_float >((*mut c_float )p_data, (*const c_float )p_min, (*const c_float )p_max);
+    // ImGuiDataType_Float =>  return DataTypeClampT<c_float >((&mut c_float )p_data, (*const c_float )p_min, (*const c_float )p_max);
     // ImGuiDataType_Double => return DataTypeClampT<double>((*mut double)p_data, (*const double)p_min, (*const double)p_max);
     // ImGuiDataType_COUNT =>  break;
     // }

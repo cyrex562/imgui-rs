@@ -17,7 +17,7 @@ use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 
 // Using 'hover_visibility_delay' allows us to hide the highlight and mouse cursor for a short time, which can be convenient to reduce visual noise.
-pub unsafe fn SplitterBehavior(bb: &mut ImRect, id: ImGuiID, axis: ImGuiAxis, size1: *mut c_float, size2: *mut c_float,min_size1: c_float,min_size2: c_float,hover_extend: c_float,hover_visibility_delay: c_float, bg_col: u32) -> bool
+pub unsafe fn SplitterBehavior(bb: &mut ImRect, id: ImGuiID, axis: ImGuiAxis, size1: &mut c_float, size2: &mut c_float,min_size1: c_float,min_size2: c_float,hover_extend: c_float,hover_visibility_delay: c_float, bg_col: u32) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow = g.CurrentWindow;

@@ -1832,15 +1832,15 @@ pub unsafe fn ShowDemoWindowWidgets()
         SameLine(); HelpMarker(
             "Click on the color square to open a color picker.\n"
             "CTRL+click on individual component to input value.\n");
-        ColorEdit3("MyColor##1", (*mut c_float)&color, misc_flags);
+        ColorEdit3("MyColor##1", (&mut c_float)&color, misc_flags);
 
         IMGUI_DEMO_MARKER("Widgets/Color/ColorEdit (HSV, with Alpha)");
         Text("Color widget HSV with Alpha:");
-        ColorEdit4("MyColor##2", (*mut c_float)&color, ImGuiColorEditFlags_DisplayHSV | misc_flags);
+        ColorEdit4("MyColor##2", (&mut c_float)&color, ImGuiColorEditFlags_DisplayHSV | misc_flags);
 
         IMGUI_DEMO_MARKER("Widgets/Color/ColorEdit (float display)");
         Text("Color widget with Float Display:");
-        ColorEdit4("MyColor##2f", (*mut c_float)&color, ImGuiColorEditFlags_Float | misc_flags);
+        ColorEdit4("MyColor##2f", (&mut c_float)&color, ImGuiColorEditFlags_Float | misc_flags);
 
         IMGUI_DEMO_MARKER("Widgets/Color/ColorButton (with Picker)");
         Text("Color button with Picker:");
@@ -1848,7 +1848,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             "With the ImGuiColorEditFlags_NoInputs flag you can hide all the slider/text inputs.\n"
             "With the ImGuiColorEditFlags_NoLabel flag you can pass a non-empty label which will only "
             "be used for the tooltip and picker popup.");
-        ColorEdit4("MyColor##3", (*mut c_float)&color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | misc_flags);
+        ColorEdit4("MyColor##3", (&mut c_float)&color, ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoLabel | misc_flags);
 
         IMGUI_DEMO_MARKER("Widgets/Color/ColorButton (with custom Picker popup)");
         Text("Color button with Custom Picker Popup:");
@@ -1880,7 +1880,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         {
             Text("MY CUSTOM COLOR PICKER WITH AN AMAZING PALETTE!");
             Separator();
-            ColorPicker4("##picker", (*mut c_float)&color, misc_flags | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview);
+            ColorPicker4("##picker", (&mut c_float)&color, misc_flags | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoSmallPreview);
             SameLine();
 
             BeginGroup(); // Lock X position
@@ -1906,9 +1906,9 @@ pub unsafe fn ShowDemoWindowWidgets()
                 if (BeginDragDropTarget())
                 {
                     if (*const ImGuiPayload payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_30f32))
-                        memcpy((*mut c_float)&saved_palette[n], payload.Data, sizeof * 3);
+                        memcpy((&mut c_float)&saved_palette[n], payload.Data, sizeof * 3);
                     if (*const ImGuiPayload payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_40f32))
-                        memcpy((*mut c_float)&saved_palette[n], payload.Data, sizeof * 4);
+                        memcpy((&mut c_float)&saved_palette[n], payload.Data, sizeof * 4);
                     EndDragDropTarget();
                 }
 
@@ -1962,7 +1962,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         if (display_mode == 2) flags |= ImGuiColorEditFlags_DisplayRGB;     // Override display mode
         if (display_mode == 3) flags |= ImGuiColorEditFlags_DisplayHSV;
         if (display_mode == 4) flags |= ImGuiColorEditFlags_DisplayHex;
-        ColorPicker4("MyColor##4", (*mut c_float)&color, flags, if ref_color { & ref_color_v.x} else {null_mut()});
+        ColorPicker4("MyColor##4", (&mut c_float)&color, flags, if ref_color { & ref_color_v.x} else {null_mut()});
 
         Text("Set defaults in code:");
         SameLine(); HelpMarker(
@@ -1979,10 +1979,10 @@ pub unsafe fn ShowDemoWindowWidgets()
         Text("Both types:");
         let w: c_float =  (GetContentRegionAvail().x - GetStyle().ItemSpacing.y) * 0.40f32;
         SetNextItemWidth(w);
-        ColorPicker3("##MyColor##5", (*mut c_float)&color, ImGuiColorEditFlags_PickerHueBar | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
+        ColorPicker3("##MyColor##5", (&mut c_float)&color, ImGuiColorEditFlags_PickerHueBar | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
         SameLine();
         SetNextItemWidth(w);
-        ColorPicker3("##MyColor##6", (*mut c_float)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
+        ColorPicker3("##MyColor##6", (&mut c_float)&color, ImGuiColorEditFlags_PickerHueWheel | ImGuiColorEditFlags_NoSidePreview | ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoAlpha);
 
         // HSV encoded support (to avoid RGB<>HSV round trips and singularities when S==0 or V==0)
         static color_hsv: ImVec4(0.23f, 1.0, 1.0, 1.0); // Stored as HSV!
@@ -1993,9 +1993,9 @@ pub unsafe fn ShowDemoWindowWidgets()
             "allows you to store colors as HSV and pass them to ColorEdit and ColorPicker as HSV. This comes with the"
             "added benefit that you can manipulate hue values with the picker even when saturation or value are zero.");
         Text("Color widget with InputHSV:");
-        ColorEdit4("HSV shown as RGB##1", (*mut c_float)&color_hsv, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
-        ColorEdit4("HSV shown as HSV##1", (*mut c_float)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
-        DragFloat4("Raw HSV values", (*mut c_float)&color_hsv, 0.01f, 0.0, 1.0);
+        ColorEdit4("HSV shown as RGB##1", (&mut c_float)&color_hsv, ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
+        ColorEdit4("HSV shown as HSV##1", (&mut c_float)&color_hsv, ImGuiColorEditFlags_DisplayHSV | ImGuiColorEditFlags_InputHSV | ImGuiColorEditFlags_Float);
+        DragFloat4("Raw HSV values", (&mut c_float)&color_hsv, 0.01f, 0.0, 1.0);
 
         TreePop();
     }
@@ -3314,7 +3314,7 @@ pub unsafe fn ShowDemoWindowLayout()
     {
         static size: ImVec2::new(100, 100);
         static offset: ImVec2::new(30f32, 30f32);
-        DragFloat2("size", (*mut c_float)&size, 0.5, 1.0, 200, "%.0f");
+        DragFloat2("size", (&mut c_float)&size, 0.5, 1.0, 200, "%.0f");
         TextWrapped("(Click and drag to scroll)");
 
         HelpMarker(
@@ -6304,7 +6304,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
         if (BeginTabItem("Sizes"))
         {
             Text("Main");
-            SliderFloat2("WindowPadding", (*mut c_float)&style.WindowPadding, 0.0, 20f32, "%.0f");
+            SliderFloat2("WindowPadding", (&mut c_float)&style.WindowPadding, 0.0, 20f32, "%.0f");
             SliderFloat2("FramePadding", &style.FramePadding, 0.0, 20f32, "%.0f");
             SliderFloat2("CellPadding", &style.CellPadding, 0.0, 20f32, "%.0f");
             SliderFloat2("ItemSpacing", &style.ItemSpacing, 0.0, 20f32, "%.0f");

@@ -188,7 +188,7 @@ pub unsafe fn TableEndCell(table: *mut ImGuiTable) {
 
 // Report maximum position so we can infer content size per column.
 // *mut let mut p_max_pos_x: c_float = 0.0;
-    let mut p_max_pos_x: *mut c_float = null_mut();
+    let mut p_max_pos_x: &mut c_float = null_mut();
     if table.RowFlags & ImGuiTableRowFlags_Headers {
         p_max_pos_x = &mut column.ContentMaxXHeadersUsed;
     }  // Useful in case user submit contents in header row that is not a TableHeader() call

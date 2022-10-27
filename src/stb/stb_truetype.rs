@@ -3195,7 +3195,7 @@ pub unsafe fn stbtt__rasterize_sorted_edges(result: *mut stbtt__bitmap, mut e: *
 
 // the edge passed in here does not cross the vertical line at x or the vertical line at x+1
 // (i.e. it has already been clipped to those)
-pub unsafe fn stbtt__handle_clipped_edge(scanline: *mut c_float, x: c_int, e: *mut stbtt__active_edge, mut x0: c_float, mut y0: c_float, mut x1: c_float, mut y1: c_float)
+pub unsafe fn stbtt__handle_clipped_edge(scanline: &mut c_float, x: c_int, e: *mut stbtt__active_edge, mut x0: c_float, mut y0: c_float, mut x1: c_float, mut y1: c_float)
 {
    if y0 == y1 { return; }
    STBTT_assert(y0 < y1);
@@ -3256,7 +3256,7 @@ pub unsafe fn stbtt__sized_triangle_area(height: c_float,width: c_float) -> c_fl
    return height * width / 2;
 }
 
-pub unsafe fn stbtt__fill_active_edges_new(scanline: *mut c_float, scanline_fill: *mut c_float, len: c_int, mut e: *mut stbtt__active_edge,y_top: c_float)
+pub unsafe fn stbtt__fill_active_edges_new(scanline: &mut c_float, scanline_fill: &mut c_float, len: c_int, mut e: *mut stbtt__active_edge,y_top: c_float)
 {
    let y_bottom: c_float =  y_top1;
 
@@ -3506,8 +3506,8 @@ pub unsafe fn stbtt__rasterize_sorted_edges2(result: *mut stbtt__bitmap, mut e: 
     let mut j: c_int = 0;
     let mut i: c_int = 0;
     let mut scanline_data: [c_float;129] = [0.0;129];
-    let mut scanline: *mut c_float = null_mut();
-    let mut scanline2: *mut c_float = null_mut();
+    let mut scanline: &mut c_float = null_mut();
+    let mut scanline2: &mut c_float = null_mut();
 
    // STBTT__NOTUSED(vsubsample);
 
@@ -4053,7 +4053,7 @@ pub unsafe fn c_ustbtt_GetCodepointBitmapSubpixel(info: *const stbtt_fontinfo,sc
    return stbtt_GetGlyphBitmapSubpixel(info, scale_x, scale_y,shift_x,shift_y, stbtt_FindGlyphIndex(info,codepoint), width,height,xoff,yoff);
 }
 
-pub unsafe fn stbtt_MakeCodepointBitmapSubpixelPrefilter(info: *const stbtt_fontinfo, output: *mut c_char, out_w: c_int, out_h: c_int, out_stride: c_int,scale_x: c_float,scale_y: c_float,shift_x: c_float,shift_y: c_float, oversample_x: c_int, oversample_y: c_int, sub_x: *mut c_float, sub_y: *mut c_float, codepoint: c_int)
+pub unsafe fn stbtt_MakeCodepointBitmapSubpixelPrefilter(info: *const stbtt_fontinfo, output: *mut c_char, out_w: c_int, out_h: c_int, out_stride: c_int,scale_x: c_float,scale_y: c_float,shift_x: c_float,shift_y: c_float, oversample_x: c_int, oversample_y: c_int, sub_x: &mut c_float, sub_y: &mut c_float, codepoint: c_int)
 {
    stbtt_MakeGlyphBitmapSubpixelPrefilter(info, output, out_w, out_h, out_stride, scale_x, scale_y, shift_x, shift_y, oversample_x, oversample_y, sub_x, sub_y, stbtt_FindGlyphIndex(info,codepoint));
 }
@@ -4148,7 +4148,7 @@ pub unsafe fn stbtt_BakeFontBitmap_internal(c_udata: *const c_uchar, offset: c_i
    return bottom_y;
 }
 
-pub unsafe fn stbtt_GetBakedQuad(stbtt_bakedchardata: *mut c_char, pw: c_int, ph: c_int, char_index: c_int, xpos: *mut c_float, ypos: *mut c_float, q: *mut stbtt_aligned_quad, opengl_fillrule: c_int)
+pub unsafe fn stbtt_GetBakedQuad(stbtt_bakedchardata: *mut c_char, pw: c_int, ph: c_int, char_index: c_int, xpos: &mut c_float, ypos: &mut c_float, q: *mut stbtt_aligned_quad, opengl_fillrule: c_int)
 {
    let d3d_bias: c_float =  if opengl_fillrule { 0.0 } else { -0.5 };
    let ipw: c_float =  1.0 / pw;
@@ -4522,7 +4522,7 @@ pub unsafe fn stbtt_PackFontRangesGatherRects(spc: *mut stbtt_pack_context, info
    return k;
 }
 
-pub unsafe fn stbtt_MakeGlyphBitmapSubpixelPrefilter(info: *const stbtt_fontinfo, c_uoutput: *mut c_char, out_w: c_int, out_h: c_int, out_stride: c_int,scale_x: c_float,scale_y: c_float,shift_x: c_float,shift_y: c_float, prefilter_x: c_int, prefilter_y: c_int, sub_x: *mut c_float, sub_y: *mut c_float, glyph: c_int)
+pub unsafe fn stbtt_MakeGlyphBitmapSubpixelPrefilter(info: *const stbtt_fontinfo, c_uoutput: *mut c_char, out_w: c_int, out_h: c_int, out_stride: c_int,scale_x: c_float,scale_y: c_float,shift_x: c_float,shift_y: c_float, prefilter_x: c_int, prefilter_y: c_int, sub_x: &mut c_float, sub_y: &mut c_float, glyph: c_int)
 {
    stbtt_MakeGlyphBitmapSubpixel(info,
                                  output,
@@ -4728,7 +4728,7 @@ pub unsafe fn stbtt_PackFontRange(spc: *mut stbtt_pack_context, fontdata: *const
    return stbtt_PackFontRanges(spc, fontdata, font_index, &mut range, 1);
 }
 
-pub unsafe fn stbtt_GetScaledFontVMetrics(fontdata: *const c_uchar, index: c_int,size: c_float, ascent: *mut c_float, descent: *mut c_float, lineGap: *mut c_float)
+pub unsafe fn stbtt_GetScaledFontVMetrics(fontdata: *const c_uchar, index: c_int,size: c_float, ascent: &mut c_float, descent: &mut c_float, lineGap: &mut c_float)
 {
    // i_ascent: c_int, i_descent, i_lineGap;
    let mut i_ascent: c_int = 0;
@@ -4745,7 +4745,7 @@ pub unsafe fn stbtt_GetScaledFontVMetrics(fontdata: *const c_uchar, index: c_int
    *lineGap =  i_lineGap * scale;
 }
 
-pub unsafe fn stbtt_GetPackedQuad(stbtt_packedchardata: *mut c_char, pw: c_int, ph: c_int, char_index: c_int, xpos: *mut c_float, ypos: *mut c_float, q: *mut stbtt_aligned_quad, align_to_integer: c_int)
+pub unsafe fn stbtt_GetPackedQuad(stbtt_packedchardata: *mut c_char, pw: c_int, ph: c_int, char_index: c_int, xpos: &mut c_float, ypos: &mut c_float, q: *mut stbtt_aligned_quad, align_to_integer: c_int)
 {
    let ipw: c_float =  1.0 / pw;
     let mut iph: c_float = 1.0 / ph;
@@ -4851,7 +4851,7 @@ pub fn stbtt__ray_intersect_bezier(orig: [c_float;2],
    }
 }
 
-pub fn equal(a: *mut c_float, b: *mut c_float) -> bool
+pub fn equal(a: &mut c_float, b: &mut c_float) -> bool
 {
    return (a[0] == b[0] && a[1] == b[1]);
 }
@@ -4953,7 +4953,7 @@ pub unsafe fn staticstbtt__cuberoot(x: c_float) -> c_float {
 }
 
 // x^3 + a*x^2 + b*x + c = 0
-pub fn stbtt__solve_cubic(a: c_float,b: c_float,c: c_float, r: *mut c_float) -> c_int
+pub fn stbtt__solve_cubic(a: c_float,b: c_float,c: c_float, r: &mut c_float) -> c_int
 {
    let s: c_float =  -a / 3;
    let p: c_float =  b - a*a / 3;
@@ -5030,7 +5030,7 @@ pub unsafe fn stbtt_GetGlyphSDF(info: *const stbtt_fontinfo,scale: c_float, glyp
        let mut y: c_int = 0;
        let mut i: c_int = 0;
        let mut j: c_int = 0;
-       let mut precompute: *mut c_float = null_mut();
+       let mut precompute: &mut c_float = null_mut();
       let mut verts: *mut stbtt_vertex = null_mut();
       let num_verts: c_int = stbtt_GetGlyphShape(info, glyph, &mut verts);
       data = STBTT_malloc(w * h, info.userdata);

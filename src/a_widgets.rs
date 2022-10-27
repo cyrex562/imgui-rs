@@ -94,7 +94,7 @@ use std::borrow::Borrow;
 use std::env::args;
 use std::ops::Index;
 use std::ptr::{null, null_mut};
-use libc::{c_char, c_float, c_int, c_uint, c_void, INT_MAX, INT_MIN, memcmp, memcpy, memmove, memset, size_t, strcmp, strlen, strncmp};
+use libc::{c_char, c_double, c_float, c_int, c_uint, c_void, INT_MAX, INT_MIN, memcmp, memcpy, memmove, memset, size_t, strcmp, strlen, strncmp};
 use crate::activate_flags::{ImGuiActivateFlags_PreferInput, ImGuiActivateFlags_TryToPreserveState};
 use crate::color::{IM_COL32, IM_COL32_A_MASK, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_CheckMark, ImGuiCol_ChildBg, ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered, ImGuiCol_Header, ImGuiCol_HeaderActive, ImGuiCol_HeaderHovered, ImGuiCol_PlotHistogram, ImGuiCol_ScrollbarBg, ImGuiCol_ScrollbarGrab, ImGuiCol_ScrollbarGrabActive, ImGuiCol_ScrollbarGrabHovered, ImGuiCol_Separator, ImGuiCol_SeparatorActive, ImGuiCol_SeparatorHovered, ImGuiCol_SliderGrab, ImGuiCol_SliderGrabActive, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TextSelectedBg};
 use crate::combo_flags::{ImGuiComboFlags, ImGuiComboFlags_CustomPreview, ImGuiComboFlags_HeightLarge, ImGuiComboFlags_HeightMask_, ImGuiComboFlags_HeightRegular, ImGuiComboFlags_HeightSmall, ImGuiComboFlags_NoArrowButton, ImGuiComboFlags_None, ImGuiComboFlags_NoPreview, ImGuiComboFlags_PopupAlignLeft};
@@ -109,6 +109,7 @@ use crate::{button_ops, checkbox_ops, data_type_ops, drag, GImGui, ImGuiViewport
 use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
 use crate::backend_flags::ImGuiBackendFlags_HasGamepad;
 use crate::button_flags::{ImGuiButtonFlags, ImGuiButtonFlags_AlignTextBaseLine, ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_DontClosePopups, ImGuiButtonFlags_FlattenChildren, ImGuiButtonFlags_MouseButtonDefault_, ImGuiButtonFlags_MouseButtonLeft, ImGuiButtonFlags_MouseButtonMask_, ImGuiButtonFlags_MouseButtonMiddle, ImGuiButtonFlags_MouseButtonRight, ImGuiButtonFlags_NoHoldingActiveId, ImGuiButtonFlags_NoHoveredOnFocus, ImGuiButtonFlags_NoKeyModifiers, ImGuiButtonFlags_NoNavFocus, ImGuiButtonFlags_None, ImGuiButtonFlags_PressedOnClick, ImGuiButtonFlags_PressedOnClickRelease, ImGuiButtonFlags_PressedOnClickReleaseAnywhere, ImGuiButtonFlags_PressedOnDefault_, ImGuiButtonFlags_PressedOnDoubleClick, ImGuiButtonFlags_PressedOnDragDropHold, ImGuiButtonFlags_PressedOnMask_, ImGuiButtonFlags_PressedOnRelease, ImGuiButtonFlags_Repeat};
+use crate::button_ops::ButtonEx;
 use crate::child_ops::{BeginChild, BeginChildEx, BeginChildFrame, EndChild, EndChildFrame};
 use crate::clipboard_ops::{GetClipboardText, SetClipboardText};
 use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_AlphaBar, ImGuiColorEditFlags_AlphaPreview, ImGuiColorEditFlags_AlphaPreviewHalf, ImGuiColorEditFlags_DataTypeMask_, ImGuiColorEditFlags_DefaultOptions_, ImGuiColorEditFlags_DisplayHex, ImGuiColorEditFlags_DisplayHSV, ImGuiColorEditFlags_DisplayMask_, ImGuiColorEditFlags_DisplayRGB, ImGuiColorEditFlags_Float, ImGuiColorEditFlags_HDR, ImGuiColorEditFlags_InputHSV, ImGuiColorEditFlags_InputMask_, ImGuiColorEditFlags_InputRGB, ImGuiColorEditFlags_NoAlpha, ImGuiColorEditFlags_NoBorder, ImGuiColorEditFlags_NoDragDrop, ImGuiColorEditFlags_NoInputs, ImGuiColorEditFlags_NoLabel, ImGuiColorEditFlags_NoOptions, ImGuiColorEditFlags_NoPicker, ImGuiColorEditFlags_NoSidePreview, ImGuiColorEditFlags_NoSmallPreview, ImGuiColorEditFlags_NoTooltip, ImGuiColorEditFlags_PickerHueBar, ImGuiColorEditFlags_PickerHueWheel, ImGuiColorEditFlags_PickerMask_, ImGuiColorEditFlags_Uint8};
@@ -117,6 +118,7 @@ use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Once};
 use crate::config_flags::ImGuiConfigFlags_NavEnableGamepad;
 use crate::content_ops::GetContentRegionAvail;
 use crate::cursor_ops::{GetCursorScreenPos, Indent, SetCursorScreenPos, Unindent};
+use crate::data_type_ops::{DataTypeApplyFromText, DataTypeApplyOp, DataTypeFormatString, DataTypeOperationAdd, DataTypeOperationSub};
 use crate::dock_node::ImGuiDockNode;
 use crate::drag_drop_flags::{ImGuiDragDropFlags_SourceNoDisableHover, ImGuiDragDropFlags_SourceNoHoldToOpenOthers};
 use crate::drag_drop_ops::{AcceptDragDropPayload, BeginDragDropSource, BeginDragDropTarget, EndDragDropSource, EndDragDropTarget, SetDragDropPayload};
@@ -252,7 +254,7 @@ pub unsafe fn TempInputScalar(
     // data_buf: [c_char;32];
     let mut data_buf = String::with_capacity(32);
     *format = ImParseFormatTrimDecorations(format, fmt_buf, fmt_buf.len());
-    data_type_ops::DataTypeFormatString(&mut data_buf, data_buf.len(), data_type, p_data, format);
+    data_type_ops::DataTypeFormatString(&mut data_buf, data_buf.len(), data_type, p_data.to_owned(), format);
     ImStrTrimBlanks(&mut data_buf);
 
     let mut flags: ImGuiInputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited;
@@ -281,9 +283,10 @@ pub unsafe fn TempInputScalar(
         }
 
         // Only mark as edited if new value is different
-        value_changed = memcmp(&data_backup, p_data, data_type_size) != 0;
-        if value_changed {
-            MarkItemEdited(id); }
+        // TODO
+        // value_changed = memcmp(&data_backup, p_data, data_type_size) != 0;
+        // if value_changed {
+        //     MarkItemEdited(id); }
     }
     return value_changed;
 }
@@ -293,8 +296,8 @@ pub unsafe fn TempInputScalar(
 pub unsafe fn InputScalar(label: &str,
                           data_type: ImGuiDataType,
                           p_data: &mut c_float,
-                          p_step: *const c_void,
-                          p_step_fast: *const c_void,
+                          p_step: Option<c_float>,
+                          p_step_fast: Option<c_float>,
                           format: &mut String,
                           mut flags: ImGuiInputTextFlags) -> bool
 {
@@ -310,7 +313,7 @@ pub unsafe fn InputScalar(label: &str,
 
     // buf: [c_char;64];
     let mut buf = String::default();
-    data_type_ops::DataTypeFormatString(&mut buf, buf.len(), data_type, p_data, format);
+    DataTypeFormatString(&mut buf, buf.len(), data_type, *p_data, format);
 
     // Testing ActiveId as a minor optimization as filtering is not needed until active
     if g.ActiveId == 0 && (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsScientific)) == 0 {
@@ -319,7 +322,7 @@ pub unsafe fn InputScalar(label: &str,
     flags |= ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited; // We call MarkItemEdited() ourselves by comparing the actual data rather than the string.
 
     let mut value_changed: bool =  false;
-    if p_step != null_mut()
+    if p_step.is_some()
     {
         let button_size: c_float =  GetFrameHeight();
 
@@ -327,7 +330,7 @@ pub unsafe fn InputScalar(label: &str,
         PushID(label);
         SetNextItemWidth(ImMax(1.0, CalcItemWidth() - (button_size + style.ItemInnerSpacing.x) * 2));
         if InputText("", &mut buf, buf.len(), flags, None, None) { // PushId(label) + "" gives us the expected ID from outside point of view
-            value_changed = data_type_ops::DataTypeApplyFromText(buf.as_str(), data_type, p_data, format);
+            value_changed = DataTypeApplyFromText(buf.as_str(), data_type, p_data, format);
         }
         IMGUI_TEST_ENGINE_ITEM_INFO(g.LastItemData.ID, label, g.LastItemData.StatusFlags);
 
@@ -338,25 +341,32 @@ pub unsafe fn InputScalar(label: &str,
         if flags & ImGuiInputTextFlags_ReadOnly {
             BeginDisabled(false); }
         SameLine(0.0, style.ItemInnerSpacing.x);
-        if button_ops::ButtonEx("-", ImVec2::new(button_size, button_size), button_flags)
+        if ButtonEx("-", ImVec2::new(button_size, button_size), button_flags)
         {
-            data_type_ops::DataTypeApplyOp(data_type, '-', p_data, p_data, g.IO.KeyCtrl && if p_step_fast {p_step_fast} else { p_step });
+           DataTypeApplyOp(data_type, DataTypeOperationSub, p_data, *p_data, if g.IO.KeyCtrl && p_step_fast.is_some() {p_step_fast.unwrap()} else { p_step.unwrap() });
             value_changed = true;
         }
-        SameLine(0, style.ItemInnerSpacing.x);
-        if (button_ops::ButtonEx("+", ImVec2::new(button_size, button_size), button_flags))
+        SameLine(0.0, style.ItemInnerSpacing.x);
+        if ButtonEx("+", ImVec2::new(button_size, button_size), button_flags)
         {
-            data_type_ops::DataTypeApplyOp(data_type, '+', p_data, p_data, g.IO.KeyCtrl && if p_step_fast {p_step_fast} else { p_step });
+            data_type_ops::DataTypeApplyOp(data_type,
+                                           DataTypeOperationAdd,
+                                           p_data,
+                                           *p_data,
+                                           if g.IO.KeyCtrl && p_step_fast.is_some() {
+                                               p_step_fast.unwrap()}
+                                           else {
+                                               p_step.unwrap() });
             value_changed = true;
         }
         if flags & ImGuiInputTextFlags_ReadOnly {
             EndDisabled(); }
 
-        let mut  label_end: &str = FindRenderedTextEnd(label);
-        if (label != label_end)
+        let mut  label_end = FindRenderedTextEnd(label);
+        if label != label_end
         {
-            SameLine(0, style.ItemInnerSpacing.x);
-            text_ops::TextEx(label, label_end);
+            SameLine(0.0, style.ItemInnerSpacing.x);
+            text_ops::TextEx(label, 0);
         }
         style.FramePadding = backup_frame_padding;
 
@@ -365,8 +375,9 @@ pub unsafe fn InputScalar(label: &str,
     }
     else
     {
-        if (InputText(label, buf, buf.len(), flags))
-            value_changed = data_type_ops::DataTypeApplyFromText(buf, data_type, p_data, format);
+        if InputText(label, &mut buf, buf.len(), flags, None, None) {
+            value_changed = DataTypeApplyFromText(buf.as_str(), data_type, p_data, format);
+        }
     }
     if value_changed{
         MarkItemEdited(g.LastItemData.ID);}
@@ -374,7 +385,15 @@ pub unsafe fn InputScalar(label: &str,
     return value_changed;
 }
 
-pub unsafe fn InputScalarN(label: &str, data_type: ImGuiDataType, p_data: *mut c_void, components: c_int, p_step: *const c_void, p_step_fast: *const c_void, format: &str, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputScalarN(
+    label: &str,
+    data_type: ImGuiDataType,
+    p_data: &mut [c_float],
+    components: usize,
+    p_step: Option<&[c_float]>,
+    p_step_fast: Option<&[c_float]>,
+    format: &mut String,
+    flags: ImGuiInputTextFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -385,76 +404,97 @@ pub unsafe fn InputScalarN(label: &str, data_type: ImGuiDataType, p_data: *mut c
     PushID(label);
     PushMultiItemsWidths(components, CalcItemWidth());
     type_size: size_t = GDataTypeInfo[data_type].Size;
-    for (let i: c_int = 0; i < components; i++)
+    // for (let i: c_int = 0; i < components; i++)
+    for i in 0 .. components
     {
         PushID(i);
-        if (i > 0)
-            SameLine(0, g.Style.ItemInnerSpacing.x);
-        value_changed |= InputScalar("", data_type, p_data, p_step, p_step_fast, format, flags);
+        if i > 0 {
+            SameLine(0.0, g.Style.ItemInnerSpacing.x);
+        }
+        value_changed |= InputScalar("", data_type, &mut p_data[i], Some(p_step[i]), Some(p_step_fast[i]), format, flags);
         PopID();
         PopItemWidth();
-        p_data = (p_data + type_size);
+        // p_data = (p_data + type_size);
     }
     PopID();
 
-    let mut  label_end: &str = FindRenderedTextEnd(label);
-    if (label != label_end)
+    let mut  label_end = FindRenderedTextEnd(label);
+    if label != label_end
     {
         SameLine(0.0, g.Style.ItemInnerSpacing.x);
-        text_ops::TextEx(label, label_end);
+        text_ops::TextEx(label, 0);
     }
 
     EndGroup();
     return value_changed;
 }
 
-pub unsafe fn InputFloat(label: &str, v: *mut c_float,step: c_float,step_fast: c_float, format: &str, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputFloat(label: &str, v: &mut c_float, step: c_float, step_fast: c_float, format: &mut String, mut flags: ImGuiInputTextFlags) -> bool
 {
     flags |= ImGuiInputTextFlags_CharsScientific;
-    return InputScalar(label, ImGuiDataType_Float, v, (if step > 0.0 { & step } else {null_mut()}), (if step_fast > 0.0 { & step_fast} else {null_mut()}), format, flags);
+    return InputScalar(label,
+                       ImGuiDataType_Float,
+                       v,
+                       (if step > 0.0 { Some(step) } else {None}),
+                       (if step_fast > 0.0 { Some(step_fast)} else {None}),
+                       format,
+                       flags);
 }
 
-pub unsafe fn InputFloat2(label: &str,v: [c_float;2], format: &str, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputFloat2(label: &str,v: &mut [c_float;2], format: &mut String, flags: ImGuiInputTextFlags) -> bool
 {
-    return InputScalarN(label, ImGuiDataType_Float, v, 2, null_mut(), null_mut(), format, flags);
+    return InputScalarN(label, ImGuiDataType_Float, v, 2, None, None, format, flags);
 }
 
-pub unsafe fn InputFloat3(label: &str,v: [c_float;3], format: &str, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputFloat3(label: &str,v: &mut [c_float;3], format: &mut String, flags: ImGuiInputTextFlags) -> bool
 {
-    return InputScalarN(label, ImGuiDataType_Float, v, 3, null_mut(), null_mut(), format, flags);
+    return InputScalarN(label, ImGuiDataType_Float, v, 3, None, None, format, flags);
 }
 
-pub unsafe fn InputFloat4(label: &str,v: [c_float;4], format: &str, flags: ImGuiInputTextFlags) -> bool
+pub unsafe fn InputFloat4(label: &str,v: &mut [c_float;4], format: &mut String, flags: ImGuiInputTextFlags) -> bool
 {
-    return InputScalarN(label, ImGuiDataType_Float, v, 4, null_mut(), null_mut(), format, flags);
+    return InputScalarN(label, ImGuiDataType_Float, v, 4, None, None, format, flags);
 }
 
-pub unsafe fn InputInt(label: &str, v: *mut c_int, step: c_int, step_fast: c_int, flags: ImGuiInputTextFlags) -> bool
-{
+pub unsafe fn InputInt(label: &str, v: &mut c_int, step: c_int, step_fast: c_int, flags: ImGuiInputTextFlags) -> bool {
     // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
-    let mut  format: &str = if flags & ImGuiInputTextFlags_CharsHexadecimal { "%08X"} else { "%d"};
-    return InputScalar(label, ImGuiDataType_S32, v, (if step > 0 { & step } else{ null_mut()}), (if step_fast > 0 { & step_fast} else {null_mut()}), format, flags);
+    let mut v_float: c_float = c_flaot::from(*v);
+    let mut format: String = String::from(if flag_set(flags, ImGuiInputTextFlags_CharsHexadecimal) { "%08X" } else { "%d" });
+    let step_float: c_float = c_float::from(step);
+    let step_fast_float: c_float = c_float::from(step_fast);
+    return InputScalar(label,
+                       ImGuiDataType_S32,
+                       &mut v_float,
+                       (if step > 0 { Some(step_float) } else { None }),
+                       (if step_fast > 0 { Some(step_fast_float) } else { None }),
+                       &mut format,
+                       flags);
 }
 
-pub unsafe fn InputInt2(label: &str, v: [c_int;2], flags: ImGuiInputTextFlags) -> bool
-{
-    return InputScalarN(label, ImGuiDataType_S32, v, 2, null_mut(), null_mut(), "%d", flags);
+pub unsafe fn InputInt2(label: &str, v: &mut [c_int; 2], flags: ImGuiInputTextFlags) -> bool {
+    let mut v_float: [c_float; 2] = [c_float::from(v[0]), c_float::from(v[1])];
+    let mut format = String::from("%d");
+    return InputScalarN(label, ImGuiDataType_S32, &mut v_float, 2, None, None, &mut format, flags);
 }
 
-pub unsafe fn InputInt3(label: &str, v: [c_int;3], flags: ImGuiInputTextFlags) -> bool
-{
-    return InputScalarN(label, ImGuiDataType_S32, v, 3, null_mut(), null_mut(), "%d", flags);
+pub unsafe fn InputInt3(label: &str, v: [c_int; 3], flags: ImGuiInputTextFlags) -> bool {
+    let mut v_float: [c_float; 3] = [c_float::from(v[0]), c_float::from(v[1]), c_float::from(v[2])];
+    let mut format = String::from("%d");
+    return InputScalarN(label, ImGuiDataType_S32, &mut v_float, 3, None, None, &mut format, flags);
 }
 
-pub unsafe fn InputInt4(label: &str, v: [c_int;4], flags: ImGuiInputTextFlags) -> bool
-{
-    return InputScalarN(label, ImGuiDataType_S32, v, 4, null_mut(), null_mut(), "%d", flags);
+pub unsafe fn InputInt4(label: &str, v: [c_int; 4], flags: ImGuiInputTextFlags) -> bool {
+    let mut v_float: [c_float; 4] = [c_float::from(v[0]), c_float::from(v[1]), c_float::from(v[2]), c_float::from(v[3])];
+    let mut format = String::from("%d");
+    return InputScalarN(label, ImGuiDataType_S32, &mut v_float, 4, None, None, &mut format, flags);
 }
 
-pub unsafe fn InputDouble(label: &str, *mut double v, double step, double step_fast, format: &str, flags: ImGuiInputTextFlags) -> bool
-{
+pub unsafe fn InputDouble(label: &str, v: &mut c_double, step: c_double, step_fast: c_double, format: &mut String, mut flags: ImGuiInputTextFlags) -> bool {
     flags |= ImGuiInputTextFlags_CharsScientific;
-    return InputScalar(label, ImGuiDataType_Double, v, (if step > 0.0 { & step} else {null_mut()}), (if step_fast > 0.0 { & step_fast} else {null_mut()}), format, flags);
+    let mut v_float = c_float::from(*v);
+    let mut step_float = c_float::from(step);
+    let mut step_fast_float = c_float::from(step_fast);
+    return InputScalar(label, ImGuiDataType_Double, &mut v_float, (if step > 0.0 { Some(step_float) } else { None }), (if step_fast > 0.0 { Some(step_fast_float) } else { None }), format, flags);
 }
 
 //-------------------------------------------------------------------------
@@ -477,7 +517,8 @@ pub unsafe fn InputText(label: &str,
                         callback: Option<ImGuiInputTextCallback>,
                         user_data: Option<&Vec<u8>>) -> bool {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline()
-    return InputTextEx(label, "", buf, buf_size, ImVec2::new(0, 0), flags, Some(callback), Some(user_data));
+    let mut size_arg = ImVec2::default();
+    return InputTextEx(label, "", buf, buf_size, &mut size_arg, flags, callback, user_data);
 }
 
 pub unsafe fn InputTextMultiline(label: &str, buf: &mut String, buf_size: size_t, size: &mut ImVec2, flags: ImGuiInputTextFlags, callback: ImGuiInputTextCallback, user_data: &Vec<u8>) -> bool
@@ -517,17 +558,22 @@ pub fn InputTextCalcTextLenAndLineCount(text_begin: &String, out_text_end: &mut 
     return line_count;
 }
 
-pub unsafe fn InputTextCalcTextSizeW(text_begin: *const ImWchar, text_end: *const ImWchar, *const *mut ImWchar remaining, *mut out_offset: ImVec2, stop_on_new_line: bool) -> ImVec2
+pub unsafe fn InputTextCalcTextSizeW(
+    text_begin: &String,
+    remaining: usize,
+    out_offset: &mut ImVec2,
+    stop_on_new_line: bool) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    *mut ImFont font = g.Font;
-    let line_height: c_float =  g.FontSize;
-    let scale: c_float =  line_height / font->FontSize;
+    let font = g.Font;
+    let line_height =  g.FontSize;
+    let scale =  line_height / font.FontSize;
 
     let text_size: ImVec2 = ImVec2::new(0, 0);
     let line_width: c_float =  0.0;
+    let mut text_end = text_begin.len();
 
-    let s: *const ImWchar = text_begin;
+    let mut s= 0usize;
     while (s < text_end)
     {
         let mut c: c_uint =  (*s++);
@@ -1826,7 +1872,7 @@ pub unsafe fn ColorEdit3(label: &str,col: [c_float;3], ImGuiColorEditFlags flags
 
 // ColorEdit supports RGB and HSV inputs. In case of RGB input resulting color may have undefined hue and/or saturation.
 // Since widget displays both RGB and HSV values we must preserve hue and saturation to prevent these values resetting.
-pub unsafe fn ColorEditRestoreHS(*col: c_float, H: *mut c_float, S: *mut c_float, V: *mut c_float)
+pub unsafe fn ColorEditRestoreHS(*col: c_float, H: &mut c_float, S: &mut c_float, V: &mut c_float)
 {
     // This check is optional. Suppose we have two color widgets side by side, both widgets display different colors, but both colors have hue and/or saturation undefined.
     // With color check: hue/saturation is preserved in one widget. Editing color in one widget would reset hue/saturation in another one.
@@ -2056,12 +2102,12 @@ pub unsafe fn ColorEdit4(label: &str,col: [c_float;4], ImGuiColorEditFlags flags
         let mut accepted_drag_drop: bool =  false;
         if (*const ImGuiPayload payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_30f32))
         {
-            memcpy((*mut c_float)col, payload.Data, sizeof * 3); // Preserve alpha if any //-V512 //-V1086
+            memcpy((&mut c_float)col, payload.Data, sizeof * 3); // Preserve alpha if any //-V512 //-V1086
             value_changed = accepted_drag_drop = true;
         }
         if (*const ImGuiPayload payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_40f32))
         {
-            memcpy((*mut c_float)col, payload.Data, sizeof * components);
+            memcpy((&mut c_float)col, payload.Data, sizeof * components);
             value_changed = accepted_drag_drop = true;
         }
 
