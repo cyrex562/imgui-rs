@@ -136,6 +136,7 @@ use crate::input_text_callback_data::ImGuiInputTextCallbackData;
 use crate::input_text_flags::{ImGuiInputTextFlags, ImGuiInputTextFlags_AllowTabInput, ImGuiInputTextFlags_AlwaysOverwrite, ImGuiInputTextFlags_AutoSelectAll, ImGuiInputTextFlags_CallbackAlways, ImGuiInputTextFlags_CallbackCharFilter, ImGuiInputTextFlags_CallbackCompletion, ImGuiInputTextFlags_CallbackEdit, ImGuiInputTextFlags_CallbackHistory, ImGuiInputTextFlags_CallbackResize, ImGuiInputTextFlags_CharsDecimal, ImGuiInputTextFlags_CharsHexadecimal, ImGuiInputTextFlags_CharsNoBlank, ImGuiInputTextFlags_CharsScientific, ImGuiInputTextFlags_CharsUppercase, ImGuiInputTextFlags_CtrlEnterForNewLine, ImGuiInputTextFlags_EnterReturnsTrue, ImGuiInputTextFlags_MergedItem, ImGuiInputTextFlags_Multiline, ImGuiInputTextFlags_NoHorizontalScroll, ImGuiInputTextFlags_NoMarkEdited, ImGuiInputTextFlags_None, ImGuiInputTextFlags_NoUndoRedo, ImGuiInputTextFlags_Password, ImGuiInputTextFlags_ReadOnly};
 use crate::input_text_state::ImGuiInputTextState;
 use crate::io::ImGuiIO;
+use crate::io_ops::GetIO;
 use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_ButtonRepeat, ImGuiItemFlags_Disabled, ImGuiItemFlags_Inputable, ImGuiItemFlags_MixedValue, ImGuiItemFlags_NoNav, ImGuiItemFlags_NoNavDefaultFocus, ImGuiItemFlags_None, ImGuiItemFlags_NoTabStop, ImGuiItemFlags_ReadOnly, ImGuiItemFlags_SelectableDontClosePopup};
 use crate::item_ops::{CalcItemSize, CalcItemWidth, CalcWrapWidthForPos, IsClippedEx, IsItemActive, IsItemHovered, ItemAdd, ItemHoverable, ItemSize, MarkItemEdited, PopItemFlag, PopItemWidth, PushItemFlag, PushItemWidth, PushMultiItemsWidths, SetNextItemWidth};
 use crate::item_status_flags::{ImGuiItemStatusFlags, ImGuiItemStatusFlags_Checkable, ImGuiItemStatusFlags_Checked, ImGuiItemStatusFlags_FocusedByTabbing, ImGuiItemStatusFlags_HasDisplayRect, ImGuiItemStatusFlags_HoveredRect, ImGuiItemStatusFlags_HoveredWindow, ImGuiItemStatusFlags_Openable, ImGuiItemStatusFlags_Opened, ImGuiItemStatusFlags_ToggledOpen, ImGuiItemStatusFlags_ToggledSelection};
@@ -562,7 +563,7 @@ pub fn InputTextCalcTextLenAndLineCount(text_begin: &String, out_text_end: &mut 
 pub unsafe fn InputTextCalcTextSizeW(
     text_begin: &String,
     remaining: &mut usize,
-    out_offset: Option<&mut ImVec2>,
+    mut out_offset: Option<&mut ImVec2>,
     stop_on_new_line: bool) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -599,9 +600,10 @@ pub unsafe fn InputTextCalcTextSizeW(
     if text_size.x < line_width{
         text_size.x = line_width;}
 
-    if out_offset {
+    if out_offset.is_some() {
         // offset allow for the possibility of sitting after a trailing
-        *out_offset = ImVec2::new(line_width, text_size.y + line_height);
+        // *out_offset. = ImVec2::new(line_width, text_size.y + line_height);
+        let _ = out_offset.replace(&mut ImVec2::from_floats(line_width, text_size.y + line_height));
     }
 
     if line_width > 0.0 as c_float || text_size.y == 0.0 {
@@ -670,24 +672,51 @@ pub unsafe fn is_word_boundary_from_left(obj: &mut ImGuiInputTextState, idx: c_i
     if obj.Flags & ImGuiInputTextFlags_Password { return 0; }
     return if idx > 0 { (!is_separator(obj.TextW[idx - 1]) & &is_separator(obj.TextW[idx])) } else { 1 };
 }
-static c_int  STB_TEXTEDIT_MOVEWORDLEFT_IMPL(obj: &mut ImGuiInputTextState, idx: c_int) -> c_int  { idx-= 1; while (idx >= 0 && !is_word_boundary_from_right(obj, idx)) idx-= 1; return if idx < 0 { 0} else {idx}; }
-static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj: &mut ImGuiInputTextState, idx: c_int)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_left(obj, idx)) idx+= 1; return if idx > len { len} else {idx}; }
-static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj: &mut ImGuiInputTextState, idx: c_int)   { idx+= 1; let len: c_int = obj->CurLenW; while (idx < len && !is_word_boundary_from_right(obj, idx)) idx+= 1; return if idx > len { len} else {idx}; }
-static c_int  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(obj: &mut ImGuiInputTextState, idx: c_int)  { if (GetIO().ConfigMacOSXBehaviors) return STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx); else return STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx); }
+
+pub unsafe fn STB_TEXTEDIT_MOVEWORDLEFT_IMPL(obj: &mut ImGuiInputTextState, mut idx: c_int) -> c_int {
+    idx -= 1;
+    while idx >= 0 && is_word_boundary_from_right(obj, idx) == 0 {
+        idx -= 1;
+    }
+    return if idx < 0 { 0 } else { idx };
+}
+
+pub unsafe fn STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj: &mut ImGuiInputTextState, mut idx: c_int) -> c_int {
+    idx += 1;
+    let len = obj.CurLenW;
+    while idx < len && is_word_boundary_from_left(obj, idx) == 0 {
+        idx += 1;
+    }
+    return if idx > len { len } else { idx };
+}
+
+pub unsafe fn STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj: &mut ImGuiInputTextState, mut idx: c_int) -> c_int {
+    idx += 1;
+    let len: c_int = obj.CurLenW;
+    while idx < len && is_word_boundary_from_right(obj, idx) == 0 {
+        idx += 1;
+    }
+    return if idx > len { len } else { idx };
+}
+
+
+pub unsafe fn  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(obj: &mut ImGuiInputTextState, mut idx: c_int) -> c_int {
+    return if GetIO().ConfigMacOSXBehaviors { STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx) } else { STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx) }
+}
 // #define STB_TEXTEDIT_MOVEWORDLEFT   STB_TEXTEDIT_MOVEWORDLEFT_IMPL  // They need to be #define for stb_textedit.h
 // #define STB_TEXTEDIT_MOVEWORDRIGHT  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL
 
 pub unsafe fn STB_TEXTEDIT_DELETECHARS(obj: &mut ImGuiInputTextState, pos: c_int, n: c_int)
 {
-    *mut let dst: ImWchar = obj.TextW.Data + pos;
+    let mut dst = &mut obj.TextW[pos..];
 
     // We maintain our buffer length in both UTF-8 and wchar formats
-    obj->Edited = true;
-    obj->CurLenA -= ImTextCountUtf8BytesFromStr(dst, dst + n);
-    obj->CurLenW -= n;
+    obj.Edited = true;
+    obj.CurLenA -= ImTextCountUtf8BytesFromStr(dst, dst + n);
+    obj.CurLenW -= n;
 
     // Offset remaining text (FIXME-OPT: Use memmove)
-    let src: *const ImWchar = obj.TextW.Data + pos + n;
+    let src = &mut obj.TextW[pos + n..];
     while (let c: ImWchar = *src++)
         *dst++ = c;
     *dst = '\0';
@@ -696,17 +725,17 @@ pub unsafe fn STB_TEXTEDIT_DELETECHARS(obj: &mut ImGuiInputTextState, pos: c_int
 pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: &mut ImGuiInputTextState, pos: c_int, new_text: *const ImWchar, new_text_len: c_int) -> bool
 {
     let is_resizable: bool = flag_set(obj.Flags, ImGuiInputTextFlags_CallbackResize) != 0;
-    let text_len: c_int = obj->CurLenW;
+    let text_len: c_int = obj.CurLenW;
     // IM_ASSERT(pos <= text_len);
 
     let new_text_len_utf8: c_int = ImTextCountUtf8BytesFromStr(new_text, new_text + new_text_len);
-    if !is_resizable && (new_text_len_utf8 + obj->CurLenA + 1 > obj->BufCapacityA) { return  false; }
+    if !is_resizable && (new_text_len_utf8 + obj.CurLenA + 1 > obj.BufCapacityA) { return  false; }
 
     // Grow internal buffer if needed
     if (new_text_len + text_len + 1 > obj.TextW.Size)
     {
         if !is_resizable { return  false; }
-        // IM_ASSERT(text_len < obj->TextW.Size);
+        // IM_ASSERT(text_len < obj.TextW.Size);
         obj.TextW.resize(text_len + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1);
     }
 
@@ -715,10 +744,10 @@ pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: &mut ImGuiInputTextState, pos: c_int
         memmove(text + pos + new_text_len, text + pos, (text_len - pos) * sizeof);
     memcpy(text + pos, new_text, new_text_len * sizeof);
 
-    obj->Edited = true;
-    obj->CurLenW += new_text_len;
-    obj->CurLenA += new_text_len_utf8;
-    obj.TextW[obj->CurLenW] = '\0';
+    obj.Edited = true;
+    obj.CurLenW += new_text_len;
+    obj.CurLenA += new_text_len_utf8;
+    obj.TextW[obj.CurLenW] = '\0';
 
     return true;
 }
