@@ -715,34 +715,40 @@ pub unsafe fn STB_TEXTEDIT_DELETECHARS(obj: &mut ImGuiInputTextState, pos: c_int
     obj.CurLenA -= ImTextCountUtf8BytesFromStr(dst, dst + n);
     obj.CurLenW -= n;
 
+    // TODO
     // Offset remaining text (FIXME-OPT: Use memmove)
-    let src = &mut obj.TextW[pos + n..];
-    while (let c: ImWchar = *src++)
-        *dst++ = c;
-    *dst = '\0';
+    // let src = &mut obj.TextW[pos + n..];
+//     while (let c: ImWchar = *src++){
+//     *dst + + = c;
+// }
+//     *dst = '\0';
 }
 
-pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: &mut ImGuiInputTextState, pos: c_int, new_text: *const ImWchar, new_text_len: c_int) -> bool
+pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: &mut ImGuiInputTextState, pos: usize, new_text: *const ImWchar, new_text_len: usize) -> bool
 {
-    let is_resizable: bool = flag_set(obj.Flags, ImGuiInputTextFlags_CallbackResize) != 0;
-    let text_len: c_int = obj.CurLenW;
+    let is_resizable: bool = flag_set(obj.Flags, ImGuiInputTextFlags_CallbackResize);
+    let text_len = obj.CurLenW;
     // IM_ASSERT(pos <= text_len);
 
     let new_text_len_utf8: c_int = ImTextCountUtf8BytesFromStr(new_text, new_text + new_text_len);
     if !is_resizable && (new_text_len_utf8 + obj.CurLenA + 1 > obj.BufCapacityA) { return  false; }
 
     // Grow internal buffer if needed
-    if (new_text_len + text_len + 1 > obj.TextW.Size)
+    if new_text_len + text_len + 1 > obj.TextW.len()
     {
         if !is_resizable { return  false; }
         // IM_ASSERT(text_len < obj.TextW.Size);
-        obj.TextW.resize(text_len + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1);
+        obj.TextW.resize(text_len + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1, 0);
     }
 
-    *mut let text: ImWchar = obj.TextW.Data;
-    if (pos != text_len)
-        memmove(text + pos + new_text_len, text + pos, (text_len - pos) * sizeof);
-    memcpy(text + pos, new_text, new_text_len * sizeof);
+    let text = obj.TextW;
+    if pos != text_len {
+        // TODO:
+        // memmove(text + pos + new_text_len, text + pos, (text_len - pos) * sizeof);
+
+    }
+    // TODO:
+    // memcpy(text + pos, new_text, new_text_len * sizeof);
 
     obj.Edited = true;
     obj.CurLenW += new_text_len;

@@ -16,8 +16,8 @@ pub struct ImGuiInputTextState {
     pub ID: ImGuiID,
     // widget id owning the text state
 // c_int                     CurLenW, CurLenA;       // we need to maintain our buffer length in both UTF-8 and wchar format. UTF-8 length is valid even if TextA is not.
-    pub CurLenW: c_int,
-    pub CurLenA: c_int,
+    pub CurLenW: usize,
+    pub CurLenA: usizec_int,
     pub TextW: Vec<u8>,
     // edit buffer, we need to persist but can't guarantee the persistence of the user-provided buffer. so we copy into own buffer.
     pub TextA: Vec<char>,
@@ -26,7 +26,7 @@ pub struct ImGuiInputTextState {
     // backup of end-user buffer at the time of focus (in UTF-8, unaltered)
     pub TextAIsValid: bool,
     // temporary UTF8 buffer is not initially valid before we make the widget active (until then we pull the data from user argument)
-    pub BufCapacityA: c_int,
+    pub BufCapacityA: usize,
     // end-user buffer capacity
     pub ScrollX: c_float,
     // horizontal scrolling/offset
