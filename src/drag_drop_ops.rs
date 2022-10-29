@@ -125,13 +125,13 @@ pub unsafe fn BeginDragDropSource(flags: ImGuiDragDropFlags) -> bool
     else
     {
         window= null_mut();
-        source_id = ImHashStr(str_to_const_c_char_ptr("#SourceExtern"), 0, 0);
+        source_id = ImHashStr("#SourceExtern", 0, 0);
         source_drag_active = true;
     }
 
-    if (source_drag_active)
+    if source_drag_active
     {
-        if (!g.DragDropActive)
+        if !g.DragDropActive
         {
             // IM_ASSERT(source_id != 0);
             ClearDragDrop();
@@ -237,20 +237,20 @@ pub unsafe fn SetDragDropPayload(payload_type: *const c_char, data: *const c_voi
 pub unsafe fn BeginDragDropTargetCustom(bb: &ImRect, id: ImGuiID) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (!g.DragDropActive) {
+    if !g.DragDropActive {
         return false;
     }
 
     let mut window = g.CurrentWindow;
     let mut hovered_window: *mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
-    if (hovered_window == null_mut() || window.RootWindowDockTree != hovered_window.RootWindowDockTree) {
+    if hovered_window == null_mut() || window.RootWindowDockTree != hovered_window.RootWindowDockTree {
         return false;
     }
     // IM_ASSERT(id != 0);
-    if (!IsMouseHoveringRect(&bb.Min, &bb.Max, false) || (id == g.DragDropPayload.SourceId)) {
+    if !IsMouseHoveringRect(&bb.Min, &bb.Max, false) || (id == g.DragDropPayload.SourceId) {
         return false;
     }
-    if (window.SkipItems) {
+    if window.SkipItems {
         return false;
     }
 

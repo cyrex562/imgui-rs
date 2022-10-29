@@ -440,7 +440,7 @@ pub unsafe fn InputTextFilterCharacter(p_char: char, flags: ImGuiInputTextFlags,
     // // Custom callback filter
     // if (flags & ImGuiInputTextFlags_CallbackCharFilter)
     // {
-    //     ImGuiInputTextCallbackData callback_data;
+    //     callback_data: ImGuiInputTextCallbackData;
     //     memset(&callback_data, 0, sizeof(ImGuiInputTextCallbackData));
     //     callback_data.EventFlag = ImGuiInputTextFlags_CallbackCharFilter;
     //     callback_data.EventChar = c;
@@ -464,10 +464,10 @@ pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(state: &mut ImGuiInpu
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let old_buf: *const ImWchar = state.TextW.Data;
     let old_length: usize = state.CurLenW;
-    let new_length: usize = ImTextCountCharsFromUtf8(new_buf_a, new_buf_a + new_length_a);
+    let new_length: usize = ImTextCountCharsFromUtf8(new_buf_a);
     g.TempBuffer.reserve_discard((new_length + 1) * sizeof);
     let mut new_buf: String = String::from(g.TempBuffer.clone());
-    ImTextStrFromUtf8(&mut new_buf, new_length + 1, new_buf_a, new_buf_a + new_length_a, 0);
+    ImTextStrFromUtf8(&mut new_buf, new_length + 1, new_buf_a);
 
     let shorter_length: usize = old_length.min(new_length);
     let mut first_diff: usize = 0;
@@ -517,7 +517,7 @@ pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(state: &mut ImGuiInpu
 pub unsafe fn InputTextEx(label: &str,
                           hint: &str,
                           buf: &mut String,
-                          buf_size: usize,
+                          mut buf_size: usize,
                           size_arg: &mut ImVec2,
                           flags: ImGuiInputTextFlags, 
                           callback: Option<ImGuiInputTextCallback>,
@@ -646,7 +646,7 @@ pub unsafe fn InputTextEx(label: &str,
         state.TextW.resize(buf_size + 1);          // wchar count <= UTF-8 count. we use +1 to make sure that .Data is always pointing to at least an empty string.
         state.TextA.clear();
         state.TextAIsValid = false;                // TextA is not valid yet (we will display buf until then)
-        state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, buf_size, buf, None, buf_end);
+        state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, buf_size, buf);
         state.CurLenA = (buf_end - buf);      // We can't get the result from ImStrncpy() above because it is not UTF-8 aware. Here we'll cut off malformed UTF-8.
 
         if recycle_state
@@ -723,7 +723,7 @@ pub unsafe fn InputTextEx(label: &str,
     {
         let mut  buf_end = 0usize;
         state.TextW.resize(buf_size + 1);
-        state.CurLenW = ImTextStrFromUtf8(state.TextW, state.TextW.len(), buf, None, buf_end);
+        state.CurLenW = ImTextStrFromUtf8(state.TextW, state.TextW.len(), buf);
         state.CurLenA = (buf_end - buf);
         state.CursorClamp();
         render_selection &= state.HasSelection();
@@ -991,7 +991,7 @@ pub unsafe fn InputTextEx(label: &str,
                 // Filter pasted buffer
                 let clipboard_len = clipboard.len();
                 let mut clipboard_filtered = String::with_capacity(clipboard_len);
-                let clipboard_filtered_len: c_int = 0;
+                let mut clipboard_filtered_len: usize = 0;
                 // for (s: &str = clipboard; *s; )
                 for s in clipboard
                 {
@@ -999,14 +999,16 @@ pub unsafe fn InputTextEx(label: &str,
                     s += ImTextCharFromUtf8(&mut c, s);
                     if c == 0 {
                         break(); }
-                    if !InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Clipboard)
+                    if !InputTextFilterCharacter(c, flags, callback, callback_user_data, ImGuiInputSource_Clipboard) {
                         continue;
-                    clipboard_filtered[clipboard_filtered_len++] = c;
+                    }
+                    clipboard_filtered[clipboard_filtered_len] = c;
+                    clipboard_filtered_len += 1;
                 }
                 clipboard_filtered[clipboard_filtered_len] = 0;
-                if (clipboard_filtered_len > 0) // If everything was filtered, ignore the pasting operation
+                if clipboard_filtered_len > 0 // If everything was filtered, ignore the pasting operation
                 {
-                    stb_textedit_paste(state, &state.Stb, clipboard_filtered, clipboard_filtered_len);
+                    stb_textedit_paste(state, &mut state.Stb, &mut clipboard_filtered, clipboard_filtered_len);
                     state.CursorFollow = true;
                 }
                 MemFree(clipboard_filtered);
@@ -1018,26 +1020,26 @@ pub unsafe fn InputTextEx(label: &str,
     }
 
     // Process callbacks and apply result back to user's buffer.
-    let mut  apply_new_text: &str= null_mut();
-    let apply_new_text_length: c_int = 0;
-    if (g.ActiveId == id)
+    let mut  apply_new_text = String::default();
+    let mut apply_new_text_length: usize = 0;
+    if g.ActiveId == id
     {
         // IM_ASSERT(state != NULL);
-        if (cancel_edit)
+        if cancel_edit
         {
             // Restore initial value. Only return true if restoring to the initial value changes the current buffer contents.
-            if (!is_readonly && strcmp(buf, state.InitialTextA.Data) != 0)
+            if !is_readonly && buf != state.InitialTextA
             {
                 // Push records into the undo stack so we can CTRL+Z the revert operation itself
                 apply_new_text = state.InitialTextA.Data;
                 apply_new_text_length = state.InitialTextA.Size - 1;
-                Vec<ImWchar> w_text;
-                if (apply_new_text_length > 0)
+                let mut w_text: Vec<char> = vec![];
+                if apply_new_text_length > 0
                 {
-                    w_text.resize(ImTextCountCharsFromUtf8(apply_new_text, apply_new_text + apply_new_text_length) + 1);
-                    ImTextStrFromUtf8(w_text.Data, w_text.Size, apply_new_text, apply_new_text + apply_new_text_length);
+                    w_text.resize(ImTextCountCharsFromUtf8(apply_new_text.as_str()) + 1, '\0');
+                    ImTextStrFromUtf8(w_text.Data, w_text.Size, &apply_new_text);
                 }
-                stb::stb_textedit_replace(state, &state.Stb, w_text.Data, if (apply_new_text_length > 0) { (w_text.Size - 1)} else{ 0});
+                stb::stb_textedit_replace(state, &mut state.Stb, w_text.Data, if (apply_new_text_length > 0) { (w_text.Size - 1)} else{ 0});
             }
         }
 
@@ -1046,14 +1048,14 @@ pub unsafe fn InputTextEx(label: &str,
         {
             state.TextAIsValid = true;
             state.TextA.resize(state.TextW.Size * 4 + 1);
-            ImTextStrToUtf8(state.TextA.Data, state.TextA.Size, state.TextW.Data, null_mut());
+            ImTextStrToUtf8(state.TextA.Data, state.TextA.Size, state.TextW.Data);
         }
 
         // When using 'ImGuiInputTextFlags_EnterReturnsTrue' as a special case we reapply the live buffer back to the input buffer before clearing ActiveId, even though strictly speaking it wasn't modified on this frame.
         // If we didn't do that, code like InputInt() with ImGuiInputTextFlags_EnterReturnsTrue would fail.
         // This also allows the user to use InputText() with ImGuiInputTextFlags_EnterReturnsTrue without maintaining any user-side storage (please note that if you use this property along ImGuiInputTextFlags_CallbackResize you can end up with your temporary string object unnecessarily allocating once a frame, either store your string data, either if you don't then don't use ImGuiInputTextFlags_CallbackResize).
         let apply_edit_back_to_user_buffer: bool = !cancel_edit || (validated && flag_set(flags, ImGuiInputTextFlags_EnterReturnsTrue));
-        if (apply_edit_back_to_user_buffer)
+        if apply_edit_back_to_user_buffer
         {
             // Apply new value immediately - copy modified buffer back
             // Note that as soon as the input box is active, the in-widget value gets priority over any underlying modification of the input buffer
@@ -1061,46 +1063,46 @@ pub unsafe fn InputTextEx(label: &str,
             // FIXME-OPT: CPU waste to do this every time the widget is active, should mark dirty state from the stb_textedit callbacks.
 
             // User callback
-            if ((flags & (ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackAlways)) != 0)
+            if flag_set(flags , (ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackAlways))
             {
                 // IM_ASSERT(callback != NULL);
 
                 // The reason we specify the usage semantic (Completion/History) is that Completion needs to disable keyboard TABBING at the moment.
                 event_flag: ImGuiInputTextFlags = 0;
                 let mut event_key: ImGuiKey =  ImGuiKey_None;
-                if (flag_set(flags, ImGuiInputTextFlags_CallbackCompletion) && IsKeyPressed(ImGuiKey_Tab))
+                if flag_set(flags, ImGuiInputTextFlags_CallbackCompletion) && IsKeyPressed(ImGuiKey_Tab, false)
                 {
                     event_flag = ImGuiInputTextFlags_CallbackCompletion;
                     event_key = ImGuiKey_Tab;
                 }
-                else if (flag_set(flags, ImGuiInputTextFlags_CallbackHistory) && IsKeyPressed(ImGuiKey_UpArrow))
+                else if flag_set(flags, ImGuiInputTextFlags_CallbackHistory) && IsKeyPressed(ImGuiKey_UpArrow, false)
                 {
                     event_flag = ImGuiInputTextFlags_CallbackHistory;
                     event_key = ImGuiKey_UpArrow;
                 }
-                else if (flag_set(flags, ImGuiInputTextFlags_CallbackHistory) && IsKeyPressed(ImGuiKey_DownArrow))
+                else if flag_set(flags, ImGuiInputTextFlags_CallbackHistory) && IsKeyPressed(ImGuiKey_DownArrow, false)
                 {
                     event_flag = ImGuiInputTextFlags_CallbackHistory;
                     event_key = ImGuiKey_DownArrow;
                 }
-                else if (flag_set(flags, ImGuiInputTextFlags_CallbackEdit) && state.Edited)
+                else if flag_set(flags, ImGuiInputTextFlags_CallbackEdit) && state.Edited
                 {
                     event_flag = ImGuiInputTextFlags_CallbackEdit;
                 }
-                else if (flags & ImGuiInputTextFlags_CallbackAlways)
+                else if flag_set(flags , ImGuiInputTextFlags_CallbackAlways)
                 {
                     event_flag = ImGuiInputTextFlags_CallbackAlways;
                 }
 
-                if (event_flag)
+                if event_flag
                 {
-                    ImGuiInputTextCallbackData callback_data;
-                    memset(&callback_data, 0, sizeof(ImGuiInputTextCallbackData));
+                    let mut callback_data: ImGuiInputTextCallbackData = ImGuiInputTextCallbackData::default();
+                    // memset(&callback_data, 0, sizeof(ImGuiInputTextCallbackData));
                     callback_data.EventFlag = event_flag;
                     callback_data.Flags = flags;
-                    callback_data.UserData = callback_user_data;
+                    callback_data.UserData = callback_user_data.unwrap_or(&vec![]).clone();
 
-                    callback_buf: *mut c_char = if is_readonly { buf} else {state.TextA.Data};
+                    let mut callback_buf: String = if is_readonly { buf.clone()} else {state.TextA};
                     callback_data.EventKey = event_key;
                     callback_data.Buf = callback_buf;
                     callback_data.BufTextLen = state.CurLenA;
@@ -1108,31 +1110,36 @@ pub unsafe fn InputTextEx(label: &str,
                     callback_data.BufDirty = false;
 
                     // We have to convert from wchar-positions to UTF-8-positions, which can be pretty slow (an incentive to ditch the ImWchar buffer, see https://github.com/nothings/stb/issues/188)
-                    *mut let text: ImWchar = state.TextW.Data;
-                    let utf8_cursor_pos: c_int = callback_data.CursorPos = ImTextCountUtf8BytesFromStr(text, text + state.Stb.cursor);
-                    let utf8_selection_start: c_int = callback_data.SelectionStart = ImTextCountUtf8BytesFromStr(text, text + state.Stb.select_start);
-                    let utf8_selection_end: c_int = callback_data.SelectionEnd = ImTextCountUtf8BytesFromStr(text, text + state.Stb.select_end);
+                    let mut text = state.TextW.clone();
+                    callback_data.CursorPos = ImTextCountUtf8BytesFromStr(text);
+                    let utf8_cursor_pos = callback_data.CursorPos;
+                    callback_data.SelectionStart = ImTextCountUtf8BytesFromStr(text);
+                    let utf8_selection_start = callback_data.SelectionStart;
+                    callback_data.SelectionEnd = ImTextCountUtf8BytesFromStr(text);
+                    let utf8_selection_end = callback_data.SelectionEnd;
 
                     // Call user code
-                    callback(&callback_data);
+                    callback.unwrap()(&mut callback_data);
 
                     // Read back what user may have modified
-                    callback_buf = if is_readonly { buf }else {state.TextA.Data}; // Pointer may have been invalidated by a resize callback
+                    callback_buf = if is_readonly { buf.clone() }else {state.TextA}; // Pointer may have been invalidated by a resize callback
                     // IM_ASSERT(callback_data.Buf == callback_bu0f32);         // Invalid to modify those fields
                     // IM_ASSERT(callback_data.BufSize == state->BufCapacityA);
                     // IM_ASSERT(callback_data.Flags == flags);
                     let buf_dirty: bool = callback_data.BufDirty;
-                    if (callback_data.CursorPos != utf8_cursor_pos || buf_dirty)            { state.Stb.cursor = ImTextCountCharsFromUtf8(callback_data.Buf, callback_data.Buf + callback_data.CursorPos); state.CursorFollow = true; }
-                    if (callback_data.SelectionStart != utf8_selection_start || buf_dirty)  { state.Stb.select_start = if callback_data.SelectionStart == callback_data.CursorPos { state.Stb.cursor} else { ImTextCountCharsFromUtf8(callback_data.Buf, callback_data.Buf + callback_data.SelectionStart)}; }
-                    if (callback_data.SelectionEnd != utf8_selection_end || buf_dirty)      { state.Stb.select_end = if callback_data.SelectionEnd == callback_data.SelectionStart { state.Stb.select_start} else { ImTextCountCharsFromUtf8(callback_data.Buf, callback_data.Buf + callback_data.SelectionEnd)}; }
-                    if (buf_dirty)
+                    if callback_data.CursorPos != utf8_cursor_pos || buf_dirty { state.Stb.cursor = ImTextCountCharsFromUtf8(callback_data.Buf.as_str()); state.CursorFollow = true; }
+                    if callback_data.SelectionStart != utf8_selection_start || buf_dirty {
+                        state.Stb.select_start = if callback_data.SelectionStart == callback_data.CursorPos { state.Stb.cursor} else { ImTextCountCharsFromUtf8(callback_data.Buf.as_str())}; }
+                    if callback_data.SelectionEnd != utf8_selection_end || buf_dirty { state.Stb.select_end = if callback_data.SelectionEnd == callback_data.SelectionStart { state.Stb.select_start} else { ImTextCountCharsFromUtf8(callback_data.Buf.as_str())}; }
+                    if buf_dirty
                     {
                         // IM_ASSERT(flag_set(flags, ImGuiInputTextFlags_ReadOnly) == 0);
                         // IM_ASSERT(callback_data.BufTextLen == strlen(callback_data.Bu0f32)); // You need to maintain BufTextLen if you change the text!
-                        InputTextReconcileUndoStateAfterUserCallback(state, callback_data.Buf, callback_data.BufTextLen); // FIXME: Move the rest of this block inside function and rename to InputTextReconcileStateAfterUserCallback() ?
-                        if (callback_data.BufTextLen > backup_current_text_length && is_resizable)
-                            state.TextW.resize(state.TextW.Size + (callback_data.BufTextLen - backup_current_text_length)); // Worse case scenario resize
-                        state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, state.TextW.Size, callback_data.Buf, null_mut());
+                        InputTextReconcileUndoStateAfterUserCallback(state, &callback_data.Buf, callback_data.BufTextLen); // FIXME: Move the rest of this block inside function and rename to InputTextReconcileStateAfterUserCallback() ?
+                        if callback_data.BufTextLen > backup_current_text_length && is_resizable {
+                            state.TextW.resize(state.TextW.Size + (callback_data.BufTextLen - backup_current_text_length));
+                        } // Worse case scenario resize
+                        state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, state.TextW.Size, &callback_data.Buf);
                         state.CurLenA = callback_data.BufTextLen;  // Assume correct length and valid UTF-8 from user, saves us an extra strlen()
                         state.CursorAnimReset();
                     }
@@ -1140,7 +1147,7 @@ pub unsafe fn InputTextEx(label: &str,
             }
 
             // Will copy result string if modified
-            if (!is_readonly && strcmp(state.TextA.Data, buf) != 0)
+            if !is_readonly && state.TextA != buf
             {
                 apply_new_text = state.TextA.Data;
                 apply_new_text_length = state.CurLenA;
@@ -1152,31 +1159,32 @@ pub unsafe fn InputTextEx(label: &str,
     }
 
     // Copy result to user buffer. This can currently only happen when (g.ActiveId == id)
-    if (apply_new_text != null_mut())
+    if apply_new_text != null_mut()
     {
         // We cannot test for 'backup_current_text_length != apply_new_text_length' here because we have no guarantee that the size
         // of our owned buffer matches the size of the string object held by the user, and by design we allow InputText() to be used
         // without any storage on user's side.
         // IM_ASSERT(apply_new_text_length >= 0);
-        if (is_resizable)
+        if is_resizable
         {
-            ImGuiInputTextCallbackData callback_data;
+            callback_data: ImGuiInputTextCallbackData;
             callback_data.EventFlag = ImGuiInputTextFlags_CallbackResize;
             callback_data.Flags = flags;
             callback_data.Buf = buf;
             callback_data.BufTextLen = apply_new_text_length;
             callback_data.BufSize = ImMax(buf_size, apply_new_text_length + 1);
             callback_data.UserData = callback_user_data;
-            callback(&callback_data);
-            buf = callback_data.Buf;
+            callback.unwrap()(&mut callback_data);
+            *buf = callback_data.Buf;
             buf_size = callback_data.BufSize;
-            apply_new_text_length = ImMin(callback_data.BufTextLen, buf_size - 1);
+            apply_new_text_length = callback_data.BufTextLen.min(buf_size - 1);
             // IM_ASSERT(apply_new_text_length <= buf_size);
         }
         //IMGUI_DEBUG_PRINT("InputText(\"%s\"): apply_new_text length %d\n", label, apply_new_text_length);
 
         // If the underlying buffer resize was denied or not carried to the next frame, apply_new_text_length+1 may be >= buf_size.
-        ImStrncpy(buf, apply_new_text, ImMin(apply_new_text_length + 1, buf_size));
+        // ImStrncpy(buf, apply_new_text, ImMin(apply_new_text_length + 1, buf_size));
+        *buf = apply_new_text;
         value_changed = true;
     }
 
@@ -1185,35 +1193,36 @@ pub unsafe fn InputTextEx(label: &str,
         ClearActiveID();}
 
     // Render frame
-    if (!is_multiline)
+    if !is_multiline
     {
-        RenderNavHighlight(frame_bb, id);
+        RenderNavHighlight(&frame_bb, id, 0);
         RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg, 0.0), true, style.FrameRounding);
     }
 
-    const clip_rect: ImVec4(frame_bb.Min.x, frame_bb.Min.y, frame_bb.Min.x + inner_size.x, frame_bb.Min.y + inner_size.y); // Not using frame_bb.Max because we have adjusted size
+    let mut clip_rect = ImVec4(frame_bb.Min.x, frame_bb.Min.y, frame_bb.Min.x + inner_size.x, frame_bb.Min.y + inner_size.y); // Not using frame_bb.Max because we have adjusted size
     let draw_pos: ImVec2 = if is_multiline { draw_window.DC.CursorPos} else {frame_bb.Min + style.FramePadding};
-    text_size: ImVec2::new(0.0, 0.0);
+    let mut text_size = ImVec2::from_floats(0.0, 0.0);
 
     // Set upper limit of single-line InputTextEx() at 2 million characters strings. The current pathological worst case is a long line
     // without any carriage return, which would makes ImFont::RenderText() reserve too many vertices and probably crash. Avoid it altogether.
     // Note that we only use this limit on single-line InputText(), so a pathologically large line on a InputTextMultiline() would still crash.
     let buf_display_max_length: c_int = 2 * 1024 * 1024;
-    let mut  buf_display: &str = if buf_display_from_state { state.TextA.Data} else {buf}; //-V595
-    let mut  buf_display_end: &str= null_mut(); // We have specialized paths below for setting the length
-    if (is_displaying_hint)
+    let mut  buf_display: String = if buf_display_from_state { state.TextA.clone()} else {buf.clone()}; //-V595
+    let mut  buf_display_end: usize = 0; // We have specialized paths below for setting the length
+    if is_displaying_hint
     {
-        buf_display = hint;
-        buf_display_end = hint + strlen(hint);
+        buf_display = String::from(hint);
+        buf_display_end = buf_display.len();
     }
 
     // Render text. We currently only render selection when the widget is active or while scrolling.
     // FIXME: We could remove the '&& render_cursor' to keep rendering selection when inactive.
-    if (render_cursor || render_selection)
+    if render_cursor || render_selection
     {
         // IM_ASSERT(state != NULL);
-        if (!is_displaying_hint)
-            buf_display_end = buf_display + state.CurLenA;
+        if !is_displaying_hint {
+            // buf_display_end = buf_display + state.CurLenA;
+        }
 
         // Render text (with cursor and selection)
         // This is going to be messy. We need to:
@@ -1222,23 +1231,25 @@ pub unsafe fn InputTextEx(label: &str,
         // - Measure text height (for scrollbar)
         // We are attempting to do most of that in **one main pass** to minimize the computation cost (non-negligible for large amount of text) + 2nd pass for selection rendering (we could merge them by an extra refactoring effort)
         // FIXME: This should occur on buf_display but we'd need to maintain cursor/select_start/select_end for UTF-8.
-        let text_begin: *const ImWchar = state.TextW.Data;
-        cursor_offset: ImVec2, select_start_offset;
+        let text_begin: String = state.TextW.clone();
+        // cursor_offset: ImVec2, select_start_offset;
+        let mut cursor_offset = ImVec2::default();
+        let mut select_start_offset = ImVec2::default();
 
         {
             // Find lines numbers straddling 'cursor' (slot 0) and 'select_start' (slot 1) positions.
-            *const ImWsearches_input_ptr: [c_char;2] = { null_mut(), null_mut() };
-            searches_result_line_no: [c_int;2] = { -1000, -1000 };
-            let searches_remaining: c_int = 0;
-            if (render_cursor)
+            let mut searches_input_ptr: [char;2] = [ '\0', '\0' ];
+            let mut searches_result_line_no: [i32;2] = [ -1000, -1000 ];
+            let mut searches_remaining: usize = 0;
+            if render_sdcursor
             {
-                searches_input_ptr[0] = text_begin + state.Stb.cursor;
+                searches_input_ptr[0] = text_begin[state.Stb.cursor];
                 searches_result_line_no[0] = -1;
                 searches_remaining+= 1;
             }
-            if (render_selection)
+            if render_selection
             {
-                searches_input_ptr[1] = text_begin + ImMin(state.Stb.select_start, state.Stb.select_end);
+                searches_input_ptr[1] = text_begin[state.Stb.select_start.min(state.Stb.select_start, state.Stb.select_end)];
                 searches_result_line_no[1] = -1;
                 searches_remaining+= 1;
             }
@@ -1246,14 +1257,17 @@ pub unsafe fn InputTextEx(label: &str,
             // Iterate all lines to find our line numbers
             // In multi-line mode, we never exit the loop until all lines are counted, so add one extra to the searches_remaining counter.
             searches_remaining += if is_multiline {1} else { 0 };
-            let line_count: c_int = 0;
+            let mut line_count: usize = 0;
             //for (const s: *mut ImWchar = text_begin; (s = (const ImWchar*)wcschr((const wchar_t*)s, (wchar_t)'\n')) != None; s++)  // FIXME-OPT: Could use this when wchar_t are 16-bit
-            for (*let s: ImWchar = text_begin; *s != 0; s++)
-                if (*s == '\n')
+            // for (*let s: ImWchar = text_begin; *s != 0; s++)
+            for s in text_begin {
+                if s == '\n'
                 {
                     line_count+= 1;
-                    if (searches_result_line_no[0] == -1 && s >= searches_input_ptr[0]) { searches_result_line_no[0] = line_count; if (--searches_remaining <= 0) break; }
-                    if (searches_result_line_no[1] == -1 && s >= searches_input_ptr[1]) { searches_result_line_no[1] = line_count; if (--searches_remaining <= 0) break; }
+                    if searches_result_line_no[0] == -1 && s >= searches_input_ptr[0] {
+                        searches_result_line_no[0] = line_count;
+                        if (--searches_remaining <= 0) { break; } }
+                    if (searches_result_line_no[1] == -1 && s >= searches_input_ptr[1]) { searches_result_line_no[1] = line_count; if (--searches_remaining <= 0) { break; } }
                 }
             line_count+= 1;
             if (searches_result_line_no[0] == -1)

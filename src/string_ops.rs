@@ -302,7 +302,7 @@ pub unsafe fn ImTextCharFromUtf8(out_char: &mut c, in_text: &str) -> c_int
 }
 
 // int ImTextStrFromUtf8(buf: *mut ImWchar, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
-pub unsafe fn ImTextStrFromUtf8(buf: &mut String, buf_size: usize, in_text: &String, in_text_end: Option<_>, in_text_remaining: usize)
+pub unsafe fn ImTextStrFromUtf8(buf: &mut String, buf_size: usize, in_text: &String)
 {
     // // buf_out: *mut ImWchar = buf;
     // let mut buf_out = buf;
@@ -327,7 +327,7 @@ pub unsafe fn ImTextStrFromUtf8(buf: &mut String, buf_size: usize, in_text: &Str
 }
 
 // int ImTextCountCharsFromUtf8(const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCountCharsFromUtf8(mut in_text: &str, in_text_end: *const c_char) -> usize
+pub unsafe fn ImTextCountCharsFromUtf8(mut in_text: &str) -> usize
 {
     // // int char_count = 0;
     // let mut char_count: i32 = 0;

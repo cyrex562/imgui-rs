@@ -670,10 +670,10 @@ pub unsafe fn stb_textedit_cut(str_var: &mut STB_TEXTEDIT_STRING, state: &mut ST
 }
 
 // API paste: replace existing selection with passed-in text
-pub unsafe fn stb_textedit_paste_internal(str_var: &mut STB_TEXTEDIT_STRING,
+pub unsafe fn stb_textedit_paste_internal(str_var: &mut String,
                                    state: &mut STB_TexteditState,
-                                   text: &mut STB_TEXTEDIT_CHARTYPE,
-                                   len: c_int) -> bool
+                                   text: &mut String,
+                                   len: usize) -> bool
 {
    // if there's a selection, the paste should delete it
    stb_textedit_clamp(str_var, state);
@@ -1453,7 +1453,7 @@ pub unsafe fn stb_textedit_initialize_state(state: &mut STB_TexteditState, is_si
 // #pragma GCC diagnostic ignored "-Wcast-qual"
 // #endif
 
-pub unsafe fn stb_textedit_paste(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, ctext: &mut STB_TEXTEDIT_CHARTYPE, len: c_int) -> bool
+pub unsafe fn stb_textedit_paste(str_var: &mut String, state: &mut STB_TexteditState, ctext: &mut String, len: usize) -> bool
 {
    return stb_textedit_paste_internal(str_var, state, ctext, len);
 }

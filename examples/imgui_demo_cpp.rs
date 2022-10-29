@@ -1452,7 +1452,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             struct TextFilters
             {
                 // Return 0 (pass) if the character is 'i' or 'm' or 'g' or 'u' or 'i'
-                pub fn FilterImGuiLetters(*mut ImGuiInputTextCallbackData data) -> c_int
+                pub fn FilterImGuiLetters(*mut data: ImGuiInputTextCallbackData) -> c_int
                 {
                     if data.EventChar < 256 && strchr("imgui", data.EventChar) { return  0; }
                     return 1;
@@ -1483,7 +1483,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         {
             struct Funcs
             {
-                pub fn MyCallback(*mut ImGuiInputTextCallbackData data) -> c_int
+                pub fn MyCallback(*mut data: ImGuiInputTextCallbackData) -> c_int
                 {
                     if (data.EventFlag == ImGuiInputTextFlags_CallbackCompletion)
                     {
@@ -1546,7 +1546,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 "See misc/cpp/imgui_stdlib.h for an implementation of this for std::string.");
             struct Funcs
             {
-                pub fn MyResizeCallback(*mut ImGuiInputTextCallbackData data) -> c_int
+                pub fn MyResizeCallback(*mut data: ImGuiInputTextCallbackData) -> c_int
                 {
                     if (data.EventFlag == ImGuiInputTextFlags_CallbackResize)
                     {

@@ -23,7 +23,7 @@ pub struct ImGuiInputTextCallbackData {
     // Flags: ImGuiInputTextFlags;          // What user passed to InputText()      // Read-only
     pub Flags: ImGuiInputTextFlags,
     // *mut c_void               UserData;       // What user passed to InputText()      // Read-only
-    pub UserData: *mut c_void,
+    pub UserData: Vec<u8>,
     // Arguments for the different callback events
     // - To modify the text buffer in a callback, prefer using the InsertChars() / DeleteChars() function. InsertChars() will take care of calling the resize callback if necessary.
     // - If you know your edits are not going to resize the underlying buffer allocation, you may modify the contents of 'Buf[]' directly. You need to update 'BufTextLen' accordingly (0 <= BufTextLen < BufSize) and set 'BufDirty'' to true so InputText can update its internal state.
@@ -32,7 +32,7 @@ pub struct ImGuiInputTextCallbackData {
     // ImGuiKey            EventKey;       // Key pressed (Up/Down/TAB)            // Read-only    // [Completion,History]
     pub EventKey: ImGuiKey,
     // char*               Buf;            // Text buffer                          // Read-write   // [Resize] Can replace pointer / [Completion,History,Always] Only write to pointed data, don't replace the actual pointer!
-    pub Buf: *mut c_char,
+    pub Buf: String,
     // c_int                 BufTextLen;     // Text length (in bytes)               // Read-write   // [Resize,Completion,History,Always] Exclude zero-terminator storage. In C land: == strlen(some_text), in C++ land: string.length()
     pub BufTextLen: size_t,
     // c_int                 BufSize;        // Buffer size (in bytes) = capacity+1  // Read-only    // [Resize,Completion,History,Always] Include zero-terminator storage. In C land == ARRAYSIZE(my_char_array), in C++ land: string.capacity()+1
