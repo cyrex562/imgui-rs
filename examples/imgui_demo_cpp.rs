@@ -1551,7 +1551,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                     if (data.EventFlag == ImGuiInputTextFlags_CallbackResize)
                     {
                         Vec<char>* my_str = (Vec<char>*)data.UserData;
-                        // IM_ASSERT(my_str->begin() == data->Bu0f32);
+                        // IM_ASSERT(my_str.begin() == data->Bu0f32);
                         my_str.resize(data.BufSize); // NB: On resizing calls, generally data->BufSize == data->BufTextLen + 1
                         data.Buf = my_str.begin();
                     }

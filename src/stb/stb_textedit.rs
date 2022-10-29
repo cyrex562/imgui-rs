@@ -288,10 +288,14 @@
 
 use std::ptr::null_mut;
 use libc::{c_char, c_float, c_int, c_short, c_uchar, size_t};
-use crate::a_widgets::{STB_TEXTEDIT_DELETECHARS, STB_TEXTEDIT_GETCHAR, STB_TEXTEDIT_GETWIDTH, STB_TEXTEDIT_INSERTCHARS, STB_TEXTEDIT_LAYOUTROW, STB_TEXTEDIT_NEWLINE, STB_TEXTEDIT_STRINGLEN};
+use crate::a_widgets::STB_TEXTEDIT_NEWLINE;
 use crate::input_text_state::ImGuiInputTextState;
 use crate::stb::stb_find_state::StbFindState;
+use crate::stb::stb_text_edit_row::StbTexteditRow;
 use crate::stb::stb_text_edit_state::STB_TexteditState;
+use crate::stb::{STB_TEXTEDIT_DELETECHARS, STB_TEXTEDIT_GETCHAR, STB_TEXTEDIT_GETWIDTH, STB_TEXTEDIT_INSERTCHARS, STB_TEXTEDIT_LAYOUTROW, STB_TEXTEDIT_STRINGLEN};
+use crate::stb::stb_undo_record::StbUndoRecord;
+use crate::stb::stb_undo_state::StbUndoState;
 use crate::stb_find_state::StbFindState;
 use crate::stb_text_edit_state::STB_TexteditState;
 use crate::stb_undo_record::StbUndoRecord;
@@ -343,16 +347,16 @@ pub type STB_TEXTEDIT_STRING = String;
 //
 
 // traverse the layout to locate the nearest character to a display position
-pub unsafe fn stb_text_locate_coord(str_var: &mut ImGuiInputTextState, x: c_float, y: c_float) -> c_int {
+pub unsafe fn stb_text_locate_coord(str_var: &mut ImGuiInputTextState, x: c_float, y: c_float) -> usize {
     let mut r = StbTexteditRow::default();
-    let n: c_int = STB_TEXTEDIT_STRINGLEN(str_var);
+    let n = STB_TEXTEDIT_STRINGLEN(str_var);
     let mut base_y: c_float = 0.0;
     let mut prev_x: c_float = 0.0;
-    let mut i: c_int = 0;
-    let mut k: c_int = 0;
+    let mut i: usize = 0;
+    let mut k: usize = 0;
 
-    r.x0 = 0;
-    r.x1 = 0;
+    r.x0 = 0.0;
+    r.x1 = 0.0;
     r.ymin = 0;
     r.ymax = 0;
     r.num_chars = 0;
@@ -714,11 +718,11 @@ pub unsafe fn stb_textedit_key(str_var: &mut STB_TEXTEDIT_STRING, state: &mut ST
 
       STB_TEXTEDIT_K_LEFT => {
           // if currently there's a selection, move cursor to start of selection
-          if (STB_TEXT_HAS_SELECTION(state)) {
+          if STB_TEXT_HAS_SELECTION(state) {
               stb_textedit_move_to_first(state);
           } else {
-              if (state.cursor > 0) {
-                  --state.cursor;
+              if state.cursor > 0 {
+                  state.cursor -= 1;
               }
           }
           state.has_preferred_x = 0;
@@ -727,7 +731,7 @@ pub unsafe fn stb_textedit_key(str_var: &mut STB_TEXTEDIT_STRING, state: &mut ST
 
       STB_TEXTEDIT_K_RIGHT => {
           // if currently there's a selection, move cursor to end of selection
-          if (STB_TEXT_HAS_SELECTION(state)) {
+          if STB_TEXT_HAS_SELECTION(state) {
               stb_textedit_move_to_last(str_var, state);
           } else {
               state.cursor += 1;
@@ -741,7 +745,7 @@ pub unsafe fn stb_textedit_key(str_var: &mut STB_TEXTEDIT_STRING, state: &mut ST
           stb_textedit_clamp(str_var, state);
           stb_textedit_prep_selection_at_cursor(state);
           // move selection left
-          if (state.select_end > 0) { state.select_end -= 1; }
+          if state.select_end > 0 { state.select_end -= 1; }
           state.cursor = state.select_end;
           state.has_preferred_x = 0;
       },
@@ -749,7 +753,7 @@ pub unsafe fn stb_textedit_key(str_var: &mut STB_TEXTEDIT_STRING, state: &mut ST
 
 // #ifdef STB_TEXTEDIT_MOVEWORDLEFT
       STB_TEXTEDIT_K_WORDLEFT => {
-          if (STB_TEXT_HAS_SELECTION(state)) {
+          if STB_TEXT_HAS_SELECTION(state) {
               stb_textedit_move_to_first(state);
           } else {
               state.cursor = STB_TEXTEDIT_MOVEWORDLEFT(str_var, state.cursor);
@@ -759,7 +763,7 @@ pub unsafe fn stb_textedit_key(str_var: &mut STB_TEXTEDIT_STRING, state: &mut ST
          // break;
 
       STB_TEXTEDIT_K_WORDLEFT | STB_TEXTEDIT_K_SHIFT => {
-          if ( ! STB_TEXT_HAS_SELECTION( state ) ) {
+          if ! STB_TEXT_HAS_SELECTION( state ) {
               stb_textedit_prep_selection_at_cursor(state);
           }
 
@@ -1214,7 +1218,7 @@ pub unsafe fn stb_textedit_discard_redo(state: *mut StbUndoState)
    }
 }
 
-pub unsafe fn stb_text_create_undo_record(state: *mut StbUndoState, numchars: c_int) -> *mut StbUndoRecord {
+pub unsafe fn stb_text_create_undo_record(state: *mut StbUndoState, numchars: usize) -> *mut StbUndoRecord {
     // any time we create a new undo record, we discard redo
     stb_textedit_flush_redo(state);
 
@@ -1225,7 +1229,7 @@ pub unsafe fn stb_text_create_undo_record(state: *mut StbUndoState, numchars: c_
     }
 
     // if the characters to store won't possibly fit in the buffer, we can't undo
-    if numchars > STB_TEXTEDIT_UNDOCHARCOUNT as c_int {
+    if numchars > STB_TEXTEDIT_UNDOCHARCOUNT {
         state.undo_point = 0;
         state.undo_char_point = 0;
         return null_mut();
@@ -1242,7 +1246,7 @@ pub unsafe fn stb_text_create_undo_record(state: *mut StbUndoState, numchars: c_
     return out;
 }
 
-pub unsafe fn stb_text_createundo(state: *mut StbUndoState, pos: c_int, insert_len: c_int, delete_len: c_int) -> &mut STB_TEXTEDIT_CHARTYPE {
+pub unsafe fn stb_text_createundo(state: *mut StbUndoState, pos: usize, insert_len: usize, delete_len: usize) -> *mut STB_TEXTEDIT_CHARTYPE {
     let mut r: *mut StbUndoRecord = stb_text_create_undo_record(state, insert_len);
     if r == null_mut() {
         return null_mut();
@@ -1407,7 +1411,7 @@ pub unsafe fn stb_text_makeundo_delete(str_var: &mut STB_TEXTEDIT_STRING, state:
    }
 }
 
-pub unsafe fn stb_text_makeundo_replace(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, stb_where: c_int, old_length: c_int, new_length: c_int)
+pub unsafe fn stb_text_makeundo_replace(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState, stb_where: usize, old_length: usize, new_length: usize)
 {
    let mut i: c_int = 0;
    p: &mut STB_TEXTEDIT_CHARTYPE = stb_text_createundo(&mut state.undostate, stb_where, old_length, new_length);
@@ -1421,7 +1425,7 @@ pub unsafe fn stb_text_makeundo_replace(str_var: &mut STB_TEXTEDIT_STRING, state
 }
 
 // reset the state to default
-pub unsafe fn stb_textedit_clear_state(state: &mut STB_TexteditState, is_single_line: c_int) {
+pub unsafe fn stb_textedit_clear_state(state: &mut STB_TexteditState, is_single_line: bool) {
     state.undostate.undo_point = 0;
     state.undostate.undo_char_point = 0;
     state.undostate.redo_point = STB_TEXTEDIT_UNDOSTATECOUNT as c_short;
@@ -1439,7 +1443,7 @@ pub unsafe fn stb_textedit_clear_state(state: &mut STB_TexteditState, is_single_
 }
 
 // API initialize
-pub unsafe fn stb_textedit_initialize_state(state: &mut STB_TexteditState, is_single_line: c_int)
+pub unsafe fn stb_textedit_initialize_state(state: &mut STB_TexteditState, is_single_line: bool)
 {
    stb_textedit_clear_state(state, is_single_line);
 }

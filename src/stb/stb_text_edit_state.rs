@@ -1,6 +1,7 @@
 #![allow(non_camel_case_types)]
 
 use libc::{c_float, c_int, c_uchar};
+use crate::stb::stb_undo_state::StbUndoState;
 use crate::stb_undo_state::StbUndoState;
 
 #[derive(Debug, Default, Clone)]
@@ -9,11 +10,11 @@ pub struct STB_TexteditState {
     //
     // public data
     //
-    pub cursor: c_int,
+    pub cursor: usize,
     // position of the text cursor within the string
-    pub select_start: c_int,
+    pub select_start: usize,
     // selection start point
-    pub select_end: c_int,
+    pub select_end: usize,
     // selection start and end point in characters; if equal, no selection.
     // note that start may be less than or greater than end (e.g. when
     // dragging the mouse, start is where the initial click was, and you
@@ -21,9 +22,9 @@ pub struct STB_TexteditState {
     pub insert_mode: c_uchar,
     // each textfield keeps its own insert mode state. to keep an app-wide
     // insert mode, copy this value in/out of the app state
-    pub row_count_per_page: c_int,
     // page size in number of row.
     // this value MUST be set to >0 for pageup or pagedown in multilines documents.
+    pub row_count_per_page: usize,
 
     /////////////////////
     //

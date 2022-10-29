@@ -1,7 +1,7 @@
 use libc::{c_char, c_float, c_int, size_t};
 use std::ptr::{null, null_mut};
 use std::borrow::Borrow;
-use crate::{a_widgets, data_type_ops, text_ops};
+use crate::{a_widgets, data_type_ops, input_num_ops, text_ops};
 use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
 use crate::color::{ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered, ImGuiCol_SliderGrab, ImGuiCol_SliderGrabActive};
 use crate::data_type::{ImGuiDataType, ImGuiDataType_Double, ImGuiDataType_Float, ImGuiDataType_S32};
@@ -364,7 +364,7 @@ pub unsafe fn SliderScalar(label: &str,
     {
         // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
         let is_clamp_input: bool = flag_set(flags, ImGuiSliderFlags_AlwaysClamp);
-        return a_widgets::TempInputScalar(&frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min} else {null_mut()}, if is_clamp_input { p_max} else {null_mut()});
+        return input_num_ops::TempInputScalar(&frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min} else {null_mut()}, if is_clamp_input { p_max} else {null_mut()});
     }
 
     // Draw frame

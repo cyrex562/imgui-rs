@@ -94,7 +94,7 @@ impl ImFont {
 
 
     // const ImFontGlyph*FindGlyph(ImWchar c) const;
-    pub unsafe fn FindGlyph(&mut self, c: ImWchar) -> *mut ImFontGlyph {
+    pub unsafe fn FindGlyph(&mut self, c: char) -> *mut ImFontGlyph {
         let mut out_glyph: ImFontGlyph = ImFontGlyph::default();
         if c >= self.IndexLookup.len() as ImWchar {
             out_glyph = *(self.FallbackGlyph.clone());

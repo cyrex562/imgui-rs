@@ -228,7 +228,7 @@ pub struct ImGuiIO {
     // bool        MouseDoubleClicked[5];              // Has mouse button been double-clicked? (same as MouseClickedCount[x] == 2)
     pub MouseDoubleClicked: [bool; 5],
     // ImU16       MouseClickedCount[5];               // == 0 (not clicked), == 1 (same as MouseClicked[]), == 2 (double-clicked), == 3 (triple-clicked) etc. when going from !Down to Down
-    pub MouseClickedCount: [u16; 5],
+    pub MouseClickedCount: [usize; 5],
     // ImU16       MouseClickedLastCount[5];           // Count successive number of clicks. Stays valid after mouse release. Reset after another click is done.
     pub MouseClickedLastCount: [u16; 5],
     // bool        MouseReleased[5];                   // Mouse button went from Down to !Down
@@ -258,7 +258,7 @@ pub struct ImGuiIO {
     pub InputQueueSurrogate: ImWchar16,
     // For AddInputCharacterUTF16()
     // ImVector<ImWchar> InputQueueCharacters;         // Queue of _characters_ input (obtained by platform backend). Fill using AddInputCharacter() helper.
-    pub InputQueueCharacters: Vec<ImWchar>,
+    pub InputQueueCharacters: Vec<char>,
 }
 
 

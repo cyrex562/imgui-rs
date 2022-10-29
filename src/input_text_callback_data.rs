@@ -1,7 +1,11 @@
-use crate::input_text_flags::ImGuiInputTextFlags;
+use crate::input_text_flags::{ImGuiInputTextFlags, ImGuiInputTextFlags_CallbackResize};
 use crate::key::ImGuiKey;
 use crate::type_defs::ImWchar;
-use libc::{c_char, c_void, size_t};
+use libc::{c_char, c_int, c_void, size_t};
+use crate::GImGui;
+use crate::input_text_state::ImGuiInputTextState;
+use crate::math_ops::{ImClamp, ImMax};
+use crate::utils::flag_set;
 
 // Shared state of InputText(), passed as an argument to your callback when a ImGuiInputTextFlags_Callback* flag is used.
 // The callback function should return 0 by default.
@@ -49,8 +53,67 @@ impl ImGuiInputTextCallbackData {
     //  ImGuiInputTextCallbackData();
 
     // c_void      DeleteChars(pos: c_int, bytes_count: c_int);
+    // FIXME: The existence of this rarely exercised code path is a bit of a nuisance.
+pub unsafe fn DeleteChars(&mut self, pos: usize, bytes_count: usize)
+{
+    // IM_ASSERT(pos + bytes_count <= BufTextLen);
+    // TODO
+    // dst: *mut c_char = self.Buf + pos;
+    // let mut  src: &str = self.Buf + pos + bytes_count;
+    // while ( c: c_char = *src++) {
+    //     *dst + + = c;
+    // }
+    // *dst = '\0';
+
+    if self.CursorPos >= pos + bytes_count {
+        self.CursorPos -= bytes_count;
+    }
+    else if self.CursorPos >= pos {
+        self.CursorPos = pos;}
+    self.SelectionEnd = self.CursorPos;
+    self.SelectionStart = self.SelectionEnd;
+    self.BufDirty = true;
+    self.BufTextLen -= bytes_count;
+}
 
     // c_void      InsertChars(pos: c_int, text: *const c_char, text_end: *const c_char = null_mut());
+    pub unsafe fn InsertChars(&mut self, pos: usize, new_text: &str, new_text_end: &str)
+{
+    let is_resizable: bool = flag_set(self.Flags, ImGuiInputTextFlags_CallbackResize);
+    let new_text_len: usize = if new_text_end { (new_text_end - new_text)} else {new_text.len()};
+    if new_text_len + self.BufTextLen >= BufSize
+    {
+        if !is_resizable { return ; }
+
+        // Contrary to STB_TEXTEDIT_INSERTCHARS() this is working in the UTF8 buffer, hence the mildly similar code (until we remove the U16 buffer altogether!)
+        let g = GImGui; // ImGuiContext& g = *GImGui;
+        edit_state: &mut ImGuiInputTextState = &mut g.InputTextState;
+        // IM_ASSERT(edit_state.ID != 0 && g.ActiveId == edit_state.ID);
+        // IM_ASSERT(Buf == edit_state->TextA.Data);
+        let new_buf_size: usize = self.BufTextLen + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1;
+        edit_state.TextA.reserve(new_buf_size + 1);
+        Buf = edit_state.TextA.Data;
+        BufSize = edit_state.BufCapacityA = new_buf_size;
+    }
+
+    if (self.BufTextLen != pos) {
+        // TODO
+        // memmove(self.Buf + pos + new_text_len, self.Buf + pos, (self.BufTextLen - pos));
+    }
+    // TODO
+    // memcpy(Buf + pos, new_text, new_text_len * sizeof);
+
+    self.Buf[self.BufTextLen + new_text_len] = '\0';
+
+    if self.CursorPos >= pos {
+        self.CursorPos += new_text_len;
+    }
+    self.SelectionEnd = self.CursorPos;
+    self.SelectionStart = self.SelectionEnd;
+    self.BufDirty = true;
+    self.BufTextLen += new_text_len;
+}
+
 
     // c_void                SelectAll()             { SelectionStart = 0; SelectionEnd = BufTextLen; }
     pub fn SelectAll(&mut self) {

@@ -2,7 +2,7 @@ use libc::{c_char, c_float, c_int, INT_MAX, INT_MIN, size_t};
 use std::ptr::{null, null_mut};
 use crate::data_type::{ImGuiDataType, ImGuiDataType_Double, ImGuiDataType_Float, ImGuiDataType_S32};
 use crate::data_type_info::GDataTypeInfo;
-use crate::{a_widgets, data_type_ops, GImGui, slider_ops, text_ops};
+use crate::{a_widgets, data_type_ops, GImGui, input_num_ops, slider_ops, text_ops};
 use crate::activate_flags::ImGuiActivateFlags_PreferInput;
 use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
 use crate::color::{ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered};
@@ -266,7 +266,7 @@ pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut 
     {
         // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
         let is_clamp_input: bool = flag_set(flags, ImGuiSliderFlags_AlwaysClamp) && (p_min == null_mut() || p_max == null_mut() || data_type_ops::DataTypeCompare(data_type, p_min, p_max) < 0);
-        return a_widgets::TempInputScalar(&frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min } else { null_mut() }, if is_clamp_input { p_max } else { null_mut() });
+        return input_num_ops::TempInputScalar(&frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min } else { null_mut() }, if is_clamp_input { p_max } else { null_mut() });
     }
 
     // Draw frame

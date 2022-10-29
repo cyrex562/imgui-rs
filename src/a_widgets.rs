@@ -105,7 +105,7 @@ use crate::data_type_temp_storage::ImGuiDataTypeTempStorage;
 use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_Right, ImGuiDir_Up};
 use crate::draw_flags::{ImDrawFlags, ImDrawFlags_RoundCornersAll, ImDrawFlags_RoundCornersBottomLeft, ImDrawFlags_RoundCornersBottomRight, ImDrawFlags_RoundCornersLeft, ImDrawFlags_RoundCornersNone, ImDrawFlags_RoundCornersRight, ImDrawFlags_RoundCornersTopRight};
 use crate::draw_list::ImDrawList;
-use crate::{button_ops, checkbox_ops, data_type_ops, drag, GImGui, ImGuiViewport, ImHashStr, layout_ops, popup_ops, radio_button, scrolling_ops, separator, text_ops};
+use crate::{button_ops, checkbox_ops, data_type_ops, drag, GImGui, ImGuiViewport, ImHashStr, input_num_ops, layout_ops, popup_ops, radio_button, scrolling_ops, separator, stb, text_ops};
 use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
 use crate::backend_flags::ImGuiBackendFlags_HasGamepad;
 use crate::button_flags::{ImGuiButtonFlags, ImGuiButtonFlags_AlignTextBaseLine, ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_DontClosePopups, ImGuiButtonFlags_FlattenChildren, ImGuiButtonFlags_MouseButtonDefault_, ImGuiButtonFlags_MouseButtonLeft, ImGuiButtonFlags_MouseButtonMask_, ImGuiButtonFlags_MouseButtonMiddle, ImGuiButtonFlags_MouseButtonRight, ImGuiButtonFlags_NoHoldingActiveId, ImGuiButtonFlags_NoHoveredOnFocus, ImGuiButtonFlags_NoKeyModifiers, ImGuiButtonFlags_NoNavFocus, ImGuiButtonFlags_None, ImGuiButtonFlags_PressedOnClick, ImGuiButtonFlags_PressedOnClickRelease, ImGuiButtonFlags_PressedOnClickReleaseAnywhere, ImGuiButtonFlags_PressedOnDefault_, ImGuiButtonFlags_PressedOnDoubleClick, ImGuiButtonFlags_PressedOnDragDropHold, ImGuiButtonFlags_PressedOnMask_, ImGuiButtonFlags_PressedOnRelease, ImGuiButtonFlags_Repeat};
@@ -172,7 +172,7 @@ use crate::shrink_width_item::ImGuiShrinkWidthItem;
 use crate::slider_flags::{ImGuiSliderFlags, ImGuiSliderFlags_AlwaysClamp, ImGuiSliderFlags_Logarithmic, ImGuiSliderFlags_NoInput, ImGuiSliderFlags_NoRoundToFormat, ImGuiSliderFlags_ReadOnly, ImGuiSliderFlags_Vertical};
 use crate::stb::stb_text_edit_row::StbTexteditRow;
 use crate::stb::stb_text_edit_state::STB_TexteditState;
-use crate::stb::stb_textedit::{stb_text_createundo, STB_TEXTEDIT_CHARTYPE, stb_textedit_click, stb_textedit_cut, stb_textedit_drag, stb_textedit_initialize_state, stb_textedit_paste};
+use crate::stb::stb_textedit::{stb_text_createundo, stb_text_makeundo_replace, STB_TEXTEDIT_CHARTYPE, stb_textedit_click, stb_textedit_cut, stb_textedit_drag, stb_textedit_initialize_state, stb_textedit_paste, STB_TEXTEDIT_STRING};
 use crate::stb::stb_undo_record::StbUndoRecord;
 use crate::stb::stb_undo_state::StbUndoState;
 use crate::storage::ImGuiStorage;
@@ -232,273 +232,6 @@ pub unsafe fn TempInputText(bb: &mut ImRect,
     return value_changed;
 }
 
-pub unsafe fn InputScalar_DefaultCharsFilter(data_type: ImGuiDataType, format: &str) -> ImGuiInputTextFlags
-{
-    if data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double { return  ImGuiInputTextFlags_CharsScientific; }
-    const  format_last_char: c_char = if format[0] { format[strlen(format) - 1]} else {0};
-    return if format_last_char == 'x' as c_char || format_last_char == 'X' as c_char { ImGuiInputTextFlags_CharsHexadecimal} else {ImGuiInputTextFlags_CharsDecimal};
-}
-
-// Note that Drag/Slider functions are only forwarding the min/max values clamping values if the ImGuiSliderFlags_AlwaysClamp flag is set!
-// This is intended: this way we allow CTRL+Click manual input to set a value out of bounds, for maximum flexibility.
-// However this may not be ideal for all uses, as some user code may break on out of bound values.
-pub unsafe fn TempInputScalar(
-    bb: &mut ImRect,
-    id: ImGuiID,
-    label: &str,
-    data_type: ImGuiDataType,
-    p_data: &mut c_float,
-    format: &mut String,
-    p_clamp_min: &mut c_float,
-    p_clamp_max: &mut c_float) -> bool
-{
-    let mut fmt_buf = String::with_capacity(32);
-    // data_buf: [c_char;32];
-    let mut data_buf = String::with_capacity(32);
-    *format = ImParseFormatTrimDecorations(format, fmt_buf, fmt_buf.len());
-    data_type_ops::DataTypeFormatString(&mut data_buf, data_buf.len(), data_type, p_data.to_owned(), format);
-    ImStrTrimBlanks(&mut data_buf);
-
-    let mut flags: ImGuiInputTextFlags = ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited;
-    flags |= InputScalar_DefaultCharsFilter(data_type, format);
-
-    let mut value_changed: bool =  false;
-    if TempInputText(bb, id, label, &mut data_buf, data_buf.len(), flags)
-    {
-        // Backup old value
-        data_type_size: size_t = data_type_ops::DataTypeGetInfo(data_type).Size;
-        let mut data_backup: ImGuiDataTypeTempStorage = ImGuiDataTypeTempStorage::default();
-        // memcpy(&data_backup, p_data, data_type_size);
-
-
-        // Apply new value (or operations) then clamp
-        data_type_ops::DataTypeApplyFromText(&data_buf, data_type, p_data, format);
-        if p_clamp_min || p_clamp_max
-        {
-            if p_clamp_min && p_clamp_max && data_type_ops::DataTypeCompare(data_type, p_clamp_min, p_clamp_max) > 0 {
-                // ImSwap(p_clamp_min, p_clamp_max);
-                let mut temp = p_clamp_min.clone();
-                *p_clamp_min = *p_clamp_max;
-                *p_clamp_max = *p_clamp_min;
-            }
-            data_type_ops::DataTypeClamp(data_type, p_data, p_clamp_min, p_clamp_max);
-        }
-
-        // Only mark as edited if new value is different
-        // TODO
-        // value_changed = memcmp(&data_backup, p_data, data_type_size) != 0;
-        // if value_changed {
-        //     MarkItemEdited(id); }
-    }
-    return value_changed;
-}
-
-// Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
-// Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn InputScalar(label: &str,
-                          data_type: ImGuiDataType,
-                          p_data: &mut c_float,
-                          p_step: Option<c_float>,
-                          p_step_fast: Option<c_float>,
-                          format: &mut String,
-                          mut flags: ImGuiInputTextFlags) -> bool
-{
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    if window.SkipItems { return  false; }
-
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let style = &mut g.Style;
-
-    if format.is_empty() {
-        *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
-    }
-
-    // buf: [c_char;64];
-    let mut buf = String::default();
-    DataTypeFormatString(&mut buf, buf.len(), data_type, *p_data, format);
-
-    // Testing ActiveId as a minor optimization as filtering is not needed until active
-    if g.ActiveId == 0 && (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsScientific)) == 0 {
-        flags |= InputScalar_DefaultCharsFilter(data_type, format);
-    }
-    flags |= ImGuiInputTextFlags_AutoSelectAll | ImGuiInputTextFlags_NoMarkEdited; // We call MarkItemEdited() ourselves by comparing the actual data rather than the string.
-
-    let mut value_changed: bool =  false;
-    if p_step.is_some()
-    {
-        let button_size: c_float =  GetFrameHeight();
-
-        BeginGroup(); // The only purpose of the group here is to allow the caller to query item data e.g. IsItemActive()
-        PushID(label);
-        SetNextItemWidth(ImMax(1.0, CalcItemWidth() - (button_size + style.ItemInnerSpacing.x) * 2));
-        if InputText("", &mut buf, buf.len(), flags, None, None) { // PushId(label) + "" gives us the expected ID from outside point of view
-            value_changed = DataTypeApplyFromText(buf.as_str(), data_type, p_data, format);
-        }
-        IMGUI_TEST_ENGINE_ITEM_INFO(g.LastItemData.ID, label, g.LastItemData.StatusFlags);
-
-        // Step buttons
-        let backup_frame_padding: ImVec2 = style.FramePadding;
-        style.FramePadding.x = style.FramePadding.y;
-        button_flags: ImGuiButtonFlags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
-        if flags & ImGuiInputTextFlags_ReadOnly {
-            BeginDisabled(false); }
-        SameLine(0.0, style.ItemInnerSpacing.x);
-        if ButtonEx("-", ImVec2::new(button_size, button_size), button_flags)
-        {
-           DataTypeApplyOp(data_type, DataTypeOperationSub, p_data, *p_data, if g.IO.KeyCtrl && p_step_fast.is_some() {p_step_fast.unwrap()} else { p_step.unwrap() });
-            value_changed = true;
-        }
-        SameLine(0.0, style.ItemInnerSpacing.x);
-        if ButtonEx("+", ImVec2::new(button_size, button_size), button_flags)
-        {
-            data_type_ops::DataTypeApplyOp(data_type,
-                                           DataTypeOperationAdd,
-                                           p_data,
-                                           *p_data,
-                                           if g.IO.KeyCtrl && p_step_fast.is_some() {
-                                               p_step_fast.unwrap()}
-                                           else {
-                                               p_step.unwrap() });
-            value_changed = true;
-        }
-        if flags & ImGuiInputTextFlags_ReadOnly {
-            EndDisabled(); }
-
-        let mut  label_end = FindRenderedTextEnd(label);
-        if label != label_end
-        {
-            SameLine(0.0, style.ItemInnerSpacing.x);
-            text_ops::TextEx(label, 0);
-        }
-        style.FramePadding = backup_frame_padding;
-
-        PopID();
-        EndGroup();
-    }
-    else
-    {
-        if InputText(label, &mut buf, buf.len(), flags, None, None) {
-            value_changed = DataTypeApplyFromText(buf.as_str(), data_type, p_data, format);
-        }
-    }
-    if value_changed{
-        MarkItemEdited(g.LastItemData.ID);}
-
-    return value_changed;
-}
-
-pub unsafe fn InputScalarN(
-    label: &str,
-    data_type: ImGuiDataType,
-    p_data: &mut [c_float],
-    components: usize,
-    p_step: Option<&[c_float]>,
-    p_step_fast: Option<&[c_float]>,
-    format: &mut String,
-    flags: ImGuiInputTextFlags) -> bool
-{
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    if window.SkipItems { return  false; }
-
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut value_changed: bool =  false;
-    BeginGroup();
-    PushID(label);
-    PushMultiItemsWidths(components, CalcItemWidth());
-    type_size: size_t = GDataTypeInfo[data_type].Size;
-    // for (let i: c_int = 0; i < components; i++)
-    for i in 0 .. components
-    {
-        PushID(i);
-        if i > 0 {
-            SameLine(0.0, g.Style.ItemInnerSpacing.x);
-        }
-        value_changed |= InputScalar("", data_type, &mut p_data[i], Some(p_step[i]), Some(p_step_fast[i]), format, flags);
-        PopID();
-        PopItemWidth();
-        // p_data = (p_data + type_size);
-    }
-    PopID();
-
-    let mut  label_end = FindRenderedTextEnd(label);
-    if label != label_end
-    {
-        SameLine(0.0, g.Style.ItemInnerSpacing.x);
-        text_ops::TextEx(label, 0);
-    }
-
-    EndGroup();
-    return value_changed;
-}
-
-pub unsafe fn InputFloat(label: &str, v: &mut c_float, step: c_float, step_fast: c_float, format: &mut String, mut flags: ImGuiInputTextFlags) -> bool
-{
-    flags |= ImGuiInputTextFlags_CharsScientific;
-    return InputScalar(label,
-                       ImGuiDataType_Float,
-                       v,
-                       (if step > 0.0 { Some(step) } else {None}),
-                       (if step_fast > 0.0 { Some(step_fast)} else {None}),
-                       format,
-                       flags);
-}
-
-pub unsafe fn InputFloat2(label: &str,v: &mut [c_float;2], format: &mut String, flags: ImGuiInputTextFlags) -> bool
-{
-    return InputScalarN(label, ImGuiDataType_Float, v, 2, None, None, format, flags);
-}
-
-pub unsafe fn InputFloat3(label: &str,v: &mut [c_float;3], format: &mut String, flags: ImGuiInputTextFlags) -> bool
-{
-    return InputScalarN(label, ImGuiDataType_Float, v, 3, None, None, format, flags);
-}
-
-pub unsafe fn InputFloat4(label: &str,v: &mut [c_float;4], format: &mut String, flags: ImGuiInputTextFlags) -> bool
-{
-    return InputScalarN(label, ImGuiDataType_Float, v, 4, None, None, format, flags);
-}
-
-pub unsafe fn InputInt(label: &str, v: &mut c_int, step: c_int, step_fast: c_int, flags: ImGuiInputTextFlags) -> bool {
-    // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
-    let mut v_float: c_float = c_flaot::from(*v);
-    let mut format: String = String::from(if flag_set(flags, ImGuiInputTextFlags_CharsHexadecimal) { "%08X" } else { "%d" });
-    let step_float: c_float = c_float::from(step);
-    let step_fast_float: c_float = c_float::from(step_fast);
-    return InputScalar(label,
-                       ImGuiDataType_S32,
-                       &mut v_float,
-                       (if step > 0 { Some(step_float) } else { None }),
-                       (if step_fast > 0 { Some(step_fast_float) } else { None }),
-                       &mut format,
-                       flags);
-}
-
-pub unsafe fn InputInt2(label: &str, v: &mut [c_int; 2], flags: ImGuiInputTextFlags) -> bool {
-    let mut v_float: [c_float; 2] = [c_float::from(v[0]), c_float::from(v[1])];
-    let mut format = String::from("%d");
-    return InputScalarN(label, ImGuiDataType_S32, &mut v_float, 2, None, None, &mut format, flags);
-}
-
-pub unsafe fn InputInt3(label: &str, v: [c_int; 3], flags: ImGuiInputTextFlags) -> bool {
-    let mut v_float: [c_float; 3] = [c_float::from(v[0]), c_float::from(v[1]), c_float::from(v[2])];
-    let mut format = String::from("%d");
-    return InputScalarN(label, ImGuiDataType_S32, &mut v_float, 3, None, None, &mut format, flags);
-}
-
-pub unsafe fn InputInt4(label: &str, v: [c_int; 4], flags: ImGuiInputTextFlags) -> bool {
-    let mut v_float: [c_float; 4] = [c_float::from(v[0]), c_float::from(v[1]), c_float::from(v[2]), c_float::from(v[3])];
-    let mut format = String::from("%d");
-    return InputScalarN(label, ImGuiDataType_S32, &mut v_float, 4, None, None, &mut format, flags);
-}
-
-pub unsafe fn InputDouble(label: &str, v: &mut c_double, step: c_double, step_fast: c_double, format: &mut String, mut flags: ImGuiInputTextFlags) -> bool {
-    flags |= ImGuiInputTextFlags_CharsScientific;
-    let mut v_float = c_float::from(*v);
-    let mut step_float = c_float::from(step);
-    let mut step_fast_float = c_float::from(step_fast);
-    return InputScalar(label, ImGuiDataType_Double, &mut v_float, (if step > 0.0 { Some(step_float) } else { None }), (if step_fast > 0.0 { Some(step_fast_float) } else { None }), format, flags);
-}
-
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: InputText, InputTextMultiline, InputTextWithHint
 //-------------------------------------------------------------------------
@@ -511,17 +244,6 @@ pub unsafe fn InputDouble(label: &str, v: &mut c_double, step: c_double, step_fa
 // - InputTextEx() [Internal]
 // - DebugNodeInputTextState() [Internal]
 //-------------------------------------------------------------------------
-
-pub unsafe fn InputText(label: &str,
-                        buf: &mut String,
-                        buf_size: size_t,
-                        flags: ImGuiInputTextFlags,
-                        callback: Option<ImGuiInputTextCallback>,
-                        user_data: Option<&Vec<u8>>) -> bool {
-    // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline()
-    let mut size_arg = ImVec2::default();
-    return InputTextEx(label, "", buf, buf_size, &mut size_arg, flags, callback, user_data);
-}
 
 pub unsafe fn InputTextMultiline(label: &str, buf: &mut String, buf_size: size_t, size: &mut ImVec2, flags: ImGuiInputTextFlags, callback: ImGuiInputTextCallback, user_data: &Vec<u8>) -> bool
 {
@@ -622,366 +344,166 @@ pub unsafe fn InputTextCalcTextSizeW(
 // namespace ImStb
 // {
 
-pub fn STB_TEXTEDIT_STRINGLEN(obj: &ImGuiInputTextState) -> c_int {
-    return obj.CurLenW;
-}
-
-
-pub fn STB_TEXTEDIT_GETCHAR(obj: &ImGuiInputTextState, idx: c_int) -> char {
-    return obj.TextW[idx];
-}
-
-pub unsafe fn STB_TEXTEDIT_GETWIDTH(obj: &mut ImGuiInputTextState,
-                                    line_start_idx: c_int,
-                                    char_idx: c_int) -> c_float {
-    let c = obj.TextW[line_start_idx + char_idx];
-    if c == '\n' { return STB_TEXTEDIT_GETWIDTH_NEWLINE; }
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.Font.GetCharAdvance(c) * (g.FontSize / g.Font.FontSize);
-}
-
-pub fn STB_TEXTEDIT_KEYTOTEXT(key: c_int) -> c_int { return if key >= 0x200000 { 0} else {key}; }
-
 pub const STB_TEXTEDIT_NEWLINE: char = '\n';
-
-pub unsafe fn STB_TEXTEDIT_LAYOUTROW(r: &mut StbTexteditRow,
-                                     obj: &mut ImGuiInputTextState,
-                                     line_start_idx: c_int) {
-    let text: *const ImWchar = obj.TextW.Data;
-    let mut text_remaining: usize = 0;
-    let size: ImVec2 = InputTextCalcTextSizeW(text + line_start_idx, &mut text_remaining, None, true);
-    r.x0 = 0.0;
-    r.x1 = size.x;
-    r.baseline_y_delta = size.y;
-    r.ymin = 0.0;
-    r.ymax = size.y;
-    r.num_chars = (text_remaining - (text + line_start_idx));
-}
 
 // When ImGuiInputTextFlags_Password is set, we don't want actions such as CTRL+Arrow to leak the fact that underlying data are blanks or separators.
 pub unsafe fn is_separator(c: char) -> bool {
     return ImCharIsBlankW(c) || c == ',' || c == ';' || c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '|' || c == '\n' || c == '\r';
 }
 
-pub unsafe fn is_word_boundary_from_right(obj: &mut ImGuiInputTextState, idx: c_int)  -> c_int     {
-    if obj.Flags & ImGuiInputTextFlags_Password { return  0; }
-    return if idx > 0 { (is_separator(obj.TextW[idx - 1]) & & ! is_separator(obj.TextW[idx]) )} else {1};
+pub unsafe fn is_word_boundary_from_right(obj: &mut ImGuiInputTextState, idx: usize)  -> bool     {
+    if obj.Flags & ImGuiInputTextFlags_Password { return  false; }
+    return if idx > 0 { (is_separator(obj.TextW[idx - 1]) & & ! is_separator(obj.TextW[idx]) )} else {true};
 }
 
-pub unsafe fn is_word_boundary_from_left(obj: &mut ImGuiInputTextState, idx: c_int) -> c_int {
-    if obj.Flags & ImGuiInputTextFlags_Password { return 0; }
-    return if idx > 0 { (!is_separator(obj.TextW[idx - 1]) & &is_separator(obj.TextW[idx])) } else { 1 };
-}
-
-pub unsafe fn STB_TEXTEDIT_MOVEWORDLEFT_IMPL(obj: &mut ImGuiInputTextState, mut idx: c_int) -> c_int {
-    idx -= 1;
-    while idx >= 0 && is_word_boundary_from_right(obj, idx) == 0 {
-        idx -= 1;
-    }
-    return if idx < 0 { 0 } else { idx };
-}
-
-pub unsafe fn STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj: &mut ImGuiInputTextState, mut idx: c_int) -> c_int {
-    idx += 1;
-    let len = obj.CurLenW;
-    while idx < len && is_word_boundary_from_left(obj, idx) == 0 {
-        idx += 1;
-    }
-    return if idx > len { len } else { idx };
-}
-
-pub unsafe fn STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj: &mut ImGuiInputTextState, mut idx: c_int) -> c_int {
-    idx += 1;
-    let len: c_int = obj.CurLenW;
-    while idx < len && is_word_boundary_from_right(obj, idx) == 0 {
-        idx += 1;
-    }
-    return if idx > len { len } else { idx };
+pub unsafe fn is_word_boundary_from_left(obj: &mut ImGuiInputTextState, idx: usize) -> bool {
+    if flag_set(obj.Flags , ImGuiInputTextFlags_Password) { return false; }
+    return if idx > 0 {
+        (!is_separator(obj.TextW[idx - 1]) && is_separator(obj.TextW[idx])) }
+    else { true };
 }
 
 
-pub unsafe fn  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL(obj: &mut ImGuiInputTextState, mut idx: c_int) -> c_int {
-    return if GetIO().ConfigMacOSXBehaviors { STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj, idx) } else { STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj, idx) }
-}
-// #define STB_TEXTEDIT_MOVEWORDLEFT   STB_TEXTEDIT_MOVEWORDLEFT_IMPL  // They need to be #define for stb_textedit.h
-// #define STB_TEXTEDIT_MOVEWORDRIGHT  STB_TEXTEDIT_MOVEWORDRIGHT_IMPL
 
-pub unsafe fn STB_TEXTEDIT_DELETECHARS(obj: &mut ImGuiInputTextState, pos: c_int, n: c_int)
-{
-    let mut dst = &mut obj.TextW[pos..];
-
-    // We maintain our buffer length in both UTF-8 and wchar formats
-    obj.Edited = true;
-    obj.CurLenA -= ImTextCountUtf8BytesFromStr(dst, dst + n);
-    obj.CurLenW -= n;
-
-    // TODO
-    // Offset remaining text (FIXME-OPT: Use memmove)
-    // let src = &mut obj.TextW[pos + n..];
-//     while (let c: ImWchar = *src++){
-//     *dst + + = c;
-// }
-//     *dst = '\0';
-}
-
-pub unsafe fn STB_TEXTEDIT_INSERTCHARS(obj: &mut ImGuiInputTextState, pos: usize, new_text: *const ImWchar, new_text_len: usize) -> bool
-{
-    let is_resizable: bool = flag_set(obj.Flags, ImGuiInputTextFlags_CallbackResize);
-    let text_len = obj.CurLenW;
-    // IM_ASSERT(pos <= text_len);
-
-    let new_text_len_utf8: c_int = ImTextCountUtf8BytesFromStr(new_text, new_text + new_text_len);
-    if !is_resizable && (new_text_len_utf8 + obj.CurLenA + 1 > obj.BufCapacityA) { return  false; }
-
-    // Grow internal buffer if needed
-    if new_text_len + text_len + 1 > obj.TextW.len()
-    {
-        if !is_resizable { return  false; }
-        // IM_ASSERT(text_len < obj.TextW.Size);
-        obj.TextW.resize(text_len + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1, 0);
-    }
-
-    let text = obj.TextW;
-    if pos != text_len {
-        // TODO:
-        // memmove(text + pos + new_text_len, text + pos, (text_len - pos) * sizeof);
-
-    }
-    // TODO:
-    // memcpy(text + pos, new_text, new_text_len * sizeof);
-
-    obj.Edited = true;
-    obj.CurLenW += new_text_len;
-    obj.CurLenA += new_text_len_utf8;
-    obj.TextW[obj.CurLenW] = '\0';
-
-    return true;
-}
-
-// We don't use an enum so we can build even with conflicting symbols (if another user of stb_textedit.h leak their STB_TEXTEDIT_K_* symbols)
-// #define STB_TEXTEDIT_K_LEFT         0x200000 // keyboard input to move cursor left
-// #define STB_TEXTEDIT_K_RIGHT        0x200001 // keyboard input to move cursor right
-// #define STB_TEXTEDIT_K_UP           0x200002 // keyboard input to move cursor up
-// #define STB_TEXTEDIT_K_DOWN         0x200003 // keyboard input to move cursor down
-// #define STB_TEXTEDIT_K_LINESTART    0x200004 // keyboard input to move cursor to start of line
-// #define STB_TEXTEDIT_K_LINEEND      0x200005 // keyboard input to move cursor to end of line
-// #define STB_TEXTEDIT_K_TEXTSTART    0x200006 // keyboard input to move cursor to start of text
-// #define STB_TEXTEDIT_K_TEXTEND      0x200007 // keyboard input to move cursor to end of text
-// #define STB_TEXTEDIT_K_DELETE       0x200008 // keyboard input to delete selection or character under cursor
-// #define STB_TEXTEDIT_K_BACKSPACE    0x200009 // keyboard input to delete selection or character left of cursor
-// #define STB_TEXTEDIT_K_UNDO         0x20000A // keyboard input to perform undo
-// #define STB_TEXTEDIT_K_REDO         0x20000B // keyboard input to perform redo
-// #define STB_TEXTEDIT_K_WORDLEFT     0x20000C // keyboard input to move cursor left one word
-// #define STB_TEXTEDIT_K_WORDRIGHT    0x20000D // keyboard input to move cursor right one word
-// #define STB_TEXTEDIT_K_PGUP         0x20000E // keyboard input to move cursor up a page
-// #define STB_TEXTEDIT_K_PGDOWN       0x20000 // keyboard input to move cursor down a page
-// #define STB_TEXTEDIT_K_SHIFT        0x400000
-
-// #define STB_TEXTEDIT_IMPLEMENTATION
-// #include "imstb_textedit.h"
-
-// stb_textedit internally allows for a single undo record to do addition and deletion, but somehow, calling
-// the stb_textedit_paste() function creates two separate records, so we perform it manually. (FIXME: Report to nothings/stb?)
-pub unsafe fn stb_textedit_replace(str: &mut ImGuiInputTextState, &mut STB_TexteditState state, *const text: STB_TEXTEDIT_CHARTYPE, text_len: c_int)
-{
-    stb_text_makeundo_replace(str, state, 0, str->CurLenW, text_len);
-    ImStb::STB_TEXTEDIT_DELETECHARS(str, 0, str->CurLenW);
-    if text_len <= 0 { return ; }
-    if (ImStb::STB_TEXTEDIT_INSERTCHARS(str, 0, text, text_len))
-    {
-        state.cursor = text_len;
-        state.has_preferred_x = 0;
-        return;
-    }
-    // IM_ASSERT(0); // Failed to insert character, normally shouldn't happen because of how we currently use stb_textedit_replace()
-}
-
-// } // namespace ImStb
-
-c_void ImGuiInputTextState::OnKeyPressed(key: c_int)
-{
-    stb_textedit_key(this, &Stb, key);
-    CursorFollow = true;
-    CursorAnimReset();
-}
-
-ImGuiInputTextCallbackData::ImGuiInputTextCallbackData()
-{
-    memset(this, 0, sizeof(*this));
-}
-
-// Public API to manipulate UTF-8 text
-// We expose UTF-8 to the user (unlike the STB_TEXTEDIT_* functions which are manipulating wchar)
-// FIXME: The existence of this rarely exercised code path is a bit of a nuisance.
-c_void ImGuiInputTextCallbackData::DeleteChars(pos: c_int, bytes_count: c_int)
-{
-    // IM_ASSERT(pos + bytes_count <= BufTextLen);
-    dst: *mut c_char = Buf + pos;
-    let mut  src: &str = Buf + pos + bytes_count;
-    while ( c: c_char = *src++)
-        *dst++ = c;
-    *dst = '\0';
-
-    if (CursorPos >= pos + bytes_count)
-        CursorPos -= bytes_count;
-    else if CursorPos >= pos {
-        CursorPos = pos;}
-    SelectionStart = SelectionEnd = CursorPos;
-    BufDirty = true;
-    BufTextLen -= bytes_count;
-}
-
-c_void ImGuiInputTextCallbackData::InsertChars(pos: c_int, new_text: &str, new_text_end: &str)
-{
-    let is_resizable: bool = (Flags & ImGuiInputTextFlags_CallbackResize) != 0;
-    let new_text_len: c_int = if new_text_end { (new_text_end - new_text)} else {"strlen(new_text)"};
-    if (new_text_len + BufTextLen >= BufSize)
-    {
-        if !is_resizable { return ; }
-
-        // Contrary to STB_TEXTEDIT_INSERTCHARS() this is working in the UTF8 buffer, hence the mildly similar code (until we remove the U16 buffer altogether!)
-        let g = GImGui; // ImGuiContext& g = *GImGui;
-        edit_state: &mut ImGuiInputTextState = &g.InputTextState;
-        // IM_ASSERT(edit_state.ID != 0 && g.ActiveId == edit_state.ID);
-        // IM_ASSERT(Buf == edit_state->TextA.Data);
-        let new_buf_size: c_int = BufTextLen + ImClamp(new_text_len * 4, 32, ImMax(256, new_text_len)) + 1;
-        edit_state.TextA.reserve(new_buf_size + 1);
-        Buf = edit_state.TextA.Data;
-        BufSize = edit_state.BufCapacityA = new_buf_size;
-    }
-
-    if (BufTextLen != pos)
-        memmove(Buf + pos + new_text_len, Buf + pos, (BufTextLen - pos));
-    memcpy(Buf + pos, new_text, new_text_len * sizeof);
-    Buf[BufTextLen + new_text_len] = '\0';
-
-    if (CursorPos >= pos)
-        CursorPos += new_text_len;
-    SelectionStart = SelectionEnd = CursorPos;
-    BufDirty = true;
-    BufTextLen += new_text_len;
-}
 
 // Return false to discard a character.
-pub unsafe fn InputTextFilterCharacter(*mut p_char: c_uint, flags: ImGuiInputTextFlags, callback: ImGuiInputTextCallback, user_data: *mut c_void, ImGuiInputSource input_source) -> bool
+pub unsafe fn InputTextFilterCharacter(p_char: char, flags: ImGuiInputTextFlags, callback: Option<ImGuiInputTextCallback>, user_data: Option<&Vec<u8>>, input_source: ImGuiInputSource) -> bool
 {
     // IM_ASSERT(input_source == ImGuiInputSource_Keyboard || input_source == ImGuiInputSource_Clipboard);
-    let mut c: c_uint =  *p_char;
-
-    // Filter non-printable (NB: isprint is unreliable! see #2467)
-    let mut apply_named_filters: bool =  true;
-    if (c < 0x20)
-    {
-        let mut pass: bool =  false;
-        pass |= (c == '\n' && (flags & ImGuiInputTextFlags_Multiline)); // Note that an Enter KEY will emit \r and be ignored (we poll for KEY in InputText() code)
-        pass |= (c == '\t' && (flags & ImGuiInputTextFlags_AllowTabInput));
-        if !pass { return  false; }
-        apply_named_filters = false; // Override named filters below so newline and tabs can still be inserted.
-    }
-
-    if (input_source != ImGuiInputSource_Clipboard)
-    {
-        // We ignore Ascii representation of delete (emitted from Backspace on OSX, see #2578, #2817)
-        if c == 127 { return  false; }
-
-        // Filter private Unicode range. GLFW on OSX seems to send private characters for special keys like arrow keys (FIXME)
-        if c >= 0xE000 && c <= 0xF8F0f32 { return  false; }
-    }
-
-    // Filter Unicode ranges we are not handling in this build
-    if c > IM_UNICODE_CODEPOINT_MAX { return  false; }
-
-    // Generic named filters
-    if (apply_named_filters && (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsScientific)))
-    {
-        // The libc allows overriding locale, with e.g. 'setlocale(LC_NUMERIC, "de_DE.UTF-8");' which affect the output/input of printf/scanf to use e.g. ',' instead of '.'.
-        // The standard mandate that programs starts in the "C" locale where the decimal point is '.'.
-        // We don't really intend to provide widespread support for it, but out of empathy for people stuck with using odd API, we support the bare minimum aka overriding the decimal point.
-        // Change the default decimal_point with:
-        //   GetCurrentContext()->PlatformLocaleDecimalPoint = *localeconv()->decimal_point;
-        // Users of non-default decimal point (in particular ',') may be affected by word-selection logic (is_word_boundary_from_right/is_word_boundary_from_left) functions.
-        let g = GImGui; // ImGuiContext& g = *GImGui;
-        const unsigned c_decimal_point = g.PlatformLocaleDecimalPoint;
-
-        // Full-width -> half-width conversion for numeric fields (https://en.wikipedia.org/wiki/Halfwidth_and_Fullwidth_Forms_(Unicode_block)
-        // While this is mostly convenient, this has the side-effect for uninformed users accidentally inputting full-width characters that they may
-        // scratch their head as to why it works in numerical fields vs in generic text fields it would require support in the font.
-        if (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsScientific | ImGuiInputTextFlags_CharsHexadecimal))
-            if (c >= 0xFF01 && c <= 0xFF5E)
-                c = c - 0xFF01 + 0x21;
-
-        // Allow 0-9 . - + * /
-        if (flags & ImGuiInputTextFlags_CharsDecimal)
-            if !(c >= '0' && c <= '9') && (c != c_decimal_point) && (c != '-') && (c != '+') && (c != '*') && (c != '/') { return  false; }
-
-        // Allow 0-9 . - + * / e E
-        if (flags & ImGuiInputTextFlags_CharsScientific)
-            if !(c >= '0' && c <= '9') && (c != c_decimal_point) && (c != '-') && (c != '+') && (c != '*') && (c != '/') && (c != 'e') && (c != 'E') { return  false; }
-
-        // Allow 0-9 a-F A-F
-        if (flags & ImGuiInputTextFlags_CharsHexadecimal)
-            if !(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f') && !(c >= 'A' && c <= 'F') { return  false; }
-
-        // Turn a-z into A-Z
-        if (flags & ImGuiInputTextFlags_CharsUppercase)
-            if (c >= 'a' && c <= 'z')
-                c += ('A' - 'a');
-
-        if (flags & ImGuiInputTextFlags_CharsNoBlank)
-            if ImCharIsBlankW(c) { return  false; }
-
-        *p_char = c;
-    }
-
-    // Custom callback filter
-    if (flags & ImGuiInputTextFlags_CallbackCharFilter)
-    {
-        ImGuiInputTextCallbackData callback_data;
-        memset(&callback_data, 0, sizeof(ImGuiInputTextCallbackData));
-        callback_data.EventFlag = ImGuiInputTextFlags_CallbackCharFilter;
-        callback_data.EventChar = c;
-        callback_data.Flags = flags;
-        callback_data.UserData = user_data;
-        if callback(&callback_data) != 0 { return  false; }
-        *p_char = callback_data.EventChar;
-        if !callback_data.EventChar { return  false; }
-    }
-
-    return true;
+    // let mut c = *p_char;
+    // 
+    // // Filter non-printable (NB: isprint is unreliable! see #2467)
+    // let mut apply_named_filters: bool =  true;
+    // if (c < 0x20)
+    // {
+    //     let mut pass: bool =  false;
+    //     pass |= (c == '\n' && (flags & ImGuiInputTextFlags_Multiline)); // Note that an Enter KEY will emit \r and be ignored (we poll for KEY in InputText() code)
+    //     pass |= (c == '\t' && (flags & ImGuiInputTextFlags_AllowTabInput));
+    //     if !pass { return  false; }
+    //     apply_named_filters = false; // Override named filters below so newline and tabs can still be inserted.
+    // }
+    // 
+    // if (input_source != ImGuiInputSource_Clipboard)
+    // {
+    //     // We ignore Ascii representation of delete (emitted from Backspace on OSX, see #2578, #2817)
+    //     if c == 127 { return  false; }
+    // 
+    //     // Filter private Unicode range. GLFW on OSX seems to send private characters for special keys like arrow keys (FIXME)
+    //     if c >= 0xE000 && c <= 0xF8F0f32 { return  false; }
+    // }
+    // 
+    // // Filter Unicode ranges we are not handling in this build
+    // if c > IM_UNICODE_CODEPOINT_MAX { return  false; }
+    // 
+    // // Generic named filters
+    // if (apply_named_filters && (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsScientific)))
+    // {
+    //     // The libc allows overriding locale, with e.g. 'setlocale(LC_NUMERIC, "de_DE.UTF-8");' which affect the output/input of printf/scanf to use e.g. ',' instead of '.'.
+    //     // The standard mandate that programs starts in the "C" locale where the decimal point is '.'.
+    //     // We don't really intend to provide widespread support for it, but out of empathy for people stuck with using odd API, we support the bare minimum aka overriding the decimal point.
+    //     // Change the default decimal_point with:
+    //     //   GetCurrentContext()->PlatformLocaleDecimalPoint = *localeconv()->decimal_point;
+    //     // Users of non-default decimal point (in particular ',') may be affected by word-selection logic (is_word_boundary_from_right/is_word_boundary_from_left) functions.
+    //     let g = GImGui; // ImGuiContext& g = *GImGui;
+    //     const unsigned c_decimal_point = g.PlatformLocaleDecimalPoint;
+    // 
+    //     // Full-width -> half-width conversion for numeric fields (https://en.wikipedia.org/wiki/Halfwidth_and_Fullwidth_Forms_(Unicode_block)
+    //     // While this is mostly convenient, this has the side-effect for uninformed users accidentally inputting full-width characters that they may
+    //     // scratch their head as to why it works in numerical fields vs in generic text fields it would require support in the font.
+    //     if (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsScientific | ImGuiInputTextFlags_CharsHexadecimal))
+    //         if (c >= 0xFF01 && c <= 0xFF5E)
+    //             c = c - 0xFF01 + 0x21;
+    // 
+    //     // Allow 0-9 . - + * /
+    //     if (flags & ImGuiInputTextFlags_CharsDecimal)
+    //         if !(c >= '0' && c <= '9') && (c != c_decimal_point) && (c != '-') && (c != '+') && (c != '*') && (c != '/') { return  false; }
+    // 
+    //     // Allow 0-9 . - + * / e E
+    //     if (flags & ImGuiInputTextFlags_CharsScientific)
+    //         if !(c >= '0' && c <= '9') && (c != c_decimal_point) && (c != '-') && (c != '+') && (c != '*') && (c != '/') && (c != 'e') && (c != 'E') { return  false; }
+    // 
+    //     // Allow 0-9 a-F A-F
+    //     if (flags & ImGuiInputTextFlags_CharsHexadecimal)
+    //         if !(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f') && !(c >= 'A' && c <= 'F') { return  false; }
+    // 
+    //     // Turn a-z into A-Z
+    //     if (flags & ImGuiInputTextFlags_CharsUppercase)
+    //         if (c >= 'a' && c <= 'z')
+    //             c += ('A' - 'a');
+    // 
+    //     if (flags & ImGuiInputTextFlags_CharsNoBlank)
+    //         if ImCharIsBlankW(c) { return  false; }
+    // 
+    //     *p_char = c;
+    // }
+    // 
+    // // Custom callback filter
+    // if (flags & ImGuiInputTextFlags_CallbackCharFilter)
+    // {
+    //     ImGuiInputTextCallbackData callback_data;
+    //     memset(&callback_data, 0, sizeof(ImGuiInputTextCallbackData));
+    //     callback_data.EventFlag = ImGuiInputTextFlags_CallbackCharFilter;
+    //     callback_data.EventChar = c;
+    //     callback_data.Flags = flags;
+    //     callback_data.UserData = user_data;
+    //     if callback(&callback_data) != 0 { return  false; }
+    //     *p_char = callback_data.EventChar;
+    //     if !callback_data.EventChar { return  false; }
+    // }
+    // 
+    // return true;
+    // TODO
+    todo!()
 }
 
 // Find the shortest single replacement we can make to get the new text from the old text.
 // Important: needs to be run before TextW is rewritten with the new characters because calling STB_TEXTEDIT_GETCHAR() at the end.
 // FIXME: Ideally we should transition toward (1) making InsertChars()/DeleteChars() update undo-stack (2) discourage (and keep reconcile) or obsolete (and remove reconcile) accessing buffer directly.
-pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(state: &mut ImGuiInputTextState, new_buf_a: &str, new_length_a: c_int)
+pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(state: &mut ImGuiInputTextState, new_buf_a: &String, new_length_a: usize)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let old_buf: *const ImWchar = state.TextW.Data;
-    let old_length: c_int = state.CurLenW;
-    let new_length: c_int = ImTextCountCharsFromUtf8(new_buf_a, new_buf_a + new_length_a);
+    let old_length: usize = state.CurLenW;
+    let new_length: usize = ImTextCountCharsFromUtf8(new_buf_a, new_buf_a + new_length_a);
     g.TempBuffer.reserve_discard((new_length + 1) * sizeof);
-    *mut let new_buf: ImWchar = (*mut ImWchar)g.TempBuffer.Data;
-    ImTextStrFromUtf8(new_buf, new_length + 1, new_buf_a, new_buf_a + new_length_a);
+    let mut new_buf: String = String::from(g.TempBuffer.clone());
+    ImTextStrFromUtf8(&mut new_buf, new_length + 1, new_buf_a, new_buf_a + new_length_a, 0);
 
-    let shorter_length: c_int = ImMin(old_length, new_length);
-    let mut first_diff: c_int = 0;
-    for (first_diff = 0; first_diff < shorter_length; first_diff++)
-        if (old_buf[first_diff] != new_buf[first_diff])
+    let shorter_length: usize = old_length.min(new_length);
+    let mut first_diff: usize = 0;
+    // for (first_diff = 0; first_diff < shorter_length; first_diff++)
+    for first_diff in 0 .. shorter_length
+    {
+        if old_buf[first_diff] != new_buf[first_diff] {
             break;
+        }
+    }
     if first_diff == old_length && first_diff == new_length { return ; }
 
-    let old_last_diff: c_int = old_length - 1;
-    let new_last_diff: c_int = new_length - 1;
-    for (; old_last_diff >= first_diff && new_last_diff >= first_diff; old_last_diff--, new_last_diff--)
-        if (old_buf[old_last_diff] != new_buf[new_last_diff])
+    let mut old_last_diff: usize = old_length - 1;
+    let mut new_last_diff: usize = new_length - 1;
+    // for (; old_last_diff >= first_diff && new_last_diff >= first_diff; old_last_diff--, new_last_diff--)
+    while old_last_diff >= first_diff && new_last_diff >= first_diff
+    {
+        if old_buf[old_last_diff] != new_buf[new_last_diff] {
             break;
+        }
+        old_last_diff -= 1;
+        new_last_diff -= 1;
+    }
 
-    let insert_len: c_int = new_last_diff - first_diff + 1;
-    let delete_len: c_int = old_last_diff - first_diff + 1;
-    if (insert_len > 0 || delete_len > 0)
-        if (*mut p: STB_TEXTEDIT_CHARTYPE = stb_text_createundo(&state.Stb.undostate, first_diff, delete_len, insert_len))
-            for (let i: c_int = 0; i < delete_len; i++)
+    let insert_len: usize = new_last_diff - first_diff + 1;
+    let delete_len: usize = old_last_diff - first_diff + 1;
+    if insert_len > 0 || delete_len > 0 {
+        let p = stb_text_createundo(&mut state.Stb.undostate, first_diff, delete_len, insert_len);
+        if p.is_null() == false {
+            // for (let i: c_int = 0; i < delete_len; i+ +)
+            for i in 0 .. delete_len
+            {
                 p[i] = ImStb::STB_TEXTEDIT_GETCHAR(state, first_diff + i);
+            }
+        }
+}
 }
 
 // Edit a string of text
@@ -1033,14 +555,14 @@ pub unsafe fn InputTextEx(label: &str,
     let mut total_bb: ImRect = ImRect::new(frame_bb.Min, frame_bb.Min + total_size);
 
     draw_window: *mut ImGuiWindow = window;
-    let inner_size: ImVec2 = frame_size;
+    let mut inner_size: ImVec2 = frame_size;
     let mut item_status_flags: ImGuiItemStatusFlags =  0;
-    ImGuiLastItemData item_data_backup;
-    if (is_multiline)
+    let mut item_data_backup = ImGuiLastItemData::default();
+    if is_multiline
     {
         let backup_pos: ImVec2 = window.DC.CursorPos;
-        ItemSize(total_bb, style.FramePadding.y);
-        if (!ItemAdd(total_bb, id, &frame_bb, ImGuiItemFlags_Inputable))
+        ItemSize(&total_bb.GetSize(), style.FramePadding.y);
+        if !ItemAdd(&mut total_bb, id, &frame_bb, ImGuiItemFlags_Inputable)
         {
             EndGroup();
             return false;
@@ -1055,10 +577,10 @@ pub unsafe fn InputTextEx(label: &str,
         PushStyleVar(ImGuiStyleVar_ChildRounding, style.FrameRounding);
         PushStyleVar(ImGuiStyleVar_ChildBorderSize, style.FrameBorderSize);
         PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2::new(0, 0)); // Ensure no clip rect so mouse hover can reach FramePadding edges
-        let mut child_visible: bool =  BeginChildEx(label, id, frame_bb.GetSize(), true, ImGuiWindowFlags_NoMove);
+        let mut child_visible: bool =  BeginChildEx(label, id, &frame_bb.GetSize(), true, ImGuiWindowFlags_NoMove);
         PopStyleVar(3);
-        PopStyleColor();
-        if (!child_visible)
+        PopStyleColor(0);
+        if !child_visible
         {
             EndChild();
             EndGroup();
@@ -1072,12 +594,13 @@ pub unsafe fn InputTextEx(label: &str,
     else
     {
         // Support for internal ImGuiInputTextFlags_MergedItem flag, which could be redesigned as an ItemFlags if needed (with test performed in ItemAdd)
-        ItemSize(total_bb, style.FramePadding.y);
-        if (flag_clear(flags, ImGuiInputTextFlags_MergedItem))
-            if !ItemAdd(total_bb, id, &frame_bb, ImGuiItemFlags_Inputable) { return  false; }
+        ItemSize(&total_bb.GetSize(), style.FramePadding.y);
+        if flag_clear(flags, ImGuiInputTextFlags_MergedItem) {
+            if !ItemAdd(&mut total_bb, id, &frame_bb, ImGuiItemFlags_Inputable) { return false; }
+        }
         item_status_flags = g.LastItemData.StatusFlags;
     }
-    let hovered: bool = ItemHoverable(frame_bb, id);
+    let hovered: bool = ItemHoverable(&frame_bb, id);
     if hovered{
         g.MouseCursor = ImGuiMouseCursor_TextInput;}
 
@@ -1093,7 +616,7 @@ pub unsafe fn InputTextEx(label: &str,
     let mut clear_active_id: bool =  false;
     let mut select_all: bool =  false;
 
-    let scroll_y: c_float =  if is_multiline { draw_window.Scroll.y} else {f32::MAX};
+    let mut scroll_y: c_float =  if is_multiline { draw_window.Scroll.y} else {f32::MAX};
 
     let init_changed_specs: bool = (state != null_mut() && state.Stb.single_line != !is_multiline);
     let init_make_active: bool = (user_clicked || user_scroll_finish || input_requested_by_nav || input_requested_by_tabbing);
@@ -1106,26 +629,27 @@ pub unsafe fn InputTextEx(label: &str,
 
         // Take a copy of the initial buffer value (both in original UTF-8 format and converted to wchar)
         // From the moment we focused we are ignoring the content of 'buf' (unless we are in read-only mode)
-        let buf_len: c_int = strlen(buf);
+        let buf_len = buf.len();
         state.InitialTextA.resize(buf_len + 1);    // UTF-8. we use +1 to make sure that .Data is always pointing to at least an empty string.
-        memcpy(state.InitialTextA.Data, buf, buf_len + 1);
+        // TODO
+        // memcpy(state.InitialTextA.Data, buf, buf_len + 1);
 
         // Preserve cursor position and undo/redo stack if we come back to same widget
         // FIXME: Since we reworked this on 2022/06, may want to differenciate recycle_cursor vs recycle_undostate?
         let mut recycle_state: bool =  (state.ID == id && !init_changed_specs);
-        if recycle_state && (state.CurLenA != buf_len || (state.TextAIsValid && strncmp(state.TextA.Data, buf, buf_len) != 0)) {
+        if recycle_state && (state.CurLenA != buf_len || (state.TextAIsValid && state.TextA != buf)) {
             recycle_state = false;}
 
         // Start edition
-        let mut  buf_end: &str= null_mut();
+        let mut  buf_end = 0usize;
         state.ID = id;
         state.TextW.resize(buf_size + 1);          // wchar count <= UTF-8 count. we use +1 to make sure that .Data is always pointing to at least an empty string.
         state.TextA.clear();
         state.TextAIsValid = false;                // TextA is not valid yet (we will display buf until then)
-        state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, buf_size, buf, null_mut(), &buf_end);
+        state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, buf_size, buf, None, buf_end);
         state.CurLenA = (buf_end - buf);      // We can't get the result from ImStrncpy() above because it is not UTF-8 aware. Here we'll cut off malformed UTF-8.
 
-        if (recycle_state)
+        if recycle_state
         {
             // Recycle existing cursor/selection/undo stack but clamp position
             // Note a single mouse click will override the cursor/position immediately by calling stb_textedit_click handler.
@@ -1134,14 +658,14 @@ pub unsafe fn InputTextEx(label: &str,
         else
         {
             state.ScrollX = 0.0;
-            stb_textedit_initialize_state(&state.Stb, !is_multiline);
+            stb_textedit_initialize_state(&mut state.Stb, !is_multiline);
         }
 
-        if (!is_multiline)
+        if !is_multiline
         {
             if flags & ImGuiInputTextFlags_AutoSelectAll {
                 select_all = true;}
-            if input_requested_by_nav && (!recycle_state || !(g.NavActivateFlags & ImGuiActivateFlags_TryToPreserveState)) {
+            if input_requested_by_nav && (!recycle_state || flag_clear(g.NavActivateFlags , ImGuiActivateFlags_TryToPreserveState)) {
                 select_all = true;}
             if input_requested_by_tabbing || (user_clicked && io.KeyCtrl) {
                 select_all = true;}
@@ -1160,18 +684,19 @@ pub unsafe fn InputTextEx(label: &str,
 
         // Declare our inputs
         g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right);
-        if (is_multiline || (flags & ImGuiInputTextFlags_CallbackHistory))
+        if is_multiline || flag_set(flags, ImGuiInputTextFlags_CallbackHistory) {
             g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Up) | (1 << ImGuiDir_Down);
+        }
         SetActiveIdUsingKey(ImGuiKey_Escape);
         SetActiveIdUsingKey(ImGuiKey_NavGamepadCancel);
         SetActiveIdUsingKey(ImGuiKey_Home);
         SetActiveIdUsingKey(ImGuiKey_End);
-        if (is_multiline)
+        if is_multiline
         {
             SetActiveIdUsingKey(ImGuiKey_PageUp);
             SetActiveIdUsingKey(ImGuiKey_PageDown);
         }
-        if (flags & (ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_AllowTabInput)) // Disable keyboard tabbing out as we will use the \t character.
+        if flag_set(flags , (ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_AllowTabInput)) // Disable keyboard tabbing out as we will use the \t character.
         {
             SetActiveIdUsingKey(ImGuiKey_Tab);
         }
@@ -1182,8 +707,9 @@ pub unsafe fn InputTextEx(label: &str,
         ClearActiveID();}
 
     // Release focus when we click outside
-    if (g.ActiveId == id && io.MouseClicked[0] && !init_state && !init_make_active) //-V560
+    if g.ActiveId == id && io.MouseClicked[0] && !init_state && !init_make_active { //-V560
         clear_active_id = true;
+    }
 
     // Lock the decision of whether we are going to take the path displaying the cursor or selection
     let render_cursor: bool = (g.ActiveId == id) || (state && user_scroll_active);
@@ -1193,11 +719,11 @@ pub unsafe fn InputTextEx(label: &str,
 
     // When read-only we always use the live data passed to the function
     // FIXME-OPT: Because our selection/cursor code currently needs the wide text we need to convert it when active, which is not ideal :(
-    if (is_readonly && state != null_mut() && (render_cursor || render_selection))
+    if is_readonly && state != null_mut() && (render_cursor || render_selection)
     {
-        let mut  buf_end: &str= null_mut();
+        let mut  buf_end = 0usize;
         state.TextW.resize(buf_size + 1);
-        state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, state.TextW.Size, buf, null_mut(), &buf_end);
+        state.CurLenW = ImTextStrFromUtf8(state.TextW, state.TextW.len(), buf, None, buf_end);
         state.CurLenA = (buf_end - buf);
         state.CursorClamp();
         render_selection &= state.HasSelection();
@@ -1208,24 +734,24 @@ pub unsafe fn InputTextEx(label: &str,
     let is_displaying_hint: bool = (hint != null_mut() && (if buf_display_from_state { state.TextA.Data} else {buf})[0] == 0);
 
     // Password pushes a temporary font with only a fallback glyph
-    if (is_password && !is_displaying_hint)
+    if is_password && !is_displaying_hint
     {
         let glyph: *const ImFontGlyph = g.Font.FindGlyph('*');
-        *mut ImFont password_font = &g.InputTextPasswordFont;
-        password_font->FontSize = g.Font.FontSize;
-        password_font->Scale = g.Font.Scale;
-        password_font->Ascent = g.Font.Ascent;
-        password_font->Descent = g.Font.Descent;
-        password_font->ContainerAtlas = g.Font.ContainerAtlas;
-        password_font->FallbackGlyph = glyph;
-        password_font->FallbackAdvanceX = glyph->AdvanceX;
-        // IM_ASSERT(password_font->Glyphs.empty() && password_font->IndexAdvanceX.empty() && password_font->IndexLookup.empty());
+        let mut password_font = &mut g.InputTextPasswordFont;
+        password_font.FontSize = g.Font.FontSize;
+        password_font.Scale = g.Font.Scale;
+        password_font.Ascent = g.Font.Ascent;
+        password_font.Descent = g.Font.Descent;
+        password_font.ContainerAtlas = g.Font.ContainerAtlas;
+        password_font.FallbackGlyph = glyph;
+        password_font.FallbackAdvanceX = glyph.AdvanceX;
+        // IM_ASSERT(password_font.Glyphs.empty() && password_font.IndexAdvanceX.empty() && password_font.IndexLookup.empty());
         PushFont(password_font);
     }
 
     // Process mouse inputs and character inputs
-    let backup_current_text_length: c_int = 0;
-    if (g.ActiveId == id)
+    let mut backup_current_text_length: usize = 0;
+    if g.ActiveId == id
     {
         // IM_ASSERT(state != NULL);
         backup_current_text_length = state.CurLenA;
@@ -1248,21 +774,23 @@ pub unsafe fn InputTextEx(label: &str,
             state.SelectAll();
             state.SelectedAllMouseLock = true;
         }
-        else if (hovered && io.MouseClickedCount[0] >= 2 && !io.KeyShift)
+        else if hovered && io.MouseClickedCount[0] >= 2 && !io.KeyShift
         {
-            stb_textedit_click(state, &state.Stb, mouse_x, mouse_y);
-            let multiclick_count: c_int = (io.MouseClickedCount[0] - 2);
-            if ((multiclick_count % 2) == 0)
+            stb_textedit_click(state, &mut state.Stb, mouse_x, mouse_y);
+            let multiclick_count: usize = (io.MouseClickedCount[0] - 2);
+            if (multiclick_count % 2) == 0
             {
                 // Double-click: Select word
                 // We always use the "Mac" word advance for double-click select vs CTRL+Right which use the platform dependent variant:
                 // FIXME: There are likely many ways to improve this behavior, but there's no "right" behavior (depends on use-case, software, OS)
                 let is_bol: bool = (state.Stb.cursor == 0) || ImStb::STB_TEXTEDIT_GETCHAR(state, state.Stb.cursor - 1) == '\n';
-                if (STB_TEXT_HAS_SELECTION(&state.Stb) || !is_bol)
+                if STB_TEXT_HAS_SELECTION(&state.Stb) || !is_bol {
                     state.OnKeyPressed(STB_TEXTEDIT_K_WORDLEFT);
+                }
                 //state->OnKeyPressed(STB_TEXTEDIT_K_WORDRIGHT | STB_TEXTEDIT_K_SHIFT);
-                if (!STB_TEXT_HAS_SELECTION(&state.Stb))
+                if !STB_TEXT_HAS_SELECTION(&state.Stb) {
                     ImStb::stb_textedit_prep_selection_at_cursor(&state.Stb);
+                }
                 state.Stb.cursor = ImStb::STB_TEXTEDIT_MOVEWORDRIGHT_MAC(state, state.Stb.cursor);
                 state.Stb.select_end = state.Stb.cursor;
                 ImStb::stb_textedit_clamp(state, &state.Stb);
@@ -1287,46 +815,54 @@ pub unsafe fn InputTextEx(label: &str,
         {
             if (hovered)
             {
-                if (io.KeyShift)
-                    stb_textedit_drag(state, &state.Stb, mouse_x, mouse_y);
-                else
-                    stb_textedit_click(state, &state.Stb, mouse_x, mouse_y);
+                if (io.KeyShift) {
+                    stb_textedit_drag(state, &mut state.Stb, mouse_x, mouse_y);
+                }
+                else {
+                    stb_textedit_click(state, &mut state.Stb, mouse_x, mouse_y);
+                }
                 state.CursorAnimReset();
             }
         }
-        else if (io.MouseDown[0] && !state.SelectedAllMouseLock && (io.MouseDelta.x != 0.0 || io.MouseDelta.y != 0.0))
+        else if io.MouseDown[0] && !state.SelectedAllMouseLock && (io.MouseDelta.x != 0.0 || io.MouseDelta.y != 0.0)
         {
-            stb_textedit_drag(state, &state.Stb, mouse_x, mouse_y);
+            stb_textedit_drag(state, &mut state.Stb, mouse_x, mouse_y);
             state.CursorAnimReset();
             state.CursorFollow = true;
         }
-        if (state.SelectedAllMouseLock && !io.MouseDown[0])
+        if state.SelectedAllMouseLock && !io.MouseDown[0] {
             state.SelectedAllMouseLock = false;
+        }
 
         // We expect backends to emit a Tab key but some also emit a Tab character which we ignore (#2467, #1336)
         // (For Tab and Enter: Win32/SFML/Allegro are sending both keys and chars, GLFW and SDL are only sending keys. For Space they all send all threes)
         let ignore_char_inputs: bool = (io.KeyCtrl && !io.KeyAlt) || (is_osx && io.KeySuper);
-        if (flag_set(flags, ImGuiInputTextFlags_AllowTabInput) && IsKeyPressed(ImGuiKey_Tab) && !ignore_char_inputs && !io.KeyShift && !is_readonly)
+        if flag_set(flags, ImGuiInputTextFlags_AllowTabInput) && IsKeyPressed(ImGuiKey_Tab, false) && !ignore_char_inputs && !io.KeyShift && !is_readonly
         {
-            let mut c: c_uint =  '\t'; // Insert TAB
-            if (InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard))
+            let mut c =  '\t'; // Insert TAB
+            if InputTextFilterCharacter(c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard) {
                 state.OnKeyPressed(c);
+            }
         }
 
         // Process regular text input (before we check for Return because using some IME will effectively send a Return?)
         // We ignore CTRL inputs, but need to allow ALT+CTRL as some keyboards (e.g. German) use AltGR (which _is_ Alt+Ctrl) to input certain characters.
-        if (io.InputQueueCharacters.Size > 0)
+        if io.InputQueueCharacters.Size > 0
         {
-            if (!ignore_char_inputs && !is_readonly && !input_requested_by_nav)
-                for (let n: c_int = 0; n < io.InputQueueCharacters.Size; n++)
+            if !ignore_char_inputs && !is_readonly && !input_requested_by_nav {
+                // for (let n: c_int = 0; n < io.InputQueueCharacters.Size; n+ +)
+                for n in 0 .. io.InputQueueCharacters.len()
                 {
                     // Insert character if they pass filtering
-                    let mut c: c_uint =  io.InputQueueCharacters[n];
-                    if (c == '\t') // Skip Tab, see above.
+                    let mut c = io.InputQueueCharacters[n];
+                    if c == '\t' { // Skip Tab, see above.
                         continue;
-                    if (InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard))
+                    }
+                    if InputTextFilterCharacter(c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard) {
                         state.OnKeyPressed(c);
+                    }
                 }
+            }
 
             // Consume characters
             io.InputQueueCharacters.clear();
@@ -1335,7 +871,7 @@ pub unsafe fn InputTextEx(label: &str,
 
     // Process other shortcuts/key-presses
     let mut cancel_edit: bool =  false;
-    if (g.ActiveId == id && !g.ActiveIdIsJustActivated && !clear_active_id)
+    if g.ActiveId == id && !g.ActiveIdIsJustActivated && !clear_active_id
     {
         // IM_ASSERT(state != NULL);
 
@@ -1351,12 +887,12 @@ pub unsafe fn InputTextEx(label: &str,
         let is_shift_key_only: bool = (io.KeyMods == ImGuiModFlags_Shift);
         let is_shortcut_key: bool = if g.IO.ConfigMacOSXBehaviors { (io.KeyMods == ImGuiModFlags_Super) }else{ (io.KeyMods == ImGuiModFlags_Ctrl)};
 
-        let is_cut: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_X)) || (is_shift_key_only && IsKeyPressed(ImGuiKey_Delete))) && !is_readonly && !is_password && (!is_multiline || state.HasSelection());
-        let is_copy: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_C)) || (is_ctrl_key_only  && IsKeyPressed(ImGuiKey_Insert))) && !is_password && (!is_multiline || state.HasSelection());
-        let is_paste: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_V)) || (is_shift_key_only && IsKeyPressed(ImGuiKey_Insert))) && !is_readonly;
-        let is_undo: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_Z)) && !is_readonly && is_undoable);
-        let is_redo: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_Y)) || (is_osx_shift_shortcut && IsKeyPressed(ImGuiKey_Z))) && !is_readonly && is_undoable;
-        let is_select_all: bool = is_shortcut_key && IsKeyPressed(ImGuiKey_A);
+        let is_cut: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_X, false)) || (is_shift_key_only && IsKeyPressed(ImGuiKey_Delete, false))) && !is_readonly && !is_password && (!is_multiline || state.HasSelection());
+        let is_copy: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_C, false)) || (is_ctrl_key_only  && IsKeyPressed(ImGuiKey_Insert, false))) && !is_password && (!is_multiline || state.HasSelection());
+        let is_paste: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_V, false)) || (is_shift_key_only && IsKeyPressed(ImGuiKey_Insert, false))) && !is_readonly;
+        let is_undo: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_Z, false)) && !is_readonly && is_undoable);
+        let is_redo: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_Y, false)) || (is_osx_shift_shortcut && IsKeyPressed(ImGuiKey_Z, false))) && !is_readonly && is_undoable;
+        let is_select_all: bool = is_shortcut_key && IsKeyPressed(ImGuiKey_A, false);
 
         // We allow validate/cancel with Nav source (gamepad) to makes it easier to undo an accidental NavInput press with no keyboard wired, but otherwise it isn't very useful.
         let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
@@ -1364,95 +900,106 @@ pub unsafe fn InputTextEx(label: &str,
         let is_gamepad_validate: bool = nav_gamepad_active && (IsKeyPressed(ImGuiKey_NavGamepadActivate, false) || IsKeyPressed(ImGuiKey_NavGamepadInput, false));
         let is_cancel: bool = IsKeyPressed(ImGuiKey_Escape, false) || (nav_gamepad_active && IsKeyPressed(ImGuiKey_NavGamepadCancel, false));
 
-        if (IsKeyPressed(ImGuiKey_LeftArrow))                        { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_LINESTART} else { if is_wordmove_key_down { STB_TEXTEDIT_K_WORDLEFT}else {STB_TEXTEDIT_K_LEFT}}) | k_mask); }
-        else if (IsKeyPressed(ImGuiKey_RightArrow))                  { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_LINEEND} else { if is_wordmove_key_down { STB_TEXTEDIT_K_WORDRIGHT}else {STB_TEXTEDIT_K_RIGHT}}) | k_mask); }
-        else if (IsKeyPressed(ImGuiKey_UpArrow) && is_multiline)     { if (io.KeyCtrl) SetScrollY(draw_window, ImMax(draw_window.Scroll.y - g.FontSize, 0.0)); else state.OnKeyPressed((if is_startend_key_down {STB_TEXTEDIT_K_TEXTSTART} else { STB_TEXTEDIT_K_UP }) | k_mask); }
-        else if (IsKeyPressed(ImGuiKey_DownArrow) && is_multiline)   { if (io.KeyCtrl) SetScrollY(draw_window, ImMin(draw_window.Scroll.y + g.FontSize, GetScrollMaxY())); else state.OnKeyPressed((if is_startend_key_down {STB_TEXTEDIT_K_TEXTEND} else { STB_TEXTEDIT_K_DOWN }) | k_mask); }
-        else if (IsKeyPressed(ImGuiKey_PageUp) && is_multiline)      { state.OnKeyPressed(STB_TEXTEDIT_K_PGUP | k_mask); scroll_y -= row_count_per_page * g.FontSize; }
-        else if (IsKeyPressed(ImGuiKey_PageDown) && is_multiline)    { state.OnKeyPressed(STB_TEXTEDIT_K_PGDOWN | k_mask); scroll_y += row_count_per_page * g.FontSize; }
-        else if (IsKeyPressed(ImGuiKey_Home))                        { state.OnKeyPressed(if io.KeyCtrl { STB_TEXTEDIT_K_TEXTSTART | k_mask} else {STB_TEXTEDIT_K_LINESTART | k_mask}); }
-        else if (IsKeyPressed(ImGuiKey_End))                         { state.OnKeyPressed(if io.KeyCtrl { STB_TEXTEDIT_K_TEXTEND | k_mask} else {STB_TEXTEDIT_K_LINEEND | k_mask}); }
-        else if (IsKeyPressed(ImGuiKey_Delete) && !is_readonly && !is_cut) { state.OnKeyPressed(STB_TEXTEDIT_K_DELETE | k_mask); }
-        else if (IsKeyPressed(ImGuiKey_Backspace) && !is_readonly)
+        if IsKeyPressed(ImGuiKey_LeftArrow, false) { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_LINESTART} else { if is_wordmove_key_down { STB_TEXTEDIT_K_WORDLEFT}else {STB_TEXTEDIT_K_LEFT}}) | k_mask); }
+        else if IsKeyPressed(ImGuiKey_RightArrow, false) { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_LINEEND} else { if is_wordmove_key_down { STB_TEXTEDIT_K_WORDRIGHT}else {STB_TEXTEDIT_K_RIGHT}}) | k_mask); }
+        else if IsKeyPressed(ImGuiKey_UpArrow, false) && is_multiline { if io.KeyCtrl {
+            SetScrollY(draw_window, ImMax(draw_window.Scroll.y - g.FontSize, 0.0));
+        } else {state.OnKeyPressed((if is_startend_key_down {STB_TEXTEDIT_K_TEXTSTART} else { STB_TEXTEDIT_K_UP }) | k_mask); }
+         if IsKeyPressed(ImGuiKey_DownArrow, false) && is_multiline { if io.KeyCtrl { SetScrollY(draw_window, ImMin(draw_window.Scroll.y + g.FontSize, GetScrollMaxY() as c_int)); } else { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_TEXTEND } else { STB_TEXTEDIT_K_DOWN }) | k_mask); }}
+        else if IsKeyPressed(ImGuiKey_PageUp, false) && is_multiline { state.OnKeyPressed(STB_TEXTEDIT_K_PGUP | k_mask); scroll_y -= row_count_per_page * g.FontSize; }
+        else if IsKeyPressed(ImGuiKey_PageDown, false) && is_multiline { state.OnKeyPressed(STB_TEXTEDIT_K_PGDOWN | k_mask); scroll_y += row_count_per_page * g.FontSize; }
+        else if IsKeyPressed(ImGuiKey_Home, false) { state.OnKeyPressed(if io.KeyCtrl { STB_TEXTEDIT_K_TEXTSTART | k_mask} else {STB_TEXTEDIT_K_LINESTART | k_mask}); }
+        else if IsKeyPressed(ImGuiKey_End, false) { state.OnKeyPressed(if io.KeyCtrl { STB_TEXTEDIT_K_TEXTEND | k_mask} else {STB_TEXTEDIT_K_LINEEND | k_mask}); }
+        else if IsKeyPressed(ImGuiKey_Delete, false) && !is_readonly && !is_cut { state.OnKeyPressed(STB_TEXTEDIT_K_DELETE | k_mask); }
+        else if IsKeyPressed(ImGuiKey_Backspace, false) && !is_readonly
         {
-            if (!state.HasSelection())
+            if !state.HasSelection()
             {
-                if (is_wordmove_key_down)
+                if is_wordmove_key_down {
                     state.OnKeyPressed(STB_TEXTEDIT_K_WORDLEFT | STB_TEXTEDIT_K_SHIFT);
-                else if (is_osx && io.KeySuper && !io.KeyAlt && !io.KeyCtrl)
+                }
+                else if is_osx && io.KeySuper && !io.KeyAlt && !io.KeyCtrl {
                     state.OnKeyPressed(STB_TEXTEDIT_K_LINESTART | STB_TEXTEDIT_K_SHIFT);
+                }
             }
             state.OnKeyPressed(STB_TEXTEDIT_K_BACKSPACE | k_mask);
         }
-        else if (is_enter_pressed || is_gamepad_validate)
+        else if is_enter_pressed || is_gamepad_validate
         {
             // Determine if we turn Enter into a \n character
             let mut ctrl_enter_for_new_line: bool =  flag_set(flags, ImGuiInputTextFlags_CtrlEnterForNewLine);
-            if (!is_multiline || is_gamepad_validate || (ctrl_enter_for_new_line && !io.KeyCtrl) || (!ctrl_enter_for_new_line && io.KeyCtrl))
+            if !is_multiline || is_gamepad_validate || (ctrl_enter_for_new_line && !io.KeyCtrl) || (!ctrl_enter_for_new_line && io.KeyCtrl)
             {
                 validated = true;
-                if (io.ConfigInputTextEnterKeepActive && !is_multiline)
-                    state.SelectAll(); // No need to scroll
-                else
+                if io.ConfigInputTextEnterKeepActive && !is_multiline {
+                    state.SelectAll();
+                } // No need to scroll
+                else {
                     clear_active_id = true;
+                }
             }
-            else if (!is_readonly)
+            else if !is_readonly
             {
-                let mut c: c_uint =  '\n'; // Insert new line
-                if (InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard))
+                let mut c =  '\n'; // Insert new line
+                if InputTextFilterCharacter(c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard) {
                     state.OnKeyPressed(c);
+                }
             }
         }
-        else if (is_cancel)
+        else if is_cancel
         {
-            clear_active_id = cancel_edit = true;
+            clear_active_id = true;
+            cancel_edit = true;
         }
-        else if (is_undo || is_redo)
+        else if is_undo || is_redo
         {
             state.OnKeyPressed(if is_undo {STB_TEXTEDIT_K_UNDO} else { STB_TEXTEDIT_K_REDO });
             state.ClearSelection();
         }
-        else if (is_select_all)
+        else if is_select_all
         {
             state.SelectAll();
             state.CursorFollow = true;
         }
-        else if (is_cut || is_copy)
+        else if is_cut || is_copy
         {
             // Cut, Copy
-            if (io.SetClipboardTextFn)
+            if io.SetClipboardTextFn
             {
                 let ib: c_int = if state.HasSelection() { ImMin(state.Stb.select_start, state.Stb.select_end)} else {0};
                 let ie: c_int = if state.HasSelection() { ImMax(state.Stb.select_start, state.Stb.select_end)} else{ state.CurLenW};
-                let clipboard_data_len: c_int = ImTextCountUtf8BytesFromStr(state.TextW.Data + ib, state.TextW.Data + ie) + 1;
-                clipboard_data: *mut c_char = IM_ALLOC(clipboard_data_len * sizeof);
-                ImTextStrToUtf8(clipboard_data, clipboard_data_len, state.TextW.Data + ib, state.TextW.Data + ie);
-                SetClipboardText(clipboard_data);
+                let clipboard_data_len: usize = (ImTextCountUtf8BytesFromStr(state.TextW.Data + ib) + 1);
+                let mut clipboard_data = String::new();
+                ImTextStrToUtf8(&mut clipboard_data, clipboard_data_len, state.TextW.Data + ib);
+                SetClipboardText(&clipboard_data);
                 MemFree(clipboard_data);
             }
-            if (is_cut)
+            if is_cut
             {
-                if (!state.HasSelection())
+                if !state.HasSelection() {
                     state.SelectAll();
+                }
                 state.CursorFollow = true;
-                stb_textedit_cut(state, &state.Stb);
+                stb_textedit_cut(state, &mut state.Stb);
             }
         }
         else if (is_paste)
         {
-            if (clipboard: &str = GetClipboardText())
+            let clipboard = GetClipboardText();
+            if clipboard.is_empty() == false
             {
                 // Filter pasted buffer
-                let clipboard_len: c_int = strlen(clipboard);
-                *mut let clipboard_filtered: ImWchar = (*mut ImWchar)IM_ALLOC((clipboard_len + 1) * sizeof);
+                let clipboard_len = clipboard.len();
+                let mut clipboard_filtered = String::with_capacity(clipboard_len);
                 let clipboard_filtered_len: c_int = 0;
-                for (s: &str = clipboard; *s; )
+                // for (s: &str = clipboard; *s; )
+                for s in clipboard
                 {
-                    c: c_uint;
-                    s += ImTextCharFromUtf8(&c, s, null_mut());
+                    let mut c = '\0';
+                    s += ImTextCharFromUtf8(&mut c, s);
                     if c == 0 {
                         break(); }
-                    if (!InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Clipboard))
+                    if !InputTextFilterCharacter(&c, flags, callback, callback_user_data, ImGuiInputSource_Clipboard)
                         continue;
                     clipboard_filtered[clipboard_filtered_len++] = c;
                 }
@@ -1490,7 +1037,7 @@ pub unsafe fn InputTextEx(label: &str,
                     w_text.resize(ImTextCountCharsFromUtf8(apply_new_text, apply_new_text + apply_new_text_length) + 1);
                     ImTextStrFromUtf8(w_text.Data, w_text.Size, apply_new_text, apply_new_text + apply_new_text_length);
                 }
-                stb_textedit_replace(state, &state.Stb, w_text.Data, if (apply_new_text_length > 0) { (w_text.Size - 1)} else{ 0});
+                stb::stb_textedit_replace(state, &state.Stb, w_text.Data, if (apply_new_text_length > 0) { (w_text.Size - 1)} else{ 0});
             }
         }
 
@@ -1891,7 +1438,7 @@ pub unsafe fn DebugNodeInputTextState(state: &mut ImGuiInputTextState)
 {
 // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    ImStb::&mut STB_TexteditState stb_state = &state.Stb;
+    ImStb::stb_state: &mut STB_TexteditState = &state.Stb;
     ImStb::*mut StbUndoState undo_state = &stb_state.undostate;
     text_ops::Text("ID: 0x%08X, ActiveID: 0x%08X", state.ID, g.ActiveId);
     text_ops::Text("CurLenW: %d, CurLenA: %d, Cursor: %d, Selection: %d..%d", state.CurLenA, state.CurLenW, stb_state.cursor, stb_state.select_start, stb_state.select_end);
@@ -2079,7 +1626,7 @@ pub unsafe fn ColorEdit4(label: &str,col: [c_float;4], ImGuiColorEditFlags flags
         else
             ImFormatString(buf, buf.len(), "#%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255));
         SetNextItemWidth(w_inputs);
-        if (InputText("##Text", buf, buf.len(), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase))
+        if (input_num_ops::InputText("##Text", buf, buf.len(), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase))
         {
             value_changed = true;
             p: *mut c_char = buf;
@@ -3233,7 +2780,7 @@ pub unsafe fn CollapsingHeader(label: &str,p_visible: *mut bool, ImGuiTreeNodeFl
         // FIXME: We can evolve this into user accessible helpers to add extra buttons on title bars, headers, etc.
         // FIXME: CloseButton can overlap into text, need find a way to clip the text somehow.
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        ImGuiLastItemData last_item_backup = g.LastItemData;
+        last_item_backup: ImGuiLastItemData = g.LastItemData;
         let button_size: c_float =  g.FontSize;
         let button_x: c_float =  ImMax(g.LastItemData.Rect.Min.x, g.LastItemData.Rect.Max.x - g.Style.FramePadding.x * 2.0 - button_size);
         let button_y: c_float =  g.LastItemData.Rect.Min.y;
@@ -5464,7 +5011,7 @@ pub unsafe fn TabItemLabelAndCloseButton(draw_list: *mut ImDrawList, bb: &ImRect
 
     if (close_button_visible)
     {
-        ImGuiLastItemData last_item_backup = g.LastItemData;
+        last_item_backup: ImGuiLastItemData = g.LastItemData;
         PushStyleVar(ImGuiStyleVar_FramePadding, frame_padding);
         if button_ops::CloseButton(close_button_id, button_pos) {
             close_button_pressed = true;}

@@ -4,7 +4,7 @@ use libc::{c_float, c_int};
 use crate::input_text_flags::ImGuiInputTextFlags;
 use crate::math_ops::ImMin;
 use crate::stb::stb_text_edit_state::STB_TexteditState;
-use crate::stb::stb_textedit::STB_TEXTEDIT_UNDOSTATECOUNT;
+use crate::stb::stb_textedit::{stb_textedit_key, STB_TEXTEDIT_UNDOSTATECOUNT};
 use crate::type_defs::{ImGuiID, ImWchar};
 use crate::stb_text_edit_state::STB_TexteditState;
 use crate::stb_textedit::STB_TEXTEDIT_UNDOSTATECOUNT;
@@ -17,8 +17,8 @@ pub struct ImGuiInputTextState {
     // widget id owning the text state
 // c_int                     CurLenW, CurLenA;       // we need to maintain our buffer length in both UTF-8 and wchar format. UTF-8 length is valid even if TextA is not.
     pub CurLenW: usize,
-    pub CurLenA: usizec_int,
-    pub TextW: Vec<u8>,
+    pub CurLenA: usize,
+    pub TextW: Vec<char>,
     // edit buffer, we need to persist but can't guarantee the persistence of the user-provided buffer. so we copy into own buffer.
     pub TextA: Vec<char>,
     // temporary UTF8 buffer for callbacks and other operations. this is not updated in every code-path! size=capacity.
@@ -77,8 +77,10 @@ impl ImGuiInputTextState {
 
 
     // c_void        OnKeyPressed(key: c_int);      // Cannot be inline because we call in code in stb_textedit.h implementation
-    pub fn OnKeyPressed(&mut self, key: c_int) {
-       todo!()
+    pub unsafe fn OnKeyPressed(&mut self, key: c_int) {
+            stb_textedit_key(&mut String::from(self.TextW.clone()), &mut self.Stb, key);
+        self.CursorFollow = true;
+        self.CursorAnimReset();
     }
 
     // Cursor & Selection
@@ -89,9 +91,9 @@ impl ImGuiInputTextState {
 
     // c_void        CursorClamp()               { Stb.cursor = ImMin(Stb.cursor, CurLenW); Stb.select_start = ImMin(Stb.select_start, CurLenW); Stb.select_end = ImMin(Stb.select_end, CurLenW); }
     pub fn CursorClamp(&mut self) {
-        self.Stb.cursor = ImMin(self.Stb.cursor, self.CurLenW);
-        self.Stb.select_start = ImMin(self.Stb.select_start, self.CurLenW);
-        self.Stb.select_end = ImMin(self.Stb.select_end, self.CurLenW);
+        self.Stb.cursor = self.Stb.cursor.min(self.CurLenW);
+        self.Stb.select_start = self.Stb.select_start.min(self.CurLenW);
+        self.Stb.select_end = self.Stb.select_end.min(self.CurLenW);
     }
 
     // bool        HasSelection() const        { return Stb.select_start != Stb.select_end; }
@@ -106,19 +108,19 @@ impl ImGuiInputTextState {
     }
 
     // c_int         GetCursorPos() const        { return Stb.cursor; }
-    pub fn GetCursorPos(&self) -> c_int {
+    pub fn GetCursorPos(&self) -> usize {
         self.Stb.cursor
     }
 
 
     // c_int         GetSelectionStart() const   { return Stb.select_start; }
-    pub fn GetSelectionStart(&self) -> c_int {
+    pub fn GetSelectionStart(&self) -> usize {
         self.Stb.select_start
     }
 
 
     // c_int         GetSelectionEnd() const     { return Stb.select_end; }
-    pub fn GetSelectionEnd(&self) -> c_int {
+    pub fn GetSelectionEnd(&self) -> usize {
         self.Stb.select_end
     }
 
@@ -129,4 +131,5 @@ impl ImGuiInputTextState {
         self.Stb.cursor = self.CurLenW;
         self.Stb.select_end = self.CurLenW;
     }
+
 }

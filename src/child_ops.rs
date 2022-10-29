@@ -6,26 +6,31 @@ use crate::color::{ImGuiCol_ChildBg, ImGuiCol_FrameBg};
 use crate::condition::ImGuiCond_None;
 use crate::content_ops::GetContentRegionAvail;
 use crate::GImGui;
-use SetActiveID;
+use crate::id_ops::SetActiveID;
 use crate::input_source::ImGuiInputSource_Nav;
 use crate::item_ops::{ItemAdd, ItemSize};
 use crate::item_status_flags::ImGuiItemStatusFlags_HoveredWindow;
 use crate::math_ops::ImMax;
 use crate::nav_highlight_flags::ImGuiNavHighlightFlags_TypeThin;
+use crate::nav_ops::NavInitWindow;
 use crate::rect::ImRect;
 use crate::render_ops::RenderNavHighlight;
 use crate::string_ops::ImFormatStringToTempBuffer;
 use crate::style_ops::{PopStyleColor, PushStyleColor};
+use crate::style_var::{ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_ChildRounding, ImGuiStyleVar_WindowPadding};
 use crate::style_var_ops::{PopStyleVar, PopStyleVarInt, PushStyleVar, PushStyleVarFloat, PushStyleVarVec2};
 use crate::type_defs::ImGuiID;
 use crate::utils::flag_clear;
 use crate::vec2::ImVec2;
+use crate::window::focus::FocusWindow;
 use crate::window::ImGuiWindow;
+use crate::window::ops::{Begin, GetCurrentWindow, SetNextWindowSize};
+use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar};
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar};
 use crate::window_ops::SetNextWindowSize;
 
 // BeginChildEx: bool(name: *const c_char, ImGuiID id, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags flags)
-pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, border: bool, mut flags: ImGuiWindowFlags) -> bool {
+pub unsafe fn BeginChildEx(name: &str, id: ImGuiID, size_arg: &ImVec2, border: bool, mut flags: ImGuiWindowFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
 
@@ -82,15 +87,15 @@ pub unsafe fn BeginChildEx(name: *const c_char, id: ImGuiID, size_arg: &ImVec2, 
 }
 
 // BeginChild: bool(str_id: *const c_char, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
-pub unsafe fn BeginChild(str_id: *const c_char, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
+pub unsafe fn BeginChild(str_id: &str, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    return BeginChildEx(str_id, window.id_from_str(str_id, null()), size_arg, border, extra_flags);
+    return BeginChildEx(str_id, window.id_from_str(str_id), size_arg, border, extra_flags);
 }
 
 // BeginChild: bool(ImGuiID id, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild2(id: ImGuiID, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
     // IM_ASSERT(id != 0);
-    return BeginChildEx(null_mut(), id, size_arg, border, extra_flags);
+    return BeginChildEx("", id, size_arg, border, extra_flags);
 }
 
 // c_void EndChild()

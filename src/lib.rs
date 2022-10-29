@@ -244,6 +244,7 @@ mod splitter;
 mod combo_box;
 mod data_type_ops;
 mod drag;
+mod input_num_ops;
 
 // c_void Initialize()
 pub unsafe fn Initialize()

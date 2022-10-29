@@ -247,99 +247,102 @@ pub fn ImFormatStringToTempBufferV(fmt_str: &str) -> String {
 // A nearly-branchless UTF-8 decoder, based on work of Christopher Wellons (https://github.com/skeeto/branchless-utf8).
 // We handle UTF-8 decoding error by skipping forward.
 // int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCharFromUtf8(out_char: *mut c_uint, in_text: &str) -> c_int
+pub unsafe fn ImTextCharFromUtf8(out_char: &mut c, in_text: &str) -> c_int
 {
-    pub const lengths: [c_char;32] = [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0 ];
-    pub const masks: [c_int;5]  = [ 0x00, 0x7f, 0x1f, 0x0f32, 0x07 ];
-    pub const mins: [u32;5] = [ 0x400000, 0, 0x80, 0x800, 0x10000 ];
-    pub const shiftc: [c_int;5] = [ 0, 18, 12, 6, 0 ];
-    pub const shifte: [c_int;5] = [ 0, 6, 4, 2, 0 ];
-    let mut len = lengths[*in_text >> 3];
-    let mut wanted = len + !len;
-
-    if in_text_end.is_null() {
-        in_text_end = in_text + wanted;
-    } // Max length, nulls will be taken into account.
-
-    // Copy at most 'len' bytes, stop copying at 0 or past in_text_end. Branch predictor does a good job here,
-    // so it is fast even with excessive branching.
-    let mut s: [c_uchar;4] = [0;4];
-    s[0] = if in_text + 0 < in_text_end { in_text[0] } else { 0 };
-    s[1] = if in_text + 1 < in_text_end { in_text[1] } else { 0 };
-    s[2] = if in_text + 2 < in_text_end { in_text[2] } else { 0 };
-    s[3] = if in_text + 3 < in_text_end { in_text[3] } else { 0 };
-
-    // Assume a four-byte character and load four bytes. Unused bits are shifted out.
-    *out_char  = (s[0] & masks[len]) << 18;
-    *out_char |= (s[1] & 0x30f32) << 12;
-    *out_char |= (s[2] & 0x30f32) <<  6;
-    *out_char |= (s[3] & 0x30f32) <<  0;
-    *out_char >>= shiftc[len];
-
-    // Accumulate the various error conditions.
-    let mut e = 0;
-    e  = (*out_char < mins[len]) << 6; // non-canonical encoding
-    e |= ((*out_char >> 11) == 0x1b) << 7;  // surrogate half?
-    e |= (*out_char > IM_UNICODE_CODEPOINT_MAX) << 8;  // out of range?
-    e |= (s[1] & 0xc0) >> 2;
-    e |= (s[2] & 0xc0) >> 4;
-    e |= (s[3]       ) >> 6;
-    e ^= 0x2a; // top two bits of each tail byte correct?
-    e >>= shifte[len];
-
-    if e
-    {
-        // No bytes are consumed when *in_text == 0 || in_text == in_text_end.
-        // One byte is consumed in case of invalid first byte of in_text.
-        // All available bytes (at most `len` bytes) are consumed on incomplete/invalid second to last bytes.
-        // Invalid or incomplete input may consume less bytes than wanted, therefore every byte has to be inspected in s.
-        wanted = wanted.min( !!s[0] + !!s[1] + !!s[2] + !!s[3]);
-        *out_char = IM_UNICODE_CODEPOINT_INVALID;
-    }
-
-    return wanted;
+    // pub const lengths: [c_char;32] = [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0 ];
+    // pub const masks: [c_int;5]  = [ 0x00, 0x7f, 0x1f, 0x0f32, 0x07 ];
+    // pub const mins: [u32;5] = [ 0x400000, 0, 0x80, 0x800, 0x10000 ];
+    // pub const shiftc: [c_int;5] = [ 0, 18, 12, 6, 0 ];
+    // pub const shifte: [c_int;5] = [ 0, 6, 4, 2, 0 ];
+    // let mut len = lengths[*in_text >> 3];
+    // let mut wanted = len + !len;
+    //
+    // if in_text_end.is_null() {
+    //     in_text_end = in_text + wanted;
+    // } // Max length, nulls will be taken into account.
+    //
+    // // Copy at most 'len' bytes, stop copying at 0 or past in_text_end. Branch predictor does a good job here,
+    // // so it is fast even with excessive branching.
+    // let mut s: [c_uchar;4] = [0;4];
+    // s[0] = if in_text + 0 < in_text_end { in_text[0] } else { 0 };
+    // s[1] = if in_text + 1 < in_text_end { in_text[1] } else { 0 };
+    // s[2] = if in_text + 2 < in_text_end { in_text[2] } else { 0 };
+    // s[3] = if in_text + 3 < in_text_end { in_text[3] } else { 0 };
+    //
+    // // Assume a four-byte character and load four bytes. Unused bits are shifted out.
+    // *out_char  = (s[0] & masks[len]) << 18;
+    // *out_char |= (s[1] & 0x30f32) << 12;
+    // *out_char |= (s[2] & 0x30f32) <<  6;
+    // *out_char |= (s[3] & 0x30f32) <<  0;
+    // *out_char >>= shiftc[len];
+    //
+    // // Accumulate the various error conditions.
+    // let mut e = 0;
+    // e  = (*out_char < mins[len]) << 6; // non-canonical encoding
+    // e |= ((*out_char >> 11) == 0x1b) << 7;  // surrogate half?
+    // e |= (*out_char > IM_UNICODE_CODEPOINT_MAX) << 8;  // out of range?
+    // e |= (s[1] & 0xc0) >> 2;
+    // e |= (s[2] & 0xc0) >> 4;
+    // e |= (s[3]       ) >> 6;
+    // e ^= 0x2a; // top two bits of each tail byte correct?
+    // e >>= shifte[len];
+    //
+    // if e
+    // {
+    //     // No bytes are consumed when *in_text == 0 || in_text == in_text_end.
+    //     // One byte is consumed in case of invalid first byte of in_text.
+    //     // All available bytes (at most `len` bytes) are consumed on incomplete/invalid second to last bytes.
+    //     // Invalid or incomplete input may consume less bytes than wanted, therefore every byte has to be inspected in s.
+    //     wanted = wanted.min( !!s[0] + !!s[1] + !!s[2] + !!s[3]);
+    //     *out_char = IM_UNICODE_CODEPOINT_INVALID;
+    // }
+    //
+    // return wanted;
+    todo!()
 }
 
 // int ImTextStrFromUtf8(buf: *mut ImWchar, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
-pub unsafe fn ImTextStrFromUtf8(buf: *mut ImWchar, buf_size: i32, mut in_text: *const c_char, in_text_end: *const c_char, in_text_remaining: *mut *const c_char)
+pub unsafe fn ImTextStrFromUtf8(buf: &mut String, buf_size: usize, in_text: &String, in_text_end: Option<_>, in_text_remaining: usize)
 {
-    // buf_out: *mut ImWchar = buf;
-    let mut buf_out = buf;
-    // buf_end: *mut ImWchar = buf + buf_size;
-    let mut buf_end = buf + buf_size;
-    while buf_out < buf_end - 1 && (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
-    {
-        let mut c: c_uint = 0;
-        in_text += ImTextCharFromUtf8(&mut c, in_text, in_text_end);
-        if c == 0 {
-            break;
-        }
-        *buf_out = c;
-        buf_out += 1;
-    }
-    *buf_out = 0;
-    if in_text_remaining.is_null() == false {
-        *in_text_remaining = in_text;
-    }
-    return buf_out - buf;
+    // // buf_out: *mut ImWchar = buf;
+    // let mut buf_out = buf;
+    // // buf_end: *mut ImWchar = buf + buf_size;
+    // let mut buf_end = buf + buf_size;
+    // while buf_out < buf_end - 1 && (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
+    // {
+    //     let mut c: c_uint = 0;
+    //     in_text += ImTextCharFromUtf8(&mut c, in_text, in_text_end);
+    //     if c == 0 {
+    //         break;
+    //     }
+    //     *buf_out = c;
+    //     buf_out += 1;
+    // }
+    // *buf_out = 0;
+    // if in_text_remaining.is_null() == false {
+    //     *in_text_remaining = in_text;
+    // }
+    // return buf_out - buf;
+    todo!()
 }
 
 // int ImTextCountCharsFromUtf8(const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCountCharsFromUtf8(mut in_text: *const c_char, in_text_end: *const c_char) -> i32
+pub unsafe fn ImTextCountCharsFromUtf8(mut in_text: &str, in_text_end: *const c_char) -> usize
 {
-    // int char_count = 0;
-    let mut char_count: i32 = 0;
-    while (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
-    {
-        // unsigned int c;
-        let mut c: c_uint = 0;
-        in_text += ImTextCharFromUtf8(&mut c, in_text, in_text_end);
-        if c == 0 {
-            break;
-        }
-        char_count += 1;
-    }
-    return char_count;
+    // // int char_count = 0;
+    // let mut char_count: i32 = 0;
+    // while (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
+    // {
+    //     // unsigned int c;
+    //     let mut c: c_uint = 0;
+    //     in_text += ImTextCharFromUtf8(&mut c, in_text, in_text_end);
+    //     if c == 0 {
+    //         break;
+    //     }
+    //     char_count += 1;
+    // }
+    // return char_count;
+    todo!()
 }
 
 // Based on stb_to_utf8() from github.com/nothings/stb/
@@ -406,7 +409,7 @@ pub fn ImTextCountUtf8BytesFromChar2(c: c_uint) -> c_int
 }
 
 // int ImTextStrToUtf8(char* out_buf, int out_buf_size, const in_text: *mut ImWchar, const in_text_end: *mut ImWchar)
-pub unsafe fn ImTextStrToUtf8(out_buf: *mut c_char, out_buf_size: c_int, int_text: *const ImWchar, in_text_end: *const ImWchar) -> c_int
+pub unsafe fn ImTextStrToUtf8(out_buf: &mut String, out_buf_size: usize, int_text: &mut String) -> c_int
 {
     let mut buf_p = out_buf;
     let buf_end = out_buf + out_buf_size;
@@ -429,22 +432,23 @@ pub unsafe fn ImTextStrToUtf8(out_buf: *mut c_char, out_buf_size: c_int, int_tex
 }
 
 // int ImTextCountUtf8BytesFromStr(const in_text: *mut ImWchar, const in_text_end: *mut ImWchar)
-pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: *const ImWchar, in_text_end: *const ImWchar) -> c_int
+pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: &String) -> usize
 {
-    let mut bytes_count = 0;
-    while (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
-    {
-        // unsigned int c = (*in_text++);
-        let mut c = *in_text;
-        in_text += 1;
-        if c < 0x80 {
-            bytes_count += 1;
-        }
-        else {
-            bytes_count += ImTextCountUtf8BytesFromChar2(c);
-        }
-    }
-    return bytes_count;
+    // let mut bytes_count = 0;
+    // while (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0
+    // {
+    //     // unsigned int c = (*in_text++);
+    //     let mut c = *in_text;
+    //     in_text += 1;
+    //     if c < 0x80 {
+    //         bytes_count += 1;
+    //     }
+    //     else {
+    //         bytes_count += ImTextCountUtf8BytesFromChar2(c);
+    //     }
+    // }
+    // return bytes_count;
+    todo!()
 }
 
 pub unsafe fn str_to_const_c_char_ptr(in_str: &str) -> *const c_char {

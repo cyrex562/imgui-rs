@@ -443,7 +443,7 @@ pub fn SetNextFrameWantCaptureMouse(want_capture_mouse: bool) {
 }
 
 // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
-// static GetInputSourceName: *const c_char(ImGuiInputSource source)
+// static GetInputSourceName: *const c_char(source: ImGuiInputSource)
 pub fn GetInputSourceName(source: ImGuiInputSource) -> *const c_char {
 
     // IM_ASSERT(IM_ARRAYSIZE(input_source_names) == ImGuiInputSource_COUNT && source >= 0 && source < ImGuiInputSource_COUNT);
