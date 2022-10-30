@@ -288,7 +288,7 @@
 
 use std::ptr::null_mut;
 use libc::{c_char, c_float, c_int, c_short, c_uchar, size_t};
-use crate::a_widgets::STB_TEXTEDIT_NEWLINE;
+use crate::input_text::STB_TEXTEDIT_NEWLINE;
 use crate::input_text_state::ImGuiInputTextState;
 use crate::stb::stb_find_state::StbFindState;
 use crate::stb::stb_text_edit_row::StbTexteditRow;

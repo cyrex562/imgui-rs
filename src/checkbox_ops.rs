@@ -109,7 +109,7 @@ pub unsafe fn CheckboxFlagsT<T>(label: &str, flags: *mut T , flags_value: T ) ->
     return pressed;
 }
 
-pub unsafe fn CheckboxFlags(label: &str, flags: *mut c_int, flags_value: c_int) -> bool
+pub unsafe fn CheckboxFlags(label: &str, flags: &mut c_int, flags_value: c_int) -> bool
 {
     return CheckboxFlagsT(label, flags, flags_value);
 }

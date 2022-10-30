@@ -1,5 +1,5 @@
 use libc::{c_float, c_int};
-use crate::{a_widgets, GImGui};
+use crate::{a_widgets, GImGui, input_text};
 use crate::input_text_flags::ImGuiInputTextFlags_CallbackResize;
 use crate::input_text_state::ImGuiInputTextState;
 use crate::io_ops::GetIO;
@@ -68,7 +68,7 @@ pub unsafe fn STB_TEXTEDIT_LAYOUTROW(r: &mut StbTexteditRow,
                                      line_start_idx: usize) {
     let text: *const ImWchar = obj.TextW.Data;
     let mut text_remaining: usize = 0;
-    let size: ImVec2 = a_widgets::InputTextCalcTextSizeW(text + line_start_idx, &mut text_remaining, None, true);
+    let size: ImVec2 = input_text::InputTextCalcTextSizeW(text + line_start_idx, &mut text_remaining, None, true);
     r.x0 = 0.0;
     r.x1 = size.x;
     r.baseline_y_delta = size.y;
@@ -79,7 +79,7 @@ pub unsafe fn STB_TEXTEDIT_LAYOUTROW(r: &mut StbTexteditRow,
 
 pub unsafe fn STB_TEXTEDIT_MOVEWORDLEFT_IMPL(obj: &mut ImGuiInputTextState, mut idx: usize) -> c_int {
     idx -= 1;
-    while idx >= 0 && a_widgets::is_word_boundary_from_right(obj, idx) == false {
+    while idx >= 0 && input_text::is_word_boundary_from_right(obj, idx) == false {
         idx -= 1;
     }
     return if idx < 0 { 0 } else { idx };
@@ -88,7 +88,7 @@ pub unsafe fn STB_TEXTEDIT_MOVEWORDLEFT_IMPL(obj: &mut ImGuiInputTextState, mut 
 pub unsafe fn STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj: &mut ImGuiInputTextState, mut idx: usize) -> usize {
     idx += 1;
     let len = obj.CurLenW;
-    while idx < len && a_widgets::is_word_boundary_from_left(obj, idx) == false {
+    while idx < len && input_text::is_word_boundary_from_left(obj, idx) == false {
         idx += 1;
     }
     return if idx > len { len } else { idx };
@@ -97,7 +97,7 @@ pub unsafe fn STB_TEXTEDIT_MOVEWORDRIGHT_MAC(obj: &mut ImGuiInputTextState, mut 
 pub unsafe fn STB_TEXTEDIT_MOVEWORDRIGHT_WIN(obj: &mut ImGuiInputTextState, mut idx: usize) -> usize {
     idx += 1;
     let len = obj.CurLenW;
-    while idx < len && a_widgets::is_word_boundary_from_right(obj, idx) == false {
+    while idx < len && input_text::is_word_boundary_from_right(obj, idx) == false {
         idx += 1;
     }
     return if idx > len { len } else { idx };

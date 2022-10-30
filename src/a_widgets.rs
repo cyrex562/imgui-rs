@@ -109,7 +109,8 @@ use crate::{button_ops, checkbox_ops, data_type_ops, drag, GImGui, ImGuiViewport
 use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
 use crate::backend_flags::ImGuiBackendFlags_HasGamepad;
 use crate::button_flags::{ImGuiButtonFlags, ImGuiButtonFlags_AlignTextBaseLine, ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_DontClosePopups, ImGuiButtonFlags_FlattenChildren, ImGuiButtonFlags_MouseButtonDefault_, ImGuiButtonFlags_MouseButtonLeft, ImGuiButtonFlags_MouseButtonMask_, ImGuiButtonFlags_MouseButtonMiddle, ImGuiButtonFlags_MouseButtonRight, ImGuiButtonFlags_NoHoldingActiveId, ImGuiButtonFlags_NoHoveredOnFocus, ImGuiButtonFlags_NoKeyModifiers, ImGuiButtonFlags_NoNavFocus, ImGuiButtonFlags_None, ImGuiButtonFlags_PressedOnClick, ImGuiButtonFlags_PressedOnClickRelease, ImGuiButtonFlags_PressedOnClickReleaseAnywhere, ImGuiButtonFlags_PressedOnDefault_, ImGuiButtonFlags_PressedOnDoubleClick, ImGuiButtonFlags_PressedOnDragDropHold, ImGuiButtonFlags_PressedOnMask_, ImGuiButtonFlags_PressedOnRelease, ImGuiButtonFlags_Repeat};
-use crate::button_ops::ButtonEx;
+use crate::button_ops::{ButtonBehavior, ButtonEx, InvisibleButton};
+use crate::checkbox_ops::CheckboxFlags;
 use crate::child_ops::{BeginChild, BeginChildEx, BeginChildFrame, EndChild, EndChildFrame};
 use crate::clipboard_ops::{GetClipboardText, SetClipboardText};
 use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_AlphaBar, ImGuiColorEditFlags_AlphaPreview, ImGuiColorEditFlags_AlphaPreviewHalf, ImGuiColorEditFlags_DataTypeMask_, ImGuiColorEditFlags_DefaultOptions_, ImGuiColorEditFlags_DisplayHex, ImGuiColorEditFlags_DisplayHSV, ImGuiColorEditFlags_DisplayMask_, ImGuiColorEditFlags_DisplayRGB, ImGuiColorEditFlags_Float, ImGuiColorEditFlags_HDR, ImGuiColorEditFlags_InputHSV, ImGuiColorEditFlags_InputMask_, ImGuiColorEditFlags_InputRGB, ImGuiColorEditFlags_NoAlpha, ImGuiColorEditFlags_NoBorder, ImGuiColorEditFlags_NoDragDrop, ImGuiColorEditFlags_NoInputs, ImGuiColorEditFlags_NoLabel, ImGuiColorEditFlags_NoOptions, ImGuiColorEditFlags_NoPicker, ImGuiColorEditFlags_NoSidePreview, ImGuiColorEditFlags_NoSmallPreview, ImGuiColorEditFlags_NoTooltip, ImGuiColorEditFlags_PickerHueBar, ImGuiColorEditFlags_PickerHueWheel, ImGuiColorEditFlags_PickerMask_, ImGuiColorEditFlags_Uint8};
@@ -130,6 +131,7 @@ use crate::geometry_ops::{ImTriangleBarycentricCoords, ImTriangleClosestPoint, I
 use crate::group_ops::{BeginGroup, EndGroup};
 use crate::hovered_flags::ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
 use crate::id_ops::{ClearActiveID, GetIDWithSeed, KeepAliveID, PopID, push_int_id, push_str_id, PushID, PushOverrideID, SetActiveID, SetHoveredID};
+use crate::input_num_ops::InputText;
 use crate::input_ops::{CalcTypematicRepeatAmount, GetKeyData, IsKeyDown, IsKeyPressed, IsMouseClicked, IsMouseDragging, IsMouseDragPastThreshold, IsMousePosValid, SetMouseCursor};
 use crate::input_source::{ImGuiInputSource, ImGuiInputSource_Clipboard, ImGuiInputSource_Gamepad, ImGuiInputSource_Keyboard, ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
 use crate::input_text_callback_data::ImGuiInputTextCallbackData;
@@ -205,33 +207,6 @@ use crate::window::props::{GetFontTexUvWhitePixel, SetNextWindowPos, SetNextWind
 use crate::window::rect::{PopClipRect, PushClipRect, WindowRectAbsToRel};
 use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoNavFocus, ImGuiWindowFlags_None, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup};    // Time for drag-hold to activate items accepting the ImGuiButtonFlags_PressedOnDragDropHold button behavior.
 
-// Create text input in place of another active widget (e.g. used when doing a CTRL+Click on drag/slider widgets)
-// FIXME: Facilitate using this in variety of other situations.
-pub unsafe fn TempInputText(bb: &mut ImRect,
-                            id: ImGuiID,
-                            label: &str,
-                            buf: &mut String,
-                            buf_size: usize,
-                            flags: ImGuiInputTextFlags) -> bool
-{
-    // On the first frame, g.TempInputTextId == 0, then on subsequent frames it becomes == id.
-    // We clear ActiveID on the first frame to allow the InputText() taking it back.
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let init: bool = (g.TempInputId != id);
-    if init {
-        ClearActiveID(); }
-
-    g.Currentwindow.DC.CursorPos = bb.Min;
-    let mut value_changed: bool =  InputTextEx(label, "", buf, buf_size, &mut bb.GetSize(), flags | ImGuiInputTextFlags_MergedItem, None, None);
-    if init
-    {
-        // First frame we started displaying the InputText widget, we expect it to take the active id.
-        // IM_ASSERT(g.ActiveId == id);
-        g.TempInputId = g.ActiveId;
-    }
-    return value_changed;
-}
-
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: InputText, InputTextMultiline, InputTextWithHint
 //-------------------------------------------------------------------------
@@ -245,1242 +220,11 @@ pub unsafe fn TempInputText(bb: &mut ImRect,
 // - DebugNodeInputTextState() [Internal]
 //-------------------------------------------------------------------------
 
-pub unsafe fn InputTextMultiline(label: &str, buf: &mut String, buf_size: size_t, size: &mut ImVec2, flags: ImGuiInputTextFlags, callback: ImGuiInputTextCallback, user_data: &Vec<u8>) -> bool
-{
-    return InputTextEx(label, "", buf, buf_size, size, flags | ImGuiInputTextFlags_Multiline, Some(callback), Some(user_data));
-}
-
-pub unsafe fn InputTextWithHint(label: &str, hint: &str, buf: &mut String, buf_size: size_t, flags: ImGuiInputTextFlags, callback: ImGuiInputTextCallback, user_data: &Vec<u8>) -> bool
-{
-    // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline() or  InputTextEx() manually if you need multi-line + hint.
-    return InputTextEx(label, hint, buf, buf_size, ImVec2::new(0, 0), flags, Some(callback), Some(user_data));
-}
-
-pub fn InputTextCalcTextLenAndLineCount(text_begin: &String, out_text_end: &mut usize) -> usize
-{
-    // let line_count: c_int = 0;
-    // let mut  s: &str = text_begin;
-    // while ( c: c_char = *s++) // We are only matching for \n so we can ignore UTF-8 decoding
-    //     if (c == '\n')
-    //         line_count+= 1;
-    // s-= 1;
-    // if (s[0] != '\n' && s[0] != '\r') {
-    //     line_count += 1;
-    // }
-    // *out_text_end = s;
-    // return line_count;
-    let mut line_count: usize = 0;
-    let mut start: usize = 0;
-    while start <= text_begin.len() {
-        let next_line_end = text_begin[start..].find('\n');
-        if next_line_end.is_none() {
-            break;
-        }
-        start = next_line_end.unwrap();
-    }
-
-    return line_count;
-}
-
-pub unsafe fn InputTextCalcTextSizeW(
-    text_begin: &String,
-    remaining: &mut usize,
-    mut out_offset: Option<&mut ImVec2>,
-    stop_on_new_line: bool) -> ImVec2
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let font = g.Font;
-    let line_height =  g.FontSize;
-    let scale =  line_height / font.FontSize;
-
-    let mut text_size = ImVec2::new(0, 0);
-    let mut line_width: c_float =  0.0;
-    let mut text_end = text_begin.len();
-
-    let mut s= 0usize;
-    while s < text_end
-    {
-        let mut c = text_begin[s];
-        if c == '\n'
-        {
-            text_size.x = ImMax(text_size.x, line_width);
-            text_size.y += line_height;
-            line_width = 0.0;
-            if stop_on_new_line {
-                break(); }
-            continue;
-        }
-        if c == '\r' {
-            continue;
-        }
-
-        let char_width: c_float =  font.GetCharAdvance(c) * scale;
-        line_width += char_width;
-        s += 1;
-    }
-
-    if text_size.x < line_width{
-        text_size.x = line_width;}
-
-    if out_offset.is_some() {
-        // offset allow for the possibility of sitting after a trailing
-        // *out_offset. = ImVec2::new(line_width, text_size.y + line_height);
-        let _ = out_offset.replace(&mut ImVec2::from_floats(line_width, text_size.y + line_height));
-    }
-
-    if line_width > 0.0 as c_float || text_size.y == 0.0 {
-        // whereas size.y will ignore the trailing \n
-        text_size.y += line_height;
-    }
-
-    if remaining {
-        *remaining = s;
-    }
-
-    return text_size;
-}
-
 // Wrapper for stb_textedit.h to edit text (our wrapper is for: statically sized buffer, single-line, wchar characters. InputText converts between UTF-8 and wchar)
 // namespace ImStb
 // {
 
-pub const STB_TEXTEDIT_NEWLINE: char = '\n';
 
-// When ImGuiInputTextFlags_Password is set, we don't want actions such as CTRL+Arrow to leak the fact that underlying data are blanks or separators.
-pub unsafe fn is_separator(c: char) -> bool {
-    return ImCharIsBlankW(c) || c == ',' || c == ';' || c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '|' || c == '\n' || c == '\r';
-}
-
-pub unsafe fn is_word_boundary_from_right(obj: &mut ImGuiInputTextState, idx: usize)  -> bool     {
-    if obj.Flags & ImGuiInputTextFlags_Password { return  false; }
-    return if idx > 0 { (is_separator(obj.TextW[idx - 1]) & & ! is_separator(obj.TextW[idx]) )} else {true};
-}
-
-pub unsafe fn is_word_boundary_from_left(obj: &mut ImGuiInputTextState, idx: usize) -> bool {
-    if flag_set(obj.Flags , ImGuiInputTextFlags_Password) { return false; }
-    return if idx > 0 {
-        (!is_separator(obj.TextW[idx - 1]) && is_separator(obj.TextW[idx])) }
-    else { true };
-}
-
-
-
-
-// Return false to discard a character.
-pub unsafe fn InputTextFilterCharacter(p_char: char, flags: ImGuiInputTextFlags, callback: Option<ImGuiInputTextCallback>, user_data: Option<&Vec<u8>>, input_source: ImGuiInputSource) -> bool
-{
-    // IM_ASSERT(input_source == ImGuiInputSource_Keyboard || input_source == ImGuiInputSource_Clipboard);
-    // let mut c = *p_char;
-    // 
-    // // Filter non-printable (NB: isprint is unreliable! see #2467)
-    // let mut apply_named_filters: bool =  true;
-    // if (c < 0x20)
-    // {
-    //     let mut pass: bool =  false;
-    //     pass |= (c == '\n' && (flags & ImGuiInputTextFlags_Multiline)); // Note that an Enter KEY will emit \r and be ignored (we poll for KEY in InputText() code)
-    //     pass |= (c == '\t' && (flags & ImGuiInputTextFlags_AllowTabInput));
-    //     if !pass { return  false; }
-    //     apply_named_filters = false; // Override named filters below so newline and tabs can still be inserted.
-    // }
-    // 
-    // if (input_source != ImGuiInputSource_Clipboard)
-    // {
-    //     // We ignore Ascii representation of delete (emitted from Backspace on OSX, see #2578, #2817)
-    //     if c == 127 { return  false; }
-    // 
-    //     // Filter private Unicode range. GLFW on OSX seems to send private characters for special keys like arrow keys (FIXME)
-    //     if c >= 0xE000 && c <= 0xF8F0f32 { return  false; }
-    // }
-    // 
-    // // Filter Unicode ranges we are not handling in this build
-    // if c > IM_UNICODE_CODEPOINT_MAX { return  false; }
-    // 
-    // // Generic named filters
-    // if (apply_named_filters && (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase | ImGuiInputTextFlags_CharsNoBlank | ImGuiInputTextFlags_CharsScientific)))
-    // {
-    //     // The libc allows overriding locale, with e.g. 'setlocale(LC_NUMERIC, "de_DE.UTF-8");' which affect the output/input of printf/scanf to use e.g. ',' instead of '.'.
-    //     // The standard mandate that programs starts in the "C" locale where the decimal point is '.'.
-    //     // We don't really intend to provide widespread support for it, but out of empathy for people stuck with using odd API, we support the bare minimum aka overriding the decimal point.
-    //     // Change the default decimal_point with:
-    //     //   GetCurrentContext()->PlatformLocaleDecimalPoint = *localeconv()->decimal_point;
-    //     // Users of non-default decimal point (in particular ',') may be affected by word-selection logic (is_word_boundary_from_right/is_word_boundary_from_left) functions.
-    //     let g = GImGui; // ImGuiContext& g = *GImGui;
-    //     const unsigned c_decimal_point = g.PlatformLocaleDecimalPoint;
-    // 
-    //     // Full-width -> half-width conversion for numeric fields (https://en.wikipedia.org/wiki/Halfwidth_and_Fullwidth_Forms_(Unicode_block)
-    //     // While this is mostly convenient, this has the side-effect for uninformed users accidentally inputting full-width characters that they may
-    //     // scratch their head as to why it works in numerical fields vs in generic text fields it would require support in the font.
-    //     if (flags & (ImGuiInputTextFlags_CharsDecimal | ImGuiInputTextFlags_CharsScientific | ImGuiInputTextFlags_CharsHexadecimal))
-    //         if (c >= 0xFF01 && c <= 0xFF5E)
-    //             c = c - 0xFF01 + 0x21;
-    // 
-    //     // Allow 0-9 . - + * /
-    //     if (flags & ImGuiInputTextFlags_CharsDecimal)
-    //         if !(c >= '0' && c <= '9') && (c != c_decimal_point) && (c != '-') && (c != '+') && (c != '*') && (c != '/') { return  false; }
-    // 
-    //     // Allow 0-9 . - + * / e E
-    //     if (flags & ImGuiInputTextFlags_CharsScientific)
-    //         if !(c >= '0' && c <= '9') && (c != c_decimal_point) && (c != '-') && (c != '+') && (c != '*') && (c != '/') && (c != 'e') && (c != 'E') { return  false; }
-    // 
-    //     // Allow 0-9 a-F A-F
-    //     if (flags & ImGuiInputTextFlags_CharsHexadecimal)
-    //         if !(c >= '0' && c <= '9') && !(c >= 'a' && c <= 'f') && !(c >= 'A' && c <= 'F') { return  false; }
-    // 
-    //     // Turn a-z into A-Z
-    //     if (flags & ImGuiInputTextFlags_CharsUppercase)
-    //         if (c >= 'a' && c <= 'z')
-    //             c += ('A' - 'a');
-    // 
-    //     if (flags & ImGuiInputTextFlags_CharsNoBlank)
-    //         if ImCharIsBlankW(c) { return  false; }
-    // 
-    //     *p_char = c;
-    // }
-    // 
-    // // Custom callback filter
-    // if (flags & ImGuiInputTextFlags_CallbackCharFilter)
-    // {
-    //     callback_data: ImGuiInputTextCallbackData;
-    //     memset(&callback_data, 0, sizeof(ImGuiInputTextCallbackData));
-    //     callback_data.EventFlag = ImGuiInputTextFlags_CallbackCharFilter;
-    //     callback_data.EventChar = c;
-    //     callback_data.Flags = flags;
-    //     callback_data.UserData = user_data;
-    //     if callback(&callback_data) != 0 { return  false; }
-    //     *p_char = callback_data.EventChar;
-    //     if !callback_data.EventChar { return  false; }
-    // }
-    // 
-    // return true;
-    // TODO
-    todo!()
-}
-
-// Find the shortest single replacement we can make to get the new text from the old text.
-// Important: needs to be run before TextW is rewritten with the new characters because calling STB_TEXTEDIT_GETCHAR() at the end.
-// FIXME: Ideally we should transition toward (1) making InsertChars()/DeleteChars() update undo-stack (2) discourage (and keep reconcile) or obsolete (and remove reconcile) accessing buffer directly.
-pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(state: &mut ImGuiInputTextState, new_buf_a: &String, new_length_a: usize)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let old_buf: *const ImWchar = state.TextW.Data;
-    let old_length: usize = state.CurLenW;
-    let new_length: usize = ImTextCountCharsFromUtf8(new_buf_a);
-    g.TempBuffer.reserve_discard((new_length + 1) * sizeof);
-    let mut new_buf: String = String::from(g.TempBuffer.clone());
-    ImTextStrFromUtf8(&mut new_buf, new_length + 1, new_buf_a);
-
-    let shorter_length: usize = old_length.min(new_length);
-    let mut first_diff: usize = 0;
-    // for (first_diff = 0; first_diff < shorter_length; first_diff++)
-    for first_diff in 0 .. shorter_length
-    {
-        if old_buf[first_diff] != new_buf[first_diff] {
-            break;
-        }
-    }
-    if first_diff == old_length && first_diff == new_length { return ; }
-
-    let mut old_last_diff: usize = old_length - 1;
-    let mut new_last_diff: usize = new_length - 1;
-    // for (; old_last_diff >= first_diff && new_last_diff >= first_diff; old_last_diff--, new_last_diff--)
-    while old_last_diff >= first_diff && new_last_diff >= first_diff
-    {
-        if old_buf[old_last_diff] != new_buf[new_last_diff] {
-            break;
-        }
-        old_last_diff -= 1;
-        new_last_diff -= 1;
-    }
-
-    let insert_len: usize = new_last_diff - first_diff + 1;
-    let delete_len: usize = old_last_diff - first_diff + 1;
-    if insert_len > 0 || delete_len > 0 {
-        let p = stb_text_createundo(&mut state.Stb.undostate, first_diff, delete_len, insert_len);
-        if p.is_null() == false {
-            // for (let i: c_int = 0; i < delete_len; i+ +)
-            for i in 0 .. delete_len
-            {
-                p[i] = ImStb::STB_TEXTEDIT_GETCHAR(state, first_diff + i);
-            }
-        }
-}
-}
-
-// Edit a string of text
-// - buf_size account for the zero-terminator, so a buf_size of 6 can hold "Hello" but not "Hello!".
-//   This is so we can easily call InputText() on static arrays using ARRAYSIZE() and to match
-//   Note that in std::string world, capacity() would omit 1 byte used by the zero-terminator.
-// - When active, hold on a privately held copy of the text (and apply back to 'buf'). So changing 'buf' while the InputText is active has no effect.
-// - If you want to use InputText() with std::string, see misc/cpp/imgui_stdlib.h
-// (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
-//  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
-pub unsafe fn InputTextEx(label: &str,
-                          hint: &str,
-                          buf: &mut String,
-                          mut buf_size: usize,
-                          size_arg: &mut ImVec2,
-                          flags: ImGuiInputTextFlags, 
-                          callback: Option<ImGuiInputTextCallback>,
-                          callback_user_data: Option<&Vec<u8>>) -> bool
-{
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    if window.SkipItems { return  false; }
-
-    // IM_ASSERT(buf != NULL && buf_size >= 0);
-    // IM_ASSERT(!(flag_set(flags, ImGuiInputTextFlags_CallbackHistory) && (flags & ImGuiInputTextFlags_Multiline)));        // Can't use both together (they both use up/down keys)
-    // IM_ASSERT(!(flag_set(flags, ImGuiInputTextFlags_CallbackCompletion) && (flags & ImGuiInputTextFlags_AllowTabInput))); // Can't use both together (they both use tab key)
-
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let io = &mut g.IO;
-    let setyle = &mut g.Style;
-
-    let RENDER_SELECTION_WHEN_INACTIVE: bool = false;
-    let is_multiline: bool = flag_set(flags, ImGuiInputTextFlags_Multiline);
-    let is_readonly: bool = flag_set(flags, ImGuiInputTextFlags_ReadOnly);
-    let is_password: bool = flag_set(flags, ImGuiInputTextFlags_Password);
-    let is_undoable: bool = flag_clear(flags, ImGuiInputTextFlags_NoUndoRedo);
-    let is_resizable: bool = flag_set(flags, ImGuiInputTextFlags_CallbackResize);
-    if is_resizable {}
-        // IM_ASSERT(callback != NULL); // Must provide a callback if you set the ImGuiInputTextFlags_CallbackResize flag!
-
-    if is_multiline { // Open group before calling GetID() because groups tracks id created within their scope (including the scrollbar)
-        BeginGroup();
-    }
-    let mut id: ImGuiID =  window.GetID(label);
-    let label_size: ImVec2 = CalcTextSize(label, true, 0.0);
-    let frame_size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(), (if is_multiline { g.FontSize * 8.0} else {label_size.y}) + style.FramePadding.y * 2.0); // Arbitrary default of 8 lines high for multi-line
-    let total_size: ImVec2 = ImVec2::new(frame_size.x + (if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x} else {0.0}), frame_size.y);
-
-    let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + frame_size);
-    let mut total_bb: ImRect = ImRect::new(frame_bb.Min, frame_bb.Min + total_size);
-
-    draw_window: *mut ImGuiWindow = window;
-    let mut inner_size: ImVec2 = frame_size;
-    let mut item_status_flags: ImGuiItemStatusFlags =  0;
-    let mut item_data_backup = ImGuiLastItemData::default();
-    if is_multiline
-    {
-        let backup_pos: ImVec2 = window.DC.CursorPos;
-        ItemSize(&total_bb.GetSize(), style.FramePadding.y);
-        if !ItemAdd(&mut total_bb, id, &frame_bb, ImGuiItemFlags_Inputable)
-        {
-            EndGroup();
-            return false;
-        }
-        item_status_flags = g.LastItemData.StatusFlags;
-        item_data_backup = g.LastItemData;
-        window.DC.CursorPos = backup_pos;
-
-        // We reproduce the contents of BeginChildFrame() in order to provide 'label' so our window internal data are easier to read/debug.
-        // FIXME-NAV: Pressing NavActivate will trigger general child activation right before triggering our own below. Harmless but bizarre.
-        PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_FrameBg]);
-        PushStyleVar(ImGuiStyleVar_ChildRounding, style.FrameRounding);
-        PushStyleVar(ImGuiStyleVar_ChildBorderSize, style.FrameBorderSize);
-        PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2::new(0, 0)); // Ensure no clip rect so mouse hover can reach FramePadding edges
-        let mut child_visible: bool =  BeginChildEx(label, id, &frame_bb.GetSize(), true, ImGuiWindowFlags_NoMove);
-        PopStyleVar(3);
-        PopStyleColor(0);
-        if !child_visible
-        {
-            EndChild();
-            EndGroup();
-            return false;
-        }
-        draw_window = g.CurrentWindow; // Child window
-        draw_window.DC.NavLayersActiveMaskNext |= (1 << draw_window.DC.NavLayerCurrent); // This is to ensure that EndChild() will display a navigation highlight so we can "enter" into it.
-        draw_window.DC.CursorPos += style.FramePadding;
-        inner_size.x -= draw_window.ScrollbarSizes.x;
-    }
-    else
-    {
-        // Support for internal ImGuiInputTextFlags_MergedItem flag, which could be redesigned as an ItemFlags if needed (with test performed in ItemAdd)
-        ItemSize(&total_bb.GetSize(), style.FramePadding.y);
-        if flag_clear(flags, ImGuiInputTextFlags_MergedItem) {
-            if !ItemAdd(&mut total_bb, id, &frame_bb, ImGuiItemFlags_Inputable) { return false; }
-        }
-        item_status_flags = g.LastItemData.StatusFlags;
-    }
-    let hovered: bool = ItemHoverable(&frame_bb, id);
-    if hovered{
-        g.MouseCursor = ImGuiMouseCursor_TextInput;}
-
-    // We are only allowed to access the state if we are already the active widget.
-    state: &mut ImGuiInputTextState = GetInputTextState(id);
-
-    let input_requested_by_tabbing: bool = (item_status_flags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
-    let input_requested_by_nav: bool = (g.ActiveId != id) && ((g.NavActivateInputId == id) || (g.NavActivateId == id && g.NavInputSource == ImGuiInputSource_Keyboard));
-
-    let user_clicked: bool = hovered && io.MouseClicked[0];
-    let user_scroll_finish: bool = is_multiline && state != null_mut() && g.ActiveId == 0 && g.ActiveIdPreviousFrame == scrolling_ops::GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
-    let user_scroll_active: bool = is_multiline && state != null_mut() && g.ActiveId == scrolling_ops::GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
-    let mut clear_active_id: bool =  false;
-    let mut select_all: bool =  false;
-
-    let mut scroll_y: c_float =  if is_multiline { draw_window.Scroll.y} else {f32::MAX};
-
-    let init_changed_specs: bool = (state != null_mut() && state.Stb.single_line != !is_multiline);
-    let init_make_active: bool = (user_clicked || user_scroll_finish || input_requested_by_nav || input_requested_by_tabbing);
-    let init_state: bool = (init_make_active || user_scroll_active);
-    if ((init_state && g.ActiveId != id) || init_changed_specs)
-    {
-        // Access state even if we don't own it yet.
-        state = &g.InputTextState;
-        state.CursorAnimReset();
-
-        // Take a copy of the initial buffer value (both in original UTF-8 format and converted to wchar)
-        // From the moment we focused we are ignoring the content of 'buf' (unless we are in read-only mode)
-        let buf_len = buf.len();
-        state.InitialTextA.resize(buf_len + 1);    // UTF-8. we use +1 to make sure that .Data is always pointing to at least an empty string.
-        // TODO
-        // memcpy(state.InitialTextA.Data, buf, buf_len + 1);
-
-        // Preserve cursor position and undo/redo stack if we come back to same widget
-        // FIXME: Since we reworked this on 2022/06, may want to differenciate recycle_cursor vs recycle_undostate?
-        let mut recycle_state: bool =  (state.ID == id && !init_changed_specs);
-        if recycle_state && (state.CurLenA != buf_len || (state.TextAIsValid && state.TextA != buf)) {
-            recycle_state = false;}
-
-        // Start edition
-        let mut  buf_end = 0usize;
-        state.ID = id;
-        state.TextW.resize(buf_size + 1);          // wchar count <= UTF-8 count. we use +1 to make sure that .Data is always pointing to at least an empty string.
-        state.TextA.clear();
-        state.TextAIsValid = false;                // TextA is not valid yet (we will display buf until then)
-        state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, buf_size, buf);
-        state.CurLenA = (buf_end - buf);      // We can't get the result from ImStrncpy() above because it is not UTF-8 aware. Here we'll cut off malformed UTF-8.
-
-        if recycle_state
-        {
-            // Recycle existing cursor/selection/undo stack but clamp position
-            // Note a single mouse click will override the cursor/position immediately by calling stb_textedit_click handler.
-            state.CursorClamp();
-        }
-        else
-        {
-            state.ScrollX = 0.0;
-            stb_textedit_initialize_state(&mut state.Stb, !is_multiline);
-        }
-
-        if !is_multiline
-        {
-            if flags & ImGuiInputTextFlags_AutoSelectAll {
-                select_all = true;}
-            if input_requested_by_nav && (!recycle_state || flag_clear(g.NavActivateFlags , ImGuiActivateFlags_TryToPreserveState)) {
-                select_all = true;}
-            if input_requested_by_tabbing || (user_clicked && io.KeyCtrl) {
-                select_all = true;}
-        }
-
-        if flags & ImGuiInputTextFlags_AlwaysOverwrite{
-            state.Stb.insert_mode = 1;} // stb field name is indeed incorrect (see #2863)
-    }
-
-    if (g.ActiveId != id && init_make_active)
-    {
-        // IM_ASSERT(state && state.ID == id);
-        SetActiveID(id, window);
-        SetFocusID(id, window);
-        FocusWindow(window);
-
-        // Declare our inputs
-        g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right);
-        if is_multiline || flag_set(flags, ImGuiInputTextFlags_CallbackHistory) {
-            g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Up) | (1 << ImGuiDir_Down);
-        }
-        SetActiveIdUsingKey(ImGuiKey_Escape);
-        SetActiveIdUsingKey(ImGuiKey_NavGamepadCancel);
-        SetActiveIdUsingKey(ImGuiKey_Home);
-        SetActiveIdUsingKey(ImGuiKey_End);
-        if is_multiline
-        {
-            SetActiveIdUsingKey(ImGuiKey_PageUp);
-            SetActiveIdUsingKey(ImGuiKey_PageDown);
-        }
-        if flag_set(flags , (ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_AllowTabInput)) // Disable keyboard tabbing out as we will use the \t character.
-        {
-            SetActiveIdUsingKey(ImGuiKey_Tab);
-        }
-    }
-
-    // We have an edge case if ActiveId was set through another widget (e.g. widget being swapped), clear id immediately (don't wait until the end of the function)
-    if g.ActiveId == id && state == null_mut(){
-        ClearActiveID();}
-
-    // Release focus when we click outside
-    if g.ActiveId == id && io.MouseClicked[0] && !init_state && !init_make_active { //-V560
-        clear_active_id = true;
-    }
-
-    // Lock the decision of whether we are going to take the path displaying the cursor or selection
-    let render_cursor: bool = (g.ActiveId == id) || (state && user_scroll_active);
-    let mut render_selection: bool =  state && (state.HasSelection() || select_all) && (RENDER_SELECTION_WHEN_INACTIVE || render_cursor);
-    let mut value_changed: bool =  false;
-    let mut validated: bool =  false;
-
-    // When read-only we always use the live data passed to the function
-    // FIXME-OPT: Because our selection/cursor code currently needs the wide text we need to convert it when active, which is not ideal :(
-    if is_readonly && state != null_mut() && (render_cursor || render_selection)
-    {
-        let mut  buf_end = 0usize;
-        state.TextW.resize(buf_size + 1);
-        state.CurLenW = ImTextStrFromUtf8(state.TextW, state.TextW.len(), buf);
-        state.CurLenA = (buf_end - buf);
-        state.CursorClamp();
-        render_selection &= state.HasSelection();
-    }
-
-    // Select the buffer to render.
-    let buf_display_from_state: bool = (render_cursor || render_selection || g.ActiveId == id) && !is_readonly && state && state.TextAIsValid;
-    let is_displaying_hint: bool = (hint != null_mut() && (if buf_display_from_state { state.TextA.Data} else {buf})[0] == 0);
-
-    // Password pushes a temporary font with only a fallback glyph
-    if is_password && !is_displaying_hint
-    {
-        let glyph: *const ImFontGlyph = g.Font.FindGlyph('*');
-        let mut password_font = &mut g.InputTextPasswordFont;
-        password_font.FontSize = g.Font.FontSize;
-        password_font.Scale = g.Font.Scale;
-        password_font.Ascent = g.Font.Ascent;
-        password_font.Descent = g.Font.Descent;
-        password_font.ContainerAtlas = g.Font.ContainerAtlas;
-        password_font.FallbackGlyph = glyph;
-        password_font.FallbackAdvanceX = glyph.AdvanceX;
-        // IM_ASSERT(password_font.Glyphs.empty() && password_font.IndexAdvanceX.empty() && password_font.IndexLookup.empty());
-        PushFont(password_font);
-    }
-
-    // Process mouse inputs and character inputs
-    let mut backup_current_text_length: usize = 0;
-    if g.ActiveId == id
-    {
-        // IM_ASSERT(state != NULL);
-        backup_current_text_length = state.CurLenA;
-        state.Edited = false;
-        state.BufCapacityA = buf_size;
-        state.Flags = flags;
-
-        // Although we are active we don't prevent mouse from hovering other elements unless we are interacting right now with the widget.
-        // Down the line we should have a cleaner library-wide concept of Selected vs Active.
-        g.ActiveIdAllowOverlap = !io.MouseDown[0];
-        g.WantTextInputNextFrame = 1;
-
-        // Edit in progress
-        let mouse_x: c_float =  (io.MousePos.x - frame_bb.Min.x - style.FramePadding.x) + state.ScrollX;
-        let mouse_y: c_float =  (if is_multiline { (io.MousePos.y - draw_window.DC.CursorPos.y) }else {g.FontSize * 0.5});
-
-        let is_osx: bool = io.ConfigMacOSXBehaviors;
-        if (select_all)
-        {
-            state.SelectAll();
-            state.SelectedAllMouseLock = true;
-        }
-        else if hovered && io.MouseClickedCount[0] >= 2 && !io.KeyShift
-        {
-            stb_textedit_click(state, &mut state.Stb, mouse_x, mouse_y);
-            let multiclick_count: usize = (io.MouseClickedCount[0] - 2);
-            if (multiclick_count % 2) == 0
-            {
-                // Double-click: Select word
-                // We always use the "Mac" word advance for double-click select vs CTRL+Right which use the platform dependent variant:
-                // FIXME: There are likely many ways to improve this behavior, but there's no "right" behavior (depends on use-case, software, OS)
-                let is_bol: bool = (state.Stb.cursor == 0) || ImStb::STB_TEXTEDIT_GETCHAR(state, state.Stb.cursor - 1) == '\n';
-                if STB_TEXT_HAS_SELECTION(&state.Stb) || !is_bol {
-                    state.OnKeyPressed(STB_TEXTEDIT_K_WORDLEFT);
-                }
-                //state->OnKeyPressed(STB_TEXTEDIT_K_WORDRIGHT | STB_TEXTEDIT_K_SHIFT);
-                if !STB_TEXT_HAS_SELECTION(&state.Stb) {
-                    ImStb::stb_textedit_prep_selection_at_cursor(&state.Stb);
-                }
-                state.Stb.cursor = ImStb::STB_TEXTEDIT_MOVEWORDRIGHT_MAC(state, state.Stb.cursor);
-                state.Stb.select_end = state.Stb.cursor;
-                ImStb::stb_textedit_clamp(state, &state.Stb);
-            }
-            else
-            {
-                // Triple-click: Select line
-                let is_eol: bool = ImStb::STB_TEXTEDIT_GETCHAR(state, state.Stb.cursor) == '\n';
-                state.OnKeyPressed(STB_TEXTEDIT_K_LINESTART);
-                state.OnKeyPressed(STB_TEXTEDIT_K_LINEEND | STB_TEXTEDIT_K_SHIFT);
-                state.OnKeyPressed(STB_TEXTEDIT_K_RIGHT | STB_TEXTEDIT_K_SHIFT);
-                if (!is_eol && is_multiline)
-                {
-                    ImSwap(state.Stb.select_start, state.Stb.select_end);
-                    state.Stb.cursor = state.Stb.select_end;
-                }
-                state.CursorFollow = false;
-            }
-            state.CursorAnimReset();
-        }
-        else if (io.MouseClicked[0] && !state.SelectedAllMouseLock)
-        {
-            if (hovered)
-            {
-                if (io.KeyShift) {
-                    stb_textedit_drag(state, &mut state.Stb, mouse_x, mouse_y);
-                }
-                else {
-                    stb_textedit_click(state, &mut state.Stb, mouse_x, mouse_y);
-                }
-                state.CursorAnimReset();
-            }
-        }
-        else if io.MouseDown[0] && !state.SelectedAllMouseLock && (io.MouseDelta.x != 0.0 || io.MouseDelta.y != 0.0)
-        {
-            stb_textedit_drag(state, &mut state.Stb, mouse_x, mouse_y);
-            state.CursorAnimReset();
-            state.CursorFollow = true;
-        }
-        if state.SelectedAllMouseLock && !io.MouseDown[0] {
-            state.SelectedAllMouseLock = false;
-        }
-
-        // We expect backends to emit a Tab key but some also emit a Tab character which we ignore (#2467, #1336)
-        // (For Tab and Enter: Win32/SFML/Allegro are sending both keys and chars, GLFW and SDL are only sending keys. For Space they all send all threes)
-        let ignore_char_inputs: bool = (io.KeyCtrl && !io.KeyAlt) || (is_osx && io.KeySuper);
-        if flag_set(flags, ImGuiInputTextFlags_AllowTabInput) && IsKeyPressed(ImGuiKey_Tab, false) && !ignore_char_inputs && !io.KeyShift && !is_readonly
-        {
-            let mut c =  '\t'; // Insert TAB
-            if InputTextFilterCharacter(c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard) {
-                state.OnKeyPressed(c);
-            }
-        }
-
-        // Process regular text input (before we check for Return because using some IME will effectively send a Return?)
-        // We ignore CTRL inputs, but need to allow ALT+CTRL as some keyboards (e.g. German) use AltGR (which _is_ Alt+Ctrl) to input certain characters.
-        if io.InputQueueCharacters.Size > 0
-        {
-            if !ignore_char_inputs && !is_readonly && !input_requested_by_nav {
-                // for (let n: c_int = 0; n < io.InputQueueCharacters.Size; n+ +)
-                for n in 0 .. io.InputQueueCharacters.len()
-                {
-                    // Insert character if they pass filtering
-                    let mut c = io.InputQueueCharacters[n];
-                    if c == '\t' { // Skip Tab, see above.
-                        continue;
-                    }
-                    if InputTextFilterCharacter(c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard) {
-                        state.OnKeyPressed(c);
-                    }
-                }
-            }
-
-            // Consume characters
-            io.InputQueueCharacters.clear();
-        }
-    }
-
-    // Process other shortcuts/key-presses
-    let mut cancel_edit: bool =  false;
-    if g.ActiveId == id && !g.ActiveIdIsJustActivated && !clear_active_id
-    {
-        // IM_ASSERT(state != NULL);
-
-        let row_count_per_page: c_int = ImMax(((inner_size.y - style.FramePadding.y) / g.FontSize), 1);
-        state.Stb.row_count_per_page = row_count_per_page;
-
-        let k_mask: c_int = (if io.KeyShift { STB_TEXTEDIT_K_SHIFT }else {0});
-        let is_osx: bool = io.ConfigMacOSXBehaviors;
-        let is_osx_shift_shortcut: bool = is_osx && (io.KeyMods == (ImGuiModFlags_Super | ImGuiModFlags_Shift));
-        let is_wordmove_key_down: bool = if is_osx { io.KeyAlt }else {io.KeyCtrl};                     // OS X style: Text editing cursor movement using Alt instead of Ctrl
-        let is_startend_key_down: bool = is_osx && io.KeySuper && !io.KeyCtrl && !io.KeyAlt;  // OS X style: Line/Text Start and End using Cmd+Arrows instead of Home/End
-        let is_ctrl_key_only: bool = (io.KeyMods == ImGuiModFlags_Ctrl);
-        let is_shift_key_only: bool = (io.KeyMods == ImGuiModFlags_Shift);
-        let is_shortcut_key: bool = if g.IO.ConfigMacOSXBehaviors { (io.KeyMods == ImGuiModFlags_Super) }else{ (io.KeyMods == ImGuiModFlags_Ctrl)};
-
-        let is_cut: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_X, false)) || (is_shift_key_only && IsKeyPressed(ImGuiKey_Delete, false))) && !is_readonly && !is_password && (!is_multiline || state.HasSelection());
-        let is_copy: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_C, false)) || (is_ctrl_key_only  && IsKeyPressed(ImGuiKey_Insert, false))) && !is_password && (!is_multiline || state.HasSelection());
-        let is_paste: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_V, false)) || (is_shift_key_only && IsKeyPressed(ImGuiKey_Insert, false))) && !is_readonly;
-        let is_undo: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_Z, false)) && !is_readonly && is_undoable);
-        let is_redo: bool = ((is_shortcut_key && IsKeyPressed(ImGuiKey_Y, false)) || (is_osx_shift_shortcut && IsKeyPressed(ImGuiKey_Z, false))) && !is_readonly && is_undoable;
-        let is_select_all: bool = is_shortcut_key && IsKeyPressed(ImGuiKey_A, false);
-
-        // We allow validate/cancel with Nav source (gamepad) to makes it easier to undo an accidental NavInput press with no keyboard wired, but otherwise it isn't very useful.
-        let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
-        let is_enter_pressed: bool = IsKeyPressed(ImGuiKey_Enter, true) || IsKeyPressed(ImGuiKey_KeypadEnter, true);
-        let is_gamepad_validate: bool = nav_gamepad_active && (IsKeyPressed(ImGuiKey_NavGamepadActivate, false) || IsKeyPressed(ImGuiKey_NavGamepadInput, false));
-        let is_cancel: bool = IsKeyPressed(ImGuiKey_Escape, false) || (nav_gamepad_active && IsKeyPressed(ImGuiKey_NavGamepadCancel, false));
-
-        if IsKeyPressed(ImGuiKey_LeftArrow, false) { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_LINESTART} else { if is_wordmove_key_down { STB_TEXTEDIT_K_WORDLEFT}else {STB_TEXTEDIT_K_LEFT}}) | k_mask); }
-        else if IsKeyPressed(ImGuiKey_RightArrow, false) { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_LINEEND} else { if is_wordmove_key_down { STB_TEXTEDIT_K_WORDRIGHT}else {STB_TEXTEDIT_K_RIGHT}}) | k_mask); }
-        else if IsKeyPressed(ImGuiKey_UpArrow, false) && is_multiline { if io.KeyCtrl {
-            SetScrollY(draw_window, ImMax(draw_window.Scroll.y - g.FontSize, 0.0));
-        } else {state.OnKeyPressed((if is_startend_key_down {STB_TEXTEDIT_K_TEXTSTART} else { STB_TEXTEDIT_K_UP }) | k_mask); }
-         if IsKeyPressed(ImGuiKey_DownArrow, false) && is_multiline { if io.KeyCtrl { SetScrollY(draw_window, ImMin(draw_window.Scroll.y + g.FontSize, GetScrollMaxY() as c_int)); } else { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_TEXTEND } else { STB_TEXTEDIT_K_DOWN }) | k_mask); }}
-        else if IsKeyPressed(ImGuiKey_PageUp, false) && is_multiline { state.OnKeyPressed(STB_TEXTEDIT_K_PGUP | k_mask); scroll_y -= row_count_per_page * g.FontSize; }
-        else if IsKeyPressed(ImGuiKey_PageDown, false) && is_multiline { state.OnKeyPressed(STB_TEXTEDIT_K_PGDOWN | k_mask); scroll_y += row_count_per_page * g.FontSize; }
-        else if IsKeyPressed(ImGuiKey_Home, false) { state.OnKeyPressed(if io.KeyCtrl { STB_TEXTEDIT_K_TEXTSTART | k_mask} else {STB_TEXTEDIT_K_LINESTART | k_mask}); }
-        else if IsKeyPressed(ImGuiKey_End, false) { state.OnKeyPressed(if io.KeyCtrl { STB_TEXTEDIT_K_TEXTEND | k_mask} else {STB_TEXTEDIT_K_LINEEND | k_mask}); }
-        else if IsKeyPressed(ImGuiKey_Delete, false) && !is_readonly && !is_cut { state.OnKeyPressed(STB_TEXTEDIT_K_DELETE | k_mask); }
-        else if IsKeyPressed(ImGuiKey_Backspace, false) && !is_readonly
-        {
-            if !state.HasSelection()
-            {
-                if is_wordmove_key_down {
-                    state.OnKeyPressed(STB_TEXTEDIT_K_WORDLEFT | STB_TEXTEDIT_K_SHIFT);
-                }
-                else if is_osx && io.KeySuper && !io.KeyAlt && !io.KeyCtrl {
-                    state.OnKeyPressed(STB_TEXTEDIT_K_LINESTART | STB_TEXTEDIT_K_SHIFT);
-                }
-            }
-            state.OnKeyPressed(STB_TEXTEDIT_K_BACKSPACE | k_mask);
-        }
-        else if is_enter_pressed || is_gamepad_validate
-        {
-            // Determine if we turn Enter into a \n character
-            let mut ctrl_enter_for_new_line: bool =  flag_set(flags, ImGuiInputTextFlags_CtrlEnterForNewLine);
-            if !is_multiline || is_gamepad_validate || (ctrl_enter_for_new_line && !io.KeyCtrl) || (!ctrl_enter_for_new_line && io.KeyCtrl)
-            {
-                validated = true;
-                if io.ConfigInputTextEnterKeepActive && !is_multiline {
-                    state.SelectAll();
-                } // No need to scroll
-                else {
-                    clear_active_id = true;
-                }
-            }
-            else if !is_readonly
-            {
-                let mut c =  '\n'; // Insert new line
-                if InputTextFilterCharacter(c, flags, callback, callback_user_data, ImGuiInputSource_Keyboard) {
-                    state.OnKeyPressed(c);
-                }
-            }
-        }
-        else if is_cancel
-        {
-            clear_active_id = true;
-            cancel_edit = true;
-        }
-        else if is_undo || is_redo
-        {
-            state.OnKeyPressed(if is_undo {STB_TEXTEDIT_K_UNDO} else { STB_TEXTEDIT_K_REDO });
-            state.ClearSelection();
-        }
-        else if is_select_all
-        {
-            state.SelectAll();
-            state.CursorFollow = true;
-        }
-        else if is_cut || is_copy
-        {
-            // Cut, Copy
-            if io.SetClipboardTextFn
-            {
-                let ib: c_int = if state.HasSelection() { ImMin(state.Stb.select_start, state.Stb.select_end)} else {0};
-                let ie: c_int = if state.HasSelection() { ImMax(state.Stb.select_start, state.Stb.select_end)} else{ state.CurLenW};
-                let clipboard_data_len: usize = (ImTextCountUtf8BytesFromStr(state.TextW.Data + ib) + 1);
-                let mut clipboard_data = String::new();
-                ImTextStrToUtf8(&mut clipboard_data, clipboard_data_len, state.TextW.Data + ib);
-                SetClipboardText(&clipboard_data);
-                MemFree(clipboard_data);
-            }
-            if is_cut
-            {
-                if !state.HasSelection() {
-                    state.SelectAll();
-                }
-                state.CursorFollow = true;
-                stb_textedit_cut(state, &mut state.Stb);
-            }
-        }
-        else if (is_paste)
-        {
-            let clipboard = GetClipboardText();
-            if clipboard.is_empty() == false
-            {
-                // Filter pasted buffer
-                let clipboard_len = clipboard.len();
-                let mut clipboard_filtered = String::with_capacity(clipboard_len);
-                let mut clipboard_filtered_len: usize = 0;
-                // for (s: &str = clipboard; *s; )
-                for s in clipboard
-                {
-                    let mut c = '\0';
-                    s += ImTextCharFromUtf8(&mut c, s);
-                    if c == 0 {
-                        break(); }
-                    if !InputTextFilterCharacter(c, flags, callback, callback_user_data, ImGuiInputSource_Clipboard) {
-                        continue;
-                    }
-                    clipboard_filtered[clipboard_filtered_len] = c;
-                    clipboard_filtered_len += 1;
-                }
-                clipboard_filtered[clipboard_filtered_len] = 0;
-                if clipboard_filtered_len > 0 // If everything was filtered, ignore the pasting operation
-                {
-                    stb_textedit_paste(state, &mut state.Stb, &mut clipboard_filtered, clipboard_filtered_len);
-                    state.CursorFollow = true;
-                }
-                MemFree(clipboard_filtered);
-            }
-        }
-
-        // Update render selection flag after events have been handled, so selection highlight can be displayed during the same frame.
-        render_selection |= state.HasSelection() && (RENDER_SELECTION_WHEN_INACTIVE || render_cursor);
-    }
-
-    // Process callbacks and apply result back to user's buffer.
-    let mut  apply_new_text = String::default();
-    let mut apply_new_text_length: usize = 0;
-    if g.ActiveId == id
-    {
-        // IM_ASSERT(state != NULL);
-        if cancel_edit
-        {
-            // Restore initial value. Only return true if restoring to the initial value changes the current buffer contents.
-            if !is_readonly && buf != state.InitialTextA
-            {
-                // Push records into the undo stack so we can CTRL+Z the revert operation itself
-                apply_new_text = state.InitialTextA.Data;
-                apply_new_text_length = state.InitialTextA.Size - 1;
-                let mut w_text: Vec<char> = vec![];
-                if apply_new_text_length > 0
-                {
-                    w_text.resize(ImTextCountCharsFromUtf8(apply_new_text.as_str()) + 1, '\0');
-                    ImTextStrFromUtf8(w_text.Data, w_text.Size, &apply_new_text);
-                }
-                stb::stb_textedit_replace(state, &mut state.Stb, w_text.Data, if (apply_new_text_length > 0) { (w_text.Size - 1)} else{ 0});
-            }
-        }
-
-        // Apply ASCII value
-        if (!is_readonly)
-        {
-            state.TextAIsValid = true;
-            state.TextA.resize(state.TextW.Size * 4 + 1);
-            ImTextStrToUtf8(state.TextA.Data, state.TextA.Size, state.TextW.Data);
-        }
-
-        // When using 'ImGuiInputTextFlags_EnterReturnsTrue' as a special case we reapply the live buffer back to the input buffer before clearing ActiveId, even though strictly speaking it wasn't modified on this frame.
-        // If we didn't do that, code like InputInt() with ImGuiInputTextFlags_EnterReturnsTrue would fail.
-        // This also allows the user to use InputText() with ImGuiInputTextFlags_EnterReturnsTrue without maintaining any user-side storage (please note that if you use this property along ImGuiInputTextFlags_CallbackResize you can end up with your temporary string object unnecessarily allocating once a frame, either store your string data, either if you don't then don't use ImGuiInputTextFlags_CallbackResize).
-        let apply_edit_back_to_user_buffer: bool = !cancel_edit || (validated && flag_set(flags, ImGuiInputTextFlags_EnterReturnsTrue));
-        if apply_edit_back_to_user_buffer
-        {
-            // Apply new value immediately - copy modified buffer back
-            // Note that as soon as the input box is active, the in-widget value gets priority over any underlying modification of the input buffer
-            // FIXME: We actually always render 'buf' when calling DrawList.AddText, making the comment above incorrect.
-            // FIXME-OPT: CPU waste to do this every time the widget is active, should mark dirty state from the stb_textedit callbacks.
-
-            // User callback
-            if flag_set(flags , (ImGuiInputTextFlags_CallbackCompletion | ImGuiInputTextFlags_CallbackHistory | ImGuiInputTextFlags_CallbackEdit | ImGuiInputTextFlags_CallbackAlways))
-            {
-                // IM_ASSERT(callback != NULL);
-
-                // The reason we specify the usage semantic (Completion/History) is that Completion needs to disable keyboard TABBING at the moment.
-                event_flag: ImGuiInputTextFlags = 0;
-                let mut event_key: ImGuiKey =  ImGuiKey_None;
-                if flag_set(flags, ImGuiInputTextFlags_CallbackCompletion) && IsKeyPressed(ImGuiKey_Tab, false)
-                {
-                    event_flag = ImGuiInputTextFlags_CallbackCompletion;
-                    event_key = ImGuiKey_Tab;
-                }
-                else if flag_set(flags, ImGuiInputTextFlags_CallbackHistory) && IsKeyPressed(ImGuiKey_UpArrow, false)
-                {
-                    event_flag = ImGuiInputTextFlags_CallbackHistory;
-                    event_key = ImGuiKey_UpArrow;
-                }
-                else if flag_set(flags, ImGuiInputTextFlags_CallbackHistory) && IsKeyPressed(ImGuiKey_DownArrow, false)
-                {
-                    event_flag = ImGuiInputTextFlags_CallbackHistory;
-                    event_key = ImGuiKey_DownArrow;
-                }
-                else if flag_set(flags, ImGuiInputTextFlags_CallbackEdit) && state.Edited
-                {
-                    event_flag = ImGuiInputTextFlags_CallbackEdit;
-                }
-                else if flag_set(flags , ImGuiInputTextFlags_CallbackAlways)
-                {
-                    event_flag = ImGuiInputTextFlags_CallbackAlways;
-                }
-
-                if event_flag
-                {
-                    let mut callback_data: ImGuiInputTextCallbackData = ImGuiInputTextCallbackData::default();
-                    // memset(&callback_data, 0, sizeof(ImGuiInputTextCallbackData));
-                    callback_data.EventFlag = event_flag;
-                    callback_data.Flags = flags;
-                    callback_data.UserData = callback_user_data.unwrap_or(&vec![]).clone();
-
-                    let mut callback_buf: String = if is_readonly { buf.clone()} else {state.TextA};
-                    callback_data.EventKey = event_key;
-                    callback_data.Buf = callback_buf;
-                    callback_data.BufTextLen = state.CurLenA;
-                    callback_data.BufSize = state.BufCapacityA;
-                    callback_data.BufDirty = false;
-
-                    // We have to convert from wchar-positions to UTF-8-positions, which can be pretty slow (an incentive to ditch the ImWchar buffer, see https://github.com/nothings/stb/issues/188)
-                    let mut text = state.TextW.clone();
-                    callback_data.CursorPos = ImTextCountUtf8BytesFromStr(text);
-                    let utf8_cursor_pos = callback_data.CursorPos;
-                    callback_data.SelectionStart = ImTextCountUtf8BytesFromStr(text);
-                    let utf8_selection_start = callback_data.SelectionStart;
-                    callback_data.SelectionEnd = ImTextCountUtf8BytesFromStr(text);
-                    let utf8_selection_end = callback_data.SelectionEnd;
-
-                    // Call user code
-                    callback.unwrap()(&mut callback_data);
-
-                    // Read back what user may have modified
-                    callback_buf = if is_readonly { buf.clone() }else {state.TextA}; // Pointer may have been invalidated by a resize callback
-                    // IM_ASSERT(callback_data.Buf == callback_bu0f32);         // Invalid to modify those fields
-                    // IM_ASSERT(callback_data.BufSize == state->BufCapacityA);
-                    // IM_ASSERT(callback_data.Flags == flags);
-                    let buf_dirty: bool = callback_data.BufDirty;
-                    if callback_data.CursorPos != utf8_cursor_pos || buf_dirty { state.Stb.cursor = ImTextCountCharsFromUtf8(callback_data.Buf.as_str()); state.CursorFollow = true; }
-                    if callback_data.SelectionStart != utf8_selection_start || buf_dirty {
-                        state.Stb.select_start = if callback_data.SelectionStart == callback_data.CursorPos { state.Stb.cursor} else { ImTextCountCharsFromUtf8(callback_data.Buf.as_str())}; }
-                    if callback_data.SelectionEnd != utf8_selection_end || buf_dirty { state.Stb.select_end = if callback_data.SelectionEnd == callback_data.SelectionStart { state.Stb.select_start} else { ImTextCountCharsFromUtf8(callback_data.Buf.as_str())}; }
-                    if buf_dirty
-                    {
-                        // IM_ASSERT(flag_set(flags, ImGuiInputTextFlags_ReadOnly) == 0);
-                        // IM_ASSERT(callback_data.BufTextLen == strlen(callback_data.Bu0f32)); // You need to maintain BufTextLen if you change the text!
-                        InputTextReconcileUndoStateAfterUserCallback(state, &callback_data.Buf, callback_data.BufTextLen); // FIXME: Move the rest of this block inside function and rename to InputTextReconcileStateAfterUserCallback() ?
-                        if callback_data.BufTextLen > backup_current_text_length && is_resizable {
-                            state.TextW.resize(state.TextW.Size + (callback_data.BufTextLen - backup_current_text_length));
-                        } // Worse case scenario resize
-                        state.CurLenW = ImTextStrFromUtf8(state.TextW.Data, state.TextW.Size, &callback_data.Buf);
-                        state.CurLenA = callback_data.BufTextLen;  // Assume correct length and valid UTF-8 from user, saves us an extra strlen()
-                        state.CursorAnimReset();
-                    }
-                }
-            }
-
-            // Will copy result string if modified
-            if !is_readonly && state.TextA != buf
-            {
-                apply_new_text = state.TextA.Data;
-                apply_new_text_length = state.CurLenA;
-            }
-        }
-
-        // Clear temporary user storage
-        state.Flags = ImGuiInputTextFlags_None;
-    }
-
-    // Copy result to user buffer. This can currently only happen when (g.ActiveId == id)
-    if apply_new_text != null_mut()
-    {
-        // We cannot test for 'backup_current_text_length != apply_new_text_length' here because we have no guarantee that the size
-        // of our owned buffer matches the size of the string object held by the user, and by design we allow InputText() to be used
-        // without any storage on user's side.
-        // IM_ASSERT(apply_new_text_length >= 0);
-        if is_resizable
-        {
-            callback_data: ImGuiInputTextCallbackData;
-            callback_data.EventFlag = ImGuiInputTextFlags_CallbackResize;
-            callback_data.Flags = flags;
-            callback_data.Buf = buf;
-            callback_data.BufTextLen = apply_new_text_length;
-            callback_data.BufSize = ImMax(buf_size, apply_new_text_length + 1);
-            callback_data.UserData = callback_user_data;
-            callback.unwrap()(&mut callback_data);
-            *buf = callback_data.Buf;
-            buf_size = callback_data.BufSize;
-            apply_new_text_length = callback_data.BufTextLen.min(buf_size - 1);
-            // IM_ASSERT(apply_new_text_length <= buf_size);
-        }
-        //IMGUI_DEBUG_PRINT("InputText(\"%s\"): apply_new_text length %d\n", label, apply_new_text_length);
-
-        // If the underlying buffer resize was denied or not carried to the next frame, apply_new_text_length+1 may be >= buf_size.
-        // ImStrncpy(buf, apply_new_text, ImMin(apply_new_text_length + 1, buf_size));
-        *buf = apply_new_text;
-        value_changed = true;
-    }
-
-    // Release active ID at the end of the function (so e.g. pressing Return still does a final application of the value)
-    if clear_active_id && g.ActiveId == id{
-        ClearActiveID();}
-
-    // Render frame
-    if !is_multiline
-    {
-        RenderNavHighlight(&frame_bb, id, 0);
-        RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg, 0.0), true, style.FrameRounding);
-    }
-
-    let mut clip_rect = ImVec4(frame_bb.Min.x, frame_bb.Min.y, frame_bb.Min.x + inner_size.x, frame_bb.Min.y + inner_size.y); // Not using frame_bb.Max because we have adjusted size
-    let draw_pos: ImVec2 = if is_multiline { draw_window.DC.CursorPos} else {frame_bb.Min + style.FramePadding};
-    let mut text_size = ImVec2::from_floats(0.0, 0.0);
-
-    // Set upper limit of single-line InputTextEx() at 2 million characters strings. The current pathological worst case is a long line
-    // without any carriage return, which would makes ImFont::RenderText() reserve too many vertices and probably crash. Avoid it altogether.
-    // Note that we only use this limit on single-line InputText(), so a pathologically large line on a InputTextMultiline() would still crash.
-    let buf_display_max_length: c_int = 2 * 1024 * 1024;
-    let mut  buf_display: String = if buf_display_from_state { state.TextA.clone()} else {buf.clone()}; //-V595
-    let mut  buf_display_end: usize = 0; // We have specialized paths below for setting the length
-    if is_displaying_hint
-    {
-        buf_display = String::from(hint);
-        buf_display_end = buf_display.len();
-    }
-
-    // Render text. We currently only render selection when the widget is active or while scrolling.
-    // FIXME: We could remove the '&& render_cursor' to keep rendering selection when inactive.
-    if render_cursor || render_selection
-    {
-        // IM_ASSERT(state != NULL);
-        if !is_displaying_hint {
-            // buf_display_end = buf_display + state.CurLenA;
-        }
-
-        // Render text (with cursor and selection)
-        // This is going to be messy. We need to:
-        // - Display the text (this alone can be more easily clipped)
-        // - Handle scrolling, highlight selection, display cursor (those all requires some form of 1d->2d cursor position calculation)
-        // - Measure text height (for scrollbar)
-        // We are attempting to do most of that in **one main pass** to minimize the computation cost (non-negligible for large amount of text) + 2nd pass for selection rendering (we could merge them by an extra refactoring effort)
-        // FIXME: This should occur on buf_display but we'd need to maintain cursor/select_start/select_end for UTF-8.
-        let text_begin: String = state.TextW.clone();
-        // cursor_offset: ImVec2, select_start_offset;
-        let mut cursor_offset = ImVec2::default();
-        let mut select_start_offset = ImVec2::default();
-
-        {
-            // Find lines numbers straddling 'cursor' (slot 0) and 'select_start' (slot 1) positions.
-            let mut searches_input_ptr: [char;2] = [ '\0', '\0' ];
-            let mut searches_result_line_no: [i32;2] = [ -1000, -1000 ];
-            let mut searches_remaining: usize = 0;
-            if render_sdcursor
-            {
-                searches_input_ptr[0] = text_begin[state.Stb.cursor];
-                searches_result_line_no[0] = -1;
-                searches_remaining+= 1;
-            }
-            if render_selection
-            {
-                searches_input_ptr[1] = text_begin[state.Stb.select_start.min(state.Stb.select_start, state.Stb.select_end)];
-                searches_result_line_no[1] = -1;
-                searches_remaining+= 1;
-            }
-
-            // Iterate all lines to find our line numbers
-            // In multi-line mode, we never exit the loop until all lines are counted, so add one extra to the searches_remaining counter.
-            searches_remaining += if is_multiline {1} else { 0 };
-            let mut line_count: usize = 0;
-            //for (const s: *mut ImWchar = text_begin; (s = (const ImWchar*)wcschr((const wchar_t*)s, (wchar_t)'\n')) != None; s++)  // FIXME-OPT: Could use this when wchar_t are 16-bit
-            // for (*let s: ImWchar = text_begin; *s != 0; s++)
-            for s in text_begin {
-                if s == '\n'
-                {
-                    line_count+= 1;
-                    if searches_result_line_no[0] == -1 && s >= searches_input_ptr[0] {
-                        searches_result_line_no[0] = line_count;
-                        if (--searches_remaining <= 0) { break; } }
-                    if (searches_result_line_no[1] == -1 && s >= searches_input_ptr[1]) { searches_result_line_no[1] = line_count; if (--searches_remaining <= 0) { break; } }
-                }
-            line_count+= 1;
-            if (searches_result_line_no[0] == -1)
-                searches_result_line_no[0] = line_count;
-            if (searches_result_line_no[1] == -1)
-                searches_result_line_no[1] = line_count;
-
-            // Calculate 2d position by finding the beginning of the line and measuring distance
-            cursor_offset.x = InputTextCalcTextSizeW(ImStrbolW(searches_input_ptr[0], text_begin), searches_input_ptr[0]).x;
-            cursor_offset.y = searches_result_line_no[0] * g.FontSize;
-            if (searches_result_line_no[1] >= 0)
-            {
-                select_start_offset.x = InputTextCalcTextSizeW(ImStrbolW(searches_input_ptr[1], text_begin), searches_input_ptr[1]).x;
-                select_start_offset.y = searches_result_line_no[1] * g.FontSize;
-            }
-
-            // Store text height (note that we haven't calculated text width at all, see GitHub issues #383, #1224)
-            if (is_multiline)
-                text_size = ImVec2::new(inner_size.x, line_count * g.FontSize);
-        }
-
-        // Scroll
-        if (render_cursor && state.CursorFollow)
-        {
-            // Horizontal scroll in chunks of quarter width
-            if (flag_clear(flags, ImGuiInputTextFlags_NoHorizontalScroll))
-            {
-                let scroll_increment_x: c_float =  inner_size.x * 0.25f32;
-                let visible_width: c_float =  inner_size.x - style.FramePadding.x;
-                if (cursor_offset.x < state.ScrollX)
-                    state.ScrollX = IM_FLOOR(ImMax(0.0, cursor_offset.x - scroll_increment_x));
-                else if (cursor_offset.x - visible_width >= state.ScrollX)
-                    state.ScrollX = IM_FLOOR(cursor_offset.x - visible_width + scroll_increment_x);
-            }
-            else
-            {
-                state.ScrollX = 0.0;
-            }
-
-            // Vertical scroll
-            if (is_multiline)
-            {
-                // Test if cursor is vertically visible
-                if (cursor_offset.y - g.FontSize < scroll_y)
-                    scroll_y = ImMax(0.0, cursor_offset.y - g.FontSize);
-                else if (cursor_offset.y - (inner_size.y - style.FramePadding.y * 2.0) >= scroll_y)
-                    scroll_y = cursor_offset.y - inner_size.y + style.FramePadding.y * 2.0;
-                let scroll_max_y: c_float =  ImMax((text_size.y + style.FramePadding.y * 2.0) - inner_size.y, 0.0);
-                scroll_y = ImClamp(scroll_y, 0.0, scroll_max_y);
-                draw_pos.y += (draw_window.Scroll.y - scroll_y);   // Manipulate cursor pos immediately avoid a frame of lag
-                draw_window.Scroll.y = scroll_y;
-            }
-
-            state.CursorFollow = false;
-        }
-
-        // Draw selection
-        let draw_scroll: ImVec2 = ImVec2::new(state.ScrollX, 0.0);
-        if (render_selection)
-        {
-            let text_selected_begin: *const ImWchar = text_begin + ImMin(state.Stb.select_start, state.Stb.select_end);
-            let text_selected_end: *const ImWchar = text_begin + ImMax(state.Stb.select_start, state.Stb.select_end);
-
-            bg_color: u32 = GetColorU32(ImGuiCol_TextSelectedBg, if render_cursor { 1.0} else {0.60}); // FIXME: current code flow mandate that render_cursor is always true here, we are leaving the transparent one for tests.
-            let bg_offy_up: c_float =  if is_multiline { 0.0 }else {- 1.0};    // FIXME: those offsets should be part of the style? they don't play so well with multi-line selection.
-            let bg_offy_dn: c_float = if is_multiline { 0.0} else {2.0};
-            let rect_pos: ImVec2 = draw_pos + select_start_offset - draw_scroll;
-            for (*let p: ImWchar = text_selected_begin; p < text_selected_end; )
-            {
-                if rect_pos.y > clip_rect.w + g.FontSize{
-                    break;}
-                if (rect_pos.y < clip_rect.y)
-                {
-                    //p = (const ImWchar*)wmemchr((const wchar_t*)p, '\n', text_selected_end - p);  // FIXME-OPT: Could use this when wchar_t are 16-bit
-                    //p = p ? p + 1 : text_selected_end;
-                    while (p < text_selected_end)
-                        if (*p++ == '\n')
-                            break;
-                }
-                else
-                {
-                    let rect_size: ImVec2 = InputTextCalcTextSizeW(p, text_selected_end, &p, null_mut(), true);
-                    if (rect_size.x <= 0.0) rect_size.x = IM_FLOOR(g.Font.GetCharAdvance(' ') * 0.5); // So we can see selected empty lines
-                    let mut rect: ImRect = ImRect::new(rect_pos + ImVec2::new(0.0, bg_offy_up - g.FontSize), rect_pos + ImVec2::new(rect_size.x, bg_offy_dn));
-                    rect.ClipWith(clip_rect);
-                    if (rect.Overlaps(clip_rect))
-                        draw_window.DrawList.AddRectFilled(rect.Min, rect.Max, bg_color);
-                }
-                rect_pos.x = draw_pos.x - draw_scroll.x;
-                rect_pos.y += g.FontSize;
-            }
-        }
-
-        // We test for 'buf_display_max_length' as a way to avoid some pathological cases (e.g. single-line 1 MB string) which would make ImDrawList crash.
-        if (is_multiline || (buf_display_end - buf_display) < buf_display_max_length)
-        {
-            col: u32 = GetColorU32(if is_displaying_hint {ImGuiCol_TextDisabled} else { ImGuiCol_Text });
-            draw_window.DrawList.AddText(g.Font, g.FontSize, draw_pos - draw_scroll, col, buf_display, buf_display_end, 0.0, if is_multiline { null_mut()} else {& clip_rect});
-        }
-
-        // Draw blinking cursor
-        if (render_cursor)
-        {
-            state.CursorAnim += io.DeltaTime;
-            let mut cursor_is_visible: bool =  (!g.IO.ConfigInputTextCursorBlink) || (state.CursorAnim <= 0.0) || ImFmod(state.CursorAnim, 1.200) <= 0.80;
-            let cursor_screen_pos: ImVec2 = ImFloor(draw_pos + cursor_offset - draw_scroll);
-            let mut cursor_screen_rect: ImRect = ImRect::new(cursor_screen_pos.x, cursor_screen_pos.y - g.FontSize + 0.5, cursor_screen_pos.x + 1.0, cursor_screen_pos.y - 1.5);
-            if (cursor_is_visible && cursor_screen_rect.Overlaps(clip_rect))
-                draw_window.DrawList.AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text, 0.0));
-
-            // Notify OS of text input position for advanced IME (-1 x offset so that Windows IME can cover our cursor. Bit of an extra nicety.)
-            if (!is_readonly)
-            {
-                g.PlatformImeData.WantVisible = true;
-                g.PlatformImeData.InputPos = ImVec2::new(cursor_screen_pos.x - 1.0, cursor_screen_pos.y - g.FontSize);
-                g.PlatformImeData.InputLineHeight = g.FontSize;
-                g.PlatformImeViewport = window.Viewport.ID;
-            }
-        }
-    }
-    else
-    {
-        // Render text only (no selection, no cursor)
-        if (is_multiline)
-            text_size = ImVec2::new(inner_size.x, InputTextCalcTextLenAndLineCount(buf_display, &buf_display_end) * g.FontSize); // We don't need width
-        else if (!is_displaying_hint && g.ActiveId == id)
-            buf_display_end = buf_display + state.CurLenA;
-        else if (!is_displaying_hint)
-            buf_display_end = buf_display + strlen(buf_display);
-
-        if (is_multiline || (buf_display_end - buf_display) < buf_display_max_length)
-        {
-            col: u32 = GetColorU32(if is_displaying_hint {ImGuiCol_TextDisabled} else { ImGuiCol_Text });
-            draw_window.DrawList.AddText(g.Font, g.FontSize, draw_pos, col, buf_display, buf_display_end, 0.0, if is_multiline { null_mut()} else {& clip_rect});
-        }
-    }
-
-    if (is_password && !is_displaying_hint)
-        PopFont();
-
-    if (is_multiline)
-    {
-        // For focus requests to work on our multiline we need to ensure our child ItemAdd() call specifies the ImGuiItemFlags_Inputable (ref issue #4761)...
-        layout_ops::Dummy(ImVec2::new(text_size.x, text_size.y + style.FramePadding.y));
-        let mut backup_item_flags: ImGuiItemFlags =  g.CurrentItemFlags;
-        g.CurrentItemFlags |= ImGuiItemFlags_Inputable | ImGuiItemFlags_NoTabStop;
-        EndChild();
-        item_data_backup.StatusFlags |= (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredWindow);
-        g.CurrentItemFlags = backup_item_flags;
-
-        // ...and then we need to undo the group overriding last item data, which gets a bit messy as EndGroup() tries to forward scrollbar being active...
-        // FIXME: This quite messy/tricky, should attempt to get rid of the child window.
-        EndGroup();
-        if (g.LastItemData.ID == 0)
-        {
-            g.LastItemData.ID = id;
-            g.LastItemData.InFlags = item_data_backup.InFlags;
-            g.LastItemData.StatusFlags = item_data_backup.StatusFlags;
-        }
-    }
-
-    // Log as text
-    if (g.LogEnabled && (!is_password || is_displaying_hint))
-    {
-        LogSetNextTextDecoration("{", "}");
-        LogRenderedText(&draw_pos, buf_display, buf_display_end);
-    }
-
-    if (label_size.x > 0)
-        RenderText(ImVec2::new(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label);
-
-    if (value_changed && flag_clear(flags, ImGuiInputTextFlags_NoMarkEdited))
-        MarkItemEdited(id);
-
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
-    if flag_set(flags, ImGuiInputTextFlags_EnterReturnsTrue) { return  validated; }
-    else
-        return value_changed;
-}
-
-pub unsafe fn DebugNodeInputTextState(state: &mut ImGuiInputTextState)
-{
-// #ifndef IMGUI_DISABLE_DEBUG_TOOLS
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    ImStb::stb_state: &mut STB_TexteditState = &state.Stb;
-    ImStb::*mut StbUndoState undo_state = &stb_state.undostate;
-    text_ops::Text("ID: 0x%08X, ActiveID: 0x%08X", state.ID, g.ActiveId);
-    text_ops::Text("CurLenW: %d, CurLenA: %d, Cursor: %d, Selection: %d..%d", state.CurLenA, state.CurLenW, stb_state.cursor, stb_state.select_start, stb_state.select_end);
-    text_ops::Text("undo_point: %d, redo_point: %d, undo_char_point: %d, redo_char_point: %d", undo_state.undo_point, undo_state.redo_point, undo_state.undo_char_point, undo_state.redo_char_point);
-    if (BeginChild("undopoints", ImVec2::new(0.0, GetTextLineHeight() * 15), true)) // Visualize undo state
-    {
-        PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2::new(0, 0));
-        for (let n: c_int = 0; n < STB_TEXTEDIT_UNDOSTATECOUNT; n++)
-        {
-            ImStb::*mut StbUndoRecord undo_rec = &undo_state.undo_rec[n];
-            const  undo_rec_type: c_char = if n < undo_state.undo_point) ? 'u' : (n >= undo_state.redo_point { 'r'} else { ' '};
-            if (undo_rec_type == ' ')
-                BeginDisabled();
-            buf: [c_char;64] = "";
-            if (undo_rec_type != ' ' && undo_rec->char_storage != -1)
-                ImTextStrToUtf8(buf, buf.len(), undo_state.undo_char + undo_rec->char_storage, undo_state.undo_char + undo_rec->char_storage + undo_rec->insert_length);
-            text_ops::Text("%c [%02d] where %03d, insert %03d, delete %03d, char_storage %03d \"%s\"",
-                           undo_rec_type, n, undo_rec-> where, undo_rec->insert_length, undo_rec->delete_length, undo_rec->char_storage, buf);
-            if (undo_rec_type == ' ')
-                EndDisabled();
-        }
-        PopStyleVar();
-    }
-    EndChild();
-// #else
-    IM_UNUSED(state);
-// #endif
-}
 
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: ColorEdit, ColorPicker, ColorButton, etc.
@@ -1497,14 +241,16 @@ pub unsafe fn DebugNodeInputTextState(state: &mut ImGuiInputTextState)
 // - ColorPickerOptionsPopup() [Internal]
 //-------------------------------------------------------------------------
 
-pub unsafe fn ColorEdit3(label: &str,col: [c_float;3], ImGuiColorEditFlags flags) -> bool
+pub unsafe fn ColorEdit3(label: &str,col: [c_float;3], flags: ImGuiColorEditFlags) -> bool
 {
-    return ColorEdit4(label, col, flags | ImGuiColorEditFlags_NoAlpha);
+    let mut color_b: [c_float;4] = [col[0], col[1], col[2], 0.0];
+
+    return ColorEdit4(label, &mut color_b, flags | ImGuiColorEditFlags_NoAlpha);
 }
 
 // ColorEdit supports RGB and HSV inputs. In case of RGB input resulting color may have undefined hue and/or saturation.
 // Since widget displays both RGB and HSV values we must preserve hue and saturation to prevent these values resetting.
-pub unsafe fn ColorEditRestoreHS(*col: c_float, H: &mut c_float, S: &mut c_float, V: &mut c_float)
+pub unsafe fn ColorEditRestoreHS(col: &[c_float], H: &mut c_float, S: &mut c_float, V: &mut c_float)
 {
     // This check is optional. Suppose we have two color widgets side by side, both widgets display different colors, but both colors have hue and/or saturation undefined.
     // With color check: hue/saturation is preserved in one widget. Editing color in one widget would reset hue/saturation in another one.
@@ -1517,18 +263,20 @@ pub unsafe fn ColorEditRestoreHS(*col: c_float, H: &mut c_float, S: &mut c_float
 
     // When S == 0, H is undefined.
     // When H == 1 it wraps around to 0.
-    if (*S == 0.0 || (*H == 0.0 && g.ColorEditLastHue == 1))
+    if *S == 0.0 || (*H == 0.0 && g.ColorEditLastHue == 1.0) {
         *H = g.ColorEditLastHue;
+    }
 
     // When V == 0, S is undefined.
-    if (*V == 0.0)
+    if *V == 0.0 {
         *S = g.ColorEditLastSat;
+    }
 }
 
 // Edit colors components (each component in 0.0..1.0 range).
 // See enum ImGuiColorEditFlags_ for available options. e.g. Only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
 // With typical options: Left-click on color square to open color picker. Right-click to open option menu. CTRL-Click over input fields to edit them and TAB to go to next item.
-pub unsafe fn ColorEdit4(label: &str,col: [c_float;4], ImGuiColorEditFlags flags) -> bool
+pub unsafe fn ColorEdit4(label: &str, col: &mut [c_float;4], mut flags: ImGuiColorEditFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -1539,31 +287,37 @@ pub unsafe fn ColorEdit4(label: &str,col: [c_float;4], ImGuiColorEditFlags flags
     let w_full: c_float =  CalcItemWidth();
     let w_button: c_float =  if flag_set(flags, ImGuiColorEditFlags_NoSmallPreview) { 0.0} else{ (square_sz + style.ItemInnerSpacing.x)};
     let w_inputs: c_float =  w_full - w_button;
-    let mut  label_display_end: &str = FindRenderedTextEnd(label);
+    let mut  label_display_end = FindRenderedTextEnd(label);
     g.NextItemData.ClearFlags();
 
     BeginGroup();
     PushID(label);
 
     // If we're not showing any slider there's no point in doing any HSV conversions
-    const ImGuiColorEditFlags flags_untouched = flags;
-    if (flags & ImGuiColorEditFlags_NoInputs)
+    const flags_untouched: ImGuiColorEditFlags = flags;
+    if flag_set(flags , ImGuiColorEditFlags_NoInputs) {
         flags = (flags & (!ImGuiColorEditFlags_DisplayMask_)) | ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_NoOptions;
+    }
 
     // Context menu: display and modify options (before defaults are applied)
-    if (flag_clear(flags, ImGuiColorEditFlags_NoOptions))
-        ColorEditOptionsPopup(col, flags);
+    if flag_clear(flags, ImGuiColorEditFlags_NoOptions) {
+        ColorEditOptionsPopup(&col, flags);
+    }
 
     // Read stored options
-    if (flag_clear(flags, ImGuiColorEditFlags_DisplayMask_))
+    if flag_clear(flags, ImGuiColorEditFlags_DisplayMask_) {
         flags |= (g.ColorEditOptions & ImGuiColorEditFlags_DisplayMask_);
-    if (flag_clear(flags, ImGuiColorEditFlags_DataTypeMask_))
+    }
+    if flag_clear(flags, ImGuiColorEditFlags_DataTypeMask_) {
         flags |= (g.ColorEditOptions & ImGuiColorEditFlags_DataTypeMask_);
-    if (flag_clear(flags, ImGuiColorEditFlags_PickerMask_))
+    }
+    if flag_clear(flags, ImGuiColorEditFlags_PickerMask_) {
         flags |= (g.ColorEditOptions & ImGuiColorEditFlags_PickerMask_);
-    if (flag_clear(flags, ImGuiColorEditFlags_InputMask_))
+    }
+    if flag_clear(flags, ImGuiColorEditFlags_InputMask_) {
         flags |= (g.ColorEditOptions & ImGuiColorEditFlags_InputMask_);
-    flags |= (g.ColorEditOptions & ~(ImGuiColorEditFlags_DisplayMask_ | ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_));
+    }
+    flags |= (g.ColorEditOptions & !(ImGuiColorEditFlags_DisplayMask_ | ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_));
     // IM_ASSERT(ImIsPowerOfTwo(flags & ImGuiColorEditFlags_DisplayMask_)); // Check that only 1 is selected
     // IM_ASSERT(ImIsPowerOfTwo(flags & ImGuiColorEditFlags_InputMask_));   // Check that only 1 is selected
 
@@ -1572,156 +326,184 @@ pub unsafe fn ColorEdit4(label: &str,col: [c_float;4], ImGuiColorEditFlags flags
     let components: c_int = if alpha {4} else { 3 };
 
     // Convert to the formats we needf: [c_float;4] = { col[0], col[1], col[2], alpha ? col[3] : 1.0 };
-    if (flag_set(flags, ImGuiColorEditFlags_InputHSV) && (flags & ImGuiColorEditFlags_DisplayRGB))
+    if flag_set(flags, ImGuiColorEditFlags_InputHSV) && flag_set(flags, ImGuiColorEditFlags_DisplayRGB) {
         ColorConvertHSVtoRGB(f[0], f[1], f[2], f[0], f[1], f[2]);
-    else if (flag_set(flags, ImGuiColorEditFlags_InputRGB) && (flags & ImGuiColorEditFlags_DisplayHSV))
+    }
+    else if flag_set(flags, ImGuiColorEditFlags_InputRGB) && flag_set(flags, ImGuiColorEditFlags_DisplayHSV)
     {
         // Hue is lost when converting from greyscale rgb (saturation=0). Restore it.
         ColorConvertRGBtoHSV(f[0], f[1], f[2], f[0], f[1], f[2]);
-        ColorEditRestoreHS(col, &f[0], &f[1], &f[2]);
+        ColorEditRestoreHS(&col, &mut f[0], &mut f[1], &mut f[2]);
     }
-    i: [c_int;4] = { IM_F32_TO_INT8_UNBOUND(f[0]), IM_F32_TO_INT8_UNBOUND(f[1]), IM_F32_TO_INT8_UNBOUND(f[2]), IM_F32_TO_INT8_UNBOUND(f[3]) };
+    let mut i: [c_int;4] = [ IM_F32_TO_INT8_UNBOUND(f[0]), IM_F32_TO_INT8_UNBOUND(f[1]), IM_F32_TO_INT8_UNBOUND(f[2]), IM_F32_TO_INT8_UNBOUND(f[3]) ];
 
     let mut value_changed: bool =  false;
     let mut value_changed_as_float: bool =  false;
 
     let pos: ImVec2 = window.DC.CursorPos;
-    let inputs_offset_x: c_float =  if (style.ColorButtonPosition == ImGuiDir_Left) { w_button }else {0.0};
+    let inputs_offset_x: c_float =  if style.ColorButtonPosition == ImGuiDir_Left { w_button }else {0.0};
     window.DC.CursorPos.x = pos.x + inputs_offset_x;
 
-    if ((flags & (ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV)) != 0 && flag_clear(flags, ImGuiColorEditFlags_NoInputs))
+    if (flags & (ImGuiColorEditFlags_DisplayRGB | ImGuiColorEditFlags_DisplayHSV)) != 0 && flag_clear(flags, ImGuiColorEditFlags_NoInputs)
     {
         // RGB/HSV 0..255 Sliders
         w_item_one: c_float  = ImMax(1.0, IM_FLOOR((w_inputs - (style.ItemInnerSpacing.x) * (components - 1)) / components));
         let w_item_last: c_float =  ImMax(1.0, IM_FLOOR(w_inputs - (w_item_one + style.ItemInnerSpacing.x) * (components - 1)));
 
-        let hide_prefix: bool = if w_item_one <= CalcTextSize((flags & ImGuiColorEditFlags_Float { "M:0.0"} else { "M:000").x)};
-        static *const ids: [c_char;4] = { "##X", "##Y", "##Z", "##W" };
-        static *const fmt_table_int: [c_char;3][4] =
-        {
-            {   "%3d",   "%3d",   "%3d",   "%3d" }, // Short display
-            { "R:%3d", "G:%3d", "B:%3d", "A:%3d" }, // Long display for RGBA
-            { "H:%3d", "S:%3d", "V:%3d", "A:%3d" }  // Long display for HSVA
-        };
-        static *const fmt_table_float: [c_char;3][4] =
-        {
-            {   "%0.3f",   "%0.3f",   "%0.3f",   "%0.3f" }, // Short display
-            { "R:%0.3f", "G:%0.3f", "B:%0.3f", "A:%0.3f" }, // Long display for RGBA
-            { "H:%0.3f", "S:%0.3f", "V:%0.3f", "A:%0.3f" }  // Long display for HSVA
-        };
+        // let hide_prefix: bool = if w_item_one <= CalcTextSize((flags & ImGuiColorEditFlags_Float { "M:0.0"} else { "M:000").x)};
+        let ids: [String;4] = [ String::from("##X"),
+            String::from("##Y"),
+            String::from("##Z"),
+            String::from("##W") ];
+        let fmt_table_int: [[String;4];3] =
+            [
+                [   String::from("%3d"),   String::from("%3d"),   String::from("%3d"),   String::from("%3d") ], // Short display
+                [ String::from("R:%3d"), String::from("G:%3d"), String::from("B:%3d"), String::from("A:%3d") ], // Long display for RGBA
+                [ String::from("H:%3d"), String::from("S:%3d"), String::from("V:%3d"), String::from("A:%3d") ] // Long display for HSVA
+            ];
+        let fmt_table_float: [[String;4];3] =
+        [
+            [   String::from("%0.3f"),   String::from("%0.3f"),   String::from("%0.3f"),   String::from("%0.3f") ], // Short display
+            [ String::from("R:%0.3f"), String::from("G:%0.3f"), String::from("B:%0.3f"), "A:%0.3f" ], // Long display for RGBA
+            [ "H:%0.3f", "S:%0.3f", "V:%0.3f", "A:%0.3f" ]  // Long display for HSVA
+        ];
         let fmt_idx: c_int = if hide_prefix { 0} else{ if flag_set(flags, ImGuiColorEditFlags_DisplayHSV) { 2}else {1}};
 
-        for (let n: c_int = 0; n < components; n++)
+        // for (let n: c_int = 0; n < components; n++)
+        for n in 0 .. components
         {
-            if (n > 0)
-                SameLine(0, style.ItemInnerSpacing.x);
-            SetNextItemWidth(if (n + 1 < components) { w_item_one }else {w_item_last});
+            if (n > 0) {
+                SameLine(0.0, style.ItemInnerSpacing.x);
+            }
+            SetNextItemWidth(if n + 1 < components { w_item_one }else {w_item_last});
 
             // FIXME: When ImGuiColorEditFlags_HDR flag is passed HS values snap in weird ways when SV values go below 0.
-            if (flags & ImGuiColorEditFlags_Float)
+            if flag_set(flags , ImGuiColorEditFlags_Float)
             {
-                value_changed |= drag::DragFloat(ids[n], &f[n], 1.0 / 255f32, 0.0, if hdr { 0.0} else {1.0}, fmt_table_float[fmt_idx][n]);
+                value_changed |= drag::DragFloat(ids[n], &mut f[n], 1.0 / 255f32, 0.0, if hdr { 0.0 } else { 1.0 }, fmt_table_float[fmt_idx][n], 0);
                 value_changed_as_float |= value_changed;
             }
             else
             {
-                value_changed |= drag::DragInt(ids[n], &i[n], 1.0, 0, if hdr {0} else { 255 }, fmt_table_int[fmt_idx][n]);
+                value_changed |= drag::DragInt(ids[n], &mut i[n], 1.0, 0, if hdr { 0 } else { 255 }, fmt_table_int[fmt_idx][n], 0);
             }
-            if (flag_clear(flags, ImGuiColorEditFlags_NoOptions))
+            if flag_clear(flags, ImGuiColorEditFlags_NoOptions) {
                 OpenPopupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
+            }
         }
     }
-    else if (flag_set(flags, ImGuiColorEditFlags_DisplayHex) && flag_clear(flags, ImGuiColorEditFlags_NoInputs))
+    else if flag_set(flags, ImGuiColorEditFlags_DisplayHex) && flag_clear(flags, ImGuiColorEditFlags_NoInputs)
     {
         // RGB Hexadecimal Input
         buf: [c_char;64];
-        if (alpha)
-            ImFormatString(buf, buf.len(), "#%02X%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255), ImClamp(i[3], 0, 255));
-        else
-            ImFormatString(buf, buf.len(), "#%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255));
-        SetNextItemWidth(w_inputs);
-        if (input_num_ops::InputText("##Text", buf, buf.len(), ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase))
+        if (alpha) {}
+            // ImFormatString(buf, buf.len(), "#%02X%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255), ImClamp(i[3], 0, 255));
+        else {
+            // ImFormatString(buf, buf.len(), "#%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255));
+            SetNextItemWidth(w_inputs);
+        }
+        if InputText("##Text",
+                     buf,
+                     buf.len(),
+                     ImGuiInputTextFlags_CharsHexadecimal | ImGuiInputTextFlags_CharsUppercase,
+                     None,
+                     None)
         {
             value_changed = true;
             p: *mut c_char = buf;
-            while (*p == '#' || ImCharIsBlankA(*p))
-                p+= 1;
-            i[0] = i[1] = i[2] = 0;
+            while *p == '#' || ImCharIsBlankA(*p) {
+                p += 1;
+            }
+            i[2] = 0;
+            i[1] = 0;
+            i[0] = i[1];
             i[3] = 0xFF; // alpha default to 255 is not parsed by scanf (e.g. inputting #FFFFFF omitting alpha)
             let mut r: c_int = 0;
-            if (alpha)
-                r = sscanf(p, "%02X%02X%02X%02X", (*mut c_uint)&i[0], (*mut c_uint)&i[1], (*mut c_uint)&i[2], (*mut c_uint)&i[3]); // Treat at unsigned (%X is unsigned)
-            else
-                r = sscanf(p, "%02X%02X%02X", (*mut c_uint)&i[0], (*mut c_uint)&i[1], (*mut c_uint)&i[2]);
+            if alpha {
+                // r = sscanf(p, "%02X%02X%02X%02X", &i[0], &i[1], &i[2], &i[3]);
+            } // Treat at unsigned (%X is unsigned)
+            else {
+                // r = sscanf(p, "%02X%02X%02X", &i[0], &i[1], &i[2]);
+            }
             IM_UNUSED(r); // Fixes C6031: Return value ignored: 'sscanf'.
         }
-        if (flag_clear(flags, ImGuiColorEditFlags_NoOptions))
+        if flag_clear(flags, ImGuiColorEditFlags_NoOptions) {
             OpenPopupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
+        }
     }
 
     picker_active_window: *mut ImGuiWindow= null_mut();
-    if (flag_clear(flags, ImGuiColorEditFlags_NoSmallPreview))
+    if flag_clear(flags, ImGuiColorEditFlags_NoSmallPreview)
     {
-        let button_offset_x: c_float = if (flag_set(flags, ImGuiColorEditFlags_NoInputs) || (style.ColorButtonPosition == ImGuiDir_Left)) { 0.0} else {w_inputs + style.ItemInnerSpacing.x};
+        let button_offset_x: c_float = if flag_set(flags, ImGuiColorEditFlags_NoInputs) || (style.ColorButtonPosition == ImGuiDir_Left) {
+            0.0
+        } else {
+            w_inputs + style.ItemInnerSpacing.x};
         window.DC.CursorPos = ImVec2::new(pos.x + button_offset_x, pos.y);
 
-        const col_v4: ImVec4(col[0], col[1], col[2], if alpha { col[3]} else {1.0});
-        if (ColorButton("##ColorButton", col_v4, flags))
+        let mut col_v4 = ImVec4::from_floats(col[0], col[1], col[2], if alpha { col[3]} else {1.0});
+        if ColorButton("##ColorButton", &col_v4, flags, &Default::default())
         {
-            if (flag_clear(flags, ImGuiColorEditFlags_NoPicker))
+            if flag_clear(flags, ImGuiColorEditFlags_NoPicker)
             {
                 // Store current color and open a picker
                 g.ColorPickerRef = col_v4;
-                OpenPopup("picker");
-                SetNextWindowPos(g.LastItemData.Rect.GetBL() + ImVec2::new(0.0, style.ItemSpacing.y));
+                OpenPopup("picker", 0);
+                SetNextWindowPos(g.LastItemData.Rect.GetBL() + ImVec2::from_floats(0.0, style.ItemSpacing.y), 0, &Default::default());
             }
         }
-        if (flag_clear(flags, ImGuiColorEditFlags_NoOptions))
+        if flag_clear(flags, ImGuiColorEditFlags_NoOptions) {
             OpenPopupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
+        }
 
-        if (BeginPopup("picker"))
+        if BeginPopup("picker", 0)
         {
             picker_active_window = g.CurrentWindow;
-            if (label != label_display_end)
+            if label != label_display_end
             {
-                text_ops::TextEx(label, label_display_end);
+                text_ops::TextEx(label, 0);
                 layout_ops::Spacing();
             }
-            ImGuiColorEditFlags picker_flags_to_forward = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaBar;
-            ImGuiColorEditFlags picker_flags = (flags_untouched & picker_flags_to_forward) | ImGuiColorEditFlags_DisplayMask_ | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaPreviewHalf;
+            picker_flags_to_forward: ImGuiColorEditFlags = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaBar;
+            picker_flags: ImGuiColorEditFlags = (flags_untouched & picker_flags_to_forward) | ImGuiColorEditFlags_DisplayMask_ | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_AlphaPreviewHalf;
             SetNextItemWidth(square_sz * 12.0); // Use 256 + bar sizes?
-            value_changed |= ColorPicker4("##picker", col, picker_flags, &g.ColorPickerRef.x);
+            value_changed |= ColorPicker4("##picker", col, picker_flags, g.ColorPickerRef.x);
             EndPopup();
         }
     }
 
-    if (label != label_display_end && flag_clear(flags, ImGuiColorEditFlags_NoLabel))
+    if label != label_display_end && flag_clear(flags, ImGuiColorEditFlags_NoLabel)
     {
         SameLine(0.0, style.ItemInnerSpacing.x);
-        text_ops::TextEx(label, label_display_end);
+        text_ops::TextEx(label, 0);
     }
 
     // Convert back
-    if (value_changed && picker_active_window == null_mut())
+    if value_changed && picker_active_window == null_mut()
     {
-        if (!value_changed_as_float)
-            for (let n: c_int = 0; n < 4; n++)
+        if !value_changed_as_float {
+            // for (let n: c_int = 0; n < 4; n++)
+            for n in 0..4 {
                 f[n] = i[n] / 255f32;
-        if (flag_set(flags, ImGuiColorEditFlags_DisplayHSV) && (flags & ImGuiColorEditFlags_InputRGB))
+            }
+        }
+        if flag_set(flags, ImGuiColorEditFlags_DisplayHSV) && flag_set(flags, ImGuiColorEditFlags_InputRGB)
         {
             g.ColorEditLastHue = f[0];
             g.ColorEditLastSat = f[1];
             ColorConvertHSVtoRGB(f[0], f[1], f[2], f[0], f[1], f[2]);
             g.ColorEditLastColor = ColorConvertFloat4ToU32(ImVec4(f[0], f[1], f[2], 0));
         }
-        if (flag_set(flags, ImGuiColorEditFlags_DisplayRGB) && (flags & ImGuiColorEditFlags_InputHSV))
+        if flag_set(flags, ImGuiColorEditFlags_DisplayRGB) && flag_set(flags, ImGuiColorEditFlags_InputHSV) {
             ColorConvertRGBtoHSV(f[0], f[1], f[2], f[0], f[1], f[2]);
+        }
 
         col[0] = f[0];
         col[1] = f[1];
         col[2] = f[2];
-        if (alpha)
+        if alpha {
             col[3] = f[3];
+        }
     }
 
     PopID();
@@ -1729,29 +511,35 @@ pub unsafe fn ColorEdit4(label: &str,col: [c_float;4], ImGuiColorEditFlags flags
 
     // Drag and Drop Target
     // NB: The flag test is merely an optional micro-optimization, BeginDragDropTarget() does the same test.
-    if ((g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredRect) && flag_clear(flags, ImGuiColorEditFlags_NoDragDrop) && BeginDragDropTarget())
+    if flag_set(g.LastItemData.StatusFlags, ImGuiItemStatusFlags_HoveredRect) && flag_clear(flags, ImGuiColorEditFlags_NoDragDrop) && BeginDragDropTarget()
     {
         let mut accepted_drag_drop: bool =  false;
-        if (*const ImGuiPayload payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_30f32))
+        let payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_30, 0);
+        if payload.is_null() == false
         {
-            memcpy((&mut c_float)col, payload.Data, sizeof * 3); // Preserve alpha if any //-V512 //-V1086
-            value_changed = accepted_drag_drop = true;
+            // memcpy((&mut c_float)col, payload.Data, sizeof * 3); // Preserve alpha if any //-V512 //-V1086
+            value_changed = true;
+            accepted_drag_drop = true;
         }
-        if (*const ImGuiPayload payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_40f32))
+        let payload = AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_40, 0);
+        if payload.is_null() == false
         {
-            memcpy((&mut c_float)col, payload.Data, sizeof * components);
-            value_changed = accepted_drag_drop = true;
+            // memcpy(col, payload.Data, sizeof * components);
+            value_changed = true;
+            accepted_drag_drop = true;
         }
 
         // Drag-drop payloads are always RGB
-        if (accepted_drag_drop && (flags & ImGuiColorEditFlags_InputHSV))
-            ColorConvertRGBtoHSV(col[0], col[1], col[2], col[0], col[1], col[2]);
+        if accepted_drag_drop && flag_set(flags, ImGuiColorEditFlags_InputHSV) {
+            ColorConvertRGBtoHSV(col[0], col[1], col[2], &mut col[0], &mut col[1], &mut col[2]);
+        }
         EndDragDropTarget();
     }
 
     // When picker is being actively used, use its active id so IsItemActive() will function on ColorEdit4().
-    if (picker_active_window && g.ActiveId != 0 && g.ActiveIdWindow == picker_active_window)
+    if picker_active_window && g.ActiveId != 0 && g.ActiveIdWindow == picker_active_window {
         g.LastItemData.ID = g.ActiveId;
+    }
 
     if value_changed{
         MarkItemEdited(g.LastItemData.ID);}
@@ -1759,10 +547,12 @@ pub unsafe fn ColorEdit4(label: &str,col: [c_float;4], ImGuiColorEditFlags flags
     return value_changed;
 }
 
-pub unsafe fn ColorPicker3(label: &str,col: [c_float;3], ImGuiColorEditFlags flags) -> bool
-{col4: [c_float;4] = { col[0], col[1], col[2], 1.0 };
-    if !ColorPicker4(label, col4, flags | ImGuiColorEditFlags_NoAlpha) { return  false; }
-    col[0] = col4[0]; col[1] = col4[1]; col[2] = col4[2];
+pub unsafe fn ColorPicker3(label: &str, col: &mut [c_float; 3], flags: ImGuiColorEditFlags) -> bool {
+    let mut col4: [c_float; 4] = [col[0], col[1], col[2], 1.0];
+    if !ColorPicker4(label, &mut col4, flags | ImGuiColorEditFlags_NoAlpha, 0.0) { return false; }
+    col[0] = col4[0];
+    col[1] = col4[1];
+    col[2] = col4[2];
     return true;
 }
 
@@ -1780,15 +570,15 @@ pub unsafe fn RenderArrowsForVerticalBar(draw_list: *mut ImDrawList, pos: ImVec2
 // (In C++ the 'float col[4]' notation for a function argument is equivalent to 'float* col', we only specify a size to facilitate understanding of the code.)
 // FIXME: we adjust the big color square height based on item width, which may cause a flickering feedback loop (if automatic height makes a vertical scrollbar appears, affecting automatic width..)
 // FIXME: this is trying to be aware of style.Alpha but not fully correct. Also, the color wheel will have overlapping glitches with (style.Alpha < 1.0)
-pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags flags, *ref_col: c_float) -> bool
+pub unsafe fn ColorPicker4(label: &str, col: &mut [c_float; 4], mut flags: ImGuiColorEditFlags, ref_col: c_float) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
 
     draw_list: *mut ImDrawList = window.DrawList;
-    ImGuiStyle& style = g.Style;
-    ImGuiIO& io = g.IO;
+   let style = &mut g.Style;
+    let io = &mut g.IO;
 
     let width: c_float =  CalcItemWidth();
     g.NextItemData.ClearFlags();
@@ -1796,22 +586,27 @@ pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags fla
     PushID(label);
     BeginGroup();
 
-    if (flag_clear(flags, ImGuiColorEditFlags_NoSidePreview))
+    if flag_clear(flags, ImGuiColorEditFlags_NoSidePreview) {
         flags |= ImGuiColorEditFlags_NoSmallPreview;
+    }
 
     // Context menu: display and store options.
-    if (flag_clear(flags, ImGuiColorEditFlags_NoOptions))
-        ColorPickerOptionsPopup(col, flags);
+    if flag_clear(flags, ImGuiColorEditFlags_NoOptions) {
+        ColorPickerOptionsPopup(&col, flags);
+    }
 
     // Read stored options
-    if (flag_clear(flags, ImGuiColorEditFlags_PickerMask_))
-        flags |= if (g.ColorEditOptions & ImGuiColorEditFlags_PickerMask_ { g.ColorEditOptions} else { ImGuiColorEditFlags_DefaultOptions_) & ImGuiColorEditFlags_PickerMask_};
-    if (flag_clear(flags, ImGuiColorEditFlags_InputMask_))
-        flags |= if (g.ColorEditOptions & ImGuiColorEditFlags_InputMask_ { g.ColorEditOptions} else { ImGuiColorEditFlags_DefaultOptions_) & ImGuiColorEditFlags_InputMask_};
+    if flag_clear(flags, ImGuiColorEditFlags_PickerMask_) {
+        flags |= if g.ColorEditOptions & ImGuiColorEditFlags_PickerMask_ { g.ColorEditOptions } else { ImGuiColorEditFlags_DefaultOptions_ &ImGuiColorEditFlags_PickerMask_ };
+    }
+    if (flag_clear(flags, ImGuiColorEditFlags_InputMask_)) {
+        flags |= if g.ColorEditOptions & ImGuiColorEditFlags_InputMask_ { g.ColorEditOptions } else { ImGuiColorEditFlags_DefaultOptions_ &ImGuiColorEditFlags_InputMask_ };
+    }
     // IM_ASSERT(ImIsPowerOfTwo(flags & ImGuiColorEditFlags_PickerMask_)); // Check that only 1 is selected
     // IM_ASSERT(ImIsPowerOfTwo(flags & ImGuiColorEditFlags_InputMask_));  // Check that only 1 is selected
-    if (flag_clear(flags, ImGuiColorEditFlags_NoOptions))
+    if flag_clear(flags, ImGuiColorEditFlags_NoOptions) {
         flags |= (g.ColorEditOptions & ImGuiColorEditFlags_AlphaBar);
+    }
 
     // Setup
     let components: c_int = if flags & ImGuiColorEditFlags_NoAlpha { 3} else { 4};
@@ -1825,100 +620,116 @@ pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags fla
     let bars_triangles_half_sz: c_float =  IM_FLOOR(bars_width * 0.200);backup_initial_col: [c_float;4];
     memcpy(backup_initial_col, col, components * sizeof);
 
-    let wheel_thickness: c_float =  sv_picker_size * 0.08f;
-    let wheel_r_outer: c_float =  sv_picker_size * 0.50f32;
+    let wheel_thickness: c_float =  sv_picker_size * 0.08;
+    let wheel_r_outer: c_float =  sv_picker_size * 0.50;
     let wheel_r_inner: c_float =  wheel_r_outer - wheel_thickness;
-    wheel_center: ImVec2(picker_pos.x + (sv_picker_size + bars_width)*0.5, picker_pos.y + sv_picker_size * 0.5);
+    let wheel_center = ImVec2::from_floats(picker_pos.x + (sv_picker_size + bars_width)*0.5, picker_pos.y + sv_picker_size * 0.5);
 
     // Note: the triangle is displayed rotated with triangle_pa pointing to Hue, but most coordinates stays unrotated for logic.
     let triangle_r: c_float =  wheel_r_inner - (sv_picker_size * 0.0270f32);
-    let triangle_pa: ImVec2 = ImVec2::new(triangle_r, 0.0); // Hue point.
-    let triangle_pb: ImVec2 = ImVec2::new(triangle_r * -0.5, triangle_r * -0.8660250f32); // Black point.
-    let triangle_pc: ImVec2 = ImVec2::new(triangle_r * -0.5, triangle_r * 0.8660250f32); // White point.
+    let triangle_pa: ImVec2 = ImVec2::from_floats(triangle_r, 0.0); // Hue point.
+    let triangle_pb: ImVec2 = ImVec2::from_floats(triangle_r * -0.5, triangle_r * -0.8660250f32); // Black point.
+    let triangle_pc: ImVec2 = ImVec2::from_floats(triangle_r * -0.5, triangle_r * 0.8660250f32); // White point.
 
-    let H: c_float =  col[0], S = col[1], V = col[2];
-    let R: c_float =  col[0], G = col[1], B = col[2];
-    if (flags & ImGuiColorEditFlags_InputRGB)
+    let mut H: c_float =  col[0]; let mut S = col[1]; let mut V = col[2];
+    let mut R: c_float =  col[0]; let mut G = col[1]; let mut B = col[2];
+    if flag_set(flags , ImGuiColorEditFlags_InputRGB)
     {
         // Hue is lost when converting from greyscale rgb (saturation=0). Restore it.
-        ColorConvertRGBtoHSV(R, G, B, H, S, V);
-        ColorEditRestoreHS(col, &H, &S, &V);
+        ColorConvertRGBtoHSV(R, G, B, &mut H, &mut S, &mut V);
+        ColorEditRestoreHS(col, &mut H, &mut S, &mut V);
     }
-    else if (flags & ImGuiColorEditFlags_InputHSV)
+    else if flag_set(flags , ImGuiColorEditFlags_InputHSV)
     {
-        ColorConvertHSVtoRGB(H, S, V, R, G, B);
+        ColorConvertHSVtoRGB(H, S, V, &mut R, &mut G, &mut B);
     }
 
-    let mut value_changed: bool =  false, value_changed_h = false, value_changed_sv = false;
+    let mut value_changed: bool =  false;
+    let mut value_changed_h = false;
+    let mut value_changed_sv = false;
 
     PushItemFlag(ImGuiItemFlags_NoNav, true);
-    if (flags & ImGuiColorEditFlags_PickerHueWheel)
+    if flag_set(flags , ImGuiColorEditFlags_PickerHueWheel)
     {
         // Hue wheel + SV triangle logic
-        button_ops::InvisibleButton("hsv", ImVec2::new(sv_picker_size + style.ItemInnerSpacing.x + bars_width, sv_picker_size));
-        if (IsItemActive())
+        button_ops::InvisibleButton("hsv", ImVec2::new(sv_picker_size + style.ItemInnerSpacing.x + bars_width, sv_picker_size), 0);
+        if IsItemActive()
         {
             let initial_off: ImVec2 = g.IO.MouseClickedPos[0] - wheel_center;
             let current_off: ImVec2 = g.IO.MousePos - wheel_center;
             let initial_dist2: c_float =  ImLengthSqr(initial_off);
-            if (initial_dist2 >= (wheel_r_inner - 1) * (wheel_r_inner - 1) && initial_dist2 <= (wheel_r_outer + 1) * (wheel_r_outer + 1))
+            if initial_dist2 >= (wheel_r_inner - 1) * (wheel_r_inner - 1) && initial_dist2 <= (wheel_r_outer + 1) * (wheel_r_outer + 1)
             {
                 // Interactive with Hue wheel
                 H = ImAtan2(current_off.y, current_off.x) / IM_PI * 0.5;
-                if (H < 0.0)
+                if H < 0.0 {
                     H += 1.0;
-                value_changed = value_changed_h = true;
+                }
+                value_changed = true;
+                value_changed_h = true;
             }
             let cos_hue_angle: c_float =  ImCos(-H * 2.0 * IM_PI);
             let sin_hue_angle: c_float =  ImSin(-H * 2.0 * IM_PI);
-            if (ImTriangleContainsPoint(triangle_pa, triangle_pb, triangle_pc, ImRotate(initial_off, cos_hue_angle, sin_hue_angle)))
+            if ImTriangleContainsPoint(&triangle_pa, &triangle_pb, &triangle_pc, &ImRotate(&initial_off, cos_hue_angle, sin_hue_angle))
             {
                 // Interacting with SV triangle
-                let current_off_unrotated: ImVec2 = ImRotate(current_off, cos_hue_angle, sin_hue_angle);
-                if (!ImTriangleContainsPoint(triangle_pa, triangle_pb, triangle_pc, current_off_unrotated))
-                    current_off_unrotated = ImTriangleClosestPoint(triangle_pa, triangle_pb, triangle_pc, current_off_unrotated);uu: c_float, vv, ww;
-                ImTriangleBarycentricCoords(triangle_pa, triangle_pb, triangle_pc, current_off_unrotated, uu, vv, ww);
-                V = ImClamp(1.0 - vv, 0.01f, 1.0);
-                S = ImClamp(uu / V, 0.01f, 1.0);
-                value_changed = value_changed_sv = true;
+                let mut current_off_unrotated: ImVec2 = ImRotate(&current_off, cos_hue_angle, sin_hue_angle);
+                if !ImTriangleContainsPoint(&triangle_pa, &triangle_pb, &triangle_pc, &current_off_unrotated) {
+                    current_off_unrotated = ImTriangleClosestPoint(&triangle_pa, &triangle_pb, &triangle_pc, &current_off_unrotated);
+                    // uu: c_float, vv, ww;
+                    let mut uu = 0f32;
+                    let mut vv = 0f32;
+                    let mut ww = 0f32;
+                }
+                ImTriangleBarycentricCoords(&triangle_pa, &triangle_pb, &triangle_pc, &current_off_unrotated, uu, vv, ww);
+                V = ImClamp(1.0 - vv, 0.01, 1.0);
+                S = ImClamp(uu / V, 0.01, 1.0);
+                value_changed = true;value_changed_sv = true;
             }
         }
-        if (flag_clear(flags, ImGuiColorEditFlags_NoOptions))
+        if flag_clear(flags, ImGuiColorEditFlags_NoOptions) {
             OpenPopupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
+        }
     }
-    else if (flags & ImGuiColorEditFlags_PickerHueBar)
+    else if flag_set(flags , ImGuiColorEditFlags_PickerHueBar)
     {
         // SV rectangle logic
-        button_ops::InvisibleButton("sv", ImVec2::new(sv_picker_size, sv_picker_size));
-        if (IsItemActive())
+        InvisibleButton("sv",
+                        &mut ImVec2::from_floats(sv_picker_size, sv_picker_size),
+                        0);
+        if IsItemActive()
         {
             S = ImSaturate((io.MousePos.x - picker_pos.x) / (sv_picker_size - 1));
             V = 1.0 - ImSaturate((io.MousePos.y - picker_pos.y) / (sv_picker_size - 1));
 
             // Greatly reduces hue jitter and reset to 0 when hue == 255 and color is rapidly modified using SV square.
-            if (g.ColorEditLastColor == ColorConvertFloat4ToU32(ImVec4(col[0], col[1], col[2], 0)))
+            if g.ColorEditLastColor == ColorConvertFloat4ToU32(ImVec4(col[0], col[1], col[2], 0)) {
                 H = g.ColorEditLastHue;
-            value_changed = value_changed_sv = true;
+            }
+            value_changed = true;
+            value_changed_sv = true;
         }
-        if (flag_clear(flags, ImGuiColorEditFlags_NoOptions))
+        if (flag_clear(flags, ImGuiColorEditFlags_NoOptions)) {
             OpenPopupOnItemClick("context", ImGuiPopupFlags_MouseButtonRight);
+        }
 
         // Hue bar logic
         SetCursorScreenPos(ImVec2::new(bar0_pos_x, picker_pos.y));
-        button_ops::InvisibleButton("hue", ImVec2::new(bars_width, sv_picker_size));
-        if (IsItemActive())
+        button_ops::InvisibleButton("hue", ImVec2::new(bars_width, sv_picker_size), 0);
+        if IsItemActive()
         {
             H = ImSaturate((io.MousePos.y - picker_pos.y) / (sv_picker_size - 1));
-            value_changed = value_changed_h = true;
+            value_changed = true;
+            value_changed_h = true;
         }
     }
 
     // Alpha bar logic
-    if (alpha_bar)
+    if alpha_bar
     {
         SetCursorScreenPos(ImVec2::new(bar1_pos_x, picker_pos.y));
-        button_ops::InvisibleButton("alpha", ImVec2::new(bars_width, sv_picker_size));
-        if (IsItemActive())
+        button_ops::InvisibleButton("alpha", ImVec2::new(bars_width, sv_picker_size), 0);
+        if IsItemActive()
         {
             col[3] = 1.0 - ImSaturate((io.MousePos.y - picker_pos.y) / (sv_picker_size - 1));
             value_changed = true;
@@ -1926,39 +737,40 @@ pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags fla
     }
     PopItemFlag(); // ImGuiItemFlags_NoNav
 
-    if (flag_clear(flags, ImGuiColorEditFlags_NoSidePreview))
+    if flag_clear(flags, ImGuiColorEditFlags_NoSidePreview)
     {
-        SameLine(0, style.ItemInnerSpacing.x);
+        SameLine(0.0, style.ItemInnerSpacing.x);
         BeginGroup();
     }
 
-    if (flag_clear(flags, ImGuiColorEditFlags_NoLabel))
+    if flag_clear(flags, ImGuiColorEditFlags_NoLabel)
     {
-        let mut  label_display_end: &str = FindRenderedTextEnd(label);
-        if (label != label_display_end)
+        let mut  label_display_end= FindRenderedTextEnd(label);
+        if label != label_display_end
         {
-            if ((flags & ImGuiColorEditFlags_NoSidePreview))
-                SameLine(0, style.ItemInnerSpacing.x);
-            text_ops::TextEx(label, label_display_end);
+            if flag_set(flags, ImGuiColorEditFlags_NoSidePreview) {
+                SameLine(0.0, style.ItemInnerSpacing.x);
+            }
+            text_ops::TextEx(label, 0);
         }
     }
 
-    if (flag_clear(flags, ImGuiColorEditFlags_NoSidePreview))
+    if flag_clear(flags, ImGuiColorEditFlags_NoSidePreview)
     {
         PushItemFlag(ImGuiItemFlags_NoNavDefaultFocus, true);
-        let mut col_v4 = ImVec4::new(col[0], col[1], col[2], if flag_set(flags, ImGuiColorEditFlags_NoAlpha) { 1.0} else {col[3]});
-        if (flags & ImGuiColorEditFlags_NoLabel){
+        let mut col_v4 = ImVec4::from_floats(col[0], col[1], col[2], if flag_set(flags, ImGuiColorEditFlags_NoAlpha) { 1.0} else {col[3]});
+        if flags & ImGuiColorEditFlags_NoLabel {
             text_ops::Text("Current");}
 
-        ImGuiColorEditFlags sub_flags_to_forward = ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoTooltip;
+        sub_flags_to_forward: ImGuiColorEditFlags = ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoTooltip;
         ColorButton("##current", col_v4, (flags & sub_flags_to_forward), ImVec2::new(square_sz * 3, square_sz * 2));
-        if (ref_col != null_mut())
+        if ref_col != c_float::MIN
         {
             text_ops::Text("Original");
-            let mut ref_col_v4 = ImVec4::new(ref_col[0], ref_col[1], ref_col[2], if flag_set(flags, ImGuiColorEditFlags_NoAlpha) { 1.0} else {ref_col[3]});
-            if (ColorButton("##original", ref_col_v4, (flags & sub_flags_to_forward), ImVec2::new(square_sz * 3, square_sz * 2)))
+            let mut ref_col_v4 = ImVec4::from_floats(ref_col[0], ref_col[1], ref_col[2], if flag_set(flags, ImGuiColorEditFlags_NoAlpha) { 1.0} else {ref_col[3]});
+            if ColorButton("##original", ref_col_v4, (flags & sub_flags_to_forward), ImVec2::new(square_sz * 3, square_sz * 2))
             {
-                memcpy(col, ref_col, components * sizeof);
+                // memcpy(col, ref_col, components * sizeof);
                 value_changed = true;
             }
         }
@@ -1967,16 +779,16 @@ pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags fla
     }
 
     // Convert back color to RGB
-    if (value_changed_h || value_changed_sv)
+    if value_changed_h || value_changed_sv
     {
-        if (flags & ImGuiColorEditFlags_InputRGB)
+        if flag_set(flags , ImGuiColorEditFlags_InputRGB)
         {
-            ColorConvertHSVtoRGB(H, S, V, col[0], col[1], col[2]);
+            ColorConvertHSVtoRGB(H, S, V, &mut col[0], &mut col[1], &mut col[2]);
             g.ColorEditLastHue = H;
             g.ColorEditLastSat = S;
             g.ColorEditLastColor = ColorConvertFloat4ToU32(ImVec4(col[0], col[1], col[2], 0));
         }
-        else if (flags & ImGuiColorEditFlags_InputHSV)
+        else if flag_set(flags , ImGuiColorEditFlags_InputHSV)
         {
             col[0] = H;
             col[1] = S;
@@ -1986,76 +798,84 @@ pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags fla
 
     // R,G,B and H,S,V slider color editor
     let mut value_changed_fix_hue_wrap: bool =  false;
-    if (flag_clear(flags, ImGuiColorEditFlags_NoInputs))
+    if flag_clear(flags, ImGuiColorEditFlags_NoInputs)
     {
         PushItemWidth((if alpha_bar {bar1_pos_x} else { bar0_pos_x }) + bars_width - picker_pos.x);
-        ImGuiColorEditFlags sub_flags_to_forward = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoSmallPreview | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf;
-        ImGuiColorEditFlags sub_flags = flag_set(flags, sub_flags_to_forward) | ImGuiColorEditFlags_NoPicker;
-        if (flags & ImGuiColorEditFlags_DisplayRGB || flag_clear(flags, ImGuiColorEditFlags_DisplayMask_))
-            if (ColorEdit4("##rgb", col, sub_flags | ImGuiColorEditFlags_DisplayRGB))
-            {
+        sub_flags_to_forward: ImGuiColorEditFlags = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoSmallPreview | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf;
+        sub_flags: ImGuiColorEditFlags = flag_set(flags, sub_flags_to_forward) | ImGuiColorEditFlags_NoPicker;
+        if flag_set(flags, ImGuiColorEditFlags_DisplayRGB) || flag_clear(flags, ImGuiColorEditFlags_DisplayMask_) {
+            if ColorEdit4("##rgb", col, sub_flags | ImGuiColorEditFlags_DisplayRGB) {
                 // FIXME: Hackily differentiating using the DragInt (ActiveId != 0 && !ActiveIdAllowOverlap) vs. using the InputText or DropTarget.
                 // For the later we don't want to run the hue-wrap canceling code. If you are well versed in HSV picker please provide your input! (See #2050)
                 value_changed_fix_hue_wrap = (g.ActiveId != 0 && !g.ActiveIdAllowOverlap);
                 value_changed = true;
             }
-        if (flags & ImGuiColorEditFlags_DisplayHSV || flag_clear(flags, ImGuiColorEditFlags_DisplayMask_))
+        }
+        if flag_set(flags , ImGuiColorEditFlags_DisplayHSV) || flag_clear(flags, ImGuiColorEditFlags_DisplayMask_) {
             value_changed |= ColorEdit4("##hsv", col, sub_flags | ImGuiColorEditFlags_DisplayHSV);
-        if (flags & ImGuiColorEditFlags_DisplayHex || flag_clear(flags, ImGuiColorEditFlags_DisplayMask_))
+        }
+        if flag_set( flags , ImGuiColorEditFlags_DisplayHex) || flag_clear(flags, ImGuiColorEditFlags_DisplayMask_) {
             value_changed |= ColorEdit4("##hex", col, sub_flags | ImGuiColorEditFlags_DisplayHex);
+        }
         PopItemWidth();
     }
 
     // Try to cancel hue wrap (after ColorEdit4 call), if any
-    if (value_changed_fix_hue_wrap && (flags & ImGuiColorEditFlags_InputRGB))
-    {new_H: c_float, new_S, new_V;
-        ColorConvertRGBtoHSV(col[0], col[1], col[2], new_H, new_S, new_V);
-        if (new_H <= 0 && H > 0)
+    if value_changed_fix_hue_wrap && flag_set(flags, ImGuiColorEditFlags_InputRGB) {
+    // {new_H: c_float, new_S, new_V;
+        let mut new_H:c_float = 0.0;
+        let mut new_S:c_float = 0.0;
+        let mut new_V:c_float = 0.0;
+        ColorConvertRGBtoHSV(col[0], col[1], col[2], &mut new_H, &mut new_S, &mut new_V);
+        if new_H <= 0.0 && H > 0.0
         {
-            if (new_V <= 0 && V != new_V)
-                ColorConvertHSVtoRGB(H, S, if new_V <= 0 { V * 0.5} else {new_V}, col[0], col[1], col[2]);
-            else if (new_S <= 0)
-                ColorConvertHSVtoRGB(H, if new_S <= 0 { S * 0.5} else {new_S}, new_V, col[0], col[1], col[2]);
+            if new_V <= 0.0 && V != new_V {
+                ColorConvertHSVtoRGB(H, S, if new_V <= 0.0 { V * 0.5 } else { new_V }, &mut col[0], &mut col[1], &mut col[2]);
+            }
+            else if new_S <= 0.0 {
+                ColorConvertHSVtoRGB(H, if new_S <= 0.0 { S * 0.5 } else { new_S }, new_V, &mut col[0], &mut col[1], &mut col[2]);
+            }
         }
     }
 
     if (value_changed)
     {
-        if (flags & ImGuiColorEditFlags_InputRGB)
+        if flag_set(flags , ImGuiColorEditFlags_InputRGB)
         {
             R = col[0];
             G = col[1];
             B = col[2];
-            ColorConvertRGBtoHSV(R, G, B, H, S, V);
-            ColorEditRestoreHS(col, &H, &S, &V);   // Fix local Hue as display below will use it immediately.
+            ColorConvertRGBtoHSV(R, G, B, &mut H, &mut S, &mut V);
+            ColorEditRestoreHS(col, &mut H, &mut S, &mut V);   // Fix local Hue as display below will use it immediately.
         }
-        else if (flags & ImGuiColorEditFlags_InputHSV)
+        else if flag_set(flags , ImGuiColorEditFlags_InputHSV)
         {
             H = col[0];
             S = col[1];
             V = col[2];
-            ColorConvertHSVtoRGB(H, S, V, R, G, B);
+            ColorConvertHSVtoRGB(H, S, V, &mut R, &mut G, &mut B);
         }
     }
 
-    let style_alpha8: c_int = IM_F32_TO_INT8_SAT(style.Alpha);
-    col_black: u32 = IM_COL32(0,0,0,style_alpha8);
-    col_white: u32 = IM_COL32(255,255,255,style_alpha8);
-    col_midgrey: u32 = IM_COL32(128,128,128,style_alpha8);
-    col_hues: u32[6 + 1] = { IM_COL32(255,0,0,style_alpha8), IM_COL32(255,255,0,style_alpha8), IM_COL32(0,255,0,style_alpha8), IM_COL32(0,255,255,style_alpha8), IM_COL32(0,0,255,style_alpha8), IM_COL32(255,0,255,style_alpha8), IM_COL32(255,0,0,style_alpha8) };
+    let style_alpha8 = IM_F32_TO_INT8_SAT(style.Alpha);
+    let col_black: u32 = IM_COL32(0,0,0,style_alpha8);
+    let col_white: u32 = IM_COL32(255,255,255,style_alpha8);
+    let col_midgrey: u32 = IM_COL32(128,128,128,style_alpha8);
+    let col_hues: [u32;6 + 1] = [ IM_COL32(255,0,0,style_alpha8), IM_COL32(255,255,0,style_alpha8), IM_COL32(0,255,0,style_alpha8), IM_COL32(0,255,255,style_alpha8), IM_COL32(0,0,255,style_alpha8), IM_COL32(255,0,255,style_alpha8), IM_COL32(255,0,0,style_alpha8) ];
 
-    let mut hue_color_f = ImVec4::new(1, 1, 1, style.Alpha); ColorConvertHSVtoRGB(H, 1, 1, hue_color_f.x, hue_color_f.y, hue_color_f.z);
+    let mut hue_color_f = ImVec4::from_floats(1.0, 1.0, 1.0, style.Alpha); ColorConvertHSVtoRGB(H, 1.0, 1.0, hue_color_f.x, hue_color_f.y, hue_color_f.z);
     hue_color32: u32 = ColorConvertFloat4ToU32(hue_color_0f32);
     user_col32_striped_of_alpha: u32 = ColorConvertFloat4ToU32(ImVec4(R, G, B, style.Alpha)); // Important: this is still including the main rendering/style alpha!!
 
     sv_cursor_pos: ImVec2;
 
-    if (flags & ImGuiColorEditFlags_PickerHueWheel)
+    if flag_set(flags , ImGuiColorEditFlags_PickerHueWheel)
     {
         // Render Hue Wheel
         let aeps: c_float =  0.5 / wheel_r_outer; // Half a pixel arc length in radians (2pi cancels out).
         let segment_per_arc: c_int = ImMax(4, wheel_r_outer / 12);
-        for (let n: c_int = 0; n < 6; n++)
+        // for (let n: c_int = 0; n < 6; n++)
+        for n in 0 .. 6
         {
             let a0: c_float =  (n)     /6f32 * 2.0 * IM_PI - aeps;
             let a1: c_float =  (n1f32)/6f32 * 2.0 * IM_PI + aeps;
@@ -2065,25 +885,25 @@ pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags fla
             let vert_end_idx: c_int = draw_list.VtxBuffer.len();
 
             // Paint colors over existing vertices
-            gradient_p0: ImVec2(wheel_center.x + ImCos(a0) * wheel_r_inner, wheel_center.y + ImSin(a0) * wheel_r_inner);
-            gradient_p1: ImVec2(wheel_center.x + ImCos(a1) * wheel_r_inner, wheel_center.y + ImSin(a1) * wheel_r_inner);
+            let mut gradient_p0 = ImVec2::from_floats(wheel_center.x + ImCos(a0) * wheel_r_inner, wheel_center.y + ImSin(a0) * wheel_r_inner);
+            let mut gradient_p1 = ImVec2::from_floats(wheel_center.x + ImCos(a1) * wheel_r_inner, wheel_center.y + ImSin(a1) * wheel_r_inner);
             ShadeVertsLinearColorGradientKeepAlpha(draw_list, vert_start_idx, vert_end_idx, gradient_p0, gradient_p1, col_hues[n], col_hues[n + 1]);
         }
 
         // Render Cursor + preview on Hue Wheel
         let cos_hue_angle: c_float =  ImCos(H * 2.0 * IM_PI);
         let sin_hue_angle: c_float =  ImSin(H * 2.0 * IM_PI);
-        hue_cursor_pos: ImVec2(wheel_center.x + cos_hue_angle * (wheel_r_inner + wheel_r_outer) * 0.5, wheel_center.y + sin_hue_angle * (wheel_r_inner + wheel_r_outer) * 0.5);
-        let hue_cursor_rad: c_float = if value_changed_h { wheel_thickness * 0.65f }else {wheel_thickness * 0.55f32};
-        let hue_cursor_segments: c_int = ImClamp((hue_cursor_rad / 1.40f32), 9, 32);
+        let mut hue_cursor_pos = ImVec2::from_floats(wheel_center.x + cos_hue_angle * (wheel_r_inner + wheel_r_outer) * 0.5, wheel_center.y + sin_hue_angle * (wheel_r_inner + wheel_r_outer) * 0.5);
+        let hue_cursor_rad: c_float = if value_changed_h { wheel_thickness * 0.65 }else {wheel_thickness * 0.55f32};
+        let hue_cursor_segments: c_int = (hue_cursor_rad / 1.40).clamp(9.0, 32.0) as c_int;
         draw_list.AddCircleFilled(hue_cursor_pos, hue_cursor_rad, hue_color32, hue_cursor_segments);
         draw_list.AddCircle(hue_cursor_pos, hue_cursor_rad + 1, col_midgrey, hue_cursor_segments);
         draw_list.AddCircle(hue_cursor_pos, hue_cursor_rad, col_white, hue_cursor_segments);
 
         // Render SV triangle (rotated according to hue)
-        let tra: ImVec2 = wheel_center + ImRotate(triangle_pa, cos_hue_angle, sin_hue_angle);
-        let trb: ImVec2 = wheel_center + ImRotate(triangle_pb, cos_hue_angle, sin_hue_angle);
-        let trc: ImVec2 = wheel_center + ImRotate(triangle_pc, cos_hue_angle, sin_hue_angle);
+        let tra: ImVec2 = wheel_center + ImRotate(&triangle_pa, cos_hue_angle, sin_hue_angle);
+        let trb: ImVec2 = wheel_center + ImRotate(&triangle_pb, cos_hue_angle, sin_hue_angle);
+        let trc: ImVec2 = wheel_center + ImRotate(&triangle_pc, cos_hue_angle, sin_hue_angle);
         let uv_white: ImVec2 = GetFontTexUvWhitePixel();
         draw_list.PrimReserve(6, 6);
         draw_list.PrimVtx(tra, uv_white, hue_color32);
@@ -2095,7 +915,7 @@ pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags fla
         draw_list.AddTriangle(tra, trb, trc, col_midgrey, 1.5);
         sv_cursor_pos = ImLerp(ImLerp(trc, tra, ImSaturate(S)), trb, ImSaturate(1 - V));
     }
-    else if (flags & ImGuiColorEditFlags_PickerHueBar)
+    else if flag_set(flags , ImGuiColorEditFlags_PickerHueBar)
     {
         // Render SV Square
         draw_list.AddRectFilledMultiColor(picker_pos, picker_pos + ImVec2::new(sv_picker_size, sv_picker_size), col_white, hue_color32, hue_color32, col_white);
@@ -2105,8 +925,11 @@ pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags fla
         sv_cursor_pos.y = ImClamp(IM_ROUND(picker_pos.y + ImSaturate(1 - V) * sv_picker_size), picker_pos.y + 2, picker_pos.y + sv_picker_size - 2);
 
         // Render Hue Bar
-        for (let i: c_int = 0; i < 6; ++i)
+        // for (let i: c_int = 0; i < 6; ++i)
+        for i in 0 .. 6
+        {
             draw_list.AddRectFilledMultiColor(ImVec2::new(bar0_pos_x, picker_pos.y + i * (sv_picker_size / 6)), ImVec2::new(bar0_pos_x + bars_width, picker_pos.y + (i + 1) * (sv_picker_size / 6)), col_hues[i], col_hues[i], col_hues[i + 1], col_hues[i + 1]);
+        }
         let bar0_line_y: c_float =  IM_ROUND(picker_pos.y + H * sv_picker_size);
         RenderFrameBorder(ImVec2::new(bar0_pos_x, picker_pos.y), ImVec2::new(bar0_pos_x + bars_width, picker_pos.y + sv_picker_size), 0.0);
         RenderArrowsForVerticalBar(draw_list, ImVec2::new(bar0_pos_x - 1, bar0_line_y), ImVec2::new(bars_triangles_half_sz + 1, bars_triangles_half_sz), bars_width + 2.0, style.Alpha);
@@ -2119,11 +942,11 @@ pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags fla
     draw_list.AddCircle(sv_cursor_pos, sv_cursor_rad, col_white, 12);
 
     // Render alpha bar
-    if (alpha_bar)
+    if alpha_bar
     {
         let alpha: c_float =  ImSaturate(col[3]);
         let mut bar1_bb: ImRect = ImRect::new(bar1_pos_x, picker_pos.y, bar1_pos_x + bars_width, picker_pos.y + sv_picker_size);
-        RenderColorRectWithAlphaCheckerboard(draw_list, bar1_bb.Min, bar1_bb.Max, 0, bar1_bb.GetWidth() / 2.0, ImVec2::new(0.0, 0.0));
+        RenderColorRectWithAlphaCheckerboard(draw_list, bar1_bb.Min, bar1_bb.Max, 0, bar1_bb.GetWidth() / 2.0, ImVec2::new(0.0, 0.0), 0.0, 0);
         draw_list.AddRectFilledMultiColor(bar1_bb.Min, bar1_bb.Max, user_col32_striped_of_alpha, user_col32_striped_of_alpha, user_col32_striped_of_alpha & !IM_COL32_A_MASK, user_col32_striped_of_alpha & !IM_COL32_A_MASK);
         let bar1_line_y: c_float =  IM_ROUND(picker_pos.y + (1.0 - alpha) * sv_picker_size);
         RenderFrameBorder(bar1_bb.Min, bar1_bb.Max, 0.0);
@@ -2146,7 +969,7 @@ pub unsafe fn ColorPicker4(label: &str,col: [c_float;4], ImGuiColorEditFlags fla
 // FIXME: May want to display/ignore the alpha component in the color display? Yet show it in the tooltip.
 // 'desc_id' is not called 'label' because we don't display it next to the button, but only in the tooltip.
 // Note that 'col' may be encoded in HSV if ImGuiColorEditFlags_InputHSV is set.
-pub unsafe fn ColorButton(desc_id: &str, col: &ImVec4, ImGuiColorEditFlags flags, size_arg: &ImVec2) -> bool
+pub unsafe fn ColorButton(desc_id: &str, col: &ImVec4, mut flags: ImGuiColorEditFlags, size_arg: &ImVec2) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -2154,78 +977,86 @@ pub unsafe fn ColorButton(desc_id: &str, col: &ImVec4, ImGuiColorEditFlags flags
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut id: ImGuiID =  window.GetID(desc_id);
     let default_size: c_float =  GetFrameHeight();
-    const size: ImVec2(if size_arg.x == 0.0 { default_size} else {size_arg.x}, if size_arg.y == 0.0 { default_size }else{ size_arg.y});
+    let mut size = ImVec2::from_floats(if size_arg.x == 0.0 { default_size} else {size_arg.x}, if size_arg.y == 0.0 { default_size }else{ size_arg.y});
     let mut bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size);
-    ItemSize(bb, if (size.y >= default_size) { g.Style.FramePadding.y} else {0.0});
-    if !ItemAdd(bb, id) { return  false; }
+    ItemSize(&bb.GetSize(), if size.y >= default_size { g.Style.FramePadding.y} else {0.0});
+    if !ItemAdd(&mut bb, id, null(), 0) { return  false; }
 
     let mut hovered = false; let mut held = false;
-    let mut pressed: bool =  button_ops::ButtonBehavior(bb, id, &hovered, &held);
+    let mut pressed: bool =  ButtonBehavior(&bb, id, &mut hovered, &mut held, 0);
 
-    if (flags & ImGuiColorEditFlags_NoAlpha)
-        flags &= ~(ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHal0f32);
+    if flag_set(flags , ImGuiColorEditFlags_NoAlpha) {
+        flags &= !(ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHal0f32);
+    }
 
-    col_rgb: ImVec4 = col;
-    if (flags & ImGuiColorEditFlags_InputHSV)
-        ColorConvertHSVtoRGB(col_rgb.x, col_rgb.y, col_rgb.z, col_rgb.x, col_rgb.y, col_rgb.z);
+    let mut col_rgb: ImVec4 = col.clone();
+    if flag_set(flags , ImGuiColorEditFlags_InputHSV) {
+        ColorConvertHSVtoRGB(col_rgb.x, col_rgb.y, col_rgb.z, &mut col_rgb.x, &mut col_rgb.y, &mut col_rgb.z);
+    }
 
-    let mut col_rgb_without_alpha = ImVec4::new(col_rgb.x, col_rgb.y, col_rgb.z, 1.0);
-    let grid_step: c_float =  ImMin(size.x, size.y) / 2.99f;
-    let rounding: c_float =  ImMin(g.Style.FrameRounding, grid_step * 0.5);
-    let bb_inner: ImRect =  bb;
-    let off: c_float =  0.0;
-    if (flag_clear(flags, ImGuiColorEditFlags_NoBorder))
+    let mut col_rgb_without_alpha = ImVec4::from_floats(col_rgb.x, col_rgb.y, col_rgb.z, 1.0);
+    let grid_step: c_float = size.x.min(size.y) / 2.99;
+    let rounding: c_float =  g.Style.FrameRounding.min(grid_step *0.5);
+    let mut bb_inner: ImRect =  bb;
+    let mut off: c_float =  0.0;
+    if flag_clear(flags, ImGuiColorEditFlags_NoBorder)
     {
-        off = -0.75f32; // The border (using Col_FrameBg) tends to look off when color is near-opaque and rounding is enabled. This offset seemed like a good middle ground to reduce those artifacts.
+        off = -0.75; // The border (using Col_FrameBg) tends to look off when color is near-opaque and rounding is enabled. This offset seemed like a good middle ground to reduce those artifacts.
         bb_inner.Expand(off);
     }
-    if (flag_set(flags, ImGuiColorEditFlags_AlphaPreviewHal0f32) && col_rgb.w < 1.0)
+    if flag_set(flags, ImGuiColorEditFlags_AlphaPreviewHal0f32) && col_rgb.w < 1.0
     {
         let mid_x: c_float =  IM_ROUND((bb_inner.Min.x + bb_inner.Max.x) * 0.5);
-        RenderColorRectWithAlphaCheckerboard(window.DrawList, ImVec2::new(bb_inner.Min.x + grid_step, bb_inner.Min.y), bb_inner.Max, GetColorU32(col_rgb, 0.0), grid_step, ImVec2::new(-grid_step + off, off), rounding, ImDrawFlags_RoundCornersRight);
-        window.DrawList.AddRectFilled(bb_inner.Min, ImVec2::new(mid_x, bb_inner.Max.y), GetColorU32(col_rgb_without_alpha, 0.0), rounding, ImDrawFlags_RoundCornersLeft);
+        RenderColorRectWithAlphaCheckerboard(window.DrawList, ImVec2::new(bb_inner.Min.x + grid_step, bb_inner.Min.y), bb_inner.Max, GetColorU32FromImVec4(&col_rgb), grid_step, ImVec2::new(-grid_step + off, off), rounding, ImDrawFlags_RoundCornersRight);
+        window.DrawList.AddRectFilled(&bb_inner.Min, ImVec2::new(mid_x, bb_inner.Max.y), GetColorU32(col_rgb_without_alpha, 0.0), rounding, ImDrawFlags_RoundCornersLeft);
     }
     else
     {
         // Because GetColorU32() multiplies by the global style Alpha and we don't want to display a checkerboard if the source code had no alpha
         col_source: ImVec4 = if flags & ImGuiColorEditFlags_AlphaPreview { col_rgb} else { col_rgb_without_alpha};
-        if (col_source.w < 1.0)
-            RenderColorRectWithAlphaCheckerboard(window.DrawList, bb_inner.Min, bb_inner.Max, GetColorU32(col_source, 0.0), grid_step, ImVec2::new(off, off), rounding);
-        else
-            window.DrawList.AddRectFilled(bb_inner.Min, bb_inner.Max, GetColorU32(col_source, 0.0), rounding);
+        if (col_source.w < 1.0) {
+            RenderColorRectWithAlphaCheckerboard(window.DrawList, bb_inner.Min, bb_inner.Max, GetColorU32(col_source, 0.0), grid_step, ImVec2::new(off, off), rounding, 0);
+        }
+        else {
+            window.DrawList.AddRectFilled(&bb_inner.Min, &bb_inner.Max, GetColorU32(col_source, 0.0), rounding, 0);
+        }
     }
-    RenderNavHighlight(bb, id);
-    if (flag_clear(flags, ImGuiColorEditFlags_NoBorder))
+    RenderNavHighlight(&bb, id, 0);
+    if flag_clear(flags, ImGuiColorEditFlags_NoBorder)
     {
-        if (g.Style.FrameBorderSize > 0.0)
+        if g.Style.FrameBorderSize > 0.0 {
             RenderFrameBorder(bb.Min, bb.Max, rounding);
-        else
-            window.DrawList.AddRect(bb.Min, bb.Max, GetColorU32(ImGuiCol_FrameBg, 0.0), rounding); // Color button are often in need of some sort of border
+        }
+        else {
+            window.DrawList.AddRect(&bb.Min, &bb.Max, GetColorU32(ImGuiCol_FrameBg, 0.0), rounding);
+        }// Color button are often in need of some sort of border
     }
 
     // Drag and Drop Source
     // NB: The ActiveId test is merely an optional micro-optimization, BeginDragDropSource() does the same test.
-    if (g.ActiveId == id && flag_clear(flags, ImGuiColorEditFlags_NoDragDrop) && BeginDragDropSource())
+    if g.ActiveId == id && flag_clear(flags, ImGuiColorEditFlags_NoDragDrop) && BeginDragDropSource(0)
     {
-        if (flags & ImGuiColorEditFlags_NoAlpha)
+        if flag_set(flags , ImGuiColorEditFlags_NoAlpha) {
             SetDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F, &col_rgb, sizeof * 3, ImGuiCond_Once);
-        else
+        }
+        else {
             SetDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_4F, &col_rgb, sizeof * 4, ImGuiCond_Once);
+        }
         ColorButton(desc_id, col, flags);
-        SameLine();
-        text_ops::TextEx("Color");
+        SameLine(0.0, 0.0);
+        text_ops::TextEx("Color", 0);
         EndDragDropSource();
     }
 
     // Tooltip
-    if (flag_clear(flags, ImGuiColorEditFlags_NoTooltip) && hovered)
-        ColorTooltip(desc_id, &col.x, flags & (ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHal0f32));
+    if flag_clear(flags, ImGuiColorEditFlags_NoTooltip) && hovered
+        ColorTooltip(desc_id, col.x, flags & (ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHal0f32));
 
     return pressed;
 }
 
 // Initialize/override default color options
-pub unsafe fn SetColorEditOptions(ImGuiColorEditFlags flags)
+pub unsafe fn SetColorEditOptions(flags: ImGuiColorEditFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (flag_clear(flags, ImGuiColorEditFlags_DisplayMask_))
@@ -2244,7 +1075,7 @@ pub unsafe fn SetColorEditOptions(ImGuiColorEditFlags flags)
 }
 
 // Note: only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
-pub unsafe fn ColorTooltip(text: &str, *col: c_float, ImGuiColorEditFlags flags)
+pub unsafe fn ColorTooltip(text: &str, *col: c_float, flags: ImGuiColorEditFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -2278,13 +1109,13 @@ pub unsafe fn ColorTooltip(text: &str, *col: c_float, ImGuiColorEditFlags flags)
     EndTooltip();
 }
 
-pub unsafe fn ColorEditOptionsPopup(*col: c_float, ImGuiColorEditFlags flags)
+pub unsafe fn ColorEditOptionsPopup(col: &[c_float], flags: ImGuiColorEditFlags)
 {
     let mut allow_opt_inputs: bool =  flag_clear(flags, ImGuiColorEditFlags_DisplayMask_);
     let mut allow_opt_datatype: bool =  flag_clear(flags, ImGuiColorEditFlags_DataTypeMask_);
     if (!allow_opt_inputs && !allow_opt_datatype) || !BeginPopup("context") { return ; }
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    ImGuiColorEditFlags opts = g.ColorEditOptions;
+    opts: ImGuiColorEditFlags = g.ColorEditOptions;
     if (allow_opt_inputs)
     {
         if (radio_button::RadioButton("RGB", (opts & ImGuiColorEditFlags_DisplayRGB) != 0)) opts = (opts & !ImGuiColorEditFlags_DisplayMask_) | ImGuiColorEditFlags_DisplayRGB;
@@ -2328,7 +1159,7 @@ pub unsafe fn ColorEditOptionsPopup(*col: c_float, ImGuiColorEditFlags flags)
     EndPopup();
 }
 
-pub unsafe fn ColorPickerOptionsPopup(*ref_col: c_float, ImGuiColorEditFlags flags)
+pub unsafe fn ColorPickerOptionsPopup(ref_col: &[c_float], flags: ImGuiColorEditFlags)
 {
     let mut allow_opt_picker: bool =  flag_clear(flags, ImGuiColorEditFlags_PickerMask_);
     let mut allow_opt_alpha_bar: bool =  flag_clear(flags, ImGuiColorEditFlags_NoAlpha) && flag_clear(flags, ImGuiColorEditFlags_AlphaBar);
@@ -2336,31 +1167,33 @@ pub unsafe fn ColorPickerOptionsPopup(*ref_col: c_float, ImGuiColorEditFlags fla
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (allow_opt_picker)
     {
-        picker_size: ImVec2(g.FontSize * 8, ImMax(g.FontSize * 8 - (GetFrameHeight() + g.Style.ItemInnerSpacing.x), 1.0)); // FIXME: Picker size copied from main picker function
+        let picker_size= ImVec2::from_floats(g.FontSize * 8, ImMax(g.FontSize * 8 - (GetFrameHeight() + g.Style.ItemInnerSpacing.x), 1.0)); // FIXME: Picker size copied from main picker function
         PushItemWidth(picker_size.x);
-        for (let picker_type: c_int = 0; picker_type < 2; picker_type++)
+        // for (let picker_type: c_int = 0; picker_type < 2; picker_type++)
+        for picker_type in 0 .. 2
         {
             // Draw small/thumbnail version of each picker type (over an invisible button for selection)
             if picker_type > 0 {  separator::Separator(); }
             PushID(picker_type);
-            ImGuiColorEditFlags picker_flags = ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | (flags & ImGuiColorEditFlags_NoAlpha);
-            if (picker_type == 0) picker_flags |= ImGuiColorEditFlags_PickerHueBar;
-            if (picker_type == 1) picker_flags |= ImGuiColorEditFlags_PickerHueWheel;
+            picker_flags: ImGuiColorEditFlags = ImGuiColorEditFlags_NoInputs | ImGuiColorEditFlags_NoOptions | ImGuiColorEditFlags_NoLabel | ImGuiColorEditFlags_NoSidePreview | (flags & ImGuiColorEditFlags_NoAlpha);
+            if (picker_type == 0) { picker_flags |= ImGuiColorEditFlags_PickerHueBar; }
+            if (picker_type == 1) { picker_flags |= ImGuiColorEditFlags_PickerHueWheel; }
             let backup_pos: ImVec2 = GetCursorScreenPos();
-            if (Selectable("##selectable", false, 0, picker_size)) // By default, Selectable() is closing popup
+            if (Selectable("##selectable", false, 0, picker_size)) { // By default, Selectable() is closing popup
                 g.ColorEditOptions = (g.ColorEditOptions & !ImGuiColorEditFlags_PickerMask_) | (picker_flags & ImGuiColorEditFlags_PickerMask_);
-            SetCursorScreenPos(backup_pos);
+            }
+            SetCursorScreenPos(&backup_pos);
             previewing_ref_col: ImVec4;
-            memcpy(&previewing_ref_col, ref_col, sizeof * (if (picker_flags & ImGuiColorEditFlags_NoAlpha) { 3 }else {4}));
-            ColorPicker4("##previewing_picker", &previewing_ref_col.x, picker_flags);
+            // memcpy(&previewing_ref_col, ref_col, sizeof * (if (picker_flags & ImGuiColorEditFlags_NoAlpha) { 3 }else {4}));
+            ColorPicker4("##previewing_picker", &previewing_ref_col.x, picker_flags, 0.0);
             PopID();
         }
         PopItemWidth();
     }
-    if (allow_opt_alpha_bar)
+    if allow_opt_alpha_bar
     {
         if allow_opt_picker {  separator::Separator(); }
-        checkbox_ops::CheckboxFlags("Alpha Bar", &g.ColorEditOptions, ImGuiColorEditFlags_AlphaBar);
+        CheckboxFlags("Alpha Bar", &mut g.ColorEditOptions, ImGuiColorEditFlags_AlphaBar);
     }
     EndPopup();
 }

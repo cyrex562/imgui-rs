@@ -1,5 +1,5 @@
 use libc::{c_char, c_double, c_float, c_int, size_t, strlen};
-use crate::{a_widgets, data_type_ops, GImGui, text_ops};
+use crate::{a_widgets, data_type_ops, GImGui, input_text, text_ops};
 use crate::button_flags::{ImGuiButtonFlags, ImGuiButtonFlags_DontClosePopups, ImGuiButtonFlags_Repeat};
 use crate::button_ops::ButtonEx;
 use crate::data_type::{ImGuiDataType, ImGuiDataType_Double, ImGuiDataType_Float, ImGuiDataType_S32};
@@ -39,8 +39,8 @@ pub unsafe fn TempInputScalar(
     data_type: ImGuiDataType,
     p_data: &mut c_float,
     format: &mut String,
-    p_clamp_min: &mut c_float,
-    p_clamp_max: &mut c_float) -> bool
+    mut p_clamp_min: c_float,
+    mut p_clamp_max: c_float) -> bool
 {
     let mut fmt_buf = String::with_capacity(32);
     // data_buf: [c_char;32];
@@ -53,7 +53,7 @@ pub unsafe fn TempInputScalar(
     flags |= InputScalar_DefaultCharsFilter(data_type, format);
 
     let mut value_changed: bool =  false;
-    if a_widgets::TempInputText(bb, id, label, &mut data_buf, data_buf.len(), flags)
+    if input_text::TempInputText(bb, id, label, &mut data_buf, data_buf.len(), flags)
     {
         // Backup old value
         data_type_size: size_t = data_type_ops::DataTypeGetInfo(data_type).Size;
@@ -65,13 +65,14 @@ pub unsafe fn TempInputScalar(
         data_type_ops::DataTypeApplyFromText(&data_buf, data_type, p_data, format);
         if p_clamp_min || p_clamp_max
         {
-            if p_clamp_min && p_clamp_max && data_type_ops::DataTypeCompare(data_type, p_clamp_min, p_clamp_max) > 0 {
+            if p_clamp_min && p_clamp_max && data_type_ops::DataTypeCompare(data_type, &p_clamp_min, &p_clamp_max) > 0 {
                 // ImSwap(p_clamp_min, p_clamp_max);
-                let mut temp = p_clamp_min.clone();
-                *p_clamp_min = *p_clamp_max;
-                *p_clamp_max = *p_clamp_min;
+                // let mut temp = p_clamp_min.clone();
+                let mut temp = p_clamp_min;
+                p_clamp_min = p_clamp_max;
+                p_clamp_max = p_clamp_min;
             }
-            data_type_ops::DataTypeClamp(data_type, p_data, p_clamp_min, p_clamp_max);
+            data_type_ops::DataTypeClamp(data_type, p_data, &p_clamp_min, &p_clamp_max);
         }
 
         // Only mark as edited if new value is different
@@ -297,5 +298,5 @@ pub unsafe fn InputText(label: &str,
                         user_data: Option<&Vec<u8>>) -> bool {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline()
     let mut size_arg = ImVec2::default();
-    return a_widgets::InputTextEx(label, "", buf, buf_size, &mut size_arg, flags, callback, user_data);
+    return input_text::InputTextEx(label, "", buf, buf_size, &mut size_arg, flags, callback, user_data);
 }

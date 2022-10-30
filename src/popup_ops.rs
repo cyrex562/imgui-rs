@@ -112,7 +112,7 @@ pub unsafe fn GetTopMostAndVisiblePopupModal() -> *mut ImGuiWindow
     return null_mut();
 }
 
-pub unsafe fn OpenPopup(str_id: *const c_char, popup_flags: ImGuiPopupFlags)
+pub unsafe fn OpenPopup(str_id: &str, popup_flags: ImGuiPopupFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut id: ImGuiID =  g.Currentwindow.GetID(str_id);
@@ -347,7 +347,7 @@ pub unsafe fn BeginPopupEx(id: ImGuiID, mut flags: ImGuiWindowFlags) -> bool
 }
 
 // BeginPopup: bool(str_id: *const c_char, flags: ImGuiWindowFlags)
-pub unsafe fn BeginPopup(str_id: *const c_char, mut flags: ImGuiWindowFlags) -> bool
+pub unsafe fn BeginPopup(str_id: &str, mut flags: ImGuiWindowFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.OpenPopupStack.len() <= g.BeginPopupStack.len()) // Early out for performance
@@ -418,7 +418,7 @@ pub unsafe fn EndPopup() {
 
 // Helper to open a popup if mouse button is released over the item
 // - This is essentially the same as BeginPopupContextItem() but without the trailing BeginPopup()
-pub unsafe fn OpenPopupOnItemClick(str_id: *const c_char, popup_flags: ImGuiPopupFlags)
+pub unsafe fn OpenPopupOnItemClick(str_id: &str, popup_flags: ImGuiPopupFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

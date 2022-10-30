@@ -34,10 +34,10 @@ use crate::window::ops::GetCurrentWindow;
 
 // FIXME: Try to move more of the code into shared SliderBehavior()
 // template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType, v: &mut c_float, v_min: &mut c_float, v_max: &mut c_float, format: &str, flags: ImGuiSliderFlags, out_grab_bb: &mut ImRect) -> bool
+pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType, v: &mut c_float, v_min: c_float, v_max: c_float, format: &str, flags: ImGuiSliderFlags, out_grab_bb: &mut ImRect) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let setyle = &mut g.Style;
+    let style = &mut g.Style;
 
     const axis: ImGuiAxis = if flags & ImGuiSliderFlags_Vertical { ImGuiAxis_Y} else { ImGuiAxis_X};
     let is_logarithmic: bool = flag_set(flags, ImGuiSliderFlags_Logarithmic);
@@ -134,7 +134,7 @@ pub unsafe fn SliderBehaviorT(bb: &ImRect, id: ImGuiID, data_type: ImGuiDataType
                 }
                 else
                 {
-                    if (v_range >= -100 && v_range <= 100) || tweak_slow {
+                    if (v_range >= -100.0 && v_range <= 100.0) || tweak_slow {
                         input_delta = if input_delta < 0.0 {
                             -1.0 }
                         else {
@@ -248,8 +248,8 @@ pub unsafe fn SliderBehavior(bb: &ImRect,
                              id: ImGuiID,
                              data_type: ImGuiDataType,
                              p_v: &mut c_float,
-                             p_min: &mut c_float,
-                             p_max: &mut c_float,
+                             p_min: c_float,
+                             p_max: c_float,
                              format: &str,
                              flags: ImGuiSliderFlags,
                              out_grab_bb: &mut ImRect) -> bool
@@ -303,8 +303,8 @@ pub unsafe fn SliderBehavior(bb: &ImRect,
 pub unsafe fn SliderScalar(label: &str,
                            data_type: ImGuiDataType,
                            p_data: &mut c_float,
-                           p_min: &mut c_float,
-                           p_max: &mut c_float,
+                           p_min: c_float,
+                           p_max: c_float,
                            format: &mut String,
                            flags: ImGuiSliderFlags) -> bool
 {
@@ -364,7 +364,7 @@ pub unsafe fn SliderScalar(label: &str,
     {
         // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
         let is_clamp_input: bool = flag_set(flags, ImGuiSliderFlags_AlwaysClamp);
-        return input_num_ops::TempInputScalar(&frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min} else {null_mut()}, if is_clamp_input { p_max} else {null_mut()});
+        return input_num_ops::TempInputScalar(&mut frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min} else {null_mut()}, if is_clamp_input { p_max} else {null_mut()});
     }
 
     // Draw frame
@@ -393,7 +393,7 @@ pub unsafe fn SliderScalar(label: &str,
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     value_buf: [c_char;64];
-    let mut  value_buf_end: &str = value_buf + data_type_ops::DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
+    let mut  value_buf_end: &str = value_buf + data_type_ops::DataTypeFormatString(value_buf, value_buf.len(), data_type, *p_data, format);
     if g.LogEnabled {
         LogSetNextTextDecoration("{", "}");
     }
@@ -439,13 +439,13 @@ pub unsafe fn SliderScalarN(label: &str,
     {
         PushID(i);
         if i > 0 {
-            SameLine(0, g.Style.ItemInnerSpacing.x);
+            SameLine(0.0, g.Style.ItemInnerSpacing.x);
         }
         value_changed |= SliderScalar("",
                                       data_type,
                                       &mut v[i],
-                                      &mut v_min[i],
-                                      &mut v_max[i],
+                                      v_min[i],
+                                      v_max[i],
                                       format.as_str(),
                                       flags);
         PopID();
@@ -457,7 +457,7 @@ pub unsafe fn SliderScalarN(label: &str,
     let mut  label_end = FindRenderedTextEnd(label);
     if label.len() > 0
     {
-        SameLine(0, g.Style.ItemInnerSpacing.x);
+        SameLine(0.0, g.Style.ItemInnerSpacing.x);
         text_ops::TextEx(label, 0);
     }
 
@@ -467,8 +467,8 @@ pub unsafe fn SliderScalarN(label: &str,
 
 pub unsafe fn SliderFloat(label: &str,
                           v: &mut c_float,
-                          v_min: &mut c_float,
-                          v_max: &mut c_float,
+                          v_min: c_float,
+                          v_max: c_float,
                           format: &mut String,
                           flags: ImGuiSliderFlags) -> bool
 {
@@ -506,8 +506,8 @@ pub unsafe fn SliderFloat4(label: &str,
 
 pub unsafe fn SliderAngle(label: &str,
                           v_rad: &mut c_float,
-                          v_degrees_min: &mut c_float,
-                          v_degrees_max: &mut c_float,
+                          v_degrees_min: c_float,
+                          v_degrees_max: c_float,
                           format: &mut String,
                           flags: ImGuiSliderFlags) -> bool
 {
@@ -535,7 +535,7 @@ pub unsafe fn SliderInt(label: &str,
     let mut v_float = *v as c_float;
     let mut v_min_float = *v_min as c_float;
     let mut v_max_float = *v_max as c_float;
-    return SliderScalar(label, ImGuiDataType_S32, &mut v_float, &mut v_min_float, &mut v_max_float, format, flags);
+    return SliderScalar(label, ImGuiDataType_S32, &mut v_float, v_min_float, v_max_float, format, flags);
 }
 
 pub unsafe fn SliderInt2(label: &str, v: &mut [c_int; 2], v_min: &mut [c_int; 2], v_max: &mut [c_int; 2], format: &str, flags: ImGuiSliderFlags) -> bool {
@@ -565,8 +565,8 @@ pub unsafe fn VSliderScalar(label: &str,
                             size: &ImVec2,
                             data_type: ImGuiDataType,
                             p_data: &mut c_float,
-                            p_min: &mut c_float,
-                            p_max: &mut c_float,
+                            p_min: c_float,
+                            p_max: c_float,
                             format: &mut String,
                             flags: ImGuiSliderFlags) -> bool
 {
@@ -620,7 +620,7 @@ pub unsafe fn VSliderScalar(label: &str,
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     // For the vertical slider we allow centered text to overlap the frame padding
     value_buf: [c_char;64];
-    let mut  value_buf_end: &str = value_buf + data_type_ops::DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
+    let mut  value_buf_end: &str = value_buf + data_type_ops::DataTypeFormatString(value_buf, value_buf.len(), data_type, *p_data, format);
     RenderTextClipped(ImVec2::new(frame_bb.Min.x, frame_bb.Min.y + style.FramePadding.y), &frame_bb.Max, value_buf, null_mut(), ImVec2::new(0.5, 0.0), null_mut());
     if label_size.x > 0.0 {
         RenderText(ImVec2::new(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y),
@@ -631,7 +631,7 @@ pub unsafe fn VSliderScalar(label: &str,
     return value_changed;
 }
 
-pub unsafe fn VSliderFloat(label: &str, size: &ImVec2, v: &mut c_float, v_min: &mut c_float, v_max: &mut c_float, format: &mut String, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn VSliderFloat(label: &str, size: &ImVec2, v: &mut c_float, v_min: c_float, v_max: c_float, format: &mut String, flags: ImGuiSliderFlags) -> bool
 {
     return VSliderScalar(label, size, ImGuiDataType_Float, v, v_min, v_max, format, flags);
 }
@@ -641,27 +641,27 @@ pub unsafe fn VSliderInt(label: &str, size: &ImVec2, v: &mut c_int, v_min: &mut 
     let mut v_float = v as c_float;
     let mut v_min_float = v as c_float;
     let mut v_max_float = v as c_float;
-    return VSliderScalar(label, size, ImGuiDataType_S32, &mut v_float, &mut v_min_float, &mut v_max_float, format, flags);
+    return VSliderScalar(label, size, ImGuiDataType_S32, &mut v_float, v_min_float, v_max_float, format, flags);
 }
 
 // Convert a value v in the output space of a slider into a parametric position on the slider itself (the logical opposite of ScaleValueFromRatioT)
-pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, v_min: &mut c_float, v_max: &mut c_float, is_logarithmic: bool, logarithmic_zero_epsilon: c_float, zero_deadzone_halfsize: c_float) -> c_float {
+pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, mut v_min: c_float, mut v_max: c_float, is_logarithmic: bool, logarithmic_zero_epsilon: c_float, zero_deadzone_halfsize: c_float) -> c_float {
     if v_min == v_max {
         return 0.0;
     }
     // IM_UNUSED(data_type);
 
-    let v_clamped = if v_min < v_max { v.clamp(*v_min, *v_max) } else { v.clamp(*v_max, *v_min) };
+    let v_clamped = if v_min < v_max { v.clamp(v_min, v_max) } else { v.clamp(v_max, v_min) };
     return if is_logarithmic {
         let mut flipped: bool = v_max < v_min;
 
         if flipped { // Handle the case where the range is backwards
-            ImSwap(v_min, v_max);
+            ImSwap(&mut v_min, &mut v_max);
         }
 
         // Fudge min/max to avoid getting close to log(0)
         let mut v_min_fudged: c_float = if v_min.abs() < logarithmic_zero_epsilon {
-            if *v_min < 0.0 as c_float {
+            if v_min < 0.0 as c_float {
                 logarithmic_zero_epsilon * -1
             } else {
                 logarithmic_zero_epsilon
@@ -670,7 +670,7 @@ pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, v_min: &m
             v_min
         };
         let mut v_max_fudged = if v_max.abs() < logarithmic_zero_epsilon {
-            if *v_max < 0.0 as c_float {
+            if v_max < 0.0 as c_float {
                 -logarithmic_zero_epsilon
             } else {
                 logarithmic_zero_epsilon
@@ -678,9 +678,9 @@ pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, v_min: &m
         } else { v_max };
 
         // Awkward special cases - we need ranges of the form (-100 .. 0) to convert to (-100 .. -epsilon), not (-100 .. epsilon)
-        if (v_min == 0.0) && (*v_max < 0.0) {
+        if (v_min == 0.0) && (v_max < 0.0) {
             v_min_fudged = logarithmic_zero_epsilon * -1;
-        } else if (v_max == 0.0) && (*v_min < 0.0) {
+        } else if (v_max == 0.0) && (v_min < 0.0) {
             v_max_fudged = logarithmic_zero_epsilon;
         }
 
@@ -704,7 +704,7 @@ pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, v_min: &m
             } else {
                 result = zero_point_snap_R + ((ImLog(v_clamped / logarithmic_zero_epsilon) / ImLog(v_max_fudged / logarithmic_zero_epsilon)) * (1.0 - zero_point_snap_R));
             }
-        } else if (*v_min < 0.0) || (*v_max < 0.0) {// Entirely negative slider
+        } else if (v_min < 0.0) || (v_max < 0.0) {// Entirely negative slider
             result = 1.0 - (ImLog(-v_clamped / -v_max_fudged) / ImLog(-v_min_fudged / -v_max_fudged));
         } else {
             result = (ImLog(v_clamped / v_min_fudged) / ImLog(v_max_fudged / v_min_fudged));
@@ -722,8 +722,8 @@ pub fn ScaleRatioFromValueT(data_type: ImGuiDataType, v: &mut c_float, v_min: &m
 pub fn ScaleValueFromRatioT(
     data_type: ImGuiDataType,
     t: c_float,
-    v_min: &mut c_float,
-    v_max: &mut c_float,
+    v_min: c_float,
+    v_max: c_float,
     is_logarithmic: bool,
     logarithmic_zero_epsilon: c_float,
     zero_deadzone_halfsize: c_float) -> c_float
@@ -738,7 +738,7 @@ pub fn ScaleValueFromRatioT(
     {
         // Fudge min/max to avoid getting silly results close to zero
         let v_min_fudged = if v_min.abs() < logarithmic_zero_epsilon {
-            if *v_min < 0.0 as c_float {
+            if v_min < 0.0 as c_float {
                 logarithmic_zero_epsilon * -1 }
             else {
                     logarithmic_zero_epsilon
@@ -746,7 +746,7 @@ pub fn ScaleValueFromRatioT(
             }
             else { v_min};
         let v_max_fudged = if v_max.abs() < logarithmic_zero_epsilon {
-            if *v_max < 0.0 as c_float {
+            if v_max < 0.0 as c_float {
                 logarithmic_zero_epsilon * -1
             } else {
                 logarithmic_zero_epsilon
@@ -760,7 +760,7 @@ pub fn ScaleValueFromRatioT(
         }
 
         // Awkward special case - we need ranges of the form (-100 .. 0) to convert to (-100 .. -epsilon), not (-100 .. epsilon)
-        if (v_max == 0.0) && (*v_min < 0.0) {
+        if (v_max == 0.0) && (v_min < 0.0) {
             v_max_fudged = -logarithmic_zero_epsilon;
         }
 
@@ -768,7 +768,7 @@ pub fn ScaleValueFromRatioT(
 
         if (v_min * v_max) < 0.0 // Range crosses zero, so we have to do this in two parts
         {
-            let zero_point_center: c_float =  (v_min.min(*v_max) * -1) / (v_max - v_min).abs(); // The zero point in parametric space
+            let zero_point_center: c_float =  (v_min.min(v_max) * -1) / (v_max - v_min).abs(); // The zero point in parametric space
             let zero_point_snap_L: c_float =  zero_point_center - zero_deadzone_halfsize;
             let zero_point_snap_R: c_float =  zero_point_center + zero_deadzone_halfsize;
             if t_with_flip >= zero_point_snap_L && t_with_flip <= zero_point_snap_R{
@@ -780,7 +780,7 @@ pub fn ScaleValueFromRatioT(
                 result = (logarithmic_zero_epsilon * ImPow(v_max_fudged / logarithmic_zero_epsilon, ((t_with_flip - zero_point_snap_R) / (1.0 - zero_point_snap_R))));
             }
         }
-        else if (*v_min < 0.0) || (*v_max < 0.0) {
+        else if (v_min < 0.0) || (v_max < 0.0) {
             // Entirely negative slider
             result = -(-v_max_fudged * ImPow(-v_min_fudged / -v_max_fudged, (1.0 - t_with_flip)));
         }
@@ -794,7 +794,7 @@ pub fn ScaleValueFromRatioT(
         let is_floating_point: bool = (data_type == ImGuiDataType_Float) || (data_type == ImGuiDataType_Double);
         if is_floating_point
         {
-            result = ImLerp(*v_min, *v_max, t);
+            result = ImLerp(v_min, v_max, t);
         }
         else if t < 1.0
         {

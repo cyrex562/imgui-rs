@@ -94,11 +94,12 @@ pub unsafe fn ImStreolRange(str_begin: * c_char, str_end: * c_char) -> * c_char 
 }
 
 // const ImStrbolW: *mut ImWchar(const buf_mid_line: *mut ImWchar, const buf_begin: *mut ImWchar) // find beginning-of-line
-pub fn ImStrbolW(mut buf_mid_line: * ImWchar, buf_begin: * ImWchar) -> * ImWchar {
-    while buf_mid_line > buf_begin && buf_mid_line[-1] != '\n' {
-        buf_mid_line -= 1;
-    }
-    return buf_mid_line;
+pub fn ImStrbolW(buf_mid_line: &String, buf_begin: &String) -> usize {
+    // while buf_mid_line > buf_begin && buf_mid_line[-1] != '\n' {
+    //     buf_mid_line -= 1;
+    // }
+    // return buf_mid_line;
+    todo!()
 }
 
 // const char* ImStristr(const char* haystack, const char* haystack_end, const char* needle, const char* needle_end)
@@ -347,47 +348,50 @@ pub unsafe fn ImTextCountCharsFromUtf8(mut in_text: &str) -> usize
 
 // Based on stb_to_utf8() from github.com/nothings/stb/
 // static inline int ImTextCharToUtf8_inline(char* buf, int buf_size, unsigned int c)
-pub fn ImTextCharToUtf8_inline(buf: *mut c_char, buf_size: c_int, c: c_uint) -> c_int
+pub fn ImTextCharToUtf8_inline(buf: &String, buf_size: usize, c: char) -> c_int
 {
-    if c < 0x80
-    {
-        buf[0] = c;
-        return 1;
-    }
-    if c < 0x800
-    {
-        if (buf_size < 2) { return 0; }
-        buf[0] = (0xc0 + (c >> 6));
-        buf[1] = (0x80 + (c & 0x3F));
-        return 2;
-    }
-    if (c < 0x10000)
-    {
-        if (buf_size < 3) { return 0; }
-        buf[0] = (0xe0 + (c >> 12));
-        buf[1] = (0x80 + ((c >> 6) & 0x3F));
-        buf[2] = (0x80 + ((c ) & 0x3F));
-        return 3;
-    }
-    if (c <= 0x10FFFF)
-    {
-        if (buf_size < 4) { return 0; }
-        buf[0] = (0xf0 + (c >> 18));
-        buf[1] = (0x80 + ((c >> 12) & 0x3F));
-        buf[2] = (0x80 + ((c >> 6) & 0x3F));
-        buf[3] = (0x80 + ((c ) & 0x3F));
-        return 4;
-    }
-    // Invalid code point, the max unicode is 0x10FFFF
-    return 0;
+    // if c < 0x80
+    // {
+    //     buf[0] = c;
+    //     return 1;
+    // }
+    // if c < 0x800
+    // {
+    //     if buf_size < 2 { return 0; }
+    //     buf[0] = (0xc0 + (c >> 6));
+    //     buf[1] = (0x80 + (c & 0x3F));
+    //     return 2;
+    // }
+    // if c < 0x10000
+    // {
+    //     if buf_size < 3 { return 0; }
+    //     buf[0] = (0xe0 + (c >> 12));
+    //     buf[1] = (0x80 + ((c >> 6) & 0x3F));
+    //     buf[2] = (0x80 + ((c ) & 0x3F));
+    //     return 3;
+    // }
+    // if c <= 0x10FFFF
+    // {
+    //     if buf_size < 4 { return 0; }
+    //     buf[0] = (0xf0 + (c >> 18));
+    //     buf[1] = (0x80 + ((c >> 12) & 0x3F));
+    //     buf[2] = (0x80 + ((c >> 6) & 0x3F));
+    //     buf[3] = (0x80 + ((c ) & 0x3F));
+    //     return 4;
+    // }
+    // // Invalid code point, the max unicode is 0x10FFFF
+    // return 0;
+    todo!()
 }
 
 // const char* ImTextCharToUtf8(char out_buf[5], unsigned int c)
-pub fn ImTextCharToUtf8(mut out_buf: [c_char;5]) -> *const c_char
+pub fn ImTextCharToUtf8(mut out_buf: [char;5], c: char) -> String
 {
-    let mut  count = ImTextCharToUtf8_inline(out_buf.as_mut_ptr(), 5, c);
+    let mut  count = ImTextCharToUtf8_inline(&String::from(out_buf),
+                                             5,
+                                             c);
     out_buf[count] = 0;
-    return out_buf.as_ptr();
+    return String::from(out_buf);
 }
 
 // Not optimal but we very rarely use this function.
@@ -411,24 +415,25 @@ pub fn ImTextCountUtf8BytesFromChar2(c: c_uint) -> c_int
 // int ImTextStrToUtf8(char* out_buf, int out_buf_size, const in_text: *mut ImWchar, const in_text_end: *mut ImWchar)
 pub unsafe fn ImTextStrToUtf8(out_buf: &mut String, out_buf_size: usize, int_text: &mut String) -> c_int
 {
-    let mut buf_p = out_buf;
-    let buf_end = out_buf + out_buf_size;
-    while buf_p < buf_end - 1 && (in_text_end.is_null || in_text < in_text_end) && *in_text != 0
-    {
-        // let c = (*in_text++);
-        let mut c = *in_text;
-        in_text += 1;
-        if c < 0x80 {
-            // *buf_p ++ = c;
-            *buf_p = c;
-            buf_p += 1;
-        }
-        else {
-            buf_p += ImTextCharToUtf8_inline(buf_p, (buf_end - buf_p - 1), c);
-        }
-    }
-    *buf_p = 0;
-    return buf_p - out_buf;
+    // let mut buf_p = out_buf;
+    // let buf_end = out_buf + out_buf_size;
+    // while buf_p < buf_end - 1 && (in_text_end.is_null || in_text < in_text_end) && *in_text != 0
+    // {
+    //     // let c = (*in_text++);
+    //     let mut c = *in_text;
+    //     in_text += 1;
+    //     if c < 0x80 {
+    //         // *buf_p ++ = c;
+    //         *buf_p = c;
+    //         buf_p += 1;
+    //     }
+    //     else {
+    //         buf_p += ImTextCharToUtf8_inline(buf_p, (buf_end - buf_p - 1), c);
+    //     }
+    // }
+    // *buf_p = 0;
+    // return buf_p - out_buf;
+    todo!()
 }
 
 // int ImTextCountUtf8BytesFromStr(const in_text: *mut ImWchar, const in_text_end: *mut ImWchar)

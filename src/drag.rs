@@ -6,6 +6,7 @@ use crate::{a_widgets, data_type_ops, GImGui, input_num_ops, slider_ops, text_op
 use crate::activate_flags::ImGuiActivateFlags_PreferInput;
 use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
 use crate::color::{ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered};
+use crate::data_type_ops::DataTypeCompare;
 use crate::direction::{ImGuiDir_Left, ImGuiDir_Right};
 use crate::group_ops::{BeginGroup, EndGroup};
 use crate::id_ops::{ClearActiveID, PopID, push_int_id, push_str_id, SetActiveID};
@@ -21,6 +22,7 @@ use crate::nav_ops::{GetNavTweakPressedAmount, SetFocusID};
 use crate::rect::ImRect;
 use crate::render_ops::{FindRenderedTextEnd, RenderFrame, RenderNavHighlight, RenderText, RenderTextClipped};
 use crate::slider_flags::{ImGuiSliderFlags, ImGuiSliderFlags_AlwaysClamp, ImGuiSliderFlags_Logarithmic, ImGuiSliderFlags_NoInput, ImGuiSliderFlags_NoRoundToFormat, ImGuiSliderFlags_ReadOnly, ImGuiSliderFlags_Vertical};
+use crate::slider_ops::ScaleRatioFromValueT;
 use crate::style_ops::GetColorU32;
 use crate::text_flags::ImGuiTextFlags_None;
 use crate::text_ops::CalcTextSize;
@@ -36,7 +38,7 @@ static DRAGDROP_HOLD_TO_OPEN_TIMER: c_float = 0.70f32;
 
 // This is called by DragBehavior() when the widget is active (held by mouse or being manipulated with Nav controls)
 // template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
-pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut c_float, mut v_speed: c_float, v_min: &mut c_float, v_max: &mut c_float, format: &str, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut c_float, mut v_speed: c_float, v_min: c_float, v_max: c_float, format: &str, flags: ImGuiSliderFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const axis: ImGuiAxis = if flag_set(flags , ImGuiSliderFlags_Vertical) { ImGuiAxis_Y} else { ImGuiAxis_X};
@@ -85,7 +87,7 @@ pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut c_float, mut 
     // Clear current value on activation
     // Avoid altering values and clamping when we are _already_ past the limits and heading in the same direction, so e.g. if range is 0..255, current value is 300 and we are pushing to the right side, keep the 300.
     let mut is_just_activated: bool =  g.ActiveIdIsJustActivated;
-    let mut is_already_past_limits_and_pushing_outward: bool =  is_clamped && ((*v >= *v_max && adjust_delta > 0.0) || (*v <= *v_min && adjust_delta < 0.0));
+    let mut is_already_past_limits_and_pushing_outward: bool =  is_clamped && ((*v >= v_max && adjust_delta > 0.0) || (*v <= v_min && adjust_delta < 0.0));
     if is_just_activated || is_already_past_limits_and_pushing_outward
     {
         g.DragCurrentAccum = 0.0;
@@ -111,7 +113,7 @@ pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut c_float, mut 
         logarithmic_zero_epsilon = (0.1 as c_float).powf(decimal_precision);
 
         // Convert to parametric space, apply delta, convert back
-        let v_old_parametric: c_float =  slider_ops::ScaleRatioFromValueT(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
+        let v_old_parametric: c_float = ScaleRatioFromValueT(data_type, v_cur, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         let v_new_parametric: c_float =  v_old_parametric + g.DragCurrentAccum;
         v_cur = slider_ops::ScaleValueFromRatioT(data_type, v_new_parametric, v_min, v_max, is_logarithmic, logarithmic_zero_epsilon, zero_deadzone_halfsize);
         v_old_ref_for_accum_remainder = v_old_parametric;
@@ -159,7 +161,7 @@ pub unsafe fn DragBehaviorT<T,U>(data_type: ImGuiDataType, v: &mut c_float, mut 
     return true;
 }
 
-pub unsafe fn DragBehavior(id: ImGuiID, data_type: ImGuiDataType, p_v: &mut c_float, v_speed: c_float, p_min: &mut c_float, p_max: &mut c_float, format: &str, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragBehavior(id: ImGuiID, data_type: ImGuiDataType, p_v: &mut c_float, v_speed: c_float, p_min: c_float, p_max: c_float, format: &str, flags: ImGuiSliderFlags) -> bool
 {
     // Read imgui.cpp "API BREAKING CHANGES" section for 1.78 if you hit this assert.
     // IM_ASSERT((flags == 1 || flag_set(flags, ImGuiSliderFlags_InvalidMask_) == 0) && "Invalid flags: ImGuiSliderFlags! Has the 'float power' argument been mistakenly cast to flags? Call function with ImGuiSliderFlags_Logarithmic flags instead.");
@@ -201,7 +203,7 @@ pub unsafe fn DragBehavior(id: ImGuiID, data_type: ImGuiDataType, p_v: &mut c_fl
 
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
-pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut c_float, v_speed: c_float, p_min: &mut c_float, p_max: &mut c_float, format: &mut String, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut c_float, v_speed: c_float, p_min: Option<c_float>, p_max: Option<c_float>, format: &mut String, flags: ImGuiSliderFlags) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -265,8 +267,9 @@ pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut 
     if temp_input_is_active
     {
         // Only clamp CTRL+Click input when ImGuiSliderFlags_AlwaysClamp is set
-        let is_clamp_input: bool = flag_set(flags, ImGuiSliderFlags_AlwaysClamp) && (p_min == null_mut() || p_max == null_mut() || data_type_ops::DataTypeCompare(data_type, p_min, p_max) < 0);
-        return input_num_ops::TempInputScalar(&frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min } else { null_mut() }, if is_clamp_input { p_max } else { null_mut() });
+        let is_clamp_input: bool = flag_set(flags, ImGuiSliderFlags_AlwaysClamp)
+            && (p_min.is_none()  || p_max.is_none() || DataTypeCompare(data_type, &p_min.unwrap_or(0.0), &p_max.unwrap_or(0.0)) < 0);
+        return input_num_ops::TempInputScalar(&mut frame_bb, id, label, data_type, p_data, format, if is_clamp_input { p_min.unwrap_or(0.0) } else { c_float::MIN }, if is_clamp_input { p_max.unwrap_or(0.0) } else { c_float::MIN });
     }
 
     // Draw frame
@@ -279,13 +282,13 @@ pub unsafe fn DragScalar<T>(label: &str, data_type: ImGuiDataType, p_data: &mut 
     RenderFrame(frame_bb.Min, frame_bb.Max, frame_col, true, style.FrameRounding);
 
     // Drag behavior
-    let value_changed: bool = DragBehavior(id, data_type, p_data, v_speed, p_min, p_max, format, flags);
+    let value_changed: bool = DragBehavior(id, data_type, p_data, v_speed, p_min.unwrap_or(c_float::MIN), p_max.unwrap_or(c_float::MIN), format, flags);
     if value_changed {
         MarkItemEdited(id); }
 
     // Display value using user-provided display format so user can add prefix/suffix/decorations to the value.
     value_buf: [c_char;64];
-    let mut  value_buf_end: &str = value_buf + data_type_ops::DataTypeFormatString(value_buf, value_buf.len(), data_type, p_data, format);
+    let mut  value_buf_end: &str = value_buf + data_type_ops::DataTypeFormatString(value_buf, value_buf.len(), data_type, *p_data, format);
     if g.LogEnabled {
         // LogSetNextTextDecoration("{", "}");
     }
@@ -325,9 +328,9 @@ pub unsafe fn DragScalarN(
     {
         push_int_id(i as c_int);
         if i > 0 {
-            SameLine(0, g.Style.ItemInnerSpacing.x);
+            SameLine(0.0, g.Style.ItemInnerSpacing.x);
         }
-        value_changed |= DragScalar("", data_type, &mut p_data[i], v_speed, &mut p_min[i], &mut p_max[i], &mut String::from(format), flags);
+        value_changed |= DragScalar("", data_type, &mut p_data[i], v_speed,  Some(p_min[i]),  Some(p_max[i]), &mut String::from(format), flags);
         PopID();
         PopItemWidth();
         p_data[i] = (p_data.clone() + type_size);
@@ -337,7 +340,7 @@ pub unsafe fn DragScalarN(
     let mut  label_end = FindRenderedTextEnd(label);
     if label.is_empty() == false
     {
-        SameLine(0, g.Style.ItemInnerSpacing.x);
+        SameLine(0.0, g.Style.ItemInnerSpacing.x);
         text_ops::TextEx(label, ImGuiTextFlags_None);
     }
 
@@ -345,9 +348,9 @@ pub unsafe fn DragScalarN(
     return value_changed;
 }
 
-pub unsafe fn DragFloat(label: &str, v: &mut c_float, v_speed: c_float, v_min: &mut c_float, v_max: &mut c_float, format: &mut String, flags: ImGuiSliderFlags) -> bool
+pub unsafe fn DragFloat(label: &str, v: &mut c_float, v_speed: c_float, v_min: c_float, v_max: c_float, format: &mut String, flags: ImGuiSliderFlags) -> bool
 {
-    return DragScalar(label, ImGuiDataType_Float, v, v_speed, v_min, v_max, format, flags);
+    return DragScalar(label, ImGuiDataType_Float, v, v_speed, Some(v_min), Some(v_max), format, flags);
 }
 
 pub unsafe fn DragFloat2(label: &str, v: &mut [c_float;2], v_speed: c_float, v_min: &mut [c_float;2], v_max: &mut [c_float;2], format: &str, flags: ImGuiSliderFlags) -> bool
@@ -385,16 +388,16 @@ pub unsafe fn DragFloatRange2(
     let mut min_min: c_float = if v_min >= v_max { -f32::MAX } else { v_min };
     let mut min_max: c_float = if v_min >= v_max { *v_current_max } else { v_max.min(*v_current_max) };
     let min_flags: ImGuiSliderFlags = flags | (if min_min == min_max { ImGuiSliderFlags_ReadOnly } else { 0 });
-    let mut value_changed: bool = DragScalar("##min", ImGuiDataType_Float, v_current_min, v_speed, &mut min_min, &mut min_max, format, min_flags);
+    let mut value_changed: bool = DragScalar("##min", ImGuiDataType_Float, v_current_min, v_speed, Some(min_min), Some(min_max), format, min_flags);
     PopItemWidth();
-    SameLine(0, g.Style.ItemInnerSpacing.x);
+    SameLine(0.0, g.Style.ItemInnerSpacing.x);
 
     let mut max_min: c_float = if v_min >= v_max { *v_current_min } else { ImMax(v_min, *v_current_min) };
     let mut max_max: c_float = if v_min >= v_max { f32::MAX } else { v_max };
     max_flags: ImGuiSliderFlags = flags | (if max_min == max_max { ImGuiSliderFlags_ReadOnly } else { 0 });
-    value_changed |= DragScalar("##max", ImGuiDataType_Float, v_current_max, v_speed, &mut max_min, &mut max_max, if format_max.is_empty() == false { &mut String::from(format_max) } else { &mut String::from(format) }, max_flags);
+    value_changed |= DragScalar("##max", ImGuiDataType_Float, v_current_max, v_speed, Some(max_min), Some(max_max), if format_max.is_empty() == false { &mut String::from(format_max) } else { &mut String::from(format) }, max_flags);
     PopItemWidth();
-    SameLine(0, g.Style.ItemInnerSpacing.x);
+    SameLine(0.0, g.Style.ItemInnerSpacing.x);
 
     text_ops::TextEx(label, ImGuiTextFlags_None);
     EndGroup();
@@ -408,7 +411,7 @@ pub unsafe fn DragInt(label: &str, v: &mut c_int, v_speed: c_float, v_min: c_int
     let mut v_float = c_float::from(*v);
     let mut v_min_float = c_float::from(v_min);
     let mut v_max_float = c_float::from(v_max);
-    return DragScalar(label, ImGuiDataType_S32, &mut v_float, v_speed, &mut v_min_float, &mut v_max_float, &mut String::from(format), flags);
+    return DragScalar(label, ImGuiDataType_S32, &mut v_float, v_speed, Some( v_min_float), Some( v_max_float), &mut String::from(format), flags);
 }
 
 pub unsafe fn DragInt2(label: &str, v: &mut [c_int; 2], v_speed: c_float, v_min: &[c_int; 2], v_max: &[c_int; 2], format: &str, flags: ImGuiSliderFlags) -> bool {
@@ -448,14 +451,14 @@ pub unsafe fn DragIntRange2(label: &str, v_current_min: &mut c_int, v_current_ma
     min_flags: ImGuiSliderFlags = flags | (if min_min == min_max { ImGuiSliderFlags_ReadOnly } else { 0 });
     let mut value_changed: bool = DragInt("##min", v_current_min, v_speed, min_min, min_max, format, min_flags);
     PopItemWidth();
-    SameLine(0, g.Style.ItemInnerSpacing.x);
+    SameLine(0.0, g.Style.ItemInnerSpacing.x);
 
     let max_min: c_int = if v_min >= v_max { *v_current_min } else { ImMax(v_min, *v_current_min) };
     let max_max: c_int = if v_min >= v_max { INT_MAX } else { v_max };
     max_flags: ImGuiSliderFlags = flags | (if max_min == max_max { ImGuiSliderFlags_ReadOnly } else { 0 });
     value_changed |= DragInt("##max", v_current_max, v_speed, max_min, max_max, if format_max { format_max } else { format }, max_flags);
     PopItemWidth();
-    SameLine(0, g.Style.ItemInnerSpacing.x);
+    SameLine(0.0, g.Style.ItemInnerSpacing.x);
 
     text_ops::TextEx(label, ImGuiTextFlags_None);
     EndGroup();

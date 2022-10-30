@@ -1825,7 +1825,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         Checkbox("With Drag and Drop", &drag_and_drop);
         Checkbox("With Options Menu", &options_menu); SameLine(); HelpMarker("Right-click on the individual color widget to show options.");
         Checkbox("With HDR", &hdr); SameLine(); HelpMarker("Currently all this does is to lift the 0..1 limits on dragging widgets.");
-        ImGuiColorEditFlags misc_flags = (if hdr {ImGuiColorEditFlags_HDR} else { 0 }) | (if drag_and_drop {0} else { ImGuiColorEditFlags_NoDragDrop }) | (if alpha_half_preview { ImGuiColorEditFlags_AlphaPreviewHalf} else {if alpha_preview {ImGuiColorEditFlags_AlphaPreview} else { 0 }}) | (if options_menu {0} else { ImGuiColorEditFlags_NoOptions });
+        misc_flags: ImGuiColorEditFlags = (if hdr {ImGuiColorEditFlags_HDR} else { 0 }) | (if drag_and_drop {0} else { ImGuiColorEditFlags_NoDragDrop }) | (if alpha_half_preview { ImGuiColorEditFlags_AlphaPreviewHalf} else {if alpha_preview {ImGuiColorEditFlags_AlphaPreview} else { 0 }}) | (if options_menu {0} else { ImGuiColorEditFlags_NoOptions });
 
         IMGUI_DEMO_MARKER("Widgets/Color/ColorEdit");
         Text("Color widget:");
@@ -1897,7 +1897,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 if ((n % 8) != 0)
                     SameLine(0.0, GetStyle().ItemSpacing.y);
 
-                ImGuiColorEditFlags palette_button_flags = ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoTooltip;
+                palette_button_flags: ImGuiColorEditFlags = ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_NoPicker | ImGuiColorEditFlags_NoTooltip;
                 if (ColorButton("##palette", saved_palette[n], palette_button_flags, ImVec2::new(20, 20)))
                     color = ImVec4(saved_palette[n].x, saved_palette[n].y, saved_palette[n].z, color.w); // Preserve alpha!
 
@@ -1952,7 +1952,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             "but the user can change it with a right-click on those inputs.\n\nColorPicker defaults to displaying RGB+HSV+Hex "
             "if you don't specify a display mode.\n\nYou can change the defaults using SetColorEditOptions().");
         SameLine(); HelpMarker("When not specified explicitly (Auto/Current mode), user can right-click the picker to change mode.");
-        ImGuiColorEditFlags flags = misc_flags;
+        flags: ImGuiColorEditFlags = misc_flags;
         if (!alpha)            flags |= ImGuiColorEditFlags_NoAlpha;        // This is by default if you call ColorPicker3() instead of ColorPicker4()
         if (alpha_bar)         flags |= ImGuiColorEditFlags_AlphaBar;
         if (!side_preview)     flags |= ImGuiColorEditFlags_NoSidePreview;
@@ -6371,7 +6371,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             static ImGuiTextFilter filter;
             filter.Draw("Filter colors", GetFontSize() * 16);
 
-            static ImGuiColorEditFlags alpha_flags = 0;
+            static alpha_flags: ImGuiColorEditFlags = 0;
             if (RadioButton("Opaque", alpha_flags == ImGuiColorEditFlags_None))             { alpha_flags = ImGuiColorEditFlags_None; } SameLine();
             if (RadioButton("Alpha",  alpha_flags == ImGuiColorEditFlags_AlphaPreview))     { alpha_flags = ImGuiColorEditFlags_AlphaPreview; } SameLine();
             if (RadioButton("Both",   alpha_flags == ImGuiColorEditFlags_AlphaPreviewHal0f32)) { alpha_flags = ImGuiColorEditFlags_AlphaPreviewHalf; } SameLine();
