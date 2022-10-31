@@ -252,7 +252,7 @@ pub unsafe fn InputFloat4(label: &str, v: &mut [c_float;4], format: &mut String,
 pub unsafe fn InputInt(label: &str, v: &mut c_int, step: c_int, step_fast: c_int, flags: ImGuiInputTextFlags) -> bool {
     // Hexadecimal input provided as a convenience but the flag name is awkward. Typically you'd use InputText() to parse your own data, if you want to handle prefixes.
     let mut v_float: c_float = c_flaot::from(*v);
-    let mut format: String = String::from(if flag_set(flags, ImGuiInputTextFlags_CharsHexadecimal) { "%08X" } else { "%d" });
+    let mut format: String = String::from(if flag_set(flags, ImGuiInputTextFlags_CharsHexadecimal) { "%08X" } else { "{}" });
     let step_float: c_float = c_float::from(step);
     let step_fast_float: c_float = c_float::from(step_fast);
     return InputScalar(label,
@@ -266,19 +266,19 @@ pub unsafe fn InputInt(label: &str, v: &mut c_int, step: c_int, step_fast: c_int
 
 pub unsafe fn InputInt2(label: &str, v: &mut [c_int; 2], flags: ImGuiInputTextFlags) -> bool {
     let mut v_float: [c_float; 2] = [c_float::from(v[0]), c_float::from(v[1])];
-    let mut format = String::from("%d");
+    let mut format = String::from("{}");
     return InputScalarN(label, ImGuiDataType_S32, &mut v_float, 2, None, None, &mut format, flags);
 }
 
 pub unsafe fn InputInt3(label: &str, v: [c_int; 3], flags: ImGuiInputTextFlags) -> bool {
     let mut v_float: [c_float; 3] = [c_float::from(v[0]), c_float::from(v[1]), c_float::from(v[2])];
-    let mut format = String::from("%d");
+    let mut format = String::from("{}");
     return InputScalarN(label, ImGuiDataType_S32, &mut v_float, 3, None, None, &mut format, flags);
 }
 
 pub unsafe fn InputInt4(label: &str, v: [c_int; 4], flags: ImGuiInputTextFlags) -> bool {
     let mut v_float: [c_float; 4] = [c_float::from(v[0]), c_float::from(v[1]), c_float::from(v[2]), c_float::from(v[3])];
-    let mut format = String::from("%d");
+    let mut format = String::from("{}");
     return InputScalarN(label, ImGuiDataType_S32, &mut v_float, 4, None, None, &mut format, flags);
 }
 

@@ -1,10 +1,11 @@
 use std::ptr::null_mut;
-use libc::{c_int, c_void, memcpy, memset, size_t};
-use crate::drag_drop_flags::{ImGuiDragDropFlags, ImGuiDragDropFlags_AcceptNoPreviewTooltip, ImGuiDragDropFlags_None, ImGuiDragDropFlags_SourceAllowNullID, ImGuiDragDropFlags_SourceExtern, ImGuiDragDropFlags_SourceNoDisableHover, ImGuiDragDropFlags_SourceNoPreviewTooltip};
+use libc::{c_float, c_int, c_void, memcpy, memset, size_t};
+use crate::drag_drop_flags::{ImGuiDragDropFlags, ImGuiDragDropFlags_AcceptBeforeDelivery, ImGuiDragDropFlags_AcceptNoDrawDefaultRect, ImGuiDragDropFlags_AcceptNoPreviewTooltip, ImGuiDragDropFlags_None, ImGuiDragDropFlags_SourceAllowNullID, ImGuiDragDropFlags_SourceExtern, ImGuiDragDropFlags_SourceNoDisableHover, ImGuiDragDropFlags_SourceNoPreviewTooltip};
 use crate::payload::ImGuiPayload;
 use crate::{GImGui, ImHashStr};
 use crate::condition::{ImGuiCond, ImGuiCond_Always};
 use crate::color::ImGuiCol_DragDropTarget;
+use crate::data_type::ImGuiPayloadType;
 use crate::id_ops::{KeepAliveID, SetActiveID};
 use crate::input_ops::{IsMouseDown, IsMouseDragging, IsMouseHoveringRect};
 use crate::item_ops::ItemHoverable;
@@ -38,7 +39,8 @@ pub unsafe fn ClearDragDrop()
     g.DragDropAcceptFrameCount = -1;
 
     g.DragDropPayloadBufHeap.clear();
-    libc::memset(&mut g.DragDropPayloadBufLocal, 0, (g.DragDropPayloadBufLocal.len()));
+    // TODO:
+    // libc::memset(&mut g.DragDropPayloadBufLocal, 0, (g.DragDropPayloadBufLocal.len()));
 }
 
 // When this returns true you need to: a) call SetDragDropPayload() exactly once, b) you may render the payload visual/description, c) call EndDragDropSource()
@@ -177,20 +179,19 @@ pub unsafe fn EndDragDropSource()
     // IM_ASSERT(g.DragDropActive);
     // IM_ASSERT(g.DragDropWithinSource && "Not after a BeginDragDropSource()?");
 
-    if (!(g.DragDropSourceFlags & ImGuiDragDropFlags_SourceNoPreviewTooltip)) {
+    if flag_clear(g.DragDropSourceFlags , ImGuiDragDropFlags_SourceNoPreviewTooltip) {
         EndTooltip();
     }
 
     // Discard the drag if have not called SetDragDropPayload()
-    if (g.DragDropPayload.DataFrameCount == -1) {
+    if g.DragDropPayload.DataFrameCount == -1 {
         ClearDragDrop();
     }
     g.DragDropWithinSource = false;
 }
 
 // Use 'cond' to choose to submit payload on drag start or every frame
-pub unsafe fn SetDragDropPayload(payload_type: *const c_char, data: *const c_void, data_size: size_t, mut cond: ImGuiCond) -> bool
-{
+pub unsafe fn SetDragDropPayload(payload_type: ImGuiPayloadType, data: &Vec<u8>, mut cond: ImGuiCond) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let payload = &mut g.DragDropPayload;
     if cond == 0 {
@@ -203,30 +204,24 @@ pub unsafe fn SetDragDropPayload(payload_type: *const c_char, data: *const c_voi
     // IM_ASSERT(cond == ImGuiCond_Always || cond == ImGuiCond_Once);
     // IM_ASSERT(payload.SourceId != 0);                               // Not called between BeginDragDropSource() and EndDragDropSource()
 
-    if cond == ImGuiCond_Always || payload.DataFrameCount == -1
-    {
+    if cond == ImGuiCond_Always || payload.DataFrameCount == -1 {
         // Copy payload
-        ImStrncpy(payload.DataType.as_mut_ptr(), payload_type, payload.DataType.len());
+        // ImStrncpy(payload.DataType.as_mut_ptr(), payload_type, payload.DataType.len());
         g.DragDropPayloadBufHeap.clear();
-        if data_size > sizeof(g.DragDropPayloadBufLocal)
-        {
+        if data.len() > g.DragDropPayloadBufLocal.len() {
             // Store in heap
-            g.DragDropPayloadBufHeap.resize(data_size);
+            g.DragDropPayloadBufHeap.resize(data.len());
             payload.Data = g.DragDropPayloadBufHeap.Data;
-            libc::memcpy(payload.Data, data, data_size);
-        }
-        else if data_size > 0
-        {
+            // libc::memcpy(payload.Data, data, data_size);
+        } else if data_size > 0 {
             // Store locally
-            libc::memset(&mut g.DragDropPayloadBufLocal, 0, sizeof(g.DragDropPayloadBufLocal));
-            payload.Data = &mut g.DragDropPayloadBufLocal;
-            libc::memcpy(payload.Data, data, data_size);
+            // libc::memset(&mut g.DragDropPayloadBufLocal, 0, sizeof(g.DragDropPayloadBufLocal));
+            payload.Data = g.DragDropPayloadBufLocal.clone();
+            // libc::memcpy(payload.Data, data, data_size);
+        } else {
+            payload.Data.clear()
         }
-        else
-        {
-            payload.Data= null_mut();
-        }
-        payload.DataSize = data_size as c_int;
+        payload.DataSize = payload.Data.len()
     }
     payload.DataFrameCount = g.FrameCount;
 
@@ -301,7 +296,7 @@ pub unsafe fn IsDragDropPayloadBeingAccepted() -> bool
     return g.DragDropActive && g.DragDropAcceptIdPrev != 0;
 }
 
-pub unsafe fn AcceptDragDropPayload(payload_type: *const c_char, mut flags: ImGuiDragDropFlags) -> *const ImGuiPayload
+pub unsafe fn AcceptDragDropPayload(payload_type: &str, mut flags: ImGuiDragDropFlags) -> *const ImGuiPayload
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;

@@ -253,13 +253,13 @@ pub unsafe fn DebugTextEncoding(str: *const c_char)
         c: c_uint;
         let c_utf8_len: c_int = ImTextCharFromUtf8(&c, p, null_mut());
         TableNextColumn();
-        Text("%d", (p - str));
+        Text("{}", (p - str));
         TableNextColumn();
         for (let byte_index: c_int = 0; byte_index < c_utf8_len; byte_index++)
         {
             if byte_index > 0 {
                 SameLine(); }
-            Text("0x%02X", p[byte_index]);
+            Text("0x{:02X}", p[byte_index]);
         }
         TableNextColumn();
         if (GetFont()->FindGlyphNoFallback(c))
@@ -297,7 +297,7 @@ pub unsafe fn ShowFontAtlas(atlas: *mut ImFontAtlas)
         DebugNodeFont(font);
         PopID();
     }
-    if (TreeNode("Atlas texture", "Atlas texture (%dx%d pixels)", atlas->TexWidth, atlas->TexHeight))
+    if (TreeNode("Atlas texture", "Atlas texture ({}x{} pixels)", atlas->TexWidth, atlas->TexHeight))
     {
         tint_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 1.0);
         border_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 0.5);
@@ -324,9 +324,9 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
 
     // Basic info
     Text("Dear ImGui %s", GetVersion());
-    Text("Application average %.3f ms/frame (%.1f FPS)", 1000 / io.Framerate, io.Framerate);
-    Text("%d vertices, %d indices (%d triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3);
-    Text("%d visible windows, %d active allocations", io.MetricsRenderWindows, io.MetricsActiveAllocations);
+    Text("Application average {} ms/frame (%.1f FPS)", 1000 / io.Framerate, io.Framerate);
+    Text("{} vertices, {} indices ({} triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3);
+    Text("{} visible windows, {} active allocations", io.MetricsRenderWindows, io.MetricsActiveAllocations);
     //SameLine(); if (SmallButton("GC")) { g.GcCompactAll = true; }
 
     Separator();
@@ -439,7 +439,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
                 if (table == null_mut() || table.LastFrameActive < g.FrameCount - 1 || (table.OuterWindow != g.NavWindow && table.InnerWindow != g.NavWindow))
                     continue;
 
-                BulletText("Table 0x%08X (%d columns, in '%s')", table.ID, table.ColumnsCount, table.Outerwindow.Name);
+                BulletText("Table 0x%08X ({} columns, in '%s')", table.ID, table.ColumnsCount, table.Outerwindow.Name);
                 if (IsItemHovered())
                     GetForegroundDrawList().AddRect(table.OuterRect.Min - ImVec2::new(1, 1), table.OuterRect.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
                 Indent();
@@ -453,7 +453,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
                         for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
                         {
                             let r: ImRect =  Funcs::GetTableRect(table, rect_n, column_n);
-                            ImFormatString(buf, buf.len(), "(%6.1f,%6.10.0) (%6.1f,%6.10.0) Size (%6.1f,%6.10.0) Col %d %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), column_n, trt_rects_names[rect_n]);
+                            ImFormatString(buf, buf.len(), "(%6.1f,%6.10.0) (%6.1f,%6.10.0) Size (%6.1f,%6.10.0) Col {} %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), column_n, trt_rects_names[rect_n]);
                             Selectable(buf);
                             if (IsItemHovered())
                                 GetForegroundDrawList().AddRect(r.Min - ImVec2::new(1, 1), r.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
@@ -476,7 +476,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
     }
 
     // Windows
-    if (TreeNode("Windows", "Windows (%d)", g.Windows.len()))
+    if (TreeNode("Windows", "Windows ({})", g.Windows.len()))
     {
         //SetNextItemOpen(true, ImGuiCond_Once);
         DebugNodeWindowsList(&g.Windows, "By display order");
@@ -502,7 +502,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
     let drawlist_count: c_int = 0;
     for (let viewport_i: c_int = 0; viewport_i < g.Viewports.len(); viewport_i++)
         drawlist_count += g.Viewports[viewport_i]->DrawDataBuilder.GetDrawListCount();
-    if (TreeNode("DrawLists", "DrawLists (%d)", drawlist_count))
+    if (TreeNode("DrawLists", "DrawLists ({})", drawlist_count))
     {
         Checkbox("Show ImDrawCmd mesh when hovering", &cfg->ShowDrawCmdMesh);
         Checkbox("Show ImDrawCmd bounding boxes when hovering", &cfg->ShowDrawCmdBoundingBoxes);
@@ -514,7 +514,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
                 for (let draw_list_i: c_int = 0; draw_list_i < viewport.DrawDataBuilder.Layers[layer_i].Size; draw_list_i++)
                 {
                     if (!viewport_has_drawlist)
-                        Text("Active DrawLists in Viewport #%d, ID: 0x%08X", viewport.Idx, viewport.ID);
+                        Text("Active DrawLists in Viewport #{}, ID: 0x%08X", viewport.Idx, viewport.ID);
                     viewport_has_drawlist = true;
                     DebugNodeDrawList(null_mut(), viewport, viewport.DrawDataBuilder.Layers[layer_i][draw_list_i], "DrawList");
                 }
@@ -523,13 +523,13 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
     }
 
     // Viewports
-    if (TreeNode("Viewports", "Viewports (%d)", g.Viewports.len()))
+    if (TreeNode("Viewports", "Viewports ({})", g.Viewports.len()))
     {
         Indent(GetTreeNodeToLabelSpacing());
         RenderViewportsThumbnails();
         Unindent(GetTreeNodeToLabelSpacing());
 
-        let mut open: bool =  TreeNode("Monitors", "Monitors (%d)", g.PlatformIO.Monitors.Size);
+        let mut open: bool =  TreeNode("Monitors", "Monitors ({})", g.PlatformIO.Monitors.Size);
         SameLine();
         MetricsHelpMarker("Dear ImGui uses monitor data:\n- to query DPI settings on a per monitor basis\n- to position popup/tooltips so they don't straddle monitors.");
         if (open)
@@ -537,7 +537,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             for (let i: c_int = 0; i < g.PlatformIO.Monitors.Size; i++)
             {
                 const ImGuiPlatformMonitor& mon = g.PlatformIO.Monitors[i];
-                BulletText("Monitor #%d: DPI %.0f%%\n MainMin (%.0,%.0), MainMax (%.0,%.0), MainSize (%.0,%.0)\n WorkMin (%.0,%.0), WorkMax (%.0,%.0), WorkSize (%.0,%.0)",
+                BulletText("Monitor #{}: DPI %.0f%%\n MainMin (%.0,%.0), MainMax (%.0,%.0), MainSize (%.0,%.0)\n WorkMin (%.0,%.0), WorkMax (%.0,%.0), WorkSize (%.0,%.0)",
                     i, mon.DpiScale * 100,
                     mon.MainPos.x, mon.MainPos.y, mon.MainPos.x + mon.MainSize.x, mon.MainPos.y + mon.MainSize.y, mon.MainSize.x, mon.MainSize.y,
                     mon.WorkPos.x, mon.WorkPos.y, mon.WorkPos.x + mon.WorkSize.x, mon.WorkPos.y + mon.WorkSize.y, mon.WorkSize.x, mon.WorkSize.y);
@@ -554,7 +554,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             if (viewports.Size > 1)
                 ImQsort(viewports.Data, viewports.Size, sizeof(ImGuiViewport*), ViewportComparerByFrontMostStampCount);
             for (let i: c_int = 0; i < viewports.Size; i++)
-                BulletText("Viewport #%d, ID: 0x%08X, FrontMostStampCount = %08d, Window: \"%s\"", viewports[i]->Idx, viewports[i].ID, viewports[i]->LastFrontMostStampCount, if viewports[i].Window { viewports[i] -> window.Name} else {"N/A"});
+                BulletText("Viewport #{}, ID: 0x%08X, FrontMostStampCount = %08d, Window: \"%s\"", viewports[i]->Idx, viewports[i].ID, viewports[i]->LastFrontMostStampCount, if viewports[i].Window { viewports[i] -> window.Name} else {"N/A"});
             TreePop();
         }
 
@@ -564,7 +564,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
     }
 
     // Details for Popups
-    if (TreeNode("Popups", "Popups (%d)", g.OpenPopupStack.len()))
+    if (TreeNode("Popups", "Popups ({})", g.OpenPopupStack.len()))
     {
         for (let i: c_int = 0; i < g.OpenPopupStack.len(); i++)
         {
@@ -579,7 +579,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
     }
 
     // Details for TabBars
-    if (TreeNode("TabBars", "Tab Bars (%d)", g.TabBars.GetAliveCount()))
+    if (TreeNode("TabBars", "Tab Bars ({})", g.TabBars.GetAliveCount()))
     {
         for (let n: c_int = 0; n < g.TabBars.GetMapSize(); n++)
             if (ImGuiTabBar* tab_bar = g.TabBars.TryGetMapData(n))
@@ -592,7 +592,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
     }
 
     // Details for Tables
-    if (TreeNode("Tables", "Tables (%d)", g.Tables.GetAliveCount()))
+    if (TreeNode("Tables", "Tables ({})", g.Tables.GetAliveCount()))
     {
         for (let n: c_int = 0; n < g.Tables.GetMapSize(); n++)
             if (ImGuiTable* table = g.Tables.TryGetMapData(n))
@@ -602,7 +602,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
 
     // Details for Fonts
     atlas: *mut ImFontAtlas = g.IO.Fonts;
-    if (TreeNode("Fonts", "Fonts (%d)", atlas->Fonts.Size))
+    if (TreeNode("Fonts", "Fonts ({})", atlas->Fonts.Size))
     {
         ShowFontAtlas(atlas);
         TreePop();
@@ -651,20 +651,20 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
         else
             TextUnformatted("<NULL>");
         Text("SettingsDirtyTimer %.2f", g.SettingsDirtyTimer);
-        if (TreeNode("SettingsHandlers", "Settings handlers: (%d)", g.SettingsHandlers.Size))
+        if (TreeNode("SettingsHandlers", "Settings handlers: ({})", g.SettingsHandlers.Size))
         {
             for (let n: c_int = 0; n < g.SettingsHandlers.Size; n++)
                 BulletText("%s", g.SettingsHandlers[n].TypeName);
             TreePop();
         }
-        if (TreeNode("SettingsWindows", "Settings packed data: Windows: %d bytes", g.SettingsWindows.size()))
+        if (TreeNode("SettingsWindows", "Settings packed data: Windows: {} bytes", g.SettingsWindows.size()))
         {
             for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
                 DebugNodeWindowSettings(settings);
             TreePop();
         }
 
-        if (TreeNode("SettingsTables", "Settings packed data: Tables: %d bytes", g.SettingsTables.size()))
+        if (TreeNode("SettingsTables", "Settings packed data: Tables: {} bytes", g.SettingsTables.size()))
         {
             for (ImGuiTableSettings* settings = g.SettingsTables.begin(); settings != null_mut(); settings = g.SettingsTables.next_chunk(settings))
                 DebugNodeTableSettings(settings);
@@ -697,7 +697,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
         }
 // #endif // #ifdef IMGUI_HAS_DOCK
 
-        if (TreeNode("SettingsIniData", "Settings unpacked data (.ini): %d bytes", g.SettingsIniData.size()))
+        if (TreeNode("SettingsIniData", "Settings unpacked data (.ini): {} bytes", g.SettingsIniData.size()))
         {
             InputTextMultiline("##Ini", g.SettingsIniData.c_str(), g.SettingsIniData.Buf.Size, ImVec2::new(-FLT_MIN, GetTextLineHeight() * 20), ImGuiInputTextFlags_ReadOnly);
             TreePop();
@@ -720,27 +720,27 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
 
         Text("ITEMS");
         Indent();
-        Text("ActiveId: 0x%08X/0x%08X (%.2f sec), AllowOverlap: %d, Source: %s", g.ActiveId, g.ActiveIdPreviousFrame, g.ActiveIdTimer, g.ActiveIdAllowOverlap, GetInputSourceName(g.ActiveIdSource));
+        Text("ActiveId: 0x%08X/0x%08X (%.2f sec), AllowOverlap: {}, Source: %s", g.ActiveId, g.ActiveIdPreviousFrame, g.ActiveIdTimer, g.ActiveIdAllowOverlap, GetInputSourceName(g.ActiveIdSource));
         Text("ActiveIdWindow: '%s'", if g.ActiveIdWindow { g.ActiveIdwindow.Name} else {"NULL"});
 
         let active_id_using_key_input_count: c_int = 0;
         for (let n: c_int = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_NamedKey_END; n++)
             active_id_using_key_input_count += if g.ActiveIdUsingKeyInputMask[n] { 1} else{ 0};
-        Text("ActiveIdUsing: NavDirMask: %X, KeyInputMask: %d key(s)", g.ActiveIdUsingNavDirMask, active_id_using_key_input_count);
-        Text("HoveredId: 0x%08X (%.2f sec), AllowOverlap: %d", g.HoveredIdPreviousFrame, g.HoveredIdTimer, g.HoveredIdAllowOverlap); // Not displaying g.HoveredId as it is update mid-frame
+        Text("ActiveIdUsing: NavDirMask: %X, KeyInputMask: {} key(s)", g.ActiveIdUsingNavDirMask, active_id_using_key_input_count);
+        Text("HoveredId: 0x%08X (%.2f sec), AllowOverlap: {}", g.HoveredIdPreviousFrame, g.HoveredIdTimer, g.HoveredIdAllowOverlap); // Not displaying g.HoveredId as it is update mid-frame
         Text("HoverDelayId: 0x%08X, Timer: %.2f, ClearTimer: %.2f", g.HoverDelayId, g.HoverDelayTimer, g.HoverDelayClearTimer);
-        Text("DragDrop: %d, SourceId = 0x%08X, Payload \"%s\" (%d bytes)", g.DragDropActive, g.DragDropPayload.SourceId, g.DragDropPayload.DataType, g.DragDropPayload.DataSize);
+        Text("DragDrop: {}, SourceId = 0x%08X, Payload \"%s\" ({} bytes)", g.DragDropActive, g.DragDropPayload.SourceId, g.DragDropPayload.DataType, g.DragDropPayload.DataSize);
         Unindent();
 
         Text("NAV,FOCUS");
         Indent();
         Text("NavWindow: '%s'", if g.NavWindow { g.NavWindow.Name} else {"NULL"});
-        Text("NavId: 0x%08X, NavLayer: %d", g.NavId, g.NavLayer);
+        Text("NavId: 0x%08X, NavLayer: {}", g.NavId, g.NavLayer);
         Text("NavInputSource: %s", GetInputSourceName(g.NavInputSource));
-        Text("NavActive: %d, NavVisible: %d", g.IO.NavActive, g.IO.NavVisible);
+        Text("NavActive: {}, NavVisible: {}", g.IO.NavActive, g.IO.NavVisible);
         Text("NavActivateId/DownId/PressedId/InputId: %08X/%08X/%08X/%08X", g.NavActivateId, g.NavActivateDownId, g.NavActivatePressedId, g.NavActivateInputId);
         Text("NavActivateFlags: %04X", g.NavActivateFlags);
-        Text("NavDisableHighlight: %d, NavDisableMouseHover: %d", g.NavDisableHighlight, g.NavDisableMouseHover);
+        Text("NavDisableHighlight: {}, NavDisableMouseHover: {}", g.NavDisableHighlight, g.NavDisableMouseHover);
         Text("NavFocusScopeId = 0x%08X", g.NavFocusScopeId);
         Text("NavWindowingTarget: '%s'", if g.NavWindowingTarget { g.NavWindowingTarget.Name }else {"NULL"});
         Unindent();
@@ -765,7 +765,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             if (cfg->ShowWindowsBeginOrder && flag_clear(window.Flags, ImGuiWindowFlags_ChildWindow))
             {
                 buf: [c_char;32];
-                ImFormatString(buf, buf.len(), "%d", window.BeginOrderWithinContext);
+                ImFormatString(buf, buf.len(), "{}", window.BeginOrderWithinContext);
                 let font_size: c_float =  GetFontSize();
                 draw_list.AddRectFilled(window.Pos, window.Pos + ImVec2::new(font_size, font_size), IM_COL32(200, 100, 100, 255));
                 draw_list.AddText(window.Pos, IM_COL32(255, 255, 255, 255), buf);
@@ -826,10 +826,10 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
 // [DEBUG] Display contents of Columns
 pub unsafe fn DebugNodeColumns(ImGuiOldColumns* columns)
 {
-    if !TreeNode((uintptr_t)columns.ID, "Columns Id: 0x%08X, Count: %d, Flags: 0x%04X", columns.ID, columns->Count, columns.Flags) { return ; }
+    if !TreeNode((uintptr_t)columns.ID, "Columns Id: 0x%08X, Count: {}, Flags: 0x%04X", columns.ID, columns->Count, columns.Flags) { return ; }
     BulletText("Width: %.1f (MinX: %.1f, MaxX: %.10.0)", columns->OffMaxX - columns->OffMinX, columns->OffMinX, columns->OffMaxX);
     for (let column_n: c_int = 0; column_n < columns->Columns.Size; column_n++)
-        BulletText("Column %02d: OffsetNorm %.3f (= %.1f px)", column_n, columns->Columns[column_n].OffsetNorm, GetColumnOffsetFromNorm(columns, columns->Columns[column_n].OffsetNorm));
+        BulletText("Column %02d: OffsetNorm {} (= %.1f px)", column_n, columns->Columns[column_n].OffsetNorm, GetColumnOffsetFromNorm(columns, columns->Columns[column_n].OffsetNorm));
     TreePop();
 }
 
@@ -871,7 +871,7 @@ pub unsafe fn DebugNodeDockNode(node:*mut ImGuiDockNode, label: *const c_char)
     open: bool;
     ImGuiTreeNodeFlags tree_node_flags = if node.IsFocused { ImGuiTreeNodeFlags_Selected }else { ImGuiTreeNodeFlags_None };
     if (node.Windows.len() > 0)
-        open = TreeNodeEx(node.ID, tree_node_flags, "%s 0x%04X%s: %d windows (vis: '%s')", label, node.ID, node.IsVisible ? "" : " (hidden)", node.Windows.len(), if node.VisibleWindow { node.Visiblewindow.Name } else { "NULL" });
+        open = TreeNodeEx(node.ID, tree_node_flags, "%s 0x%04X%s: {} windows (vis: '%s')", label, node.ID, node.IsVisible ? "" : " (hidden)", node.Windows.len(), if node.VisibleWindow { node.Visiblewindow.Name } else { "NULL" });
     else
         open = TreeNodeEx(node.ID, tree_node_flags, "%s 0x%04X%s: %s split (vis: '%s')", label, node.ID, node.IsVisible ? "" : " (hidden)", if (node.SplitAxis == ImGuiAxis_X) { "horizontal" } else {
             if (node.SplitAxis == ImGuiAxis_Y) {
@@ -932,7 +932,7 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
     let cmd_count: c_int = draw_list.CmdBuffer.len();
     if (cmd_count > 0 && draw_list.CmdBuffer.last().unwrap().ElemCount == 0 && draw_list.CmdBuffer.last().unwrap().UserCallback == null_mut())
         cmd_count-= 1;
-    let mut node_open: bool =  TreeNode(draw_list, "%s: '%s' %d vtx, %d indices, %d cmds", label, if draw_list._OwnerName { draw_list._OwnerName} else {""}, draw_list.VtxBuffer.len(), draw_list.IdxBuffer.len(), cmd_count);
+    let mut node_open: bool =  TreeNode(draw_list, "%s: '%s' {} vtx, {} indices, {} cmds", label, if draw_list._OwnerName { draw_list._OwnerName} else {""}, draw_list.VtxBuffer.len(), draw_list.IdxBuffer.len(), cmd_count);
     if (draw_list == GetWindowDrawList())
     {
         SameLine();
@@ -982,7 +982,7 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
         }
 
         // Display vertex information summary. Hover to get all triangles drawn in wire-frame
-        ImFormatString(buf, buf.len(), "Mesh: ElemCount: %d, VtxOffset: +%d, IdxOffset: +%d, Area: ~%0.f px", pcmd->ElemCount, pcmd->VtxOffset, pcmd->IdxOffset, total_area);
+        ImFormatString(buf, buf.len(), "Mesh: ElemCount: {}, VtxOffset: +{}, IdxOffset: +{}, Area: ~%0.f px", pcmd->ElemCount, pcmd->VtxOffset, pcmd->IdxOffset, total_area);
         Selectable(buf);
         if (IsItemHovered() && fg_draw_list)
             DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, true, false);
@@ -1050,7 +1050,7 @@ pub unsafe fn DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_list, 
 // [DEBUG] Display details for a single font, called by ShowStyleEditor().
 pub unsafe fn DebugNodeFont(font: *mut ImFont)
 {
-    let mut opened: bool =  TreeNode(font, "Font: \"%s\"\n%.2f px, %d glyphs, %d file(s)",
+    let mut opened: bool =  TreeNode(font, "Font: \"%s\"\n%.2f px, {} glyphs, {} file(s)",
         if font->ConfigData { font->ConfigData[0].Name } else { "" }, font->FontSize, font->Glyphs.Size, font->ConfigDataCount);
     SameLine();
     if (SmallButton("Set as default"))
@@ -1076,15 +1076,15 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
     Text("Fallback character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->FallbackChar), font->FallbackChar);
     Text("Ellipsis character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->EllipsisChar), font->EllipsisChar);
     let surface_sqrt: c_int = ImSqrt(font->MetricsTotalSurface);
-    Text("Texture Area: about %d px ~%dx%d px", font->MetricsTotalSurface, surface_sqrt, surface_sqrt);
+    Text("Texture Area: about {} px ~{}x{} px", font->MetricsTotalSurface, surface_sqrt, surface_sqrt);
     for (let config_i: c_int = 0; config_i < font->ConfigDataCount; config_i++)
         if (font->ConfigData)
             if (*const ImFontConfig cfg = &font->ConfigData[config_i])
-                BulletText("Input %d: \'%s\', Oversample: (%d,%d), PixelSnapH: %d, Offset: (%.1f,%.10.0)",
+                BulletText("Input {}: \'%s\', Oversample: ({},{}), PixelSnapH: {}, Offset: (%.1f,%.10.0)",
                     config_i, cfg.Name, cfg->OversampleH, cfg->OversampleV, cfg->PixelSnapH, cfg->GlyphOffset.x, cfg->GlyphOffset.y);
 
     // Display all glyphs of the fonts in separate pages of 256 characters
-    if (TreeNode("Glyphs", "Glyphs (%d)", font->Glyphs.Size))
+    if (TreeNode("Glyphs", "Glyphs ({})", font->Glyphs.Size))
     {
         let mut  draw_list: *mut ImDrawList =  GetWindowDrawList();
         glyph_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
@@ -1107,7 +1107,7 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
                     count+= 1;
             if count <= 0 {
                 continue(); }
-            if (!TreeNode(base, "U+%04X..U+%04X (%d %s)", base, base + 255, count, count > 1 ? "glyphs" : "glyph"))
+            if (!TreeNode(base, "U+%04X..U+%04X ({} %s)", base, base + 255, count, count > 1 ? "glyphs" : "glyph"))
                 continue;
 
             // Draw a 16x16 grid of glyphs
@@ -1142,20 +1142,20 @@ pub unsafe fn DebugNodeFontGlyph(ImFont*, *const ImFontGlyph glyph)
 {
     Text("Codepoint: U+%04X", glyph->Codepoint);
     Separator();
-    Text("Visible: %d", glyph->Visible);
+    Text("Visible: {}", glyph->Visible);
     Text("AdvanceX: %.1f", glyph->AdvanceX);
     Text("Pos: (%.2f,%.20)->(%.2f,%.20)", glyph->X0, glyph->Y0, glyph->X1, glyph->Y1);
-    Text("UV: (%.3f,%.30f32)->(%.3f,%.30f32)", glyph->U0, glyph->V0, glyph->U1, glyph->V1);
+    Text("UV: ({},{})->({},{})", glyph->U0, glyph->V0, glyph->U1, glyph->V1);
 }
 
 // [DEBUG] Display contents of ImGuiStorage
 pub unsafe fn DebugNodeStorage(ImGuiStorage* storage, label: *const c_char)
 {
-    if !TreeNode(label, "%s: %d entries, %d bytes", label, storage.Data.Size, storage.Data.size_in_bytes()) { return ; }
+    if !TreeNode(label, "%s: {} entries, {} bytes", label, storage.Data.Size, storage.Data.size_in_bytes()) { return ; }
     for (let n: c_int = 0; n < storage.Data.Size; n++)
     {
         const ImGuiStorage::ImGuiStoragePair& p = storage.Data[n];
-        BulletText("Key 0x%08X Value { i: %d }", p.key, p.val_i); // Important: we currently don't store a type, real value may not be integer.
+        BulletText("Key 0x%08X Value { i: {} }", p.key, p.val_i); // Important: we currently don't store a type, real value may not be integer.
     }
     TreePop();
 }
@@ -1168,7 +1168,7 @@ pub unsafe fn DebugNodeTabBar(ImGuiTabBar* tab_bar, label: *const c_char)
     char* p = buf;
     let mut  buf_end: *const c_char = buf + buf.len();
     let is_active: bool = (tab_bar->PrevFrameVisible >= GetFrameCount() - 2);
-    p += ImFormatString(p, buf_end - p, "%s 0x%08X (%d tabs)%s", label, tab_bar.ID, tab_bar.Tabs.Size, is_active ? "" : " *Inactive*");
+    p += ImFormatString(p, buf_end - p, "%s 0x%08X ({} tabs)%s", label, tab_bar.ID, tab_bar.Tabs.Size, is_active ? "" : " *Inactive*");
     p += ImFormatString(p, buf_end - p, "  { ");
     for (let tab_n: c_int = 0; tab_n < ImMin(tab_bar.Tabs.Size, 3); tab_n++)
     {
@@ -1206,10 +1206,10 @@ pub unsafe fn DebugNodeTabBar(ImGuiTabBar* tab_bar, label: *const c_char)
 pub unsafe fn DebugNodeViewport(viewport: *mut ImGuiViewport)
 {
     SetNextItemOpen(true, ImGuiCond_Once);
-    if (TreeNode(viewport.ID, "Viewport #%d, ID: 0x%08X, Parent: 0x%08X, Window: \"%s\"", viewport.Idx, viewport.ID, viewport.ParentViewportId, if viewport.Window { viewport.window.Name } else { "N/A" }))
+    if (TreeNode(viewport.ID, "Viewport #{}, ID: 0x%08X, Parent: 0x%08X, Window: \"%s\"", viewport.Idx, viewport.ID, viewport.ParentViewportId, if viewport.Window { viewport.window.Name } else { "N/A" }))
     {
         flags: ImGuiWindowFlags = viewport.Flags;
-        BulletText("Main Pos: (%.0,%.0), Size: (%.0,%.0)\nWorkArea Offset Left: %.0 Top: %.0, Right: %.0, Bottom: %.0f\nMonitor: %d, DpiScale: %.0f%%",
+        BulletText("Main Pos: (%.0,%.0), Size: (%.0,%.0)\nWorkArea Offset Left: %.0 Top: %.0, Right: %.0, Bottom: %.0f\nMonitor: {}, DpiScale: %.0f%%",
             viewport.Pos.x, viewport.Pos.y, viewport.Size.x, viewport.Size.y,
             viewport.WorkOffsetMin.x, viewport.WorkOffsetMin.y, viewport.WorkOffsetMax.x, viewport.WorkOffsetMax.y,
             viewport.PlatformMonitor, viewport.DpiScale * 100);
@@ -1265,25 +1265,25 @@ pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
         (flags & ImGuiWindowFlags_NoMouseInputs)? "NoMouseInputs":"", flag_set(flags, ImGuiWindowFlags_NoNavInputs) ? "NoNavInputs" : "", flag_set(flags, ImGuiWindowFlags_AlwaysAutoResize) ? "AlwaysAutoResize" : "");
     BulletText("WindowClassId: 0x%08X", window.WindowClass.ClassId);
     BulletText("Scroll: (%.2f/%.2f,%.2f/%.20) Scrollbar:%s%s", window.Scroll.x, window.ScrollMax.x, window.Scroll.y, window.ScrollMax.y, window.ScrollbarX ? "X" : "", window.ScrollbarY ? "Y" : "");
-    BulletText("Active: %d/%d, WriteAccessed: %d, BeginOrderWithinContext: %d", window.Active, window.WasActive, window.WriteAccessed, if (window.Active || window.WasActive) { window.BeginOrderWithinContext } else { -1 });
-    BulletText("Appearing: %d, Hidden: %d (CanSkip %d Cannot %d), SkipItems: %d", window.Appearing, window.Hidden, window.HiddenFramesCanSkipItems, window.HiddenFramesCannotSkipItems, window.SkipItems);
+    BulletText("Active: {}/{}, WriteAccessed: {}, BeginOrderWithinContext: {}", window.Active, window.WasActive, window.WriteAccessed, if (window.Active || window.WasActive) { window.BeginOrderWithinContext } else { -1 });
+    BulletText("Appearing: {}, Hidden: {} (CanSkip {} Cannot {}), SkipItems: {}", window.Appearing, window.Hidden, window.HiddenFramesCanSkipItems, window.HiddenFramesCannotSkipItems, window.SkipItems);
     for (let layer: c_int = 0; layer < ImGuiNavLayer_COUNT; layer++)
     {
         let r: ImRect =  window.NavRectRel[layer];
         if (r.Min.x >= r.Max.y && r.Min.y >= r.Max.y)
         {
-            BulletText("NavLastIds[%d]: 0x%08X", layer, window.NavLastIds[layer]);
+            BulletText("NavLastIds[{}]: 0x%08X", layer, window.NavLastIds[layer]);
             continue;
         }
-        BulletText("NavLastIds[%d]: 0x%08X at +(%.1f,%.10.0)(%.1f,%.10.0)", layer, window.NavLastIds[layer], r.Min.x, r.Min.y, r.Max.x, r.Max.y);
+        BulletText("NavLastIds[{}]: 0x%08X at +(%.1f,%.10.0)(%.1f,%.10.0)", layer, window.NavLastIds[layer], r.Min.x, r.Min.y, r.Max.x, r.Max.y);
         if (IsItemHovered())
             GetForegroundDrawList(window).AddRect(r.Min + window.Pos, r.Max + window.Pos, IM_COL32(255, 255, 0, 255));
     }
     BulletText("NavLayersActiveMask: %X, NavLastChildNavWindow: %s", window.DC.NavLayersActiveMask, if window.NavLastChildNavWindow { window.NavLastChildNavwindow.Name } else { "NULL" });
 
-    BulletText("Viewport: %d%s, ViewportId: 0x%08X, ViewportPos: (%.1f,%.10.0)", if window.Viewport { window.Viewport.Idx } else { -1 }, if window.ViewportOwned { " (Owned)" } else { "" }, window.ViewportId, window.ViewportPos.x, window.ViewportPos.y);
-    BulletText("ViewportMonitor: %d", if window.Viewport { window.Viewport.PlatformMonitor } else { -1 });
-    BulletText("DockId: 0x%04X, DockOrder: %d, Act: %d, Vis: %d", window.DockId, window.DockOrder, window.DockIsActive, window.DockTabIsVisible);
+    BulletText("Viewport: {}%s, ViewportId: 0x%08X, ViewportPos: (%.1f,%.10.0)", if window.Viewport { window.Viewport.Idx } else { -1 }, if window.ViewportOwned { " (Owned)" } else { "" }, window.ViewportId, window.ViewportPos.x, window.ViewportPos.y);
+    BulletText("ViewportMonitor: {}", if window.Viewport { window.Viewport.PlatformMonitor } else { -1 });
+    BulletText("DockId: 0x%04X, DockOrder: {}, Act: {}, Vis: {}", window.DockId, window.DockOrder, window.DockIsActive, window.DockTabIsVisible);
     if (window.DockNode || window.DockNodeAsHost)
         DebugNodeDockNode(if window.DockNodeAsHost { window.DockNodeAsHost } else { window.DockNode }, if window.DockNodeAsHost { "DockNodeAsHost" } else { "DockNode" });
 
@@ -1291,7 +1291,7 @@ pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
     if (window.RootWindowDockTree != window.RootWindow) { DebugNodeWindow(window.RootWindowDockTree, "RootWindowDockTree"); }
     if (window.ParentWindow != null_mut())       { DebugNodeWindow(window.ParentWindow, "ParentWindow"); }
     if (window.DC.ChildWindows.Size > 0)   { DebugNodeWindowsList(&window.DC.ChildWindows, "ChildWindows"); }
-    if (window.ColumnsStorage.Size > 0 && TreeNode("Columns", "Columns sets (%d)", window.ColumnsStorage.Size))
+    if (window.ColumnsStorage.Size > 0 && TreeNode("Columns", "Columns sets ({})", window.ColumnsStorage.Size))
     {
         for (let n: c_int = 0; n < window.ColumnsStorage.Size; n++)
             DebugNodeColumns(&window.ColumnsStorage[n]);
@@ -1303,13 +1303,13 @@ pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
 
 pub unsafe fn DebugNodeWindowSettings(settings: *mut ImGuiWindowSettings)
 {
-    Text("0x%08X \"%s\" Pos (%d,%d) Size (%d,%d) Collapsed=%d",
+    Text("0x%08X \"%s\" Pos ({},{}) Size ({},{}) Collapsed={}",
         settings.ID, settings.GetName(), settings.Pos.x, settings.Pos.y, settings.Size.x, settings.Size.y, settings.Collapsed);
 }
 
 pub unsafe fn DebugNodeWindowsList(Vec<ImGuiWindow*>* windows, label: *const c_char)
 {
-    if !TreeNode(label, "%s (%d)", label, windows.Size) { return ; }
+    if !TreeNode(label, "%s ({})", label, windows.Size) { return ; }
     for (let i: c_int = windows.Size - 1; i >= 0; i--) // Iterate front to back
     {
         PushID((*windows)[i]);

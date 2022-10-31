@@ -257,7 +257,7 @@ pub unsafe fn ClosePopupsExceptModals()
 pub unsafe fn ClosePopupToLevel(remaining: usize, restore_focus_to_window_under_popup: bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IMGUI_DEBUG_LOG_POPUP("[popup] ClosePopupToLevel(%d), restore_focus_to_window_under_popup=%d\n", remaining, restore_focus_to_window_under_popup);
+    // IMGUI_DEBUG_LOG_POPUP("[popup] ClosePopupToLevel({}), restore_focus_to_window_under_popup={}\n", remaining, restore_focus_to_window_under_popup);
     // IM_ASSERT(remaining >= 0 && remaining < g.OpenPopupStack.Size);
 
     // Trim open popup stack
@@ -306,7 +306,7 @@ pub unsafe fn CloseCurrentPopup() {
         }
         popup_idx -= 1;
     }
-    IMGUI_DEBUG_LOG_POPUP("[popup] CloseCurrentPopup %d -> %d\n", g.BeginPopupStack.len() - 1, popup_idx);
+    IMGUI_DEBUG_LOG_POPUP("[popup] CloseCurrentPopup {} -> {}\n", g.BeginPopupStack.len() - 1, popup_idx);
     ClosePopupToLevel(popup_idx, true);
 
     // A common pattern is to close a popup when selecting a menu item/selectable that will open another window.
@@ -350,7 +350,7 @@ pub unsafe fn BeginPopupEx(id: ImGuiID, mut flags: ImGuiWindowFlags) -> bool
 pub unsafe fn BeginPopup(str_id: &str, mut flags: ImGuiWindowFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (g.OpenPopupStack.len() <= g.BeginPopupStack.len()) // Early out for performance
+    if g.OpenPopupStack.len() <= g.BeginPopupStack.len() // Early out for performance
     {
         g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
         return false;

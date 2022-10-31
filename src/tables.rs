@@ -633,7 +633,7 @@ pub unsafe fn  BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_i
     if (table.RefScale != 0.0 && table.RefScale != new_ref_scale_unit)
     {
         let scale_factor: c_float =  new_ref_scale_unit / table.RefScale;
-        //IMGUI_DEBUG_PRINT("[table] %08X RefScaleUnit %.3f -> %.3f, scaling width by %.3f\n", table.ID, table.RefScaleUnit, new_ref_scale_unit, scale_factor);
+        //IMGUI_DEBUG_PRINT("[table] %08X RefScaleUnit {} -> {}, scaling width by {}\n", table.ID, table.RefScaleUnit, new_ref_scale_unit, scale_factor);
         // for (let n: c_int = 0; n < columns_count; n++)
         for n in 0 .. columns_count
         {
@@ -2126,7 +2126,7 @@ pub unsafe fn TableSetColumnWidth(column_n: c_int,width: c_float)
     let mut column_0_width = ImClamp(column_0_width, min_width, max_width);
     if column_0.WidthGiven == column_0_width || column_0.WidthRequest == column_0_width { return ; }
 
-    //IMGUI_DEBUG_PRINT("TableSetColumnWidth(%d, %.1f->%.10.0)\n", column_0_idx, column_0->WidthGiven, column_0_width);
+    //IMGUI_DEBUG_PRINT("TableSetColumnWidth({}, %.1f->%.10.0)\n", column_0_idx, column_0->WidthGiven, column_0_width);
     let mut column_1: *mut ImGuiTableColumn = if column_0.NextEnabledColumn != -1 { &mut table.Columns[column_0.NextEnabledColumn]} else { null_mut()};
 
     // In this surprisingly not simple because of how we support mixing Fixed and multiple Stretch columns.
@@ -2455,7 +2455,7 @@ pub unsafe fn TableMergeDrawChannels(table: *mut ImGuiTable)
                 continue;
             }
             buf: [c_char; 32];
-            // ImFormatString(buf, 32, "MG%d:%d", merge_group_n, merge_group.ChannelsCount);
+            // ImFormatString(buf, 32, "MG{}:{}", merge_group_n, merge_group.ChannelsCount);
             let text_pos: ImVec2 = merge_group.ClipRect.Min + ImVec2::from_floats(4.0, 4.0);
             let text_size: ImVec2 = CalcTextSize(buf, null_mut(), false, 0.0);
             GetForegroundDrawList(null_mut()).AddRectFilled(&text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255), 0.0, 0);
@@ -3019,7 +3019,7 @@ pub unsafe fn TableHeader(mut label: *const c_char)
         w_arrow = ImFloor(g.FontSize * ARROW_SCALE + g.Style.FramePadding.x);
         if column.SortOrder > 0
         {
-            // ImFormatString(sort_order_suf, sort_order_su0f32.len(), "%d", column.SortOrder + 1);
+            // ImFormatString(sort_order_suf, sort_order_su0f32.len(), "{}", column.SortOrder + 1);
             w_sort_text = g.Style.ItemInnerSpacing.x + CalcTextSize(sort_order_suf, null(), false, 0.0).x;
         }
     }
@@ -3542,7 +3542,7 @@ pub unsafe fn TableSettingsHandler_ReadOpen(ctx: *mut ImGuiContext, handler: *mu
 {
     let mut id: ImGuiID =  0;
     let columns_count: c_int = 0;
-    if (libc::sscanf(name, str_to_const_c_char_ptr("0x%08X,%d"), &id, &columns_count) < 2) {
+    if (libc::sscanf(name, str_to_const_c_char_ptr("0x%08X,{}"), &id, &columns_count) < 2) {
         return null_mut();
     }
 
@@ -3570,7 +3570,7 @@ pub unsafe fn TableSettingsHandler_ReadLine(ctx: *mut ImGuiContext, handler: *mu
     //
     // if (libc::sscanf(line, str_to_const_c_char_ptr("RefScale=%f"), &0.0) == 1) { settings.RefScale = f; return; }
     //
-    // if (libc::sscanf(line, str_to_const_c_char_ptr("Column %d%n"), &column_n, &r) == 1)
+    // if (libc::sscanf(line, str_to_const_c_char_ptr("Column {}%n"), &column_n, &r) == 1)
     // {
     //     if column_n < 0 || column_n >= settings.ColumnsCount as c_int { return ; }
     //     line = ImStrSkipBlank(line + r);
@@ -3578,11 +3578,11 @@ pub unsafe fn TableSettingsHandler_ReadLine(ctx: *mut ImGuiContext, handler: *mu
     //     let  column: *mut ImGuiTableColumnSettings = settings.GetColumnSettings() + column_n;
     //     column.Index = column_n;
     //     if (libc::sscanf(line, "UserID=0x%08X%n", (*mut u32)&n, &r)==1) { line = ImStrSkipBlank(line + r); column.UserID = n; }
-    //     if (sscanf(line, "Width=%d%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column.WidthOrWeight = n; column.IsStretch = 0; settings.SaveFlags |= ImGuiTableFlags_Resizable; }
+    //     if (sscanf(line, "Width={}%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column.WidthOrWeight = n; column.IsStretch = 0; settings.SaveFlags |= ImGuiTableFlags_Resizable; }
     //     if (sscanf(line, "Weight=%f%n", &f, &r) == 1)           { line = ImStrSkipBlank(line + r); column.WidthOrWeight = f; column.IsStretch = 1; settings.SaveFlags |= ImGuiTableFlags_Resizable; }
-    //     if (sscanf(line, "Visible=%d%n", &n, &r) == 1)          { line = ImStrSkipBlank(line + r); column.IsEnabled = n; settings.SaveFlags |= ImGuiTableFlags_Hideable; }
-    //     if (sscanf(line, "Order=%d%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column.DisplayOrder = n; settings.SaveFlags |= ImGuiTableFlags_Reorderable; }
-    //     if (sscanf(line, "Sort=%d%c%n", &n, &c, &r) == 2)       { line = ImStrSkipBlank(line + r); column.SortOrder = n; column.SortDirection = if (c == '^') { ImGuiSortDirection_Descending } else { ImGuiSortDirection_Ascending }; settings.SaveFlags |= ImGuiTableFlags_Sortable; }
+    //     if (sscanf(line, "Visible={}%n", &n, &r) == 1)          { line = ImStrSkipBlank(line + r); column.IsEnabled = n; settings.SaveFlags |= ImGuiTableFlags_Hideable; }
+    //     if (sscanf(line, "Order={}%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column.DisplayOrder = n; settings.SaveFlags |= ImGuiTableFlags_Reorderable; }
+    //     if (sscanf(line, "Sort={}%c%n", &n, &c, &r) == 2)       { line = ImStrSkipBlank(line + r); column.SortOrder = n; column.SortDirection = if (c == '^') { ImGuiSortDirection_Descending } else { ImGuiSortDirection_Ascending }; settings.SaveFlags |= ImGuiTableFlags_Sortable; }
     // }
 }
 
@@ -3604,7 +3604,7 @@ pub unsafe fn TableSettingsHandler_WriteAll(ctx: *mut ImGuiContext, handler: *mu
     //         continue;
     //
     //     buf->reserve(buf->size() + 30 + settings.ColumnsCount * 50); // ballpark reserve
-    //     buf->appendf("[%s][0x%08X,%d]\n", handler.TypeName, settings.ID, settings.ColumnsCount);
+    //     buf->appendf("[%s][0x%08X,{}]\n", handler.TypeName, settings.ID, settings.ColumnsCount);
     //     if (settings.RefScale != 0.0)
     //         buf->appendf("RefScale=%g\n", settings.RefScale);
     //     *mut ImGuiTableColumnSettings column = settings.GetColumnSettings();
@@ -3617,10 +3617,10 @@ pub unsafe fn TableSettingsHandler_WriteAll(ctx: *mut ImGuiContext, handler: *mu
     //         buf->appendf("Column %-2d", column_n);
     //         if (column.UserID != 0)                    buf->appendf(" UserID=%08X", column.UserID);
     //         if (save_size && column.IsStretch)         buf->appendf(" Weight=%.4f", column.WidthOrWeight);
-    //         if (save_size && !column.IsStretch)        buf->appendf(" Width=%d", column.WidthOrWeight);
-    //         if (save_visible)                           buf->appendf(" Visible=%d", column.IsEnabled);
-    //         if (save_order)                             buf->appendf(" Order=%d", column.DisplayOrder);
-    //         if (save_sort && column.SortOrder != -1)   buf->appendf(" Sort=%d%c", column.SortOrder, (column.SortDirection == ImGuiSortDirection_Ascending) ? 'v' : '^');
+    //         if (save_size && !column.IsStretch)        buf->appendf(" Width={}", column.WidthOrWeight);
+    //         if (save_visible)                           buf->appendf(" Visible={}", column.IsEnabled);
+    //         if (save_order)                             buf->appendf(" Order={}", column.DisplayOrder);
+    //         if (save_sort && column.SortOrder != -1)   buf->appendf(" Sort={}%c", column.SortOrder, (column.SortDirection == ImGuiSortDirection_Ascending) ? 'v' : '^');
     //         buf->append("\n");
     //     }
     //     buf->append("\n");
@@ -3728,7 +3728,7 @@ pub unsafe fn DebugNodeTable(table: *mut ImGuiTable)
 //     p: *mut c_char = buf;
 //     let mut  buf_end: *const c_char = buf + buf.len();
 //     let is_active: bool = (table.LastFrameActive >= GetFrameCount() - 2); // Note that fully clipped early out scrolling tables will appear as inactive here.
-//     ImFormatString(p, buf_end - p, "Table 0x%08X (%d columns, in '%s')%s", table.ID, table.ColumnsCount, table.Outerwindow.Name, is_active ? "" : " *Inactive*");
+//     ImFormatString(p, buf_end - p, "Table 0x%08X ({} columns, in '%s')%s", table.ID, table.ColumnsCount, table.Outerwindow.Name, is_active ? "" : " *Inactive*");
 //     if (!is_active) { PushStyleColor(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled)); }
 //     let mut open: bool =  TreeNode(table, "%s", buf);
 //     if (!is_active) { PopStyleColor(); }
@@ -3738,14 +3738,14 @@ pub unsafe fn DebugNodeTable(table: *mut ImGuiTable)
 //         GetForegroundDrawList().AddRect(GetItemRectMin(), GetItemRectMax(), IM_COL32(255, 255, 0, 255));
 //     if !open { return ; }
 //     if (table.InstanceCurrent > 0)
-//         Text("** %d instances of same table! Some data below will refer to last instance.", table.InstanceCurrent + 1);
+//         Text("** {} instances of same table! Some data below will refer to last instance.", table.InstanceCurrent + 1);
 //     let mut clear_settings: bool =  SmallButton("Clear settings");
 //     BulletText("OuterRect: Pos: (%.1f,%.10.0) Size: (%.1f,%.10.0) Sizing: '%s'", table.OuterRect.Min.x, table.OuterRect.Min.y, table.OuterRect.GetWidth(), table.OuterRect.GetHeight(), DebugNodeTableGetSizingPolicyDesc(table.Flags));
 //     BulletText("ColumnsGivenWidth: %.1f, ColumnsAutoFitWidth: %.1f, InnerWidth: %.1f%s", table.ColumnsGivenWidth, table.ColumnsAutoFitWidth, table.InnerWidth, table.InnerWidth == 0.0 ? " (auto)" : "");
 //     BulletText("CellPaddingX: %.1f, CellSpacingX: %.1f/%.1f, OuterPaddingX: %.1f", table.CellPaddingX, table.CellSpacingX1, table.CellSpacingX2, table.OuterPaddingX);
-//     BulletText("HoveredColumnBody: %d, HoveredColumnBorder: %d", table.HoveredColumnBody, table.HoveredColumnBorder);
-//     BulletText("ResizedColumn: %d, ReorderColumn: %d, HeldHeaderColumn: %d", table.ResizedColumn, table.ReorderColumn, table.HeldHeaderColumn);
-//     //BulletText("BgDrawChannels: %d/%d", 0, table.BgDrawChannelUnfrozen);
+//     BulletText("HoveredColumnBody: {}, HoveredColumnBorder: {}", table.HoveredColumnBody, table.HoveredColumnBorder);
+//     BulletText("ResizedColumn: {}, ReorderColumn: {}, HeldHeaderColumn: {}", table.ResizedColumn, table.ReorderColumn, table.HeldHeaderColumn);
+//     //BulletText("BgDrawChannels: {}/{}", 0, table.BgDrawChannelUnfrozen);
 //     let sum_weights: c_float =  0.0;
 //     for (let n: c_int = 0; n < table.ColumnsCount; n++)
 //         if (table.Columns[n].Flags & ImGuiTableColumnFlags_WidthStretch)
@@ -3755,12 +3755,12 @@ pub unsafe fn DebugNodeTable(table: *mut ImGuiTable)
 //         column: *mut ImGuiTableColumn = &table.Columns[n];
 //         let mut  name: *const c_char = TableGetColumnName(table, n);
 //         ImFormatString(buf, buf.len(),
-//             "Column %d order %d '%s': offset %+.2f to %+.2f%s\n"
-//             "Enabled: %d, VisibleX/Y: %d/%d, RequestOutput: %d, SkipItems: %d, DrawChannels: %d,%d\n"
-//             "WidthGiven: %.1f, Request/Auto: %.1f/%.1f, StretchWeight: %.3f (%.1f%%)\n"
+//             "Column {} order {} '%s': offset %+.2f to %+.2f%s\n"
+//             "Enabled: {}, VisibleX/Y: {}/{}, RequestOutput: {}, SkipItems: {}, DrawChannels: {},{}\n"
+//             "WidthGiven: %.1f, Request/Auto: %.1f/%.1f, StretchWeight: {} (%.1f%%)\n"
 //             "MinX: %.1f, MaxX: %.1f (%+.10.0), ClipRect: %.1f to %.1f (+%.10.0)\n"
 //             "ContentWidth: %.1f,%.1f, HeadersUsed/Ideal %.1f/%.1f\n"
-//             "Sort: %d%s, UserID: 0x%08X, Flags: 0x%04X: %s%s%s..",
+//             "Sort: {}%s, UserID: 0x%08X, Flags: 0x%04X: %s%s%s..",
 //             n, column.DisplayOrder, name, column.MinX - table.WorkRect.Min.x, column.MaxX - table.WorkRect.Min.x, (n < table.FreezeColumnsRequest) ? " (Frozen)" : "",
 //             column.IsEnabled, column.IsVisibleX, column.IsVisibleY, column.IsRequestOutput, column.IsSkipItems, column.DrawChannelFrozen, column.DrawChannelUnfrozen,
 //             column.WidthGiven, column.WidthRequest, column.WidthAuto, column.StretchWeight, if column.StretchWeight > 0.0 { (column.StretchWeight / sum_weights) * 100 } else { 0.0 },
@@ -3791,14 +3791,14 @@ pub unsafe fn DebugNodeTable(table: *mut ImGuiTable)
 //
 // pub unsafe fn DebugNodeTableSettings(settings: *mut ImGuiTableSettings)
 // {
-//     if !TreeNode(settings.ID, "Settings 0x%08X (%d columns)", settings.ID, settings.ColumnsCount) { return ; }
+//     if !TreeNode(settings.ID, "Settings 0x%08X ({} columns)", settings.ID, settings.ColumnsCount) { return ; }
 //     BulletText("SaveFlags: 0x%08X", settings.SaveFlags);
-//     BulletText("ColumnsCount: %d (max %d)", settings.ColumnsCount, settings.ColumnsCountMax);
+//     BulletText("ColumnsCount: {} (max {})", settings.ColumnsCount, settings.ColumnsCountMax);
 //     for (let n: c_int = 0; n < settings.ColumnsCount; n++)
 //     {
 //         *mut ImGuiTableColumnSettings column_settings = &settings.GetColumnSettings()[n];
 //         sort_dir: ImGuiSortDirection = if column_settings.SortOrder != -1 { (ImGuiSortDirection)column_settings.SortDirection} else { ImGuiSortDirection_None};
-//         BulletText("Column %d Order %d SortOrder %d %s Vis %d %s %7.3f UserID 0x%08X",
+//         BulletText("Column {} Order {} SortOrder {} %s Vis {} %s %7.3f UserID 0x%08X",
 //             n, column_settings.DisplayOrder, column_settings.SortOrder,
 //             (sort_dir == ImGuiSortDirection_Ascending) ? "Asc" : (sort_dir == ImGuiSortDirection_Descending) ? "Des" : "---",
 //             column_settings.IsEnabled, column_settings.IsStretch ? "Weight" : "Width ", column_settings.WidthOrWeight, column_settings.UserID);

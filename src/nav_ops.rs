@@ -564,7 +564,7 @@ pub unsafe fn NavInitWindow(window: *mut ImGuiWindow, force_reinit: bool)
     if (window == window.RootWindow || flag_set(window.Flags, ImGuiWindowFlags_Popup) || (window.NavLastIds[0] == 0) || force_reinit) {
         init_for_nav = true;
     }
-    IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from NavInitWindow(), init_for_nav=%d, window=\"%s\", layer=%d\n", init_for_nav, window.Name, g.NavLayer);
+    IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from NavInitWindow(), init_for_nav={}, window=\"%s\", layer={}\n", init_for_nav, window.Name, g.NavLayer);
     if (init_for_nav)
     {
         SetNavID(0, g.NavLayer, 0, ImRect());
@@ -640,7 +640,7 @@ pub unsafe fn NavUpdate()
     let mut io = &mut g.IO;
 
     io.WantSetMousePos = false;
-    //if (g.NavScoringDebugCount > 0) IMGUI_DEBUG_LOG_NAV("[nav] NavScoringDebugCount %d for '%s' layer %d (Init:%d, Move:%d)\n", g.NavScoringDebugCount, g.NavWindow ? g.Navwindow.Name : "NULL", g.NavLayer, g.NavInitRequest || g.NavInitResultId != 0, g.NavMoveRequest);
+    //if (g.NavScoringDebugCount > 0) IMGUI_DEBUG_LOG_NAV("[nav] NavScoringDebugCount {} for '%s' layer {} (Init:{}, Move:{})\n", g.NavScoringDebugCount, g.NavWindow ? g.Navwindow.Name : "NULL", g.NavLayer, g.NavInitRequest || g.NavInitResultId != 0, g.NavMoveRequest);
 
     // Set input source based on which keys are last pressed (as some features differs when used with Gamepad vs Keyboard)
     // FIXME-NAV: Now that keys are separated maybe we can get rid of NavInputSource?
@@ -838,7 +838,7 @@ pub unsafe fn NavUpdate()
         let col: u32 = if (!g.NavWindow.Hidden) { IM_COL32(255, 0, 255, 255) } else { IM_COL32(255, 0, 0, 255) };
         let mut p: ImVec2 =  NavCalcPreferredRefPos();
         let mut buf: [c_char;32] = [0;32];
-        // ImFormatString(buf, 32, "%d", g.NavLayer);
+        // ImFormatString(buf, 32, "{}", g.NavLayer);
         draw_list.AddCircleFilled(&p, 3.0, col, 0);
         draw_list.AddText2(null_mut(), 13.0, p + ImVec2::from_floats(8.0, -4.0), col, buf.as_ptr(), null(), 0.0, null());
     }
@@ -855,7 +855,7 @@ pub unsafe fn NavInitRequestApplyResult()
 
     // Apply result from previous navigation init request (will typically select the first item, unless SetItemDefaultFocus() has been called)
     // FIXME-NAV: On _NavFlattened windows, g.NavWindow will only be updated during subsequent frame. Not a problem currently.
-    IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: ApplyResult: NavID 0x%08X in Layer %d Window \"%s\"\n", g.NavInitResultId, g.NavLayer, g.NavWindow.Name);
+    IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: ApplyResult: NavID 0x%08X in Layer {} Window \"%s\"\n", g.NavInitResultId, g.NavLayer, g.NavWindow.Name);
     SetNavID(g.NavInitResultId, g.NavLayer, 0, &g.NavInitResultRectRel);
     g.NavIdIsAlive = true; // Mark as alive from previous frame as we got a result
     if (g.NavInitRequestFromMove) {
@@ -877,7 +877,7 @@ pub unsafe fn NavUpdateCreateMoveRequest()
         // (preserve most state, which were already set by the NavMoveRequestForward() function)
         // IM_ASSERT(g.NavMoveDir != ImGuiDir_None && g.NavMoveClipDir != ImGuiDir_None);
         // IM_ASSERT(g.NavMoveFlags & ImGuiNavMoveFlags_Forwarded);
-        IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequestForward %d\n", g.NavMoveDir);
+        IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequestForward {}\n", g.NavMoveDir);
     }
     else
     {
@@ -930,7 +930,7 @@ pub unsafe fn NavUpdateCreateMoveRequest()
     // Moving with no reference triggers a init request (will be used as a fallback if the direction fails to find a match)
     if g.NavMoveSubmitted && g.NavId == 0
     {
-        // IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from move, window \"%s\", layer=%d\n", window ? window.Name : "<NULL>", g.NavLayer);
+        // IMGUI_DEBUG_LOG_NAV("[nav] NavInitRequest: from move, window \"%s\", layer={}\n", window ? window.Name : "<NULL>", g.NavLayer);
         g.NavInitRequest = true;
         g.NavInitRequestFromMove = true;
         g.NavInitResultId = 0;
@@ -1093,7 +1093,7 @@ pub unsafe fn NavMoveRequestApplyResult()
     }
 
     // Focus
-    // IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result NavID 0x%08X in Layer %d Window \"%s\"\n", result.ID, g.NavLayer, g.NavWindow.Name);
+    // IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: result NavID 0x%08X in Layer {} Window \"%s\"\n", result.ID, g.NavLayer, g.NavWindow.Name);
     SetNavID(result.ID, g.NavLayer, result.FocusScopeId, &result.RectRel);
 
     // Tabbing: Activates Inputable or Focus non-Inputable

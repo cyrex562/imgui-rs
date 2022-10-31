@@ -560,10 +560,10 @@ pub struct ImGuiContext {
     pub DragDropHoldJustPressedId: ImGuiID,
 
     // ImVector<unsigned char> DragDropPayloadBufHeap;             // We don't expose the ImVector<> directly, ImGuiPayload only holds pointer+size
-    pub DragDropPayloadBufHead: Vec<c_uchar>,
+    pub DragDropPayloadBufHead: Vec<u8>,
 
     // unsigned char           DragDropPayloadBufLocal[16];        // Local buffer for small payloads
-    pub DragDropPayloadBufLocal: [c_uchar; 16],
+    pub DragDropPayloadBufLocal: Vec<u8>,
 
     // Clipper
 

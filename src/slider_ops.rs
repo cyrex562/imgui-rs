@@ -333,8 +333,8 @@ pub unsafe fn SliderScalar(label: &str,
         *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
     }
 
-    else if data_type == ImGuiDataType_S32 && format != String::from("%d") {
-        // (FIXME-LEGACY: Patch old "%.0f" format string to use "%d", read function more details.)
+    else if data_type == ImGuiDataType_S32 && format != String::from("{}") {
+        // (FIXME-LEGACY: Patch old "%.0f" format string to use "{}", read function more details.)
         *format = data_type_ops::PatchFormatStringFloatToInt(format);
     }
     let hovered: bool = ItemHoverable(&frame_bb, id);
@@ -588,7 +588,7 @@ pub unsafe fn VSliderScalar(label: &str,
     if format.is_empty() {
         *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
     }
-    else if data_type == ImGuiDataType_S32 && format != "%d".into_string() { // (FIXME-LEGACY: Patch old "%.0f" format string to use "%d", read function more details.)
+    else if data_type == ImGuiDataType_S32 && format != "{}".into_string() { // (FIXME-LEGACY: Patch old "%.0f" format string to use "{}", read function more details.)
         *format = data_type_ops::PatchFormatStringFloatToInt(format);
     }
 

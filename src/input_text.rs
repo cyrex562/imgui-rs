@@ -1025,7 +1025,7 @@ pub unsafe fn InputTextEx(label: &str,
             apply_new_text_length = callback_data.BufTextLen.min(buf_size - 1);
             // IM_ASSERT(apply_new_text_length <= buf_size);
         }
-        //IMGUI_DEBUG_PRINT("InputText(\"%s\"): apply_new_text length %d\n", label, apply_new_text_length);
+        //IMGUI_DEBUG_PRINT("InputText(\"%s\"): apply_new_text length {}\n", label, apply_new_text_length);
 
         // If the underlying buffer resize was denied or not carried to the next frame, apply_new_text_length+1 may be >= buf_size.
         // ImStrncpy(buf, apply_new_text, ImMin(apply_new_text_length + 1, buf_size));
@@ -1322,8 +1322,8 @@ pub unsafe fn DebugNodeInputTextState(state: &mut ImGuiInputTextState)
 //     ImStb::stb_state: &mut STB_TexteditState = &state.Stb;
 //     ImStb::*mut StbUndoState undo_state = &stb_state.undostate;
 //     text_ops::Text("ID: 0x%08X, ActiveID: 0x%08X", state.ID, g.ActiveId);
-//     text_ops::Text("CurLenW: %d, CurLenA: %d, Cursor: %d, Selection: %d..%d", state.CurLenA, state.CurLenW, stb_state.cursor, stb_state.select_start, stb_state.select_end);
-//     text_ops::Text("undo_point: %d, redo_point: %d, undo_char_point: %d, redo_char_point: %d", undo_state.undo_point, undo_state.redo_point, undo_state.undo_char_point, undo_state.redo_char_point);
+//     text_ops::Text("CurLenW: {}, CurLenA: {}, Cursor: {}, Selection: {}..{}", state.CurLenA, state.CurLenW, stb_state.cursor, stb_state.select_start, stb_state.select_end);
+//     text_ops::Text("undo_point: {}, redo_point: {}, undo_char_point: {}, redo_char_point: {}", undo_state.undo_point, undo_state.redo_point, undo_state.undo_char_point, undo_state.redo_char_point);
 //     if (BeginChild("undopoints", ImVec2::new(0.0, GetTextLineHeight() * 15), true)) // Visualize undo state
 //     {
 //         PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2::new(0, 0));

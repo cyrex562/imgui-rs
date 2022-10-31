@@ -131,7 +131,7 @@ pub unsafe fn SetKeyboardFocusHere(offset: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     // IM_ASSERT(offset >= -1);    // -1 is allowed but not below
-    IMGUI_DEBUG_LOG_ACTIVEID("SetKeyboardFocusHere(%d) in window \"%s\"\n", offset, window.Name);
+    IMGUI_DEBUG_LOG_ACTIVEID("SetKeyboardFocusHere({}) in window \"%s\"\n", offset, window.Name);
 
     // It makes sense in the vast majority of cases to never interrupt a drag and drop.
     // When we refactor this function into ActivateItem() we may want to make this an option.

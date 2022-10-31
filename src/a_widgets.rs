@@ -115,7 +115,7 @@ use crate::child_ops::{BeginChild, BeginChildEx, BeginChildFrame, EndChild, EndC
 use crate::clipboard_ops::{GetClipboardText, SetClipboardText};
 use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_AlphaBar, ImGuiColorEditFlags_AlphaPreview, ImGuiColorEditFlags_AlphaPreviewHalf, ImGuiColorEditFlags_DataTypeMask_, ImGuiColorEditFlags_DefaultOptions_, ImGuiColorEditFlags_DisplayHex, ImGuiColorEditFlags_DisplayHSV, ImGuiColorEditFlags_DisplayMask_, ImGuiColorEditFlags_DisplayRGB, ImGuiColorEditFlags_Float, ImGuiColorEditFlags_HDR, ImGuiColorEditFlags_InputHSV, ImGuiColorEditFlags_InputMask_, ImGuiColorEditFlags_InputRGB, ImGuiColorEditFlags_NoAlpha, ImGuiColorEditFlags_NoBorder, ImGuiColorEditFlags_NoDragDrop, ImGuiColorEditFlags_NoInputs, ImGuiColorEditFlags_NoLabel, ImGuiColorEditFlags_NoOptions, ImGuiColorEditFlags_NoPicker, ImGuiColorEditFlags_NoSidePreview, ImGuiColorEditFlags_NoSmallPreview, ImGuiColorEditFlags_NoTooltip, ImGuiColorEditFlags_PickerHueBar, ImGuiColorEditFlags_PickerHueWheel, ImGuiColorEditFlags_PickerMask_, ImGuiColorEditFlags_Uint8};
 use crate::color_ops::{ColorConvertFloat4ToU32, ColorConvertHSVtoRGB, ColorConvertRGBtoHSV};
-use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Once};
+use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_None, ImGuiCond_Once};
 use crate::config_flags::ImGuiConfigFlags_NavEnableGamepad;
 use crate::content_ops::GetContentRegionAvail;
 use crate::cursor_ops::{GetCursorScreenPos, Indent, SetCursorScreenPos, Unindent};
@@ -189,7 +189,8 @@ use crate::tab_item_flags::{ImGuiTabItemFlags, ImGuiTabItemFlags_Button, ImGuiTa
 use crate::table::ImGuiTable;
 use crate::tables::{PopColumnsBackground, PushColumnsBackground, TablePopBackgroundChannel, TablePushBackgroundChannel};
 use crate::text_flags::{ImGuiTextFlags, ImGuiTextFlags_None, ImGuiTextFlags_NoWidthForLargeClippedText};
-use crate::text_ops::{CalcTextSize, GetTextLineHeight, GetTextLineHeightWithSpacing};
+use crate::{CalcTextSize, GetTextLineHeight, GetTextLineHeightWithSpacing, Text};
+use crate::text_ops::{Text, TextEx};
 use crate::tooltip_flags::ImGuiTooltipFlags_OverridePreviousTooltip;
 use crate::tooltip_ops::{BeginTooltipEx, EndTooltip};
 use crate::tree_node_flags::{ImGuiTreeNodeFlags, ImGuiTreeNodeFlags_AllowItemOverlap, ImGuiTreeNodeFlags_Bullet, ImGuiTreeNodeFlags_ClipLabelForTrailingButton, ImGuiTreeNodeFlags_CollapsingHeader, ImGuiTreeNodeFlags_DefaultOpen, ImGuiTreeNodeFlags_Framed, ImGuiTreeNodeFlags_FramePadding, ImGuiTreeNodeFlags_NavLeftJumpsBackHere, ImGuiTreeNodeFlags_NoAutoOpenOnLog, ImGuiTreeNodeFlags_None, ImGuiTreeNodeFlags_NoTreePushOnOpen, ImGuiTreeNodeFlags_OpenOnArrow, ImGuiTreeNodeFlags_OpenOnDoubleClick, ImGuiTreeNodeFlags_Selected, ImGuiTreeNodeFlags_SpanAvailWidth, ImGuiTreeNodeFlags_SpanFullWidth};
@@ -397,9 +398,9 @@ pub unsafe fn ColorEdit4(label: &str, col: &mut [c_float;4], mut flags: ImGuiCol
         // RGB Hexadecimal Input
         buf: [c_char;64];
         if (alpha) {}
-            // ImFormatString(buf, buf.len(), "#%02X%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255), ImClamp(i[3], 0, 255));
+            // ImFormatString(buf, buf.len(), "#{:02X}{:02X}{:02X}{:02X}", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255), ImClamp(i[3], 0, 255));
         else {
-            // ImFormatString(buf, buf.len(), "#%02X%02X%02X", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255));
+            // ImFormatString(buf, buf.len(), "#{:02X}{:02X}{:02X}", ImClamp(i[0], 0, 255), ImClamp(i[1], 0, 255), ImClamp(i[2], 0, 255));
             SetNextItemWidth(w_inputs);
         }
         if InputText("##Text",
@@ -420,10 +421,10 @@ pub unsafe fn ColorEdit4(label: &str, col: &mut [c_float;4], mut flags: ImGuiCol
             i[3] = 0xFF; // alpha default to 255 is not parsed by scanf (e.g. inputting #FFFFFF omitting alpha)
             let mut r: c_int = 0;
             if alpha {
-                // r = sscanf(p, "%02X%02X%02X%02X", &i[0], &i[1], &i[2], &i[3]);
+                // r = sscanf(p, "{:02X}{:02X}{:02X}{:02X}", &i[0], &i[1], &i[2], &i[3]);
             } // Treat at unsigned (%X is unsigned)
             else {
-                // r = sscanf(p, "%02X%02X%02X", &i[0], &i[1], &i[2]);
+                // r = sscanf(p, "{:02X}{:02X}{:02X}", &i[0], &i[1], &i[2]);
             }
             IM_UNUSED(r); // Fixes C6031: Return value ignored: 'sscanf'.
         }
@@ -442,7 +443,7 @@ pub unsafe fn ColorEdit4(label: &str, col: &mut [c_float;4], mut flags: ImGuiCol
         window.DC.CursorPos = ImVec2::new(pos.x + button_offset_x, pos.y);
 
         let mut col_v4 = ImVec4::from_floats(col[0], col[1], col[2], if alpha { col[3]} else {1.0});
-        if ColorButton("##ColorButton", &col_v4, flags, &Default::default())
+        if ColorButton("##ColorButton", &col_v4, flags, None)
         {
             if flag_clear(flags, ImGuiColorEditFlags_NoPicker)
             {
@@ -461,7 +462,7 @@ pub unsafe fn ColorEdit4(label: &str, col: &mut [c_float;4], mut flags: ImGuiCol
             picker_active_window = g.CurrentWindow;
             if label != label_display_end
             {
-                text_ops::TextEx(label, 0);
+                TextEx(label, 0);
                 layout_ops::Spacing();
             }
             picker_flags_to_forward: ImGuiColorEditFlags = ImGuiColorEditFlags_DataTypeMask_ | ImGuiColorEditFlags_PickerMask_ | ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaBar;
@@ -475,7 +476,7 @@ pub unsafe fn ColorEdit4(label: &str, col: &mut [c_float;4], mut flags: ImGuiCol
     if label != label_display_end && flag_clear(flags, ImGuiColorEditFlags_NoLabel)
     {
         SameLine(0.0, style.ItemInnerSpacing.x);
-        text_ops::TextEx(label, 0);
+        TextEx(label, 0);
     }
 
     // Convert back
@@ -618,7 +619,8 @@ pub unsafe fn ColorPicker4(label: &str, col: &mut [c_float; 4], mut flags: ImGui
     let bar0_pos_x: c_float =  picker_pos.x + sv_picker_size + style.ItemInnerSpacing.x;
     let bar1_pos_x: c_float =  bar0_pos_x + bars_width + style.ItemInnerSpacing.x;
     let bars_triangles_half_sz: c_float =  IM_FLOOR(bars_width * 0.200);backup_initial_col: [c_float;4];
-    memcpy(backup_initial_col, col, components * sizeof);
+    // TODO:
+    // memcpy(backup_initial_col, col, components * sizeof);
 
     let wheel_thickness: c_float =  sv_picker_size * 0.08;
     let wheel_r_outer: c_float =  sv_picker_size * 0.50;
@@ -751,7 +753,7 @@ pub unsafe fn ColorPicker4(label: &str, col: &mut [c_float; 4], mut flags: ImGui
             if flag_set(flags, ImGuiColorEditFlags_NoSidePreview) {
                 SameLine(0.0, style.ItemInnerSpacing.x);
             }
-            text_ops::TextEx(label, 0);
+            TextEx(label, 0);
         }
     }
 
@@ -760,13 +762,13 @@ pub unsafe fn ColorPicker4(label: &str, col: &mut [c_float; 4], mut flags: ImGui
         PushItemFlag(ImGuiItemFlags_NoNavDefaultFocus, true);
         let mut col_v4 = ImVec4::from_floats(col[0], col[1], col[2], if flag_set(flags, ImGuiColorEditFlags_NoAlpha) { 1.0} else {col[3]});
         if flags & ImGuiColorEditFlags_NoLabel {
-            text_ops::Text("Current");}
+            Text("Current");}
 
         sub_flags_to_forward: ImGuiColorEditFlags = ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_HDR | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHalf | ImGuiColorEditFlags_NoTooltip;
         ColorButton("##current", col_v4, (flags & sub_flags_to_forward), ImVec2::new(square_sz * 3, square_sz * 2));
         if ref_col != c_float::MIN
         {
-            text_ops::Text("Original");
+            Text("Original");
             let mut ref_col_v4 = ImVec4::from_floats(ref_col[0], ref_col[1], ref_col[2], if flag_set(flags, ImGuiColorEditFlags_NoAlpha) { 1.0} else {ref_col[3]});
             if ColorButton("##original", ref_col_v4, (flags & sub_flags_to_forward), ImVec2::new(square_sz * 3, square_sz * 2))
             {
@@ -955,7 +957,9 @@ pub unsafe fn ColorPicker4(label: &str, col: &mut [c_float; 4], mut flags: ImGui
 
     EndGroup();
 
-    if value_changed && memcmp(backup_initial_col, col, components * sizeof) == 0 {
+    if value_changed
+        && backup_initial_col == col //memcmp(backup_initial_col, col, components * sizeof) == 0
+    {
         value_changed = false;}
     if value_changed{
         MarkItemEdited(g.LastItemData.ID);}
@@ -969,104 +973,102 @@ pub unsafe fn ColorPicker4(label: &str, col: &mut [c_float; 4], mut flags: ImGui
 // FIXME: May want to display/ignore the alpha component in the color display? Yet show it in the tooltip.
 // 'desc_id' is not called 'label' because we don't display it next to the button, but only in the tooltip.
 // Note that 'col' may be encoded in HSV if ImGuiColorEditFlags_InputHSV is set.
-pub unsafe fn ColorButton(desc_id: &str, col: &ImVec4, mut flags: ImGuiColorEditFlags, size_arg: &ImVec2) -> bool
-{
+pub unsafe fn ColorButton(desc_id: &str, col: &ImVec4, mut flags: ImGuiColorEditFlags, size_arg: Option<&ImVec2>) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    if window.SkipItems { return  false; }
+    if window.SkipItems { return false; }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut id: ImGuiID =  window.GetID(desc_id);
-    let default_size: c_float =  GetFrameHeight();
-    let mut size = ImVec2::from_floats(if size_arg.x == 0.0 { default_size} else {size_arg.x}, if size_arg.y == 0.0 { default_size }else{ size_arg.y});
+    let mut id: ImGuiID = window.GetID(desc_id);
+    let default_size: c_float = GetFrameHeight();
+    let mut size = ImVec2::from_floats(if size_arg.x == 0.0 { default_size } else { size_arg.x }, if size_arg.y == 0.0 { default_size } else { size_arg.y });
     let mut bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size);
-    ItemSize(&bb.GetSize(), if size.y >= default_size { g.Style.FramePadding.y} else {0.0});
-    if !ItemAdd(&mut bb, id, null(), 0) { return  false; }
+    ItemSize(&bb.GetSize(), if size.y >= default_size { g.Style.FramePadding.y } else { 0.0 });
+    if !ItemAdd(&mut bb, id, null(), 0) { return false; }
 
-    let mut hovered = false; let mut held = false;
-    let mut pressed: bool =  ButtonBehavior(&bb, id, &mut hovered, &mut held, 0);
+    let mut hovered = false;
+    let mut held = false;
+    let mut pressed: bool = ButtonBehavior(&bb, id, &mut hovered, &mut held, 0);
 
-    if flag_set(flags , ImGuiColorEditFlags_NoAlpha) {
+    if flag_set(flags, ImGuiColorEditFlags_NoAlpha) {
         flags &= !(ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHal0f32);
     }
 
     let mut col_rgb: ImVec4 = col.clone();
-    if flag_set(flags , ImGuiColorEditFlags_InputHSV) {
+    if flag_set(flags, ImGuiColorEditFlags_InputHSV) {
         ColorConvertHSVtoRGB(col_rgb.x, col_rgb.y, col_rgb.z, &mut col_rgb.x, &mut col_rgb.y, &mut col_rgb.z);
     }
 
     let mut col_rgb_without_alpha = ImVec4::from_floats(col_rgb.x, col_rgb.y, col_rgb.z, 1.0);
     let grid_step: c_float = size.x.min(size.y) / 2.99;
-    let rounding: c_float =  g.Style.FrameRounding.min(grid_step *0.5);
-    let mut bb_inner: ImRect =  bb;
-    let mut off: c_float =  0.0;
-    if flag_clear(flags, ImGuiColorEditFlags_NoBorder)
-    {
+    let rounding: c_float = g.Style.FrameRounding.min(grid_step * 0.5);
+    let mut bb_inner: ImRect = bb;
+    let mut off: c_float = 0.0;
+    if flag_clear(flags, ImGuiColorEditFlags_NoBorder) {
         off = -0.75; // The border (using Col_FrameBg) tends to look off when color is near-opaque and rounding is enabled. This offset seemed like a good middle ground to reduce those artifacts.
         bb_inner.Expand(off);
     }
-    if flag_set(flags, ImGuiColorEditFlags_AlphaPreviewHal0f32) && col_rgb.w < 1.0
-    {
-        let mid_x: c_float =  IM_ROUND((bb_inner.Min.x + bb_inner.Max.x) * 0.5);
+    if flag_set(flags, ImGuiColorEditFlags_AlphaPreviewHal0f32) && col_rgb.w < 1.0 {
+        let mid_x: c_float = IM_ROUND((bb_inner.Min.x + bb_inner.Max.x) * 0.5);
         RenderColorRectWithAlphaCheckerboard(window.DrawList, ImVec2::new(bb_inner.Min.x + grid_step, bb_inner.Min.y), bb_inner.Max, GetColorU32FromImVec4(&col_rgb), grid_step, ImVec2::new(-grid_step + off, off), rounding, ImDrawFlags_RoundCornersRight);
         window.DrawList.AddRectFilled(&bb_inner.Min, ImVec2::new(mid_x, bb_inner.Max.y), GetColorU32(col_rgb_without_alpha, 0.0), rounding, ImDrawFlags_RoundCornersLeft);
-    }
-    else
-    {
+    } else {
         // Because GetColorU32() multiplies by the global style Alpha and we don't want to display a checkerboard if the source code had no alpha
-        col_source: ImVec4 = if flags & ImGuiColorEditFlags_AlphaPreview { col_rgb} else { col_rgb_without_alpha};
+        col_source: ImVec4 = if flags & ImGuiColorEditFlags_AlphaPreview { col_rgb } else { col_rgb_without_alpha };
         if (col_source.w < 1.0) {
             RenderColorRectWithAlphaCheckerboard(window.DrawList, bb_inner.Min, bb_inner.Max, GetColorU32(col_source, 0.0), grid_step, ImVec2::new(off, off), rounding, 0);
-        }
-        else {
+        } else {
             window.DrawList.AddRectFilled(&bb_inner.Min, &bb_inner.Max, GetColorU32(col_source, 0.0), rounding, 0);
         }
     }
     RenderNavHighlight(&bb, id, 0);
-    if flag_clear(flags, ImGuiColorEditFlags_NoBorder)
-    {
+    if flag_clear(flags, ImGuiColorEditFlags_NoBorder) {
         if g.Style.FrameBorderSize > 0.0 {
             RenderFrameBorder(bb.Min, bb.Max, rounding);
-        }
-        else {
+        } else {
             window.DrawList.AddRect(&bb.Min, &bb.Max, GetColorU32(ImGuiCol_FrameBg, 0.0), rounding);
         }// Color button are often in need of some sort of border
     }
 
     // Drag and Drop Source
     // NB: The ActiveId test is merely an optional micro-optimization, BeginDragDropSource() does the same test.
-    if g.ActiveId == id && flag_clear(flags, ImGuiColorEditFlags_NoDragDrop) && BeginDragDropSource(0)
-    {
-        if flag_set(flags , ImGuiColorEditFlags_NoAlpha) {
-            SetDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F, &col_rgb, sizeof * 3, ImGuiCond_Once);
+    if g.ActiveId == id && flag_clear(flags, ImGuiColorEditFlags_NoDragDrop) && BeginDragDropSource(0) {
+        if flag_set(flags, ImGuiColorEditFlags_NoAlpha) {
+            let mut payload_bytes = col_rgb.to_vec();
+            SetDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_3F, &payload_bytes, ImGuiCond_None);
+        } else {
+            let mut payload_bytes = col_rgb.to_vec();
+            SetDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_4F, &payload_bytes, ImGuiCond_None);
         }
-        else {
-            SetDragDropPayload(IMGUI_PAYLOAD_TYPE_COLOR_4F, &col_rgb, sizeof * 4, ImGuiCond_Once);
-        }
-        ColorButton(desc_id, col, flags);
+        ColorButton(desc_id, col, flags, None);
         SameLine(0.0, 0.0);
-        text_ops::TextEx("Color", 0);
+        TextEx("Color", 0);
         EndDragDropSource();
     }
 
     // Tooltip
-    if flag_clear(flags, ImGuiColorEditFlags_NoTooltip) && hovered
+    if flag_clear(flags, ImGuiColorEditFlags_NoTooltip) && hovered {
         ColorTooltip(desc_id, col.x, flags & (ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHal0f32));
+    }
 
     return pressed;
 }
 
 // Initialize/override default color options
-pub unsafe fn SetColorEditOptions(flags: ImGuiColorEditFlags)
+pub unsafe fn SetColorEditOptions(mut flags: ImGuiColorEditFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (flag_clear(flags, ImGuiColorEditFlags_DisplayMask_))
+    if flag_clear(flags, ImGuiColorEditFlags_DisplayMask_) {
         flags |= ImGuiColorEditFlags_DefaultOptions_ & ImGuiColorEditFlags_DisplayMask_;
-    if (flag_clear(flags, ImGuiColorEditFlags_DataTypeMask_))
+    }
+    if flag_clear(flags, ImGuiColorEditFlags_DataTypeMask_) {
         flags |= ImGuiColorEditFlags_DefaultOptions_ & ImGuiColorEditFlags_DataTypeMask_;
-    if (flag_clear(flags, ImGuiColorEditFlags_PickerMask_))
+    }
+    if flag_clear(flags, ImGuiColorEditFlags_PickerMask_) {
         flags |= ImGuiColorEditFlags_DefaultOptions_ & ImGuiColorEditFlags_PickerMask_;
-    if (flag_clear(flags, ImGuiColorEditFlags_InputMask_))
+    }
+    if flag_clear(flags, ImGuiColorEditFlags_InputMask_) {
         flags |= ImGuiColorEditFlags_DefaultOptions_ & ImGuiColorEditFlags_InputMask_;
+    }
     // IM_ASSERT(ImIsPowerOfTwo(flags & ImGuiColorEditFlags_DisplayMask_));    // Check only 1 option is selected
     // IM_ASSERT(ImIsPowerOfTwo(flags & ImGuiColorEditFlags_DataTypeMask_));   // Check only 1 option is selected
     // IM_ASSERT(ImIsPowerOfTwo(flags & ImGuiColorEditFlags_PickerMask_));     // Check only 1 option is selected
@@ -1075,36 +1077,53 @@ pub unsafe fn SetColorEditOptions(flags: ImGuiColorEditFlags)
 }
 
 // Note: only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
-pub unsafe fn ColorTooltip(text: &str, *col: c_float, flags: ImGuiColorEditFlags)
+pub unsafe fn ColorTooltip(text: &str, col: c_float, flags: ImGuiColorEditFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     BeginTooltipEx(ImGuiTooltipFlags_OverridePreviousTooltip, ImGuiWindowFlags_None);
-    let mut  text_end: &str = if text { FindRenderedTextEnd(text, null_mut()) }else {text};
-    if (text_end > text)
-    {
-        text_ops::TextEx(text, text_end);
+    // let mut  text_end: &str = if text { FindRenderedTextEnd(text, null_mut()) }else {text};
+    // if text_end > text
+    // {
+        TextEx(text, 0);
         separator::Separator();
-    }
+    // }
 
-    sz: ImVec2(g.FontSize * 3 + g.Style.FramePadding.y * 2, g.FontSize * 3 + g.Style.FramePadding.y * 2);
-    let mut cf = ImVec4::new(col[0], col[1], col[2], if flag_set(flags, ImGuiColorEditFlags_NoAlpha) { 1.0} else {col[3]});
-    let cr: c_int = IM_F32_TO_INT8_SAT(col[0]), cg = IM_F32_TO_INT8_SAT(col[1]), cb = IM_F32_TO_INT8_SAT(col[2]), ca = if flags & ImGuiColorEditFlags_NoAlpha { 255} else { IM_F32_TO_INT8_SAT(col[3])};
-    ColorButton("##preview", cf, (flags & (ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHal0f32)) | ImGuiColorEditFlags_NoTooltip, sz);
-    SameLine();
-    if (flag_set(flags, ImGuiColorEditFlags_InputRGB) || flag_clear(flags, ImGuiColorEditFlags_InputMask_))
+    let sz = ImVec2::from_floats(g.FontSize * 3 + g.Style.FramePadding.y * 2,
+                                 g.FontSize * 3 + g.Style.FramePadding.y * 2);
+    let mut cf = ImVec4::from_floats(col[0],
+                                     col[1],
+                                     col[2],
+                                     if flag_set(flags, ImGuiColorEditFlags_NoAlpha) {
+                                         1.0}
+                                     else {
+                                         col[3]});
+    let cr: c_int = IM_F32_TO_INT8_SAT(col[0]);
+    let cg = IM_F32_TO_INT8_SAT(col[1]);
+    let cb = IM_F32_TO_INT8_SAT(col[2]);
+    let ca = if flags & ImGuiColorEditFlags_NoAlpha {
+        255}
+    else {
+        IM_F32_TO_INT8_SAT(col[3])};
+    ColorButton("##preview", cf, (flags & (ImGuiColorEditFlags_InputMask_ | ImGuiColorEditFlags_NoAlpha | ImGuiColorEditFlags_AlphaPreview | ImGuiColorEditFlags_AlphaPreviewHal0f32)) | ImGuiColorEditFlags_NoTooltip, Some(&sz));
+    SameLine(0.0, 0.0);
+    if flag_set(flags, ImGuiColorEditFlags_InputRGB) || flag_clear(flags, ImGuiColorEditFlags_InputMask_)
     {
-        if (flags & ImGuiColorEditFlags_NoAlpha)
-            text_ops::Text("#%02X%02X%02X\nR: %d, G: %d, B: %d\n(%.3f, %.3f, %.30f32)", cr, cg, cb, cr, cg, cb, col[0], col[1], col[2]);
-        else
-            text_ops::Text("#%02X%02X%02X%02X\nR:%d, G:%d, B:%d, A:%d\n(%.3f, %.3f, %.3f, %.30f32)", cr, cg, cb, ca, cr, cg, cb, ca, col[0], col[1], col[2], col[3]);
+        if flags & ImGuiColorEditFlags_NoAlpha {
+            let fmt_txt = format!("#{:02X}{:02X}{:02X}\nR: {}, G: {}, B: {}\n({}, {}, {})", cr, cg, cb, cr, cg, cb, col[0], col[1], col[2]);
+            Text(fmt_txt.as_str());
+        }
+        else {
+            let fmt_txt = format!("#{:02X}{:02X}{:02X}{:02X}\nR:{}, G:{}, B:{}, A:{}\n({}, {}, {}, {})", cr, cg, cb, ca, cr, cg, cb, ca, col[0], col[1], col[2], col[3]);
+            Text(fmt_txt.as_str());
+        }
     }
     else if (flags & ImGuiColorEditFlags_InputHSV)
     {
         if (flags & ImGuiColorEditFlags_NoAlpha)
-            text_ops::Text("H: %.3f, S: %.3f, V: %.3f", col[0], col[1], col[2]);
+            Text("H: {}, S: {}, V: {}", col[0], col[1], col[2]);
         else
-            text_ops::Text("H: %.3f, S: %.3f, V: %.3f, A: %.3f", col[0], col[1], col[2], col[3]);
+            Text("H: {}, S: {}, V: {}, A: {}", col[0], col[1], col[2], col[3]);
     }
     EndTooltip();
 }
@@ -1125,8 +1144,10 @@ pub unsafe fn ColorEditOptionsPopup(col: &[c_float], flags: ImGuiColorEditFlags)
     if (allow_opt_datatype)
     {
         if allow_opt_inputs {  separator::Separator(); }
-        if (radio_button::RadioButton("0..255", (opts & ImGuiColorEditFlags_Uint8) != 0)) opts = (opts & !ImGuiColorEditFlags_DataTypeMask_) | ImGuiColorEditFlags_Uint8;
-        if (radio_button::RadioButton("0.00..1.00", (opts & ImGuiColorEditFlags_Float) != 0)) opts = (opts & !ImGuiColorEditFlags_DataTypeMask_) | ImGuiColorEditFlags_Float;
+        if radio_button::RadioButton("0..255", (opts & ImGuiColorEditFlags_Uint8) != 0)
+        opts = (opts & !ImGuiColorEditFlags_DataTypeMask_) | ImGuiColorEditFlags_Uint8;
+        if radio_button::RadioButton("0.00..1.00", (opts & ImGuiColorEditFlags_Float) != 0)
+        opts = (opts & !ImGuiColorEditFlags_DataTypeMask_) | ImGuiColorEditFlags_Float;
     }
 
     if allow_opt_inputs || allow_opt_datatype {
@@ -1137,18 +1158,18 @@ pub unsafe fn ColorEditOptionsPopup(col: &[c_float], flags: ImGuiColorEditFlags)
     {
         let cr: c_int = IM_F32_TO_INT8_SAT(col[0]), cg = IM_F32_TO_INT8_SAT(col[1]), cb = IM_F32_TO_INT8_SAT(col[2]), ca = if flags & ImGuiColorEditFlags_NoAlpha { 255} else { IM_F32_TO_INT8_SAT(col[3])};
         buf: [c_char;64];
-        ImFormatString(buf, buf.len(), "(%.3ff, %.3ff, %.3ff, %.3f0f32)", col[0], col[1], col[2], if flag_set(flags, ImGuiColorEditFlags_NoAlpha) { 1.0} else {col[3]});
+        ImFormatString(buf, buf.len(), "({}f, {}f, {}f, {}0f32)", col[0], col[1], col[2], if flag_set(flags, ImGuiColorEditFlags_NoAlpha) { 1.0} else {col[3]});
         if Selectable(buf) {
             SetClipboardText(buf)(); }
-        ImFormatString(buf, buf.len(), "(%d,%d,%d,%d)", cr, cg, cb, ca);
+        ImFormatString(buf, buf.len(), "({},{},{},{})", cr, cg, cb, ca);
         if Selectable(buf) {
             SetClipboardText(buf)(); }
-        ImFormatString(buf, buf.len(), "#%02X%02X%02X", cr, cg, cb);
+        ImFormatString(buf, buf.len(), "#{:02X}{:02X}{:02X}", cr, cg, cb);
         if Selectable(buf) {
             SetClipboardText(buf)(); }
         if (flag_clear(flags, ImGuiColorEditFlags_NoAlpha))
         {
-            ImFormatString(buf, buf.len(), "#%02X%02X%02X%02X", cr, cg, cb, ca);
+            ImFormatString(buf, buf.len(), "#{:02X}{:02X}{:02X}{:02X}", cr, cg, cb, ca);
             if Selectable(buf) {
                 SetClipboardText(buf)(); }
         }
@@ -2002,9 +2023,9 @@ PlotEx: c_int(ImGuiPlotType plot_type, label: &str, c_float (*values_getter)(dat
             let v0: c_float =  values_getter(data, (v_idx + values_offset) % values_count);
             let v1: c_float =  values_getter(data, (v_idx + 1 + values_offset) % values_count);
             if (plot_type == ImGuiPlotType_Lines)
-                SetTooltip("%d: %8.4g\n%d: %8.4g", v_idx, v0, v_idx + 1, v1);
+                SetTooltip("{}: %8.4g\n{}: %8.4g", v_idx, v0, v_idx + 1, v1);
             else if (plot_type == ImGuiPlotType_Histogram)
-                SetTooltip("%d: %8.4g", v_idx, v0);
+                SetTooltip("{}: %8.4g", v_idx, v0);
             idx_hovered = v_idx;
         }
 
@@ -2104,17 +2125,17 @@ pub unsafe fn PlotHistogram(label: &str, c_float (*values_getter)(data: *mut c_v
 
 pub unsafe fn Value(prefix: &str, b: bool)
 {
-    text_ops::Text("%s: %s", prefix, (b ? "true": "false"));
+    Text("%s: %s", prefix, (b ? "true": "false"));
 }
 
 pub unsafe fn Value(prefix: &str, v: c_int)
 {
-    text_ops::Text("%s: %d", prefix, v);
+    Text("%s: {}", prefix, v);
 }
 
 pub unsafe fn Value(prefix: &str, v: c_uint)
 {
-    text_ops::Text("%s: %d", prefix, v);
+    Text("%s: {}", prefix, v);
 }
 
 pub unsafe fn Value(prefix: &str,v: c_float, float_format: &str)
@@ -2123,11 +2144,11 @@ pub unsafe fn Value(prefix: &str,v: c_float, float_format: &str)
     {
         fmt: [c_char;64];
         ImFormatString(fmt, fmt.len(), "%%s: %s", float_format);
-        text_ops::Text(fmt, prefix, v);
+        Text(fmt, prefix, v);
     }
     else
     {
-        text_ops::Text("%s: %.3f", prefix, v);
+        Text("%s: {}", prefix, v);
     }
 }
 

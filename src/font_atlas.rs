@@ -155,7 +155,7 @@ impl ImFontAtlas {
             font_cfg.SizePixels = 13.0 * 1;
         }
         if font_cfg.Name[0] == '\0' as c_char {
-            // ImFormatString(font_cfg.Name, font_cfg.Name.len(), "ProggyClean.ttf, %dpx", font_cfg.SizePixels);
+            // ImFormatString(font_cfg.Name, font_cfg.Name.len(), "ProggyClean.ttf, {}px", font_cfg.SizePixels);
         }
         font_cfg.EllipsisChar = 0x0085;
         font_cfg.GlyphOffset.y = 1 * IM_FLOOR(font_cfg.SizePixels / 13.00);  // Add +1 offset per 13 units

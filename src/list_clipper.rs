@@ -21,7 +21,7 @@ use crate::table_ops::TableEndRow;
 //   clipper.Begin(1000);         // We have 1000 elements, evenly spaced.
 //   while (clipper.Step())
 //       for (int i = clipper.DisplayStart; i < clipper.DisplayEnd; i++)
-//           Text("line number %d", i);
+//           Text("line number {}", i);
 // Generally what happens is:
 // - Clipper lets you process the first element (DisplayStart = 0, DisplayEnd = 1) regardless of it being visible or not.
 // - User code submit that one element.
@@ -57,7 +57,7 @@ impl ImGuiListClipper {
     pub unsafe fn Begin(&mut self, items_count: i32, items_height: f32) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         let mut window = g.CurrentWindow;
-        // IMGUI_DEBUG_LOG_CLIPPER("Clipper: Begin(%d,%.20) in '%s'\n", items_count, items_height, window.Name);
+        // IMGUI_DEBUG_LOG_CLIPPER("Clipper: Begin({},%.20) in '%s'\n", items_count, items_height, window.Name);
 
         let table = g.CurrentTable;
         if table.is_null() == false {
@@ -124,7 +124,7 @@ impl ImGuiListClipper {
             IMGUI_DEBUG_LOG_CLIPPER("Clipper: Step(): computed ItemsHeight: %.2f.\n", self.ItemsHeight);
         }
         if ret {
-            IMGUI_DEBUG_LOG_CLIPPER("Clipper: Step(): display %d to %d.\n", self.DisplayStart, self.DisplayEnd);
+            IMGUI_DEBUG_LOG_CLIPPER("Clipper: Step(): display {} to {}.\n", self.DisplayStart, self.DisplayEnd);
         } else {
             IMGUI_DEBUG_LOG_CLIPPER("Clipper: Step(): End.\n");
         }

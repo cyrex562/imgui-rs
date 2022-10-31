@@ -9,19 +9,19 @@ use crate::math_ops::{ImAddClampOverflow, ImSubClampOverflow};
 pub fn PatchFormatStringFloatToInt(fmt: &str) -> String
 {
 //     if (fmt[0] == '%' && fmt[1] == '.' && fmt[2] == '0' && fmt[3] == 'f' && fmt[4] == 0) // Fast legacy path for "%.0f" which is expected to be the most common case.
-//         return "%d";
+//         return "{}";
 //     let mut  fmt_start: &str = ImParseFormatFindStart(fmt);    // Find % (if any, and ignore %%)
 //     let mut  fmt_end: &str = ImParseFormatFindEnd(fmt_start);  // Find end of format specifier, which itself is an exercise of confidence/recklessness (because snprintf is dependent on libc or user).
 //     if (fmt_end > fmt_start && fmt_end[-1] == 'f')
 //     {
 // // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 //         if (fmt_start == fmt && fmt_end[0] == 0)
-//             return "%d";
+//             return "{}";
 // let tmp_format: &str;
-//         ImFormatStringToTempBuffer(&tmp_format, null_mut(), "%.*s%%d%s", (fmt_start - fmt), fmt, fmt_end); // Honor leading and trailing decorations, but lose alignment/precision.
+//         ImFormatStringToTempBuffer(&tmp_format, null_mut(), "%.*s%{}%s", (fmt_start - fmt), fmt, fmt_end); // Honor leading and trailing decorations, but lose alignment/precision.
 //         return tmp_format;
 // // #else
-//         // IM_ASSERT(0 && "DragInt(): Invalid format string!"); // Old versions used a default parameter of "%.0f", please replace with e.g. "%d"
+//         // IM_ASSERT(0 && "DragInt(): Invalid format string!"); // Old versions used a default parameter of "%.0f", please replace with e.g. "{}"
 // // #endif
 //     }
 //     return fmt;
