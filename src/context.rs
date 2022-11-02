@@ -3,6 +3,7 @@
 // [SECTION] ImGuiContext (main Dear ImGui context)
 //-----------------------------------------------------------------------------
 
+use std::collections::HashMap;
 use crate::activate_flags::{ImGuiActivateFlags, ImGuiActivateFlags_None};
 use crate::chunk_stream::ImChunkStream;
 use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_DefaultOptions_};
@@ -114,7 +115,7 @@ pub struct ImGuiContext {
     pub Time: c_double,
 
     // int                     FrameCount;
-    pub FrameCount: c_int,
+    pub FrameCount: usize,
 
     // int                     FrameCountEnded;
     pub FrameCountEnded: c_int,
@@ -587,7 +588,7 @@ pub struct ImGuiContext {
     pub TablesTempData: Vec<ImGuiTableTempData>,
 
     // ImPool<ImGuiTable>              Tables;                     // Persistent table data
-    pub Tables: ImPool<ImGuiTable>,
+    pub Tables: HashMap<i32, ImGuiTable>,
 
     // ImVector<float>                 TablesLastTimeActive;       // Last used timestamp of each tables (SOA, for efficient GC)
     pub TablesLastTimeActive: Vec<c_float>,

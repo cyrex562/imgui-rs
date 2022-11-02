@@ -9,7 +9,7 @@ use crate::string_ops::str_to_const_c_char_ptr;
 use crate::viewport::ImGuiViewport;
 
 // static ImDrawList* GetViewportDrawList(viewport: *mut ImGuiViewport, drawlist_no: size_t, drawlist_name: *const c_char)
-pub unsafe fn GetViewportDrawList(viewport: *mut ImGuiViewport, drawlist_no: c_sizet, drawlist_name: *const c_char) -> *mut ImDrawList
+pub unsafe fn GetViewportDrawList(viewport: Option<&mut ImGuiViewport>, drawlist_no: usize, drawlist_name: &str) -> &mut ImDrawList
 {
     // Create the draw list on demand, because they are not frequently used for all viewports
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -47,7 +47,7 @@ pub unsafe fn GetBackgroundDrawList2() -> *mut ImDrawList
 }
 
 // ImDrawList* GetForegroundDrawList(viewport: *mut ImGuiViewport)
-pub unsafe fn GetForegroundDrawList(viewport: *mut ImGuiViewport) -> *mut ImDrawList
+pub unsafe fn GetForegroundDrawList(viewport: Option<&mut Viewport>) -> &mut ImDrawList
 {
     return GetViewportDrawList(viewport, 1, str_to_const_c_char_ptr("##Foreground"));
 }

@@ -55,13 +55,12 @@ pub struct ImDrawList {
     pub VtxBuffer: Vec<ImDrawVert>,
     // Vertex buffer.
     pub Flags: ImDrawListFlags, // Flags, you may poke into these to adjust anti-aliasing settings per-primitive.
-
     // [Internal, used while building lists]
-    pub _VtxCurrentIdx: size_t,
+    pub _VtxCurrentIdx: usize,
     // [Internal] generally == VtxBuffer.Size unless we are past 64K vertices, in which case this gets reset to 0.
     pub _Data: *const ImDrawListSharedData,
     // Pointer to shared draw data (you can use GetDrawListSharedData() to get the one from current ImGui context)
-    pub _OwnerName: *const c_char,
+    pub _OwnerName: String,
     // Pointer to owner window's name for debugging
     pub _VtxWritePtr: *mut ImDrawVert,
     // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
@@ -77,13 +76,13 @@ pub struct ImDrawList {
     // [Internal] template of active commands. Fields should match those of CmdBuffer.back().
     pub _Splitter: ImDrawListSplitter,
     // [Internal] for channels api (note: prefer using your own persistent instance of ImDrawListSplitter!)
-    pub _FringeScale: c_float, // [Internal] anti-alias fringe is scaled by this value, this helps to keep things sharp while zooming at vertex buffer content
+    pub _FringeScale: f32, // [Internal] anti-alias fringe is scaled by this value, this helps to keep things sharp while zooming at vertex buffer content
 }
 
 impl ImDrawList {
     // If you want to create ImDrawList instances, pass them GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
     // ImDrawList(const ImDrawListSharedData* shared_data) { memset(this, 0, sizeof(*this)); _Data = shared_data; }
-    pub fn new(shared_data: *const ImDrawListSharedData) -> Self {
+    pub fn new(shared_data: &ImDrawListSharedData) -> Self {
         Self {
             _Data: shared_data,
             ..Default::default()
@@ -558,9 +557,10 @@ impl ImDrawList {
             } else {
                 5
             };
-            let mut temp_normals: *mut ImVec2 =
-                libc::malloc(points_count * count * mem::size_of::<ImVec2>()); //-V630
-            let mut temp_points: *mut ImVec2 = temp_normals + points_count;
+            let mut temp_normals: Vec<ImVec2> = vec![];
+                // libc::malloc(points_count * count * mem::size_of::<ImVec2>()); //-V630
+            // let mut temp_points_offset: *mut ImVec2 = temp_normals + points_count;
+
 
             // Calculate normals (tangents) for each line segment
             // for (let i1: c_int = 0; i1 < count; i1++)
@@ -876,9 +876,10 @@ impl ImDrawList {
             }
 
             // Compute normals
-            let mut temp_normals: *mut ImVec2 =
-                libc::malloc(points_count * mem::size_of::<ImVec2>()); //-V630
+            // let mut temp_normals: *mut ImVec2 =
+            //     libc::malloc(points_count * mem::size_of::<ImVec2>()); //-V630
                                                                        // for (let i0: c_int = points_count - 1, i1 = 0; i1 < points_count; i0 = i1++)
+            let mut temp_normals: Vec<ImVec2> = vec![];
             let mut i0 = points_count - 1;
             let mut i1: size_t = 0;
             while i1 < points_count {
@@ -898,8 +899,8 @@ impl ImDrawList {
             let mut i1: size_t = 0;
             while i1 < points_count {
                 // Average normals
-                n0: &ImVec2 = temp_normals[i0];
-                n1: &ImVec2 = temp_normals[i1];
+                let n0 = &temp_normals[i0];
+                let n1 = &temp_normals[i1];
                 let mut dm_x: c_float = (n0.x + n1.x) * 0.5;
                 let mut dm_y: c_float = (n0.y + n1.y) * 0.5;
                 IM_FIXNORMAL2F(dm_x, dm_y);
@@ -1070,7 +1071,7 @@ impl ImDrawList {
 
         flags = FixRectCornerFlags(flags);
         if rounding < 0.5
-            || flag_set(flags, ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
+            || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
         {
             self.AddImage(user_texture_id, p_min, p_max, uv_min, uv_max, col);
             return;

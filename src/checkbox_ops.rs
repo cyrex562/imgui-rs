@@ -18,7 +18,7 @@ use crate::{button_ops, GImGui};
 use libc::{c_float, c_int, c_uint};
 use std::ptr::null;
 
-pub unsafe fn Checkbox(label: &str, v: *mut bool) -> bool {
+pub unsafe fn Checkbox(label: &str, v: &mut bool) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems {
         return false;
@@ -59,7 +59,7 @@ pub unsafe fn Checkbox(label: &str, v: *mut bool) -> bool {
     let mut hovered = false;
     let mut held = false;
     let mut pressed: bool = button_ops::ButtonBehavior(&total_bb, id, &mut hovered, &mut held, 0);
-    if (pressed) {
+    if pressed {
         *v = !(*v);
         MarkItemEdited(id);
     }
@@ -103,7 +103,7 @@ pub unsafe fn Checkbox(label: &str, v: *mut bool) -> bool {
     } else if (*v) {
         let pad: c_float = ImMax(1.0, IM_FLOOR(square_sz / 6.0));
         RenderCheckMark(
-            window.DrawList,
+            &mut window.DrawList,
             check_bb.Min + ImVec2::from_floats(pad, pad),
             check_col,
             square_sz - pad * 2.0,

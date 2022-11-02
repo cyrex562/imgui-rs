@@ -12,8 +12,8 @@ pub struct ImGuiMetricsConfig {
     pub ShowDrawCmdMesh: bool,
     pub ShowDrawCmdBoundingBoxes: bool,
     pub ShowDockingNodes: bool,
-    pub ShowWindowsRectsType: c_int,
-    pub ShowTablesRectsType: c_int,
+    pub ShowWindowsRectsType: i32,
+    pub ShowTablesRectsType: i32,
 
 }
 

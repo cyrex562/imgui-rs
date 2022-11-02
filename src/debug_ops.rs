@@ -6,9 +6,11 @@ use std::ffi::CStr;
 use std::ptr::null_mut;
 use libc::{c_char, c_float, c_int, c_uint, c_void, open, size_t};
 use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
+use crate::checkbox_ops::Checkbox;
 use crate::child_ops::{BeginChild, EndChild};
 use crate::clipboard_ops::SetClipboardText;
 use crate::color::{IM_COL32, ImGuiCol_Border, ImGuiCol_Header, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_WindowBg};
+use crate::combo_box::{Combo, Combo2};
 use crate::condition::{ImGuiCond_FirstUseEver, ImGuiCond_Once};
 use crate::context_ops::GetFrameCount;
 use crate::cursor_ops::{GetCursorScreenPos, Indent, Unindent};
@@ -27,6 +29,7 @@ use crate::id_ops::PopID;
 use crate::image_ops::Image;
 use crate::imgui::GImGui;
 use crate::ImGuiViewport;
+use crate::input_num_ops::InputText;
 use crate::input_ops::{IsKeyDown, IsKeyPressed, IsMouseClicked, IsMouseHoveringRect, SetMouseCursor};
 use crate::io::ImGuiIO;
 use crate::io_ops::GetIO;
@@ -50,9 +53,12 @@ use crate::style::ImGuiStyle;
 use crate::style_ops::{GetColorU32, GetStyle, GetStyleColorVec4, PopStyleColor, PushStyleColor};
 use crate::tab_bar::ImGuiTabBar;
 use crate::tab_item::ImGuiTabItem;
+use crate::table::ImGuiTable;
+use crate::table_column::ImGuiTableColumn;
 use crate::table_flags::{ImGuiTableFlags_Borders, ImGuiTableFlags_RowBg, ImGuiTableFlags_SizingFixedFit};
+use crate::table_ops::TableGetInstanceData;
 use crate::tables::{BeginTable, EndTable, TableHeadersRow, TableNextColumn, TableSetupColumn};
-use crate::text_ops::{CalcTextSize, Text, TextDisabled, TextUnformatted};
+use crate::text_ops::{BulletText, CalcTextSize, Text, TextDisabled, TextUnformatted};
 use crate::tooltip_ops::{BeginTooltip, EndTooltip};
 use crate::type_defs::ImGuiID;
 use crate::utils::{flag_set, GetVersion};
@@ -321,13 +327,93 @@ pub unsafe fn ShowFontAtlas(atlas: &mut ImFontAtlas) {
     }
 }
 
-enum { WRT_OuterRect, WRT_OuterRectClipped, WRT_InnerRect, WRT_InnerClipRect, WRT_WorkRect, WRT_Content, WRT_ContentIdeal, WRT_ContentRegionRect, WRT_Count };
+// enum { WRT_OuterRect, WRT_OuterRectClipped, WRT_InnerRect, WRT_InnerClipRect, WRT_WorkRect, WRT_Content, WRT_ContentIdeal, WRT_ContentRegionRect, WRT_Count };
+pub type WRT = i32;
+pub const WRT_OuterRect: WRT = 0;
+pub const WRT_OuterRectClipped: WRT = 1;
+pub const WRT_InnterRect: WRT = 2;
+pub const WRT_InnerClipRect: WRT = 3;
+pub const WRT_WorkRect: WRT = 4;
+pub const WRT_Content: WRT = 5;
+pub const WRT_ContentIdeal: WRT = 6;
+pub const WRT_ContentRegionRect: WRT = 7;
+pub const WRT_Count: WRT = 8;
 
-enum { TRT_OuterRect, TRT_InnerRect, TRT_WorkRect, TRT_HostClipRect, TRT_InnerClipRect, TRT_BackgroundClipRect, TRT_ColumnsRect, TRT_ColumnsWorkRect, TRT_ColumnsClipRect, TRT_ColumnsContentHeadersUsed, TRT_ColumnsContentHeadersIdeal, TRT_ColumnsContentFrozen, TRT_ColumnsContentUnfrozen, TRT_Count };
 
-wrt_rects_names: *const c_char[WRT_Count] = { "OuterRect", "OuterRectClipped", "InnerRect", "InnerClipRect", "WorkRect", "Content", "ContentIdeal", "ContentRegionRect" };
+// enum { TRT_OuterRect, TRT_InnerRect, TRT_WorkRect, TRT_HostClipRect, TRT_InnerClipRect, TRT_BackgroundClipRect, TRT_ColumnsRect, TRT_ColumnsWorkRect, TRT_ColumnsClipRect, TRT_ColumnsContentHeadersUsed, TRT_ColumnsContentHeadersIdeal, TRT_ColumnsContentFrozen, TRT_ColumnsContentUnfrozen, TRT_Count };
+pub type TRT = i32;
+pub const TRT_OuterRect: TRT = 0;
+pub const TRT_InnerRect: TRT = 1;
+pub const TRT_WorkRect: TRT = 2;
+pub const TRT_HostClipRect: TRT = 3;
+pub const TRT_InnerClipRect: TRT = 4;
+pub const TRT_BackgroundClipRect: TRT = 5;
+pub const TRT_ColumnsRect: TRT = 6;
+pub const TRT_ColumnsWorkRect: TRT = 7;
+pub const TRT_ColumnsClipRect: TRT = 8;
+pub const TRT_ColumnsContentHeadersUsed: TRT = 9;
+pub const TRT_ColumnsContentHeadersIdeal: TRT = 10;
+pub const TRT_ColumnsContentFrozen: TRT = 11;
+pub const TRT_ColumnsContentUnfrozen: TRT = 12;
+pub const TRT_Count: TRT = 13;
+
+
+
+pub const wrt_rects_names: [&'static str;8] = [ "OuterRect", "OuterRectClipped", "InnerRect", "InnerClipRect", "WorkRect", "Content", "ContentIdeal", "ContentRegionRect" ];
      // Tables Rect Type
-    trt_rects_names: *const c_char[TRT_Count] = { "OuterRect", "InnerRect", "WorkRect", "HostClipRect", "InnerClipRect", "BackgroundClipRect", "ColumnsRect", "ColumnsWorkRect", "ColumnsClipRect", "ColumnsContentHeadersUsed", "ColumnsContentHeadersIdeal", "ColumnsContentFrozen", "ColumnsContentUnfrozen" };
+    pub const trt_rects_names: [&'startic str;13] = [ "OuterRect", "InnerRect", "WorkRect", "HostClipRect", "InnerClipRect", "BackgroundClipRect", "ColumnsRect", "ColumnsWorkRect", "ColumnsClipRect", "ColumnsContentHeadersUsed", "ColumnsContentHeadersIdeal", "ColumnsContentFrozen", "ColumnsContentUnfrozen" ];
+
+
+#[derive(Default,Debug,Clone)]
+    struct Funcs {
+
+    }
+
+    impl Funcs
+    {
+        pub unsafe fn GetTableRect(table: &mut ImGuiTable, rect_type: i32, n: i32) -> ImRect {
+            let table_instance = TableGetInstanceData(table, table.InstanceCurrent); // Always using last submitted instance
+            if rect_type == TRT_OuterRect { return table.OuterRect; } else if rect_type == TRT_InnerRect { return table.InnerRect; } else if rect_type == TRT_WorkRect { return table.WorkRect; } else if rect_type == TRT_HostClipRect { return table.HostClipRect; } else if rect_type == TRT_InnerClipRect { return table.InnerClipRect; } else if rect_type == TRT_BackgroundClipRect { return table.BgClipRect; } else if rect_type == TRT_ColumnsRect {
+                let c = &table.Columns[n];
+                return ImRect::from_floats(c.MinX, table.InnerClipRect.Min.y, c.MaxX, table.InnerClipRect.Min.y + table_instance.LastOuterHeight);
+            } else if rect_type == TRT_ColumnsWorkRect {
+                let c = &table.Columns[n];
+                return ImRect::from_floats(c.WorkMinX, table.WorkRect.Min.y, c.WorkMaxX, table.WorkRect.Max.y);
+            } else if rect_type == TRT_ColumnsClipRect {
+                let c = &table.Columns[n];
+                return c.ClipRect;
+            } else if rect_type == TRT_ColumnsContentHeadersUsed {
+                let c = &table.Columns[n];
+                return ImRect::from_floats(c.WorkMinX, table.InnerClipRect.Min.y, c.ContentMaxXHeadersUsed, table.InnerClipRect.Min.y + table_instance.LastFirstRowHeight);
+            } // Note: y1/y2 not always accurate
+            else if rect_type == TRT_ColumnsContentHeadersIdeal {
+                let c = &table.Columns[n];
+                return ImRect::from_floats(c.WorkMinX, table.InnerClipRect.Min.y, c.ContentMaxXHeadersIdeal, table.InnerClipRect.Min.y + table_instance.LastFirstRowHeight);
+            } else if rect_type == TRT_ColumnsContentFrozen {
+                let c = &table.Columns[n];
+                return ImRect::from_floats(c.WorkMinX, table.InnerClipRect.Min.y, c.ContentMaxXFrozen, table.InnerClipRect.Min.y + table_instance.LastFirstRowHeight);
+            } else if rect_type == TRT_ColumnsContentUnfrozen {
+                let c = &table.Columns[n];
+                return ImRect::from_floats(c.WorkMinX, table.InnerClipRect.Min.y + table_instance.LastFirstRowHeight, c.ContentMaxXUnfrozen, table.InnerClipRect.Max.y);
+            }
+            // IM_ASSERT(0);
+            return ImRect::default();
+        }
+
+        pub unsafe fn GetWindowRect(window: &mut ImGuiWindow, rect_type: i32) -> ImRect
+        {
+            if rect_type == WRT_OuterRect { return window.Rect(); }
+            else if (rect_type == WRT_OuterRectClipped)     { return window.OuterRectClipped; }
+            else if (rect_type == WRT_InnerRect)            { return window.InnerRect; }
+            else if (rect_type == WRT_InnerClipRect)        { return window.InnerClipRect; }
+            else if (rect_type == WRT_WorkRect)             { return window.WorkRect; }
+            else if (rect_type == WRT_Content)       { let mut min =  window.InnerRect.Min - window.Scroll + window.WindowPadding; return ImRect::from_vec2(min, min + window.ContentSize); }
+            else if (rect_type == WRT_ContentIdeal)         { let mut min =  window.InnerRect.Min - window.Scroll + window.WindowPadding; return ImRect::from_vec2(min, min + window.ContentSizeIdeal); }
+            else if (rect_type == WRT_ContentRegionRect)    { return window.ContentRegionRect; }
+            // IM_ASSERT(0);
+            return ImRect::default();
+        }
+    }
 
 pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
 {
@@ -341,7 +427,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
         ShowStackToolWindow(&mut cfg.ShowStackTool);
     }
 
-    if !Begin("Dear ImGui Metrics/Debugger", p_open) || GetCurrentWindow().BeginCount > 1
+    if !Begin("Dear ImGui Metrics/Debugger", Some(p_open)) || GetCurrentWindow().BeginCount > 1
     {
         End();
         return;
@@ -359,112 +445,109 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
     // Debugging enums
     // Windows Rect Type
 
-    if (cfg.ShowWindowsRectsType < 0)
+    if cfg.ShowWindowsRectsType < 0 {
         cfg.ShowWindowsRectsType = WRT_WorkRect;
-    if (cfg.ShowTablesRectsType < 0)
+    }
+    if cfg.ShowTablesRectsType < 0 {
         cfg.ShowTablesRectsType = TRT_WorkRect;
+    }
 
-    struct Funcs
-    {
-        static pub unsafe fn GetTableRect(ImGuiTable* table, rect_type: c_int, n: c_int) -> ImRect
-        {
-            ImGuiTableInstanceData* table_instance = TableGetInstanceData(table, table.InstanceCurrent); // Always using last submitted instance
-            if (rect_type == TRT_OuterRect)                     { return table.OuterRect; }
-            else if (rect_type == TRT_InnerRect)                { return table.InnerRect; }
-            else if (rect_type == TRT_WorkRect)                 { return table.WorkRect; }
-            else if (rect_type == TRT_HostClipRect)             { return table.HostClipRect; }
-            else if (rect_type == TRT_InnerClipRect)            { return table.InnerClipRect; }
-            else if (rect_type == TRT_BackgroundClipRect)       { return table.BgClipRect; }
-            else if (rect_type == TRT_ColumnsRect)              { ImGuiTableColumn* c = &table.Columns[n]; return ImRect(c->MinX, table.InnerClipRect.Min.y, c->MaxX, table.InnerClipRect.Min.y + table_instance.LastOuterHeight); }
-            else if (rect_type == TRT_ColumnsWorkRect)          { ImGuiTableColumn* c = &table.Columns[n]; return ImRect(c->WorkMinX, table.WorkRect.Min.y, c->WorkMaxX, table.WorkRect.Max.y); }
-            else if (rect_type == TRT_ColumnsClipRect)          { ImGuiTableColumn* c = &table.Columns[n]; return c->ClipRect; }
-            else if (rect_type == TRT_ColumnsContentHeadersUsed){ ImGuiTableColumn* c = &table.Columns[n]; return ImRect(c->WorkMinX, table.InnerClipRect.Min.y, c->ContentMaxXHeadersUsed, table.InnerClipRect.Min.y + table_instance.LastFirstRowHeight); } // Note: y1/y2 not always accurate
-            else if (rect_type == TRT_ColumnsContentHeadersIdeal){ImGuiTableColumn* c = &table.Columns[n]; return ImRect(c->WorkMinX, table.InnerClipRect.Min.y, c->ContentMaxXHeadersIdeal, table.InnerClipRect.Min.y + table_instance.LastFirstRowHeight); }
-            else if (rect_type == TRT_ColumnsContentFrozen)     { ImGuiTableColumn* c = &table.Columns[n]; return ImRect(c->WorkMinX, table.InnerClipRect.Min.y, c->ContentMaxXFrozen, table.InnerClipRect.Min.y + table_instance.LastFirstRowHeight); }
-            else if (rect_type == TRT_ColumnsContentUnfrozen)   { ImGuiTableColumn* c = &table.Columns[n]; return ImRect(c->WorkMinX, table.InnerClipRect.Min.y + table_instance.LastFirstRowHeight, c->ContentMaxXUnfrozen, table.InnerClipRect.Max.y); }
-            // IM_ASSERT(0);
-            return ImRect();
-        }
 
-        static pub unsafe fn GetWindowRect(window: *mut ImGuiWindow, rect_type: c_int) -> ImRect
-        {
-            if (rect_type == WRT_OuterRect)                 { return window.Rect(); }
-            else if (rect_type == WRT_OuterRectClipped)     { return window.OuterRectClipped; }
-            else if (rect_type == WRT_InnerRect)            { return window.InnerRect; }
-            else if (rect_type == WRT_InnerClipRect)        { return window.InnerClipRect; }
-            else if (rect_type == WRT_WorkRect)             { return window.WorkRect; }
-            else if (rect_type == WRT_Content)       { let mut min: ImVec2 =  window.InnerRect.Min - window.Scroll + window.WindowPadding; return ImRect(min, min + window.ContentSize); }
-            else if (rect_type == WRT_ContentIdeal)         { let mut min: ImVec2 =  window.InnerRect.Min - window.Scroll + window.WindowPadding; return ImRect(min, min + window.ContentSizeIdeal); }
-            else if (rect_type == WRT_ContentRegionRect)    { return window.ContentRegionRect; }
-            // IM_ASSERT(0);
-            return ImRect();
-        }
-    };
 
     // Tools
-    if (TreeNode("Tools"))
+    if TreeNode("Tools", "")
     {
-        let mut show_encoding_viewer: bool =  TreeNode("UTF-8 Encoding viewer");
-        SameLine();
+        let mut show_encoding_viewer: bool =  TreeNode("UTF-8 Encoding viewer", "");
+        SameLine(0.0, 0.0);
         MetricsHelpMarker("You can also call DebugTextEncoding() from your code with a given string to test that your UTF-8 encoding settings are correct.");
-        if (show_encoding_viewer)
+        if show_encoding_viewer
         {
-            static buf: [c_char;100] = "";
+            let mut buf = String::with_capacity(100);
             SetNextItemWidth(-FLT_MIN);
-            InputText("##Text", buf, buf.len());
-            if (buf[0] != 0)
-                DebugTextEncoding(buf);
+            InputText("##Text", &mut buf, buf.len(), 0, None, None);
+            if buf[0] != 0 {
+                DebugTextEncoding(buf.as_str());
+            }
             TreePop();
         }
 
         // The Item Picker tool is super useful to visually select an item and break into the call-stack of where it was submitted.
-        if (Checkbox("Show Item Picker", &g.DebugItemPickerActive) && g.DebugItemPickerActive)
+        if Checkbox("Show Item Picker", &mut g.DebugItemPickerActive) && g.DebugItemPickerActive {
             DebugStartItemPicker();
-        SameLine();
+        }
+        SameLine(0.0, 0.0);
         MetricsHelpMarker("Will call the IM_DEBUG_BREAK() macro to break in debugger.\nWarning: If you don't have a debugger attached, this will probably crash.");
 
         // Stack Tool is your best friend!
-        Checkbox("Show Debug Log", &cfg.ShowDebugLog);
-        SameLine();
+        Checkbox("Show Debug Log", &mut cfg.ShowDebugLog);
+        SameLine(0.0, 0.0);
         MetricsHelpMarker("You can also call ShowDebugLogWindow() from your code.");
 
         // Stack Tool is your best friend!
-        Checkbox("Show Stack Tool", &cfg.ShowStackTool);
-        SameLine();
+        Checkbox("Show Stack Tool", &mut cfg.ShowStackTool);
+        SameLine(0.0, 0.0);
         MetricsHelpMarker("You can also call ShowStackToolWindow() from your code.");
 
-        Checkbox("Show windows begin order", &cfg.ShowWindowsBeginOrder);
-        Checkbox("Show windows rectangles", &cfg.ShowWindowsRects);
-        SameLine();
+        Checkbox("Show windows begin order", &mut cfg.ShowWindowsBeginOrder);
+        Checkbox("Show windows rectangles", &mut cfg.ShowWindowsRects);
+        SameLine(0.0, 0.0);
         SetNextItemWidth(GetFontSize() * 12);
-        cfg.ShowWindowsRects |= Combo("##show_windows_rect_type", &cfg.ShowWindowsRectsType, wrt_rects_names, WRT_Count, WRT_Count);
-        if (cfg.ShowWindowsRects && g.NavWindow != null_mut())
+        let data: [String;8] = [
+            String::from(wrt_rects_names[0]),
+            String::from(wrt_rects_names[1]),
+            String::from(wrt_rects_names[2]),
+            String::from(wrt_rects_names[3]),
+            String::from(wrt_rects_names[4]),
+            String::from(wrt_rects_names[5]),
+            String::from(wrt_rects_names[6]),
+            String::from(wrt_rects_names[7])];
+        cfg.ShowWindowsRects |= Combo2("##show_windows_rect_type", &mut cfg.ShowWindowsRectsType, &data, WRT_Count as usize, WRT_Count);
+        if cfg.ShowWindowsRects && g.NavWindow != null_mut()
         {
-            BulletText("'%s':", g.NavWindow.Name);
-            Indent();
-            for (let rect_n: c_int = 0; rect_n < WRT_Count; rect_n++)
+            BulletText(format!("'{}':", g.NavWindow.Name).as_str());
+            Indent(0.0);
+            // for (let rect_n: c_int = 0; rect_n < WRT_Count; rect_n++)
+            for rect_n in 0 .. WRT_Count
             {
-                let r: ImRect =  Funcs::GetWindowRect(g.NavWindow, rect_n);
-                Text("(%6.1f,%6.10.0) (%6.1f,%6.10.0) Size (%6.1f,%6.10.0) %s", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), wrt_rects_names[rect_n]);
+                let mut r: ImRect =  Funcs::GetWindowRect(&mut *g.NavWindow, rect_n);
+                Text(format!("({},{}) ({},{}) Size ({},{}) {}", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), wrt_rects_names[rect_n]).as_str());
             }
-            Unindent();
+            Unindent(0.0);
         }
 
-        Checkbox("Show tables rectangles", &cfg.ShowTablesRects);
-        SameLine();
+        Checkbox("Show tables rectangles", &mut cfg.ShowTablesRects);
+        SameLine(0.0, 0.0);
         SetNextItemWidth(GetFontSize() * 12);
-        cfg.ShowTablesRects |= Combo("##show_table_rects_type", &cfg.ShowTablesRectsType, trt_rects_names, TRT_Count, TRT_Count);
-        if (cfg.ShowTablesRects && g.NavWindow != null_mut())
+        let trt_data: [String;13] = [
+            String::from(trt_rects_names[0]),
+            String::from(trt_rects_names[1]),
+            String::from(trt_rects_names[2]),
+            String::from(trt_rects_names[3]),
+            String::from(trt_rects_names[4]),
+            String::from(trt_rects_names[5]),
+            String::from(trt_rects_names[6]),
+            String::from(trt_rects_names[7]),
+            String::from(trt_rects_names[8]),
+            String::from(trt_rects_names[9]),
+            String::from(trt_rects_names[10]),
+            String::from(trt_rects_names[11]),
+            String::from(trt_rects_names[12])
+        ];
+        cfg.ShowTablesRects |= Combo2("##show_table_rects_type", &mut cfg.ShowTablesRectsType, &trt_data, TRT_Count as usize, TRT_Count);
+        if cfg.ShowTablesRects && g.NavWindow != null_mut()
         {
-            for (let table_n: c_int = 0; table_n < g.Tables.GetMapSize(); table_n++)
+            // for (let table_n: c_int = 0; table_n < g.Tables.GetMapSize(); table_n++)
+            for (_, table) in g.Tables.iter()
             {
-                ImGuiTable* table = g.Tables.TryGetMapData(table_n);
-                if (table == null_mut() || table.LastFrameActive < g.FrameCount - 1 || (table.OuterWindow != g.NavWindow && table.InnerWindow != g.NavWindow))
+                // let table = g.Tables.get_key_value(table_n);
+                if table.LastFrameActive < g.FrameCount - 1 || (table.OuterWindow != g.NavWindow && table.InnerWindow != g.NavWindow) {
                     continue;
+                }
 
-                BulletText("Table 0x%08X ({} columns, in '%s')", table.ID, table.ColumnsCount, table.Outerwindow.Name);
-                if (IsItemHovered())
-                    GetForegroundDrawList().AddRect(table.OuterRect.Min - ImVec2::new(1, 1), table.OuterRect.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
+                BulletText(format!("Table {} ({} columns, in '{}')", table.ID, table.ColumnsCount, table.Outerwindow.Name).as_str());
+                if IsItemHovered(0) {
+                    GetForegroundDrawList(None).AddRect(table.OuterRect.Min - ImVec2::new(1, 1), table.OuterRect.Max + ImVec2::new(1, 1), IM_COL32(255, 255, 0, 255), 0.0, 0, 2.0);
+                }
                 Indent();
                 buf: [c_char;128];
                 for (let rect_n: c_int = 0; rect_n < TRT_Count; rect_n++)
@@ -648,9 +731,9 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
         Checkbox("Ctrl shows window dock info", &cfg.ShowDockingNodes);
         if (SmallButton("Clear nodes")) { DockContextClearNodes(&g, 0, true); }
         SameLine();
-        if (SmallButton("Rebuild all")) { dc->WantFullRebuild = true; }
-        for (let n: c_int = 0; n < dc->Nodes.Data.Size; n++)
-            if (node:*mut ImGuiDockNode = dc->Nodes.Data[n].val_p)
+        if (SmallButton("Rebuild all")) { dc.WantFullRebuild = true; }
+        for (let n: c_int = 0; n < dc.Nodes.Data.Size; n++)
+            if (node:*mut ImGuiDockNode = dc.Nodes.Data[n].val_p)
                 if (!root_nodes_only || node.IsRootNode())
                     DebugNodeDockNode(node, "Node");
         TreePop();
@@ -703,9 +786,9 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
                 if (settings.DockId != 0)
                     BulletText("Window '%s' -> DockId %08X", settings.GetName(), settings.DockId);
             Text("In SettingsNodes:");
-            for (let n: c_int = 0; n < dc->NodesSettings.Size; n++)
+            for (let n: c_int = 0; n < dc.NodesSettings.Size; n++)
             {
-                settings: *mut ImGuiDockNodeSettings = &dc->NodesSettings[n];
+                settings: *mut ImGuiDockNodeSettings = &dc.NodesSettings[n];
                 let mut  selected_tab_name: *const c_char= null_mut();
                 if (settings.SelectedTabId)
                 {

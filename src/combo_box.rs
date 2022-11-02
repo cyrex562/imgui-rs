@@ -158,8 +158,8 @@ pub unsafe fn BeginCombo(label: &str, preview_value: &mut String, flags: ImGuiCo
         );
         if value_x2 + arrow_size - style.FramePadding.x <= bb.Max.x {
             RenderArrow(
-                window.DrawList,
-                ImVec2::from_floats(
+                &mut window.DrawList,
+                &ImVec2::from_floats(
                     value_x2 + style.FramePadding.y,
                     bb.Min.y + style.FramePadding.y,
                 ),
@@ -343,19 +343,21 @@ pub unsafe fn BeginComboPreview() -> bool {
 
 pub unsafe fn EndComboPreview() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window = g.CurrentWindow;
     let preview_data: *mut ImGuiComboPreviewData = &mut g.ComboPreviewData;
 
     // FIXME: Using CursorMaxPos approximation instead of correct AABB which we will store in ImDrawCmd in the future
-    draw_list: *mut ImDrawList = window.DrawList;
+    let draw_list = &mut window.DrawList;
     if window.DC.CursorMaxPos.x < preview_Data.PreviewRect.Max.x
         && window.DC.CursorMaxPos.y < preview_Data.PreviewRect.Max.y
     {
         if draw_list.CmdBuffer.len() > 1 {
             // Unlikely case that the PushClipRect() didn't create a command {
-            draw_list._CmdHeader.ClipRect = draw_list.CmdBuffer[draw_list.CmdBuffer.len() - 1]
+            draw_list.CmdBuffer[draw_list.CmdBuffer.len() - 1]
                 .ClipRect =
                 draw_list.CmdBuffer[draw_list.CmdBuffer.len() - 2].ClipRect;
+            draw_list._CmdHeader.ClipRect = draw_list.CmdBuffer[draw_list.CmdBuffer.len() - 1]
+                .ClipRect;
         }
     }
     draw_list._TryMergeDrawCmds();
@@ -404,7 +406,7 @@ pub unsafe fn Items_SingleStringGetter(data: &[String], idx: usize, out_text: &m
 // Old API, prefer using BeginCombo() nowadays if you can.
 pub unsafe fn Combo(
     label: &str,
-    current_item: *mut usize,
+    current_item: &mut i32,
     items_getter: fn(&[String], usize, &mut String) -> bool,
     data: &[String],
     items_count: usize,
@@ -473,7 +475,7 @@ pub unsafe fn Combo(
 // Combo box helper allowing to pass an array of strings.
 pub unsafe fn Combo2(
     label: &str,
-    current_item: *mut usize,
+    current_item: &mut i32,
     items: &[String],
     items_count: usize,
     height_in_items: c_int,
@@ -492,7 +494,7 @@ pub unsafe fn Combo2(
 // Combo box helper allowing to pass all items in a single string literal holding multiple zero-terminated items "item1\0item2\0"
 pub unsafe fn Combo3(
     label: &str,
-    current_item: *mut usize,
+    current_item: &mut usize,
     items_separated_by_zeros: &[String],
     height_in_items: c_int,
 ) -> bool {

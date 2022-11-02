@@ -644,8 +644,8 @@ pub unsafe fn Render() {
 
 // Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
 pub unsafe fn RenderArrow(
-    mut draw_list: *mut ImDrawList,
-    pos: ImVec2,
+    mut draw_list: &mut ImDrawList,
+    pos: &ImVec2,
     col: u32,
     dir: ImGuiDir,
     scale: c_float,
@@ -688,8 +688,8 @@ pub unsafe fn RenderBullet(mut draw_list: *mut ImDrawList, pos: ImVec2, col: u32
 }
 
 pub unsafe fn RenderCheckMark(
-    mut draw_list: *mut ImDrawList,
-    mut pos: ImVec2,
+    mut draw_list: &mut ImDrawList,
+    mut pos: &ImVec2,
     col: u32,
     mut sz: c_float,
 ) {
