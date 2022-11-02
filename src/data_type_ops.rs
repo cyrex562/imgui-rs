@@ -1,42 +1,49 @@
-use libc::{c_float, c_int};
-use crate::data_type::{ImGuiDataType, ImGuiDataType_COUNT, ImGuiDataType_Double, ImGuiDataType_Float, ImGuiDataType_S16, ImGuiDataType_S32, ImGuiDataType_S64, ImGuiDataType_S8, ImGuiDataType_U16, ImGuiDataType_U32, ImGuiDataType_U64, ImGuiDataType_U8};
+use crate::data_type::{
+    ImGuiDataType, ImGuiDataType_COUNT, ImGuiDataType_Double, ImGuiDataType_Float,
+    ImGuiDataType_S16, ImGuiDataType_S32, ImGuiDataType_S64, ImGuiDataType_S8, ImGuiDataType_U16,
+    ImGuiDataType_U32, ImGuiDataType_U64, ImGuiDataType_U8,
+};
 use crate::data_type_info::{GDataTypeInfo, ImGuiDataTypeInfo};
 use crate::math_ops::{ImAddClampOverflow, ImSubClampOverflow};
+use libc::{c_float, c_int};
 
 // FIXME-LEGACY: Prior to 1.61 our DragInt() function internally used floats and because of this the compile-time default value for format was "%.0f".
 // Even though we changed the compile-time default, we expect users to have carried %f around, which would break the display of DragInt() calls.
 // To honor backward compatibility we are rewriting the format string, unless IMGUI_DISABLE_OBSOLETE_FUNCTIONS is enabled. What could possibly go wrong?!
-pub fn PatchFormatStringFloatToInt(fmt: &str) -> String
-{
-//     if (fmt[0] == '%' && fmt[1] == '.' && fmt[2] == '0' && fmt[3] == 'f' && fmt[4] == 0) // Fast legacy path for "%.0f" which is expected to be the most common case.
-//         return "{}";
-//     let mut  fmt_start: &str = ImParseFormatFindStart(fmt);    // Find % (if any, and ignore %%)
-//     let mut  fmt_end: &str = ImParseFormatFindEnd(fmt_start);  // Find end of format specifier, which itself is an exercise of confidence/recklessness (because snprintf is dependent on libc or user).
-//     if (fmt_end > fmt_start && fmt_end[-1] == 'f')
-//     {
-// // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-//         if (fmt_start == fmt && fmt_end[0] == 0)
-//             return "{}";
-// let tmp_format: &str;
-//         ImFormatStringToTempBuffer(&tmp_format, null_mut(), "%.*s%{}%s", (fmt_start - fmt), fmt, fmt_end); // Honor leading and trailing decorations, but lose alignment/precision.
-//         return tmp_format;
-// // #else
-//         // IM_ASSERT(0 && "DragInt(): Invalid format string!"); // Old versions used a default parameter of "%.0f", please replace with e.g. "{}"
-// // #endif
-//     }
-//     return fmt;
+pub fn PatchFormatStringFloatToInt(fmt: &str) -> String {
+    //     if (fmt[0] == '%' && fmt[1] == '.' && fmt[2] == '0' && fmt[3] == 'f' && fmt[4] == 0) // Fast legacy path for "%.0f" which is expected to be the most common case.
+    //         return "{}";
+    //     let mut  fmt_start: &str = ImParseFormatFindStart(fmt);    // Find % (if any, and ignore %%)
+    //     let mut  fmt_end: &str = ImParseFormatFindEnd(fmt_start);  // Find end of format specifier, which itself is an exercise of confidence/recklessness (because snprintf is dependent on libc or user).
+    //     if (fmt_end > fmt_start && fmt_end[-1] == 'f')
+    //     {
+    // // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
+    //         if (fmt_start == fmt && fmt_end[0] == 0)
+    //             return "{}";
+    // let tmp_format: &str;
+    //         ImFormatStringToTempBuffer(&tmp_format, null_mut(), "%.*s%{}%s", (fmt_start - fmt), fmt, fmt_end); // Honor leading and trailing decorations, but lose alignment/precision.
+    //         return tmp_format;
+    // // #else
+    //         // IM_ASSERT(0 && "DragInt(): Invalid format string!"); // Old versions used a default parameter of "%.0f", please replace with e.g. "{}"
+    // // #endif
+    //     }
+    //     return fmt;
     todo!()
 }
 
-pub fn DataTypeGetInfo(data_type: ImGuiDataType) -> ImGuiDataTypeInfo
-{
+pub fn DataTypeGetInfo(data_type: ImGuiDataType) -> ImGuiDataTypeInfo {
     // IM_ASSERT(data_type >= 0 && data_type < ImGuiDataType_COUNT);
     return GDataTypeInfo[data_type].clone();
 }
 
 // DataTypeFormatString: c_int(buf: *mut c_char, buf_size: c_int, data_type: ImGuiDataType, p_data: *const c_void, format: &str)
-pub fn DataTypeFormatString(buf: &mut String, buf_size: usize, data_type: ImGuiDataType, p_data: c_float, format: &String) -> usize
-{
+pub fn DataTypeFormatString(
+    buf: &mut String,
+    buf_size: usize,
+    data_type: ImGuiDataType,
+    p_data: c_float,
+    format: &String,
+) -> usize {
     todo!();
     // Signedness doesn't matter when pushing integer arguments
     if data_type == ImGuiDataType_S32 || data_type == ImGuiDataType_U32 {
@@ -69,65 +76,108 @@ pub fn DataTypeFormatString(buf: &mut String, buf_size: usize, data_type: ImGuiD
 
 pub type DataTypeOperation = c_int;
 
-pub const DataTypeOperationAdd: DataTypeOperation = 0;
-pub const DataTypeOperationSub: DataTypeOperation = 1;
+pub const DATA_TYPE_OPERATION_ADD: DataTypeOperation = 0;
+pub const DATA_TYPE_OPERATION_SUB: DataTypeOperation = 1;
 
-pub unsafe fn DataTypeApplyOp<T>(data_type: ImGuiDataType, op: DataTypeOperation, output: &mut T, arg1: T, arg2: T)
-{
-    // IM_ASSERT(op == '+' || op == '-');
-    match data_type
-    {
+pub unsafe fn DataTypeApplyOp<T>(
+    data_type: ImGuiDataType,
+    op: DataTypeOperation,
+    output: &mut T,
+    arg1: &T,
+    arg2: &T,
+) {
+    match data_type {
         ImGuiDataType_S8 => {
-            if op == DataTypeOperationAdd { *output = ImAddClampOverflow(arg1, arg2, IM_S8_MIN, IM_S8_MAX); }
-            if op == DataTypeOperationSub { *output = ImSubClampOverflow(arg1, arg2, IM_S8_MIN, IM_S8_MAX); }
+            if op == DATA_TYPE_OPERATION_ADD {
+                *output = ImAddClampOverflow(arg1, arg2, IM_S8_MIN, IM_S8_MAX);
+            }
+            if op == DATA_TYPE_OPERATION_SUB {
+                *output = ImSubClampOverflow(arg1, arg2, IM_S8_MIN, IM_S8_MAX);
+            }
             return;
         }
         ImGuiDataType_U8 => {
-            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_U8_MIN, IM_U8_MAX); }
-            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_U8_MIN, IM_U8_MAX); }
+            if op == DATA_TYPE_OPERATION_ADD {
+                *output = ImAddClampOverflow(arg1, arg2, IM_U8_MIN, IM_U8_MAX);
+            }
+            if op == DATA_TYPE_OPERATION_SUB {
+                *output = ImSubClampOverflow(arg1, arg2, IM_U8_MIN, IM_U8_MAX);
+            }
             return;
         }
         ImGuiDataType_S16 => {
-            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_S16_MIN, IM_S16_MAX); }
-            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_S16_MIN, IM_S16_MAX); }
+            if op == DATA_TYPE_OPERATION_ADD {
+                *output = ImAddClampOverflow(arg1, arg2, IM_S16_MIN, IM_S16_MAX);
+            }
+            if op == DATA_TYPE_OPERATION_SUB {
+                *output = ImSubClampOverflow(arg1, arg2, IM_S16_MIN, IM_S16_MAX);
+            }
             return;
         }
         ImGuiDataType_U16 => {
-            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_U16_MIN, IM_U16_MAX); }
-            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_U16_MIN, IM_U16_MAX); }
+            if op == DATA_TYPE_OPERATION_ADD {
+                *output = ImAddClampOverflow(arg1, arg2, IM_U16_MIN, IM_U16_MAX);
+            }
+            if op == DATA_TYPE_OPERATION_SUB {
+                *output = ImSubClampOverflow(arg1, arg2, IM_U16_MIN, IM_U16_MAX);
+            }
             return;
         }
         ImGuiDataType_S32 => {
-            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_S32_MIN, IM_S32_MAX); }
-            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_S32_MIN, IM_S32_MAX); }
+            if op == DATA_TYPE_OPERATION_ADD {
+                *output = ImAddClampOverflow(arg1, arg2, IM_S32_MIN, IM_S32_MAX);
+            }
+            if op == DATA_TYPE_OPERATION_SUB {
+                *output = ImSubClampOverflow(arg1, arg2, IM_S32_MIN, IM_S32_MAX);
+            }
             return;
         }
         ImGuiDataType_U32 => {
-            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_U32_MIN, IM_U32_MAX); }
-            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_U32_MIN, IM_U32_MAX); }
+            if op == DATA_TYPE_OPERATION_ADD {
+                *output = ImAddClampOverflow(arg1, arg2, IM_U32_MIN, IM_U32_MAX);
+            }
+            if op == DATA_TYPE_OPERATION_SUB {
+                *output = ImSubClampOverflow(arg1, arg2, IM_U32_MIN, IM_U32_MAX);
+            }
             return;
         }
         ImGuiDataType_S64 => {
-            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_S64_MIN, IM_S64_MAX); }
-            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_S64_MIN, IM_S64_MAX); }
+            if op == DATA_TYPE_OPERATION_ADD {
+                *output = ImAddClampOverflow(arg1, arg2, IM_S64_MIN, IM_S64_MAX);
+            }
+            if op == DATA_TYPE_OPERATION_SUB {
+                *output = ImSubClampOverflow(arg1, arg2, IM_S64_MIN, IM_S64_MAX);
+            }
             return;
         }
         ImGuiDataType_U64 => {
-            if (op == DataTypeOperationAdd) { *output = ImAddClampOverflow(arg1, arg2, IM_U64_MIN, IM_U64_MAX); }
-            if (op == DataTypeOperationSub) { *output = ImSubClampOverflow(arg1, arg2, IM_U64_MIN, IM_U64_MAX); }
+            if op == DATA_TYPE_OPERATION_ADD {
+                *output = ImAddClampOverflow(arg1, arg2, IM_U64_MIN, IM_U64_MAX);
+            }
+            if op == DATA_TYPE_OPERATION_SUB {
+                *output = ImSubClampOverflow(arg1, arg2, IM_U64_MIN, IM_U64_MAX);
+            }
             return;
         }
         ImGuiDataType_Float => {
-            if (op == DataTypeOperationAdd) { *output = arg1 + arg2; }
-            if (op == DataTypeOperationSub) { *output = arg1 - arg2; }
+            if op == DATA_TYPE_OPERATION_ADD {
+                *output = arg1 + arg2;
+            }
+            if op == DATA_TYPE_OPERATION_SUB {
+                *output = arg1 - arg2;
+            }
             return;
         }
         ImGuiDataType_Double => {
-            if (op == DataTypeOperationAdd) { *output = arg1 + arg2; }
-            if (op == DataTypeOperationSub) { *output = arg1 - arg2; }
+            if op == DATA_TYPE_OPERATION_ADD {
+                *output = arg1 + arg2;
+            }
+            if op == DATA_TYPE_OPERATION_SUB {
+                *output = arg1 - arg2;
+            }
             return;
         }
-        ImGuiDataType_COUNT => { }
+        ImGuiDataType_COUNT => {}
         _ => {}
     }
     // IM_ASSERT(0);
@@ -135,8 +185,12 @@ pub unsafe fn DataTypeApplyOp<T>(data_type: ImGuiDataType, op: DataTypeOperation
 
 // User can input math operators (e.g. +100) to edit a numerical values.
 // NB: This is _not_ a full expression evaluator. We should probably add one and replace this dumb mess..
-pub unsafe fn DataTypeApplyFromText(buf: &str, data_type: ImGuiDataType, p_data: &mut c_float, format: &str) -> bool
-{
+pub unsafe fn DataTypeApplyFromText(
+    buf: &str,
+    data_type: ImGuiDataType,
+    p_data: &mut c_float,
+    format: &str,
+) -> bool {
     // while (ImCharIsBlankA(*buf))
     //     buf+= 1;
     // if !buf[0] { return  false; }
@@ -181,12 +235,15 @@ pub fn DataTypeCompareT<T>(lhs: &T, rhs: &T) -> c_int {
     // if (*lhs < *rhs) return -1;
     // if *lhs > *rhs { return  1; }
     // return 0;
-    if lhs < rhs { return -1 } else if lhs > rhs { return 1 }
-    return 0
+    if lhs < rhs {
+        return -1;
+    } else if lhs > rhs {
+        return 1;
+    }
+    return 0;
 }
 
-pub fn DataTypeCompare<T>(data_type: ImGuiDataType, arg_1: &T, arg_2: &T) -> c_int
-{
+pub fn DataTypeCompare<T>(data_type: ImGuiDataType, arg_1: &T, arg_2: &T) -> c_int {
     // switch (data_type)
     // {
     // ImGuiDataType_S8 =>     return DataTypeCompareT<i8  >((*const i8  )arg_1, (*const i8  )arg_2);
@@ -223,8 +280,12 @@ pub unsafe fn DataTypeClampT<T>(v: &mut T, v_min: &T, v_max: &T) -> bool {
     return false;
 }
 
-pub unsafe fn DataTypeClamp<T>(data_type: ImGuiDataType, p_data: &mut T, p_min: &T, p_max: &T) -> bool
-{
+pub unsafe fn DataTypeClamp<T>(
+    data_type: ImGuiDataType,
+    p_data: &mut T,
+    p_min: &T,
+    p_max: &T,
+) -> bool {
     // switch (data_type)
     // {
     // ImGuiDataType_S8 =>     return DataTypeClampT<i8  >((*mut i8  )p_data, (*const i8  )p_min, (*const i8  )p_max);
@@ -244,13 +305,16 @@ pub unsafe fn DataTypeClamp<T>(data_type: ImGuiDataType, p_data: &mut T, p_min: 
     DataTypeClampT(p_data, p_min, p_max)
 }
 
-pub fn GetMinimumStepAtDecimalPrecision(decimal_precision: usize) -> c_float
-{
-    let min_steps: [c_float;10] = [ 1.0, 0.1, 0.01, 0.001, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001 ];
-    if decimal_precision < 0 { return  f32::MIN; }
+pub fn GetMinimumStepAtDecimalPrecision(decimal_precision: usize) -> c_float {
+    let min_steps: [c_float; 10] = [
+        1.0, 0.1, 0.01, 0.001, 0.01, 0.001, 0.0001, 0.00001, 0.000001, 0.0000001,
+    ];
+    if decimal_precision < 0 {
+        return f32::MIN;
+    }
     return if decimal_precision < min_steps.len() {
-        min_steps[decimal_precision]}
-    else {
+        min_steps[decimal_precision]
+    } else {
         // ImPow(10.0, - decimal_precision)
         let mut x = 10.0;
         x.powf(-decimal_precision as f64)
@@ -258,8 +322,7 @@ pub fn GetMinimumStepAtDecimalPrecision(decimal_precision: usize) -> c_float
 }
 
 // template<typename TYPE>
-pub fn RoundScalarWithFormatT(format: &str, data_type: ImGuiDataType, v: T) -> T
-{
+pub fn RoundScalarWithFormatT(format: &str, data_type: ImGuiDataType, v: T) -> T {
     // // IM_UNUSED(data_type);
     // // IM_ASSERT(data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double);
     // let mut  fmt_start: &str = ImParseFormatFindStart(format);

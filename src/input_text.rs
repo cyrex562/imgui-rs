@@ -36,7 +36,7 @@ use crate::key::{ImGuiKey, ImGuiKey_A, ImGuiKey_Backspace, ImGuiKey_C, ImGuiKey_
 use crate::last_item_data::ImGuiLastItemData;
 use crate::layout_ops::SameLine;
 use crate::logging_ops::LogSetNextTextDecoration;
-use crate::math_ops::{ImAtan2, ImCharIsBlankW, ImClamp, ImCos, ImFmod, ImLerp, ImMax, ImMin, ImRotate, ImSin, ImSwap};
+use crate::math_ops::{ImAtan2, char_is_blank, ImClamp, ImCos, ImFmod, ImLerp, ImMax, ImMin, ImRotate, ImSin, ImSwap};
 use crate::mod_flags::{ImGuiModFlags_Ctrl, ImGuiModFlags_Shift, ImGuiModFlags_Super};
 use crate::mouse_cursor::ImGuiMouseCursor_TextInput;
 use crate::nav_highlight_flags::{ImGuiNavHighlightFlags_NoRounding, ImGuiNavHighlightFlags_TypeThin};
@@ -195,7 +195,7 @@ pub const STB_TEXTEDIT_NEWLINE: char = '\n';
 
 // When ImGuiInputTextFlags_Password is set, we don't want actions such as CTRL+Arrow to leak the fact that underlying data are blanks or separators.
 pub unsafe fn is_separator(c: char) -> bool {
-    return ImCharIsBlankW(c) || c == ',' || c == ';' || c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '|' || c == '\n' || c == '\r';
+    return char_is_blank(c) || c == ',' || c == ';' || c == '(' || c == ')' || c == '{' || c == '}' || c == '[' || c == ']' || c == '|' || c == '\n' || c == '\r';
 }
 
 pub unsafe fn is_word_boundary_from_right(obj: &mut ImGuiInputTextState, idx: usize) -> bool     {

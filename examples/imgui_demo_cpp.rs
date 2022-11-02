@@ -888,7 +888,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             HelpMarker(
                 "This is a more typical looking tree with selectable nodes.\n"
                 "Click to select, CTRL+Click to toggle, click on arrows or double-click to open.");
-            static ImGuiTreeNodeFlags base_flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
+            static base_flags: ImGuiTreeNodeFlags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick | ImGuiTreeNodeFlags_SpanAvailWidth;
             static let mut align_label_with_current_x_position: bool =  false;
             static let mut test_drag_and_drop: bool =  false;
             CheckboxFlags("ImGuiTreeNodeFlags_OpenOnArrow",       &base_flags, ImGuiTreeNodeFlags_OpenOnArrow);
@@ -911,7 +911,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             {
                 // Disable the default "open on single-click behavior" + set Selected flag according to our selection.
                 // To alter selection we use IsItemClicked() && !IsItemToggledOpen(), so clicking on an arrow doesn't alter selection.
-                ImGuiTreeNodeFlags node_flags = base_flags;
+                node_flags: ImGuiTreeNodeFlags = base_flags;
                 let is_selected: bool = (selection_mask & (1 << i)) != 0;
                 if (is_selected)
                     node_flags |= ImGuiTreeNodeFlags_Selected;
@@ -1588,7 +1588,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         IMGUI_DEMO_MARKER("Widgets/Tabs/Basic");
         if (TreeNode("Basic"))
         {
-            ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_None;
+            tab_bar_flags: ImGuiTabBarFlags = ImGuiTabBarFlags_None;
             if (BeginTabBar("MyTabBar", tab_bar_flags))
             {
                 if (BeginTabItem("Avocado"))
@@ -1616,7 +1616,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         if (TreeNode("Advanced & Close Button"))
         {
             // Expose a couple of the available flags. In most cases you may just call BeginTabBar() with no flags (0).
-            static ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_Reorderable;
+            static tab_bar_flags: ImGuiTabBarFlags = ImGuiTabBarFlags_Reorderable;
             CheckboxFlags("ImGuiTabBarFlags_Reorderable", &tab_bar_flags, ImGuiTabBarFlags_Reorderable);
             CheckboxFlags("ImGuiTabBarFlags_AutoSelectNewTabs", &tab_bar_flags, ImGuiTabBarFlags_AutoSelectNewTabs);
             CheckboxFlags("ImGuiTabBarFlags_TabListPopupButton", &tab_bar_flags, ImGuiTabBarFlags_TabListPopupButton);
@@ -1673,7 +1673,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             Checkbox("Show Trailing TabItemButton()", &show_trailing_button);
 
             // Expose some other flags which are useful to showcase how they interact with Leading/Trailing tabs
-            static ImGuiTabBarFlags tab_bar_flags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_FittingPolicyResizeDown;
+            static tab_bar_flags: ImGuiTabBarFlags = ImGuiTabBarFlags_AutoSelectNewTabs | ImGuiTabBarFlags_Reorderable | ImGuiTabBarFlags_FittingPolicyResizeDown;
             CheckboxFlags("ImGuiTabBarFlags_TabListPopupButton", &tab_bar_flags, ImGuiTabBarFlags_TabListPopupButton);
             if (CheckboxFlags("ImGuiTabBarFlags_FittingPolicyResizeDown", &tab_bar_flags, ImGuiTabBarFlags_FittingPolicyResizeDown))
                 tab_bar_flags &= ~(ImGuiTabBarFlags_FittingPolicyMask_ ^ ImGuiTabBarFlags_FittingPolicyResizeDown);
@@ -5468,7 +5468,7 @@ pub unsafe fn ShowDemoWindowTables()
                         Button(label, ImVec2::new(-FLT_MIN, 0.0));
                     else if (contents_type == CT_Selectable || contents_type == CT_SelectableSpanRow)
                     {
-                        ImGuiSelectableFlags selectable_flags = if (contents_type == CT_SelectableSpanRow) { ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap } else { ImGuiSelectableFlags_None };
+                        selectable_flags ImGuiSelectableFlags = if (contents_type == CT_SelectableSpanRow) { ImGuiSelectableFlags_SpanAllColumns | ImGuiSelectableFlags_AllowItemOverlap } else { ImGuiSelectableFlags_None };
                         if (Selectable(label, item_is_selected, selectable_flags, ImVec2::new(0, row_min_height)))
                         {
                             if (GetIO().KeyCtrl)
@@ -7237,7 +7237,7 @@ pub unsafe fn ShowPlaceholderObject(prefix: *const c_char, uid: c_int)
                 TableNextRow();
                 TableSetColumnIndex(0);
                 AlignTextToFramePadding();
-                ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
+                flags: ImGuiTreeNodeFlags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen | ImGuiTreeNodeFlags_Bullet;
                 TreeNodeEx("Field", flags, "Field_{}", i);
 
                 TableSetColumnIndex(1);
@@ -8064,7 +8064,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
     };
     static Target opt_target = Target_Tab;
     static let mut opt_reorderable: bool =  true;
-    static ImGuiTabBarFlags opt_fitting_flags = ImGuiTabBarFlags_FittingPolicyDefault_;
+    static opt_fitting_flags: ImGuiTabBarFlags = ImGuiTabBarFlags_FittingPolicyDefault_;
 
     // When (opt_target == Target_DockSpaceAndWindow) there is the possibily that one of our child Document window (e.g. "Eggplant")
     // that we emit gets docked into the same spot as the parent window ("Example: Documents").
@@ -8144,7 +8144,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
     // Tabs
     if (opt_target == Target_Tab)
     {
-        ImGuiTabBarFlags tab_bar_flags = (opt_fitting_flags) | (if opt_reorderable { ImGuiTabBarFlags_Reorderable} else {0});
+        tab_bar_flags: ImGuiTabBarFlags = (opt_fitting_flags) | (if opt_reorderable { ImGuiTabBarFlags_Reorderable} else {0});
         if (BeginTabBar("##tabs", tab_bar_flags))
         {
             if opt_reorderable {
@@ -8161,7 +8161,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
                 if (!doc->Open)
                     continue;
 
-                ImGuiTabItemFlags tab_flags = (if doc->Dirty { ImGuiTabItemFlags_UnsavedDocument} else {0});
+                tab_flags: ImGuiTabItemFlags = (if doc->Dirty { ImGuiTabItemFlags_UnsavedDocument} else {0});
                 let mut visible: bool =  BeginTabItem(doc.Name, &doc->Open, tab_flags);
 
                 // Cancel attempt to close when unsaved add to save queue so we can display a popup.

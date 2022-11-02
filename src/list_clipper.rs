@@ -1,13 +1,13 @@
 #![allow(non_snake_case)]
 
-use std::ptr::null_mut;
-use libc::{c_float, c_int, c_void};
-use crate::imgui::GImGui;
 use crate::a_imgui_cpp::GImGui;
+use crate::imgui::GImGui;
 use crate::list_clipper_data::ImGuiListClipperData;
 use crate::list_clipper_ops::ImGuiListClipper_StepInternal;
 use crate::list_clipper_range::ImGuiListClipperRange;
 use crate::table_ops::TableEndRow;
+use libc::{c_float, c_int, c_void};
+use std::ptr::null_mut;
 
 // Helper: Manually clip large list of items.
 // If you have lots evenly spaced items and you have a random access to the list, you can perform coarse
@@ -31,17 +31,17 @@ use crate::table_ops::TableEndRow;
 // - The clipper also handles various subtleties related to keyboard/gamepad navigation, wrapping etc.
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiListClipper {
-    pub DisplayStart: c_int,
+    pub DisplayStart: usize,
     // First item to display, updated by each call to Step()
-    pub DisplayEnd: c_int,
+    pub DisplayEnd: usize,
     // End of items to display (exclusive)
-    pub ItemsCount: c_int,
+    pub ItemsCount: usize,
     // [Internal] Number of items
-    pub ItemsHeight: c_float,
+    pub ItemsHeight: usize,
     // [Internal] Height of item after a first step and item submission can calculate it
     pub StartPosY: c_float,
     // [Internal] Cursor position at the time of Begin() or after table frozen rows are all processed
-    pub TempData: *mut c_void,           // [Internal] Internal data
+    pub TempData: Vec<u8>, // [Internal] Internal data
 }
 
 impl ImGuiListClipper {
@@ -51,10 +51,9 @@ impl ImGuiListClipper {
 
     // ~ImGuiListClipper();
 
-
     // c_void  Begin(items_count: c_int, c_float items_height = -1.0);
     // IMGUI_API void  Begin(int items_count, float items_height = -1.0);
-    pub unsafe fn Begin(&mut self, items_count: i32, items_height: f32) {
+    pub unsafe fn Begin(&mut self, items_count: usize, items_height: f32) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         let mut window = g.CurrentWindow;
         // IMGUI_DEBUG_LOG_CLIPPER("Clipper: Begin({},%.20) in '%s'\n", items_count, items_height, window.Name);
@@ -74,7 +73,8 @@ impl ImGuiListClipper {
 
         // Acquire temporary buffer
         if g.ClipperTempDataStacked > g.ClipperTempData.len() {
-            g.ClipperTempData.resize(g.ClipperTempDataStacked, ImGuiListClipperData::default());
+            g.ClipperTempData
+                .resize(g.ClipperTempDataStacked, ImGuiListClipperData::default());
         }
         g.ClipperTempDataStacked += 1;
         let mut data = &mut g.ClipperTempData[g.ClipperTempDataStacked - 1];
@@ -121,10 +121,17 @@ impl ImGuiListClipper {
             IMGUI_DEBUG_LOG_CLIPPER("Clipper: Step(): inside frozen table row.\n");
         }
         if need_items_height && self.ItemsHeight > 0.0 {
-            IMGUI_DEBUG_LOG_CLIPPER("Clipper: Step(): computed ItemsHeight: %.2f.\n", self.ItemsHeight);
+            IMGUI_DEBUG_LOG_CLIPPER(
+                "Clipper: Step(): computed ItemsHeight: %.2f.\n",
+                self.ItemsHeight,
+            );
         }
         if ret {
-            IMGUI_DEBUG_LOG_CLIPPER("Clipper: Step(): display {} to {}.\n", self.DisplayStart, self.DisplayEnd);
+            IMGUI_DEBUG_LOG_CLIPPER(
+                "Clipper: Step(): display {} to {}.\n",
+                self.DisplayStart,
+                self.DisplayEnd,
+            );
         } else {
             IMGUI_DEBUG_LOG_CLIPPER("Clipper: Step(): End.\n");
         }
@@ -141,24 +148,26 @@ impl ImGuiListClipper {
         // IM_ASSERT(DisplayStart < 0); // Only allowed after Begin() and if there has not been a specified range yet.
         // IM_ASSERT(item_min <= item_max);
         if item_min < item_max {
-            data.Ranges.push(ImGuiListClipperRange::FromIndices(item_min, item_max));
+            data.Ranges
+                .push(ImGuiListClipperRange::FromIndices(item_min, item_max));
         }
     }
 
-
     // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
     // inline ImGuiListClipper(items_count: c_int, c_float items_height = -1.0) { memset(this, 0, sizeof(*this)); ItemsCount = -1; Begin(items_count, items_height); } // [removed in 1.79]
-// #endif
+    // #endif
 }
 
 // static c_void ImGuiListClipper_SeekCursorForItem(*mut ImGuiListClipper clipper, item_n: c_int)
 pub unsafe fn ImGuiListClipper_SeekCursorForItem(clipper: *mut ImGuiListClipper, item_n: c_int) {
-// StartPosY starts from ItemsFrozen hence the subtraction
-// Perform the add and multiply with double to allow seeking through larger ranges
-// *mut ImGuiListClipperData data = (*mut ImGuiListClipperData)clipper->TempData;
+    // StartPosY starts from ItemsFrozen hence the subtraction
+    // Perform the add and multiply with double to allow seeking through larger ranges
+    // *mut ImGuiListClipperData data = (*mut ImGuiListClipperData)clipper->TempData;
     let mut data = clipper.TempData as *mut ImGuiListClipperData;
 
-    let mut pos_y = (clipper.StartPosY + data.LossynessOffset + (item_n - data.ItemsFrozen) * clipper.ItemsHeight);
+    let mut pos_y = (clipper.StartPosY
+        + data.LossynessOffset
+        + (item_n - data.ItemsFrozen) * clipper.ItemsHeight);
 
     ImGuiListClipper_SeekCursorAndSetupPrevLine(pos_y, clipper.ItemsHeight);
 }
@@ -173,14 +182,14 @@ pub unsafe fn ImGuiListClipper_SeekCursorAndSetupPrevLine(pos_y: c_float, line_h
     let off_y = pos_y - window.DC.CursorPos.y;
     window.DC.CursorPos.y = pos_y;
     window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, pos_y - g.Style.ItemSpacing.y);
-    window.DC.CursorPosPrevLine.y = window.DC.CursorPos.y - line_height;  // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
-    window.DC.PrevLineSize.y = (line_height - g.Style.ItemSpacing.y);      // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
+    window.DC.CursorPosPrevLine.y = window.DC.CursorPos.y - line_height; // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
+    window.DC.PrevLineSize.y = (line_height - g.Style.ItemSpacing.y); // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
 
     let columns = window.DC.CurrentColumns;
     // if (ImGuiOldColumns* columns = window.DC.CurrentColumns)
     if columns.is_null() == false {
         columns.LineMinY = window.DC.CursorPos.y;
-    }        // Setting this so that cell Y position are set properly
+    } // Setting this so that cell Y position are set properly
     let mut table = g.CurrentTable;
     if table.is_null() == false {
         if table.IsInsideRow() {

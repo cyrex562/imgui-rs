@@ -559,7 +559,7 @@ pub unsafe fn DockContextProcessDock(ctx: *mut ImGuiContext, req: *mut ImGuiDock
     }
 
     // Update selection immediately
-    if (ImGuiTabBar* tab_bar = node.TabBar){
+    if (tab_bar: &mut ImGuiTabBar = node.TabBar){
         tab_bar.NextSelectedTabId = next_selected_id;}
     MarkIniSettingsDirty();
 }

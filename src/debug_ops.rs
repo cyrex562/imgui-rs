@@ -8,7 +8,7 @@ use libc::{c_char, c_float, c_int, c_uint, c_void, open, size_t};
 use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
 use crate::child_ops::{BeginChild, EndChild};
 use crate::clipboard_ops::SetClipboardText;
-use crate::color::{IM_COL32, ImGuiCol_Border, ImGuiCol_Header, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TitleBgActive, ImGuiCol_WindowBg};
+use crate::color::{IM_COL32, ImGuiCol_Border, ImGuiCol_Header, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_WindowBg};
 use crate::condition::{ImGuiCond_FirstUseEver, ImGuiCond_Once};
 use crate::context_ops::GetFrameCount;
 use crate::cursor_ops::{GetCursorScreenPos, Indent, Unindent};
@@ -22,6 +22,9 @@ use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
 use crate::font_glyph::ImFontGlyph;
 use crate::font_ops::{PopFont, PushFont};
+use crate::hovered_flags::ImGuiHoveredFlags_DelayShort;
+use crate::id_ops::PopID;
+use crate::image_ops::Image;
 use crate::imgui::GImGui;
 use crate::ImGuiViewport;
 use crate::input_ops::{IsKeyDown, IsKeyPressed, IsMouseClicked, IsMouseHoveringRect, SetMouseCursor};
@@ -29,7 +32,7 @@ use crate::io::ImGuiIO;
 use crate::io_ops::GetIO;
 use crate::item_ops::{IsItemHovered, SetNextItemWidth};
 use crate::key::{ImGuiKey_C, ImGuiKey_Escape, ImGuiKey_ModCtrl};
-use crate::layout_ops::SameLine;
+use crate::layout_ops::{Dummy, SameLine};
 use crate::math_ops::{ImFmod, ImMin, ImSqrt};
 use crate::mod_flags::{ImGuiModFlags_Ctrl, ImGuiModFlags_Shift};
 use crate::mouse_cursor::ImGuiMouseCursor_Hand;
@@ -38,6 +41,7 @@ use crate::old_columns::ImGuiOldColumns;
 use crate::rect::ImRect;
 use crate::render_ops::FindRenderedTextEnd;
 use crate::scrolling_ops::{GetScrollMaxY, GetScrollY, SetScrollHereY};
+use crate::separator::Separator;
 use crate::stack_level_info::ImGuiStackLevelInfo;
 use crate::stack_tool::ImGuiStackTool;
 use crate::storage::ImGuiStorage;
@@ -47,14 +51,18 @@ use crate::style_ops::{GetColorU32, GetStyle, GetStyleColorVec4, PopStyleColor, 
 use crate::tab_bar::ImGuiTabBar;
 use crate::tab_item::ImGuiTabItem;
 use crate::table_flags::{ImGuiTableFlags_Borders, ImGuiTableFlags_RowBg, ImGuiTableFlags_SizingFixedFit};
-use crate::text_ops::CalcTextSize;
+use crate::tables::{BeginTable, EndTable, TableHeadersRow, TableNextColumn, TableSetupColumn};
+use crate::text_ops::{CalcTextSize, Text, TextDisabled, TextUnformatted};
 use crate::tooltip_ops::{BeginTooltip, EndTooltip};
 use crate::type_defs::ImGuiID;
-use crate::utils::GetVersion;
+use crate::utils::{flag_set, GetVersion};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
+use crate::viewport_flags::ImGuiViewportFlags_Minimized;
+use crate::widget_ops::{PopTextWrapPos, PushTextWrapPos};
+use crate::widgets::{TreeNode, TreePop};
 use crate::window::ImGuiWindow;
-use crate::window::ops::{Begin, SetNextWindowSize};
+use crate::window::ops::{Begin, End, GetCurrentWindow, SetNextWindowSize};
 use crate::window::props::{GetFont, GetFontSize, GetWindowDrawList, SetNextWindowBgAlpha};
 use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysHorizontalScrollbar, ImGuiWindowFlags_AlwaysVerticalScrollbar, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip};
 use crate::window::window_settings::ImGuiWindowSettings;
@@ -178,36 +186,41 @@ pub unsafe fn DebugCheckVersionAndDataLayout(version: *const c_char, sz_io: size
 
 // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
 
-pub unsafe fn DebugRenderViewportThumbnail(draw_list: *mut ImDrawList, viewport: *mut ImGuiViewport, bb: &ImRect)
+pub unsafe fn DebugRenderViewportThumbnail(draw_list: &mut ImDrawList, viewport: *mut ImGuiViewport, bb: &mut ImRect)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
 
-    let scale: ImVec2 = bb.GetSize() / viewport.Size;
-    let off: ImVec2 = bb.Min - viewport.Pos * scale;
-    let alpha_mul: c_float =  if flag_set(viewport.Flags, ImGuiViewportFlags_Minimized) { 0.3f32 } else { 1.0 };
-    window.DrawList.AddRectFilled(bb.Min, bb.Max, GetColorU32(ImGuiCol_Border, alpha_mul * 0.4));
-    for (let i: c_int = 0; i != g.Windows.len(); i++)
+    let mut scale = bb.GetSize() / viewport.Size;
+    let off = bb.Min - viewport.Pos * scale;
+    let alpha_mul: c_float =  if flag_set(viewport.Flags, ImGuiViewportFlags_Minimized) { 0.3 } else { 1.0 };
+    window.DrawList.AddRectFilled(&bb.Min, &bb.Max, GetColorU32(ImGuiCol_Border, alpha_mul * 0.4), 0.0, 0);
+    // for (let i: c_int = 0; i != g.Windows.len(); i++)
+    for i in 0 .. g.Windows.len()
     {
         let mut thumb_window: *mut ImGuiWindow =  g.Windows[i];
-        if (!thumb_window.WasActive || (thumb_window.Flags & ImGuiWindowFlags_ChildWindow))
+        if !thumb_window.WasActive || flag_set(thumb_window.Flags, ImGuiWindowFlags_ChildWindow) {
             continue;
-        if (thumb_window.Viewport != viewport)
+        }
+        if thumb_window.Viewport != viewport {
             continue;
+        }
 
-        let thumb_r: ImRect =  thumb_window.Rect();
-        let title_r: ImRect =  thumb_window.TitleBarRect();
+        let mut thumb_r: ImRect =  thumb_window.Rect();
+        let mut title_r: ImRect =  thumb_window.TitleBarRect();
         thumb_r = ImRect(ImFloor(off + thumb_r.Min * scale), ImFloor(off +  thumb_r.Max * scale));
-        title_r = ImRect(ImFloor(off + title_r.Min * scale), ImFloor(off +  ImVec2::from_floats(title_r.Max.x, title_r.Min.y) * scale) + ImVec2::from_floats(0, 5)); // Exaggerate title bar height
+        title_r = ImRect(ImFloor(off + title_r.Min * scale), ImFloor(off +  ImVec2::from_floats(title_r.Max.x, title_r.Min.y) * scale) + ImVec2::from_ints(0, 5)); // Exaggerate title bar height
         thumb_r.ClipWithFull(bb);
         title_r.ClipWithFull(bb);
-        let window_is_focused: bool = (g.NavWindow && thumb_window.RootWindowForTitleBarHighlight == g.NavWindow.RootWindowForTitleBarHighlight);
-        window.DrawList.AddRectFilled(thumb_r.Min, thumb_r.Max, GetColorU32(ImGuiCol_WindowBg, alpha_mul));
-        window.DrawList.AddRectFilled(title_r.Min, title_r.Max, GetColorU32(if window_is_focused {ImGuiCol_TitleBgActive} else { ImGuiCol_TitleBg }, alpha_mul));
-        window.DrawList.AddRect(thumb_r.Min, thumb_r.Max, GetColorU32(ImGuiCol_Border, alpha_mul));
-        window.DrawList.AddText(g.Font, g.FontSize * 1.0, title_r.Min, GetColorU32(ImGuiCol_Text, alpha_mul), thumb_window.Name, FindRenderedTextEnd(thumb_window.Name));
+        let window_is_focused: bool = (g.NavWindow.is_null() == fallse && thumb_window.RootWindowForTitleBarHighlight == g.NavWindow.RootWindowForTitleBarHighlight);
+        window.DrawList.AddRectFilled(&thumb_r.Min, &thumb_r.Max, GetColorU32(ImGuiCol_WindowBg, alpha_mul), 0.0, 0);
+        window.DrawList.AddRectFilled(&title_r.Min, &title_r.Max, GetColorU32(if window_is_focused { ImGuiCol_TitleBgActive } else { ImGuiCol_TitleBg }, alpha_mul), f, 0);
+        window.DrawList.AddRect(&thumb_r.Min, &thumb_r.Max, GetColorU32(ImGuiCol_Border, alpha_mul), 0.0);
+        //         window.DrawList.AddText(g.Font, g.FontSize * 1.0, title_r.Min, GetColorU32(ImGuiCol_Text, alpha_mul), thumb_window.Name, FindRenderedTextEnd(thumb_window.Name));
+        // window.DrawList.AddText2(g.Font, GetColorU32(ImGuiCol_Text, alpha_mul), thumb_window.Name.as_str());
+        window.DrawList.AddText2(Some(&g.Font), g.FontSize, &title_r.Min, GetColorU32(ImGuiCol_Text, alpha_mul), thumb_window.Name.as_str(), 0.0, &Default::default())
     }
-    draw_list.AddRect(bb.Min, bb.Max, GetColorU32(ImGuiCol_Border, alpha_mul));
+    draw_list.AddRect(&bb.Min, &bb.Max, GetColorU32(ImGuiCol_Border, alpha_mul), 0.0);
 }
 
 pub unsafe fn RenderViewportsThumbnails()
@@ -218,66 +231,70 @@ pub unsafe fn RenderViewportsThumbnails()
     // We don't display full monitor bounds (we could, but it often looks awkward), instead we display just enough to cover all of our viewports.
     let SCALE: c_float =  1.0 / 8.0;
     let mut bb_full: ImRect = ImRect::new(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
-    for (let n: c_int = 0; n < g.Viewports.len(); n++)
-        bb_full.Add(g.Viewports[n].GetMainRect());
+    // for (let n: c_int = 0; n < g.Viewports.len(); n++)
+    for n in 0 .. g.Viewports.len()
+    {
+        bb_full.Add(&g.Viewports[n].GetMainRect().GetSize());
+    }
     let p: ImVec2 = window.DC.CursorPos;
     let off: ImVec2 = p - bb_full.Min * SCALE;
-    for (let n: c_int = 0; n < g.Viewports.len(); n++)
+    // for (let n: c_int = 0; n < g.Viewports.len(); n++)
+    for n in 0 .. g.Viewports.len()
     {
         let mut viewport: *mut ImGuiViewport =  g.Viewports[n];
         let mut viewport_draw_bb: ImRect = ImRect::new(off + (viewport.Pos) * SCALE, off + (viewport.Pos + viewport.Size) * SCALE);
-        DebugRenderViewportThumbnail(window.DrawList, viewport, viewport_draw_bb);
+        DebugRenderViewportThumbnail(&mut window.DrawList, viewport, &mut viewport_draw_bb);
     }
     Dummy(bb_full.GetSize() * SCALE);
 }
 
-: c_int ViewportComparerByFrontMostStampCount(lhs: *const c_void, rhs: *const c_void)
+pub fn ViewportComparerByFrontMostStampCount(lhs: &ImGuiViewport, rhs: &ImGuiViewport) -> c_int
 {
-    let mut a: *mut ImGuiViewport =  *(const const: *mut ImGuiViewport*)lhs;
-    let mut b: *mut ImGuiViewport =  *(const const: *mut ImGuiViewport*)rhs;
-    return b->LastFrontMostStampCount - a->LastFrontMostStampCount;
+    rhs.LastFrontMostStampCount - lhs.LastFrontMostStampCount
 }
 
 // Helper tool to diagnose between text encoding issues and font loading issues. Pass your UTF-8 string and verify that there are correct.
-pub unsafe fn DebugTextEncoding(str: *const c_char)
+pub unsafe fn DebugTextEncoding(txt: &str)
 {
-    Text("Text: \"%s\"", str);
-    if !BeginTable("list", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit) { return ; }
-    TableSetupColumn("Offset");
-    TableSetupColumn("UTF-8");
-    TableSetupColumn("Glyph");
-    TableSetupColumn("Codepoint");
+    Text(format!("Text: \"{}\"",txt).as_str());
+    if !BeginTable("list", 4, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingFixedFit, None, 0.0) { return ; }
+    TableSetupColumn("Offset", 0, 0.0, 0);
+    TableSetupColumn("UTF-8", 0, 0.0, 0);
+    TableSetupColumn("Glyph", 0, 0.0, 0);
+    TableSetupColumn("Codepoint", 0, 0.0, 0);
     TableHeadersRow();
-    for (p: *const c_char = str; *p != 0; )
-    {
-        c: c_uint;
-        let c_utf8_len: c_int = ImTextCharFromUtf8(&c, p, null_mut());
-        TableNextColumn();
-        Text("{}", (p - str));
-        TableNextColumn();
-        for (let byte_index: c_int = 0; byte_index < c_utf8_len; byte_index++)
-        {
-            if byte_index > 0 {
-                SameLine(); }
-            Text("0x{:02X}", p[byte_index]);
-        }
-        TableNextColumn();
-        if (GetFont()->FindGlyphNoFallback(c))
-            TextUnformatted(p, p + c_utf8_len);
-        else
-            TextUnformatted((c == IM_UNICODE_CODEPOINT_INVALID) ? "[invalid]" : "[missing]");
-        TableNextColumn();
-        Text("U+%04X", c);
-        p += c_utf8_len;
-    }
+    // for (p: *const c_char = str; *p != 0; )
+    // {
+    //     c: c_uint;
+    //     let c_utf8_len: c_int = ImTextCharFromUtf8(&c, p, null_mut());
+    //     TableNextColumn();
+    //     Text("{}", (p - str));
+    //     TableNextColumn();
+    //     for (let byte_index: c_int = 0; byte_index < c_utf8_len; byte_index++)
+    //     {
+    //         if byte_index > 0 {
+    //             SameLine(); }
+    //         Text("0x{:02X}", p[byte_index]);
+    //     }
+    //     TableNextColumn();
+    //     if (GetFont()->FindGlyphNoFallback(c)){
+    //     TextUnformatted(p, p + c_utf8_len);
+    // }
+    //     else{
+    //     TextUnformatted((c == IM_UNICODE_CODEPOINT_INVALID)? "[invalid]": "[missing]");
+    // }
+    //     TableNextColumn();
+    //     Text("U+%04X", c);
+    //     p += c_utf8_len;
+    // }
     EndTable();
 }
 
 // Avoid naming collision with imgui_demo.cpp's HelpMarker() for unity builds.
-pub unsafe fn MetricsHelpMarker(desc: *const c_char)
+pub unsafe fn MetricsHelpMarker(desc: &str)
 {
     TextDisabled("(?)");
-    if (IsItemHovered(ImGuiHoveredFlags_DelayShort))
+    if IsItemHovered(ImGuiHoveredFlags_DelayShort)
     {
         BeginTooltip();
         PushTextWrapPos(GetFontSize() * 35.0);
@@ -288,58 +305,64 @@ pub unsafe fn MetricsHelpMarker(desc: *const c_char)
 }
 
 // [DEBUG] List fonts in a font atlas and display its texture
-pub unsafe fn ShowFontAtlas(atlas: *mut ImFontAtlas)
-{
-    for (let i: c_int = 0; i < atlas->Fonts.Size; i++)
-    {
-        font: *mut ImFont = atlas->Fonts[i];
+pub unsafe fn ShowFontAtlas(atlas: &mut ImFontAtlas) {
+    // for (let i: c_int = 0; i < atlas->Fonts.Size; i++)
+    for i in 0..atlas.Fonts.len() {
+        let font = atlas.Fonts[i];
         PushID(font);
         DebugNodeFont(font);
         PopID();
     }
-    if (TreeNode("Atlas texture", "Atlas texture ({}x{} pixels)", atlas->TexWidth, atlas->TexHeight))
-    {
-        tint_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 1.0);
-        border_col: ImVec4 = ImVec4(1.0, 1.0, 1.0, 0.5);
-        Image(atlas->TexID, ImVec2::from_floats(atlas->TexWidth, atlas->TexHeight), ImVec2::from_floats(0.0, 0.0), ImVec2::from_floats(1.0, 1.0), tint_col, border_col);
+    if TreeNode("Atlas texture", format!("Atlas texture ({}x{} pixels)", atlas.TexWidth, atlas.TexHeight).as_str()) {
+        let tint_col = ImVec4::from_floats(1.0, 1.0, 1.0, 1.0);
+        let border_col = ImVec4::from_floats(1.0, 1.0, 1.0, 0.5);
+        Image(atlas.TexID, &ImVec2::from_usizes(atlas.TexWidth, atlas.TexHeight), &ImVec2::from_floats(0.0, 0.0), &ImVec2::from_floats(1.0, 1.0), tint_col, border_col);
         TreePop();
     }
 }
 
-pub unsafe fn ShowMetricsWindow(bool* p_open)
+enum { WRT_OuterRect, WRT_OuterRectClipped, WRT_InnerRect, WRT_InnerClipRect, WRT_WorkRect, WRT_Content, WRT_ContentIdeal, WRT_ContentRegionRect, WRT_Count };
+
+enum { TRT_OuterRect, TRT_InnerRect, TRT_WorkRect, TRT_HostClipRect, TRT_InnerClipRect, TRT_BackgroundClipRect, TRT_ColumnsRect, TRT_ColumnsWorkRect, TRT_ColumnsClipRect, TRT_ColumnsContentHeadersUsed, TRT_ColumnsContentHeadersIdeal, TRT_ColumnsContentFrozen, TRT_ColumnsContentUnfrozen, TRT_Count };
+
+wrt_rects_names: *const c_char[WRT_Count] = { "OuterRect", "OuterRectClipped", "InnerRect", "InnerClipRect", "WorkRect", "Content", "ContentIdeal", "ContentRegionRect" };
+     // Tables Rect Type
+    trt_rects_names: *const c_char[TRT_Count] = { "OuterRect", "InnerRect", "WorkRect", "HostClipRect", "InnerClipRect", "BackgroundClipRect", "ColumnsRect", "ColumnsWorkRect", "ColumnsClipRect", "ColumnsContentHeadersUsed", "ColumnsContentHeadersIdeal", "ColumnsContentFrozen", "ColumnsContentUnfrozen" };
+
+pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    ImGuiIO& io = g.IO;
-    ImGuiMetricsConfig* cfg = &g.DebugMetricsConfig;
-    if (cfg->ShowDebugLog)
-        ShowDebugLogWindow(&cfg->ShowDebugLog);
-    if (cfg->ShowStackTool)
-        ShowStackToolWindow(&cfg->ShowStackTool);
+    let io = &g.IO;
+    let cfg = &mut g.DebugMetricsConfig;
+    if cfg.ShowDebugLog {
+        ShowDebugLogWindow(&mut cfg.ShowDebugLog);
+    }
+    if cfg.ShowStackTool {
+        ShowStackToolWindow(&mut cfg.ShowStackTool);
+    }
 
-    if (!Begin("Dear ImGui Metrics/Debugger", p_open) || GetCurrentWindow()->BeginCount > 1)
+    if !Begin("Dear ImGui Metrics/Debugger", p_open) || GetCurrentWindow().BeginCount > 1
     {
         End();
         return;
     }
 
     // Basic info
-    Text("Dear ImGui %s", GetVersion());
-    Text("Application average {} ms/frame (%.1f FPS)", 1000 / io.Framerate, io.Framerate);
-    Text("{} vertices, {} indices ({} triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3);
-    Text("{} visible windows, {} active allocations", io.MetricsRenderWindows, io.MetricsActiveAllocations);
+    Text(format!("Dear ImGui {}", GetVersion()).as_str());
+    Text(format!("Application average {} ms/frame ({} FPS)", 1000 / io.Framerate, io.Framerate).as_str());
+    Text(format!("{} vertices, {} indices ({} triangles)", io.MetricsRenderVertices, io.MetricsRenderIndices, io.MetricsRenderIndices / 3).as_str());
+    Text(format!("{} visible windows, {} active allocations", io.MetricsRenderWindows, io.MetricsActiveAllocations).as_str());
     //SameLine(); if (SmallButton("GC")) { g.GcCompactAll = true; }
 
     Separator();
 
     // Debugging enums
-    enum { WRT_OuterRect, WRT_OuterRectClipped, WRT_InnerRect, WRT_InnerClipRect, WRT_WorkRect, WRT_Content, WRT_ContentIdeal, WRT_ContentRegionRect, WRT_Count }; // Windows Rect Type
-    wrt_rects_names: *const c_char[WRT_Count] = { "OuterRect", "OuterRectClipped", "InnerRect", "InnerClipRect", "WorkRect", "Content", "ContentIdeal", "ContentRegionRect" };
-    enum { TRT_OuterRect, TRT_InnerRect, TRT_WorkRect, TRT_HostClipRect, TRT_InnerClipRect, TRT_BackgroundClipRect, TRT_ColumnsRect, TRT_ColumnsWorkRect, TRT_ColumnsClipRect, TRT_ColumnsContentHeadersUsed, TRT_ColumnsContentHeadersIdeal, TRT_ColumnsContentFrozen, TRT_ColumnsContentUnfrozen, TRT_Count }; // Tables Rect Type
-    trt_rects_names: *const c_char[TRT_Count] = { "OuterRect", "InnerRect", "WorkRect", "HostClipRect", "InnerClipRect", "BackgroundClipRect", "ColumnsRect", "ColumnsWorkRect", "ColumnsClipRect", "ColumnsContentHeadersUsed", "ColumnsContentHeadersIdeal", "ColumnsContentFrozen", "ColumnsContentUnfrozen" };
-    if (cfg->ShowWindowsRectsType < 0)
-        cfg->ShowWindowsRectsType = WRT_WorkRect;
-    if (cfg->ShowTablesRectsType < 0)
-        cfg->ShowTablesRectsType = TRT_WorkRect;
+    // Windows Rect Type
+
+    if (cfg.ShowWindowsRectsType < 0)
+        cfg.ShowWindowsRectsType = WRT_WorkRect;
+    if (cfg.ShowTablesRectsType < 0)
+        cfg.ShowTablesRectsType = TRT_WorkRect;
 
     struct Funcs
     {
@@ -401,21 +424,21 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
         MetricsHelpMarker("Will call the IM_DEBUG_BREAK() macro to break in debugger.\nWarning: If you don't have a debugger attached, this will probably crash.");
 
         // Stack Tool is your best friend!
-        Checkbox("Show Debug Log", &cfg->ShowDebugLog);
+        Checkbox("Show Debug Log", &cfg.ShowDebugLog);
         SameLine();
         MetricsHelpMarker("You can also call ShowDebugLogWindow() from your code.");
 
         // Stack Tool is your best friend!
-        Checkbox("Show Stack Tool", &cfg->ShowStackTool);
+        Checkbox("Show Stack Tool", &cfg.ShowStackTool);
         SameLine();
         MetricsHelpMarker("You can also call ShowStackToolWindow() from your code.");
 
-        Checkbox("Show windows begin order", &cfg->ShowWindowsBeginOrder);
-        Checkbox("Show windows rectangles", &cfg->ShowWindowsRects);
+        Checkbox("Show windows begin order", &cfg.ShowWindowsBeginOrder);
+        Checkbox("Show windows rectangles", &cfg.ShowWindowsRects);
         SameLine();
         SetNextItemWidth(GetFontSize() * 12);
-        cfg->ShowWindowsRects |= Combo("##show_windows_rect_type", &cfg->ShowWindowsRectsType, wrt_rects_names, WRT_Count, WRT_Count);
-        if (cfg->ShowWindowsRects && g.NavWindow != null_mut())
+        cfg.ShowWindowsRects |= Combo("##show_windows_rect_type", &cfg.ShowWindowsRectsType, wrt_rects_names, WRT_Count, WRT_Count);
+        if (cfg.ShowWindowsRects && g.NavWindow != null_mut())
         {
             BulletText("'%s':", g.NavWindow.Name);
             Indent();
@@ -427,11 +450,11 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             Unindent();
         }
 
-        Checkbox("Show tables rectangles", &cfg->ShowTablesRects);
+        Checkbox("Show tables rectangles", &cfg.ShowTablesRects);
         SameLine();
         SetNextItemWidth(GetFontSize() * 12);
-        cfg->ShowTablesRects |= Combo("##show_table_rects_type", &cfg->ShowTablesRectsType, trt_rects_names, TRT_Count, TRT_Count);
-        if (cfg->ShowTablesRects && g.NavWindow != null_mut())
+        cfg.ShowTablesRects |= Combo("##show_table_rects_type", &cfg.ShowTablesRectsType, trt_rects_names, TRT_Count, TRT_Count);
+        if (cfg.ShowTablesRects && g.NavWindow != null_mut())
         {
             for (let table_n: c_int = 0; table_n < g.Tables.GetMapSize(); table_n++)
             {
@@ -504,8 +527,8 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
         drawlist_count += g.Viewports[viewport_i]->DrawDataBuilder.GetDrawListCount();
     if (TreeNode("DrawLists", "DrawLists ({})", drawlist_count))
     {
-        Checkbox("Show ImDrawCmd mesh when hovering", &cfg->ShowDrawCmdMesh);
-        Checkbox("Show ImDrawCmd bounding boxes when hovering", &cfg->ShowDrawCmdBoundingBoxes);
+        Checkbox("Show ImDrawCmd mesh when hovering", &cfg.ShowDrawCmdMesh);
+        Checkbox("Show ImDrawCmd bounding boxes when hovering", &cfg.ShowDrawCmdBoundingBoxes);
         for (let viewport_i: c_int = 0; viewport_i < g.Viewports.len(); viewport_i++)
         {
             let mut viewport: *mut ImGuiViewport =  g.Viewports[viewport_i];
@@ -582,7 +605,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
     if (TreeNode("TabBars", "Tab Bars ({})", g.TabBars.GetAliveCount()))
     {
         for (let n: c_int = 0; n < g.TabBars.GetMapSize(); n++)
-            if (ImGuiTabBar* tab_bar = g.TabBars.TryGetMapData(n))
+            if (tab_bar: &mut ImGuiTabBar = g.TabBars.TryGetMapData(n))
             {
                 PushID(tab_bar);
                 DebugNodeTabBar(tab_bar, "TabBar");
@@ -622,7 +645,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
         static let mut root_nodes_only: bool =  true;
         dc: *mut ImGuiDockContext = &g.DockContext;
         Checkbox("List root nodes", &root_nodes_only);
-        Checkbox("Ctrl shows window dock info", &cfg->ShowDockingNodes);
+        Checkbox("Ctrl shows window dock info", &cfg.ShowDockingNodes);
         if (SmallButton("Clear nodes")) { DockContextClearNodes(&g, 0, true); }
         SameLine();
         if (SmallButton("Rebuild all")) { dc->WantFullRebuild = true; }
@@ -749,7 +772,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
     }
 
     // Overlay: Display windows Rectangles and Begin Order
-    if (cfg->ShowWindowsRects || cfg->ShowWindowsBeginOrder)
+    if (cfg.ShowWindowsRects || cfg.ShowWindowsBeginOrder)
     {
         for (let n: c_int = 0; n < g.Windows.len(); n++)
         {
@@ -757,12 +780,12 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             if (!window.WasActive)
                 continue;
             let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window);
-            if (cfg->ShowWindowsRects)
+            if (cfg.ShowWindowsRects)
             {
-                let r: ImRect =  Funcs::GetWindowRect(window, cfg->ShowWindowsRectsType);
+                let r: ImRect =  Funcs::GetWindowRect(window, cfg.ShowWindowsRectsType);
                 draw_list.AddRect(r.Min, r.Max, IM_COL32(255, 0, 128, 255));
             }
-            if (cfg->ShowWindowsBeginOrder && flag_clear(window.Flags, ImGuiWindowFlags_ChildWindow))
+            if (cfg.ShowWindowsBeginOrder && flag_clear(window.Flags, ImGuiWindowFlags_ChildWindow))
             {
                 buf: [c_char;32];
                 ImFormatString(buf, buf.len(), "{}", window.BeginOrderWithinContext);
@@ -774,7 +797,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
     }
 
     // Overlay: Display Tables Rectangles
-    if (cfg->ShowTablesRects)
+    if (cfg.ShowTablesRects)
     {
         for (let table_n: c_int = 0; table_n < g.Tables.GetMapSize(); table_n++)
         {
@@ -782,11 +805,11 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             if (table == null_mut() || table.LastFrameActive < g.FrameCount - 1)
                 continue;
             let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(table.OuterWindow);
-            if (cfg->ShowTablesRectsType >= TRT_ColumnsRect)
+            if (cfg.ShowTablesRectsType >= TRT_ColumnsRect)
             {
                 for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
                 {
-                    let r: ImRect =  Funcs::GetTableRect(table, cfg->ShowTablesRectsType, column_n);
+                    let r: ImRect =  Funcs::GetTableRect(table, cfg.ShowTablesRectsType, column_n);
                     col: u32 = if table.HoveredColumnBody == column_n { IM_COL32(255, 255, 128, 255)} else { IM_COL32(255, 0, 128, 255)};
                     let thickness: c_float =  if (table.HoveredColumnBody == column_n) { 3.0} else {1.0};
                     draw_list.AddRect(r.Min, r.Max, col, 0.0, 0, thickness);
@@ -794,7 +817,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
             }
             else
             {
-                let r: ImRect =  Funcs::GetTableRect(table, cfg->ShowTablesRectsType, -1);
+                let r: ImRect =  Funcs::GetTableRect(table, cfg.ShowTablesRectsType, -1);
                 draw_list.AddRect(r.Min, r.Max, IM_COL32(255, 0, 128, 255));
             }
         }
@@ -802,7 +825,7 @@ pub unsafe fn ShowMetricsWindow(bool* p_open)
 
 // #ifdef IMGUI_HAS_DOCK
     // Overlay: Display Docking info
-    if (cfg->ShowDockingNodes && g.IO.KeyCtrl && g.DebugHoveredDockNode)
+    if (cfg.ShowDockingNodes && g.IO.KeyCtrl && g.DebugHoveredDockNode)
     {
         buf: [c_char;64] = "";
         char* p = buf;
@@ -869,7 +892,7 @@ pub unsafe fn DebugNodeDockNode(node:*mut ImGuiDockNode, label: *const c_char)
     let is_active: bool = (g.FrameCount - node.LastFrameActive < 2);  // Submitted
     if (!is_alive) { PushStyleColor(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled)); }
     open: bool;
-    ImGuiTreeNodeFlags tree_node_flags = if node.IsFocused { ImGuiTreeNodeFlags_Selected }else { ImGuiTreeNodeFlags_None };
+    tree_node_flags: ImGuiTreeNodeFlags = if node.IsFocused { ImGuiTreeNodeFlags_Selected }else { ImGuiTreeNodeFlags_None };
     if (node.Windows.len() > 0)
         open = TreeNodeEx(node.ID, tree_node_flags, "%s 0x%04X%s: {} windows (vis: '%s')", label, node.ID, node.IsVisible ? "" : " (hidden)", node.Windows.len(), if node.VisibleWindow { node.Visiblewindow.Name } else { "NULL" });
     else
@@ -963,8 +986,8 @@ pub unsafe fn DebugNodeDrawList(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
             pcmd->ElemCount / 3, pcmd.TextureId,
             pcmd->ClipRect.x, pcmd->ClipRect.y, pcmd->ClipRect.z, pcmd->ClipRect.w);
         let mut pcmd_node_open: bool =  TreeNode((pcmd - draw_list.CmdBuffer.begin()), "%s", buf);
-        if (IsItemHovered() && (cfg->ShowDrawCmdMesh || cfg->ShowDrawCmdBoundingBoxes) && fg_draw_list)
-            DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, cfg->ShowDrawCmdMesh, cfg->ShowDrawCmdBoundingBoxes);
+        if (IsItemHovered() && (cfg.ShowDrawCmdMesh || cfg.ShowDrawCmdBoundingBoxes) && fg_draw_list)
+            DebugNodeDrawCmdShowMeshAndBoundingBox(fg_draw_list, draw_list, pcmd, cfg.ShowDrawCmdMesh, cfg.ShowDrawCmdBoundingBoxes);
         if (!pcmd_node_open)
             continue;
 
@@ -1051,7 +1074,7 @@ pub unsafe fn DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_list, 
 pub unsafe fn DebugNodeFont(font: *mut ImFont)
 {
     let mut opened: bool =  TreeNode(font, "Font: \"%s\"\n%.2f px, {} glyphs, {} file(s)",
-        if font->ConfigData { font->ConfigData[0].Name } else { "" }, font->FontSize, font->Glyphs.Size, font->ConfigDataCount);
+        if font.ConfigData { font.ConfigData[0].Name } else { "" }, font.FontSize, font.Glyphs.Size, font.ConfigDataCount);
     SameLine();
     if (SmallButton("Set as default"))
         GetIO().FontDefault = font;
@@ -1064,38 +1087,38 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
 
     // Display details
     SetNextItemWidth(GetFontSize() * 8);
-    DragFloat("Font scale", &font->Scale, 0.005f, 0.3f, 2.0, "%.1f");
+    DragFloat("Font scale", &font.Scale, 0.005f, 0.3f, 2.0, "%.1f");
     SameLine(); MetricsHelpMarker(
         "Note than the default embedded font is NOT meant to be scaled.\n\n"
         "Font are currently rendered into bitmaps at a given size at the time of building the atlas. "
         "You may oversample them to get some flexibility with scaling. "
         "You can also render at multiple sizes and select which one to use at runtime.\n\n"
         "(Glimmer of hope: the atlas system will be rewritten in the future to make scaling more flexible.)");
-    Text("Ascent: %f, Descent: %f, Height: %f", font->Ascent, font->Descent, font->Ascent - font->Descent);
+    Text("Ascent: %f, Descent: %f, Height: %f", font.Ascent, font.Descent, font.Ascent - font.Descent);
     c_str: [c_char;5];
-    Text("Fallback character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->FallbackChar), font->FallbackChar);
-    Text("Ellipsis character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font->EllipsisChar), font->EllipsisChar);
-    let surface_sqrt: c_int = ImSqrt(font->MetricsTotalSurface);
-    Text("Texture Area: about {} px ~{}x{} px", font->MetricsTotalSurface, surface_sqrt, surface_sqrt);
-    for (let config_i: c_int = 0; config_i < font->ConfigDataCount; config_i++)
-        if (font->ConfigData)
-            if (*const ImFontConfig cfg = &font->ConfigData[config_i])
+    Text("Fallback character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font.FallbackChar), font.FallbackChar);
+    Text("Ellipsis character: '%s' (U+%04X)", ImTextCharToUtf8(c_str, font.EllipsisChar), font.EllipsisChar);
+    let surface_sqrt: c_int = ImSqrt(font.MetricsTotalSurface);
+    Text("Texture Area: about {} px ~{}x{} px", font.MetricsTotalSurface, surface_sqrt, surface_sqrt);
+    for (let config_i: c_int = 0; config_i < font.ConfigDataCount; config_i++)
+        if (font.ConfigData)
+            if (*const ImFontConfig cfg = &font.ConfigData[config_i])
                 BulletText("Input {}: \'%s\', Oversample: ({},{}), PixelSnapH: {}, Offset: (%.1f,%.10.0)",
-                    config_i, cfg.Name, cfg->OversampleH, cfg->OversampleV, cfg->PixelSnapH, cfg->GlyphOffset.x, cfg->GlyphOffset.y);
+                    config_i, cfg.Name, cfg.OversampleH, cfg.OversampleV, cfg.PixelSnapH, cfg.GlyphOffset.x, cfg.GlyphOffset.y);
 
     // Display all glyphs of the fonts in separate pages of 256 characters
-    if (TreeNode("Glyphs", "Glyphs ({})", font->Glyphs.Size))
+    if (TreeNode("Glyphs", "Glyphs ({})", font.Glyphs.Size))
     {
         let mut  draw_list: *mut ImDrawList =  GetWindowDrawList();
         glyph_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
-        let cell_size: c_float =  font->FontSize * 1;
+        let cell_size: c_float =  font.FontSize * 1;
         let cell_spacing: c_float =  GetStyle().ItemSpacing.y;
         for (let mut base: c_uint =  0; base <= IM_UNICODE_CODEPOINT_MAX; base += 256)
         {
             // Skip ahead if a large bunch of glyphs are not present in the font (test in chunks of 4k)
             // This is only a small optimization to reduce the number of iterations when IM_UNICODE_MAX_CODEPOINT
             // is large // (if ImWchar==ImWchar32 we will do at least about 272 queries here)
-            if (!(base & 4095) && font->IsGlyphRangeUnused(base, base + 4095))
+            if (!(base & 4095) && font.IsGlyphRangeUnused(base, base + 4095))
             {
                 base += 4096 - 256;
                 continue;
@@ -1103,7 +1126,7 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
 
             let count: c_int = 0;
             for (let mut n: c_uint =  0; n < 256; n++)
-                if (font->FindGlyphNoFallback((base + n)))
+                if (font.FindGlyphNoFallback((base + n)))
                     count+= 1;
             if count <= 0 {
                 continue(); }
@@ -1118,11 +1141,11 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
                 // available here and thus cannot easily generate a zero-terminated UTF-8 encoded string.
                 cell_p1: ImVec2(base_pos.x + (n % 16) * (cell_size + cell_spacing), base_pos.y + (n / 16) * (cell_size + cell_spacing));
                 cell_p2: ImVec2(cell_p1.x + cell_size, cell_p1.y + cell_size);
-                let glyph: *const ImFontGlyph = font->FindGlyphNoFallback((base + n));
+                let glyph: *const ImFontGlyph = font.FindGlyphNoFallback((base + n));
                 draw_list.AddRect(cell_p1, cell_p2, if glyph { IM_COL32(255, 255, 255, 100) } else { IM_COL32(255, 255, 255, 50) });
                 if (!glyph)
                     continue;
-                font->RenderChar(draw_list, cell_size, cell_p1, glyph_col, (base + n));
+                font.RenderChar(draw_list, cell_size, cell_p1, glyph_col, (base + n));
                 if (IsMouseHoveringRect(cell_p1, cell_p2))
                 {
                     BeginTooltip();
@@ -1161,7 +1184,7 @@ pub unsafe fn DebugNodeStorage(ImGuiStorage* storage, label: *const c_char)
 }
 
 // [DEBUG] Display contents of ImGuiTabBar
-pub unsafe fn DebugNodeTabBar(ImGuiTabBar* tab_bar, label: *const c_char)
+pub unsafe fn DebugNodeTabBar(tab_bar: &mut ImGuiTabBar, label: *const c_char)
 {
     // Standalone tab bars (not associated to docking/windows functionality) currently hold no discernible strings.
     buf: [c_char;256];
@@ -1245,7 +1268,7 @@ pub unsafe fn DebugNodeWindow(window: *mut ImGuiWindow, label: *const c_char)
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let is_active: bool = window.WasActive;
-    ImGuiTreeNodeFlags tree_node_flags = if window == g.NavWindow { ImGuiTreeNodeFlags_Selected} else { ImGuiTreeNodeFlags_None};
+    tree_node_flags: ImGuiTreeNodeFlags = if window == g.NavWindow { ImGuiTreeNodeFlags_Selected} else { ImGuiTreeNodeFlags_None};
     if (!is_active) { PushStyleColor(ImGuiCol_Text, GetStyleColorVec4(ImGuiCol_TextDisabled)); }
     let open: bool = TreeNodeEx(label, tree_node_flags, "%s '%s'%s", label, window.Name, is_active ? "" : " *Inactive*");
     if (!is_active) { PopStyleColor(); }
@@ -1359,7 +1382,7 @@ pub unsafe fn DebugLogV(fmt: *const c_char, va_list args)
         IMGUI_DEBUG_PRINTF("%s", g.DebugLogBuf.begin() + old_size);
 }
 
-pub unsafe fn ShowDebugLogWindow(bool* p_open)
+pub unsafe fn ShowDebugLogWindow(p_open: &mut bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize))
@@ -1488,7 +1511,7 @@ pub fn StackToolFormatLevelInfo(ImGuiStackTool* tool, n: c_int, format_for_ui: b
 }
 
 // Stack Tool: Display UI
-pub unsafe fn ShowStackToolWindow(bool* p_open)
+pub unsafe fn ShowStackToolWindow(p_open: &mut bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (!(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize))

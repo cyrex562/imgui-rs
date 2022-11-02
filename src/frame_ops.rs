@@ -1,29 +1,43 @@
 #![allow(non_snake_case)]
 
-use std::ptr::null_mut;
-use libc::{c_float, c_int};
-use crate::{CallContextHooks, GImGui, ImGuiViewport};
 use crate::condition::ImGuiCond_FirstUseEver;
-use crate::context_hook::{ImGuiContextHookType_EndFramePost, ImGuiContextHookType_EndFramePre, ImGuiContextHookType_NewFramePost, ImGuiContextHookType_NewFramePre, ImGuiContextHookType_PendingRemoval_};
-use crate::drag_drop_flags::{ImGuiDragDropFlags_SourceAutoExpirePayload, ImGuiDragDropFlags_SourceNoPreviewTooltip};
-use crate::draw_list_flags::{ImDrawListFlags_AllowVtxOffset, ImDrawListFlags_AntiAliasedFill, ImDrawListFlags_AntiAliasedLines, ImDrawListFlags_AntiAliasedLinesUseTex, ImDrawListFlags_None};
+use crate::context_hook::{
+    ImGuiContextHookType_EndFramePost, ImGuiContextHookType_EndFramePre,
+    ImGuiContextHookType_NewFramePost, ImGuiContextHookType_NewFramePre,
+    ImGuiContextHookType_PendingRemoval_,
+};
+use crate::drag_drop_flags::{
+    ImGuiDragDropFlags_SourceAutoExpirePayload, ImGuiDragDropFlags_SourceNoPreviewTooltip,
+};
+use crate::draw_list_flags::{
+    ImDrawListFlags_AllowVtxOffset, ImDrawListFlags_AntiAliasedFill,
+    ImDrawListFlags_AntiAliasedLines, ImDrawListFlags_AntiAliasedLinesUseTex, ImDrawListFlags_None,
+};
 use crate::error_ops::{ErrorCheckEndFrameSanityChecks, ErrorCheckNewFrameSanityChecks};
 use crate::font_atlas_flags::ImFontAtlasFlags_NoBakedLines;
 use crate::font_ops::SetCurrentFont;
 use crate::garbage_collection::GcCompactTransientWindowBuffers;
+use crate::{CallContextHooks, GImGui, ImGuiViewport};
+use libc::{c_float, c_int};
+use std::ptr::null_mut;
 
+use crate::a_imgui_cpp::{UpdateDebugToolItemPicker, UpdateDebugToolStackQueries};
 use crate::backend_flags::ImGuiBackendFlags_RendererHasVtxOffset;
-use crate::dock_context_ops::{DockContextEndFrame, DockContextNewFrameUpdateDocking, DockContextNewFrameUpdateUndocking};
+use crate::dock_context_ops::{
+    DockContextEndFrame, DockContextNewFrameUpdateDocking, DockContextNewFrameUpdateUndocking,
+};
 use crate::drag_drop_ops::ClearDragDrop;
 use crate::id_ops::{ClearActiveID, KeepAliveID};
-use crate::a_imgui_cpp::{UpdateDebugToolItemPicker, UpdateDebugToolStackQueries};
 use crate::input_ops::{IsMouseDown, UpdateInputEvents};
 use crate::item_flags::ImGuiItemFlags_None;
 use crate::key::ImGuiKey_Escape;
 use crate::keyboard_ops::UpdateKeyboardInputs;
 use crate::math_ops::{ImMax, ImMin};
 use crate::mouse_cursor::ImGuiMouseCursor_Arrow;
-use crate::mouse_ops::{UpdateHoveredWindowAndCaptureFlags, UpdateMouseInputs, UpdateMouseMovingWindowEndFrame, UpdateMouseMovingWindowNewFrame, UpdateMouseWheel};
+use crate::mouse_ops::{
+    UpdateHoveredWindowAndCaptureFlags, UpdateMouseInputs, UpdateMouseMovingWindowEndFrame,
+    UpdateMouseMovingWindowNewFrame, UpdateMouseWheel,
+};
 use crate::nav_ops::{NavEndFrame, NavUpdate};
 use crate::platform_ime_data::ImGuiPlatformImeData;
 use crate::popup_ops::GetTopMostPopupModal;
@@ -32,11 +46,14 @@ use crate::settings_ops::UpdateSettings;
 use crate::string_ops::str_to_const_c_char_ptr;
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
-use crate::viewport_ops::{FindViewportByID, GetMainViewport, SetCurrentViewport, UpdateViewportsEndFrame, UpdateViewportsNewFrame};
+use crate::viewport_ops::{
+    FindViewportByID, GetMainViewport, SetCurrentViewport, UpdateViewportsEndFrame,
+    UpdateViewportsNewFrame,
+};
 use crate::window::focus::FocusTopMostWindowUnderOne;
-use crate::window::ImGuiWindow;
 use crate::window::ops::{AddWindowToSortBuffer, Begin, End, SetNextWindowSize};
 use crate::window::window_flags::ImGuiWindowFlags_ChildWindow;
+use crate::window::ImGuiWindow;
 use crate::window_flags::ImGuiWindowFlags_ChildWindow;
 use crate::window_ops::{AddWindowToSortBuffer, SetNextWindowSize};
 
@@ -72,11 +89,19 @@ pub unsafe fn NewFrame() {
     // g.MenusIdSubmittedThisFrame.resize(0);
 
     // Calculate frame-rate for the user, as a purely luxurious feature
-    g.FramerateSecPerFrameAccum += g.IO.DeltaTime - g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx];
+    g.FramerateSecPerFrameAccum +=
+        g.IO.DeltaTime - g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx];
     g.FramerateSecPerFrame[g.FramerateSecPerFrameIdx] = g.IO.DeltaTime;
     g.FramerateSecPerFrameIdx = (g.FramerateSecPerFrameIdx + 1) % g.FramerateSecPerFrame.len();
-    g.FramerateSecPerFrameCount = ImMin(g.FramerateSecPerFrameCount + 1, g.FramerateSecPerFrame.len() as c_int);
-    g.IO.Framerate = if (g.FramerateSecPerFrameAccum > 0.0) { (1.0 / (g.FramerateSecPerFrameAccum / g.FramerateSecPerFrameCount)) }else { f32::MAX };
+    g.FramerateSecPerFrameCount = ImMin(
+        g.FramerateSecPerFrameCount + 1,
+        g.FramerateSecPerFrame.len() as c_int,
+    );
+    g.IO.Framerate = if (g.FramerateSecPerFrameAccum > 0.0) {
+        (1.0 / (g.FramerateSecPerFrameAccum / g.FramerateSecPerFrameCount))
+    } else {
+        f32::MAX
+    };
 
     UpdateViewportsNewFrame();
 
@@ -92,12 +117,15 @@ pub unsafe fn NewFrame() {
     }
     g.DrawListSharedData.ClipRectFullscreen = virtual_space.ToVec4();
     g.DrawListSharedData.CurveTessellationTol = g.Style.CurveTessellationTol;
-    g.DrawListSharedData.SetCircleTessellationMaxError(g.Style.CircleTessellationMaxError);
+    g.DrawListSharedData
+        .SetCircleTessellationMaxError(g.Style.CircleTessellationMaxError);
     g.DrawListSharedData.InitialFlags = ImDrawListFlags_None;
     if g.Style.AntiAliasedLines {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLines;
     }
-    if g.Style.AntiAliasedLinesUseTex && flag_clear(g.Font.ContainerAtlas.Flags, ImFontAtlasFlags_NoBakedLines) {
+    if g.Style.AntiAliasedLinesUseTex
+        && flag_clear(g.Font.ContainerAtlas.Flags, ImFontAtlasFlags_NoBakedLines)
+    {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;
     }
     if g.Style.AntiAliasedFill {
@@ -168,7 +196,7 @@ pub unsafe fn NewFrame() {
         g.ActiveIdUsingKeyInputMask.ClearAllBits();
     }
 
-// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+    // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
     if g.ActiveId == 0 {
         g.ActiveIdUsingNavInputMask = 0;
     } else if g.ActiveIdUsingNavInputMask != 0 {
@@ -180,7 +208,7 @@ pub unsafe fn NewFrame() {
         if g.ActiveIdUsingNavInputMask & !(1 << ImGuiNavInput_Cancel) {}
         // IM_ASSERT(0); // Other values unsupported
     }
-// #endif
+    // #endif
 
     // Update hover delay for IsItemHovered() with delays and tooltips
     g.HoverDelayIdPreviousFrame = g.HoverDelayId;
@@ -242,7 +270,9 @@ pub unsafe fn NewFrame() {
     UpdateMouseMovingWindowNewFrame();
 
     // Background darkening/whitening
-    if GetTopMostPopupModal() != null_mut() || (g.NavWindowingTarget != null_mut() && g.NavWindowingHighlightAlpha > 0.0) {
+    if GetTopMostPopupModal() != null_mut()
+        || (g.NavWindowingTarget != null_mut() && g.NavWindowingHighlightAlpha > 0.0)
+    {
         g.DimBgRatio = ImMin(g.DimBgRatio + g.IO.DeltaTime * 6f32, 1.0);
     } else {
         g.DimBgRatio = ImMax(g.DimBgRatio - g.IO.DeltaTime * 10.0, 0.0);
@@ -262,7 +292,12 @@ pub unsafe fn NewFrame() {
 
     // Mark all windows as not visible and compact unused memory.
     // IM_ASSERT(g.WindowsFocusOrder.Size <= g.Windows.Size);
-    let memory_compact_start_time: c_float = if g.GcCompactAll || g.IO.ConfigMemoryCompactTimer < 0.0 { f32::MAX } else { g.Time - g.IO.ConfigMemoryCompactTimer };
+    let memory_compact_start_time: c_float =
+        if g.GcCompactAll || g.IO.ConfigMemoryCompactTimer < 0.0 {
+            f32::MAX
+        } else {
+            g.Time - g.IO.ConfigMemoryCompactTimer
+        };
     // for (let i: c_int = 0; i != g.Windows.Size; i++)
     for i in 0..g.Windows.len() {
         let mut window: *mut ImGuiWindow = g.Windows[i];
@@ -272,7 +307,10 @@ pub unsafe fn NewFrame() {
         window.WriteAccessed = false;
 
         // Garbage collect transient buffers of recently unused windows
-        if !window.WasActive && !window.MemoryCompacted && window.LastTimeActive < memory_compact_start_time {
+        if !window.WasActive
+            && !window.MemoryCompacted
+            && window.LastTimeActive < memory_compact_start_time
+        {
             GcCompactTransientWindowBuffers(window);
         }
     }
@@ -280,13 +318,16 @@ pub unsafe fn NewFrame() {
     // Garbage collect transient buffers of recently unused tables
     // for (let i: c_int = 0; i < g.TablesLastTimeActive.Size; i++)
     for i in 0..g.TablesLastTimeActive.len() {
-        if g.TablesLastTimeActive[i] >= 0.0 && g.TablesLastTimeActive[i] < memory_compact_start_time {
+        if g.TablesLastTimeActive[i] >= 0.0 && g.TablesLastTimeActive[i] < memory_compact_start_time
+        {
             TableGcCompactTransientBuffers(g.Tables.GetByIndex(i));
         }
     }
     // for (let i: c_int = 0; i < g.TablesTempData.Size; i++)
     for i in 0..g.TablesTempData.len() {
-        if g.TablesTempData[i].LastTimeActive >= 0.0 && g.TablesTempData[i].LastTimeActive < memory_compact_start_time {
+        if g.TablesTempData[i].LastTimeActive >= 0.0
+            && g.TablesTempData[i].LastTimeActive < memory_compact_start_time
+        {
             TableGcCompactTransientBuffers(&g.TablesTempData[i]);
         }
     }
@@ -320,18 +361,17 @@ pub unsafe fn NewFrame() {
     // This fallback is particularly important as it avoid  calls from crashing.
     g.WithinFrameScopeWithImplicitWindow = true;
     SetNextWindowSize(&ImVec2::from_floats(400.0, 400.0), ImGuiCond_FirstUseEver);
-    Begin(str_to_const_c_char_ptr("Debug##Default"), null_mut(), 0);
+    Begin(str_to_const_c_char_ptr("Debug##Default"), null_mut());
     // IM_ASSERT(g.Currentwindow.IsFallbackWindow == true);
 
     CallContextHooks(g, ImGuiContextHookType_NewFramePost);
 }
 
-
 // This is normally called by Render(). You may want to call it directly if you want to avoid calling Render() but the gain will be very minimal.
 // c_void EndFrame()
 pub unsafe fn EndFrame() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(g.Initialized);
+                    // IM_ASSERT(g.Initialized);
 
     // Don't process EndFrame() multiple times.
     if g.FrameCountEnded == g.FrameCount {
@@ -344,9 +384,22 @@ pub unsafe fn EndFrame() {
     ErrorCheckEndFrameSanityChecks();
 
     // Notify Platform/OS when our Input Method Editor cursor has moved (e.g. CJK inputs using Microsoft IME)
-    if g.IO.SetPlatformImeDataFn != null_mut() && libc::memcmp(&g.PlatformImeData, &g.PlatformImeDataPrev, libc::sizeof(ImGuiPlatformImeData)) != 0 {
+    if g.IO.SetPlatformImeDataFn != null_mut()
+        && libc::memcmp(
+            &g.PlatformImeData,
+            &g.PlatformImeDataPrev,
+            libc::sizeof(ImGuiPlatformImeData),
+        ) != 0
+    {
         let viewport = FindViewportByID(g.PlatformImeViewport);
-        g.IO.SetPlatformImeDataFn(if viewport.is_null() == false { viewport } else { GetMainViewport() }, &g.PlatformImeData);
+        g.IO.SetPlatformImeDataFn(
+            if viewport.is_null() == false {
+                viewport
+            } else {
+                GetMainViewport()
+            },
+            &g.PlatformImeData,
+        );
     }
 
     // Hide implicit/fallback "Debug" window if it hasn't been used
@@ -367,14 +420,19 @@ pub unsafe fn EndFrame() {
     // Drag and Drop: Elapse payload (if delivered, or if source stops being submitted)
     if g.DragDropActive {
         let mut is_delivered: bool = g.DragDropPayload.Delivery;
-        let mut is_elapsed: bool = (g.DragDropPayload.DataFrameCount + 1 < g.FrameCount) && ((g.DragDropSourceFlags & ImGuiDragDropFlags_SourceAutoExpirePayload) != 0 || !IsMouseDown(g.DragDropMouseButton));
+        let mut is_elapsed: bool = (g.DragDropPayload.DataFrameCount + 1 < g.FrameCount)
+            && ((g.DragDropSourceFlags & ImGuiDragDropFlags_SourceAutoExpirePayload) != 0
+                || !IsMouseDown(g.DragDropMouseButton));
         if is_delivered || is_elapsed {
             ClearDragDrop();
         }
     }
 
     // Drag and Drop: Fallback for source tooltip. This is not ideal but better than nothing.
-    if g.DragDropActive && g.DragDropSourceFrameCount < g.FrameCount && !(g.DragDropSourceFlags & ImGuiDragDropFlags_SourceNoPreviewTooltip) != 0 {
+    if g.DragDropActive
+        && g.DragDropSourceFrameCount < g.FrameCount
+        && !(g.DragDropSourceFlags & ImGuiDragDropFlags_SourceNoPreviewTooltip) != 0
+    {
         g.DragDropWithinSource = true;
         SetTooltip("...");
         g.DragDropWithinSource = false;
@@ -397,7 +455,8 @@ pub unsafe fn EndFrame() {
     // for (let i: c_int = 0; i != g.Windows.Size; i++)
     for i in 0..g.Windows.len() {
         let mut window: *mut ImGuiWindow = g.Windows[i];
-        if window.Active && flag_set(window.Flags, ImGuiWindowFlags_ChildWindow) {     // if a child is active its parent will add it
+        if window.Active && flag_set(window.Flags, ImGuiWindowFlags_ChildWindow) {
+            // if a child is active its parent will add it
             continue;
         }
         AddWindowToSortBuffer(&mut g.WindowsTempSortBuffer, window);
@@ -418,7 +477,6 @@ pub unsafe fn EndFrame() {
 
     CallContextHooks(g, ImGuiContextHookType_EndFramePost);
 }
-
 
 // GetFrameHeight: c_float()
 pub unsafe fn GetFrameHeight() -> c_float {

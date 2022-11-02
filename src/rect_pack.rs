@@ -300,10 +300,10 @@ pub fn stbrp__skyline_find_min_y(c: *mut stbrp_context, first: *mut stbrp_node, 
 
    #if 0
    // skip in case we're past the node
-   while (node.next->x <= x0)
+   while (node.next.x<= x0)
       node += 1;
    #else
-   STBRP_ASSERT(node.next->x > x0); // we ended up handling this in the caller for efficiency
+   STBRP_ASSERT(node.next.x> x0); // we ended up handling this in the caller for efficiency
    #endif
 
    STBRP_ASSERT(node.x <= x0);
@@ -320,12 +320,12 @@ pub fn stbrp__skyline_find_min_y(c: *mut stbrp_context, first: *mut stbrp_node, 
          min_y = node.y;
          // the first time through, visited_width might be reduced
          if (node.x < x0)
-            visited_width += node.next->x - x0;
+            visited_width += node.next.x- x0;
          else
-            visited_width += node.next->x - node.x;
+            visited_width += node.next.x- node.x;
       } else {
          // add waste area
-         let under_width: c_int = node.next->x - node.x;
+         let under_width: c_int = node.next.x- node.x;
          if (under_width + visited_width > width)
             under_width = width - visited_width;
          waste_area += under_width * (min_y - node.y);
@@ -419,11 +419,11 @@ static stbrp__findresult stbrp__skyline_find_best_pos(c: *mut stbrp_context, wid
          y: c_int,waste;
          STBRP_ASSERT(xpos >= 0);
          // find the left position that matches this
-         while (node.next->x <= xpos) {
+         while (node.next.x<= xpos) {
             prev = &node.next;
             node = node.next;
          }
-         STBRP_ASSERT(node.next->x > xpos && node.x <= xpos);
+         STBRP_ASSERT(node.next.x> xpos && node.x <= xpos);
          y = stbrp__skyline_find_min_y(c, node, xpos, width, &waste);
          if (y + height <= c.height) {
             if (y <= best_y) {
@@ -484,7 +484,7 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(context: *mut stbrp_conte
 
    // from here, traverse cur and free the nodes, until we get to one
    // that shouldn't be freed
-   while (cur.next && cur.next->x <= res.x + width) {
+   while (cur.next && cur.next.x<= res.x + width) {
       next: *mut stbrp_node = cur.next;
       // move the current node to the free list
       cur.next = context.free_head;

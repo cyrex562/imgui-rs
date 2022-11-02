@@ -281,7 +281,7 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
         draw_list.AddRect(&curr.Min, &curr.Max, IM_COL32(255, 200, 0, 100), 0.0);
         draw_list.AddRect(&cand.Min, &cand.Max, IM_COL32(255, 255, 0, 200), 0.0);
         draw_list.AddRectFilled(cand.Max - ImVec2::from_floats(4.0, 4.0), cand.Max + CalcTextSize(buf.as_ptr(), null(), false, 0.0) + ImVec2::from_floats(4.0, 4.0), IM_COL32(40, 0, 0, 150), 0.0, 0);
-        draw_list.AddText(&cand.Max, !0, buf.as_ptr(), null_mut());
+        draw_list.AddText(&cand.Max, !0, buf.as_ptr());
     }
     else if (g.IO.KeyCtrl) // Hold to preview score in matching quadrant. Press C to rotate.
     {
@@ -290,7 +290,7 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
             // ImFormatString(buf, buf.len(), "%.0f/%.0f", dist_box, dist_center);
             let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window.Viewport);
             draw_list.AddRectFilled(&cand.Min, &cand.Max, IM_COL32(255, 0, 0, 200), 0.0, 0);
-            draw_list.AddText(&cand.Min, IM_COL32(255, 255, 255, 255), buf.as_ptr(), null_mut());
+            draw_list.AddText(&cand.Min, IM_COL32(255, 255, 255, 255), buf.as_ptr());
         }
     }
 // #endif
@@ -1630,7 +1630,7 @@ pub unsafe fn NavUpdateWindowingOverlay()
     SetNextWindowSizeConstraints(&ImVec2::from_floats(viewport.Size.x * 0.20, viewport.Size.y * 0.200), &ImVec2::from_floats(f32::MAX, f32::MAX), (), null_mut());
     SetNextWindowPos(&viewport.GetCenter(), ImGuiCond_Always, &ImVec2::from_floats(0.5, 0.5));
     PushStyleVar(ImGuiStyleVar_WindowPadding, g.Style.WindowPadding * 2.0);
-    Begin(str_to_const_c_char_ptr("###NavWindowingList"), null_mut(), ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoFocusOnAppearing | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoInputs | ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoSavedSettings);
+    Begin(str_to_const_c_char_ptr("###NavWindowingList"), null_mut());
     // for (let n: c_int = g.WindowsFocusOrder.Size - 1; n >= 0; n--)
     for n in g.WindowsFocusOrder.len() - 1 .. 0
     {

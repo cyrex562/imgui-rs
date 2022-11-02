@@ -318,6 +318,7 @@ use crate::type_defs::{ImGuiID, ImGuiTableColumnIdx, ImGuiTableDrawChannelIdx};
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
+use crate::window::ops::GetCurrentWindow;
 use crate::window::props::{SetNextWindowContentSize, SetNextWindowScroll};
 use crate::window::rect::{PopClipRect, PushClipRect, SetWindowClipRectBeforeSetChannel};
 use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_HorizontalScrollbar, ImGuiWindowFlags_None, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar};
@@ -339,7 +340,7 @@ pub fn TableFixFlags(mut flags: ImGuiTableFlags, outer_window: *mut ImGuiWindow)
     }
 
     // Adjust flags: enable NoKeepColumnsVisible when using ImGuiTableFlags_SizingFixedSame
-    if (flag_set(flags, ImGuiTableFlags_SizingMask_) == ImGuiTableFlags_SizingFixedSame) {
+    if (flags & ImGuiTableFlags_SizingMask_) == ImGuiTableFlags_SizingFixedSame {
         flags |= ImGuiTableFlags_NoKeepColumnsVisible;
     }
 
@@ -349,7 +350,7 @@ pub fn TableFixFlags(mut flags: ImGuiTableFlags, outer_window: *mut ImGuiWindow)
     }
 
     // Adjust flags: disable NoHostExtendX/NoHostExtendY if we have any scrolling going on
-    if (flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) {
+    if flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY) {
         flags &= !(ImGuiTableFlags_NoHostExtendX | ImGuiTableFlags_NoHostExtendY);
     }
 
@@ -378,17 +379,16 @@ pub unsafe fn TableFindByID(id: ImGuiID) -> *mut ImGuiTable
 }
 
 // Read about "TABLE SIZING" at the top of this file.
-pub unsafe fn BeginTable(str_id: *const c_char, columns_count: c_int, flags: ImGuiTableFlags, outer_size: &ImVec2,inner_width: c_float) -> bool
-{
-    let mut id: ImGuiID =  id_from_str(str_id);
+pub unsafe fn BeginTable(str_id: &str, columns_count: usize, flags: ImGuiTableFlags, outer_size: Option<&mut ImVec2>, inner_width: c_float) -> bool {
+    let mut id: ImGuiID = id_from_str(str_id);
     return BeginTableEx(str_id, id, columns_count, flags, outer_size, inner_width);
 }
 
-pub unsafe fn  BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_int, mut flags: ImGuiTableFlags, outer_size: &ImVec2, inner_width: c_float) -> bool
+pub unsafe fn  BeginTableEx(name: &str, id: ImGuiID, columns_count: usize, mut flags: ImGuiTableFlags, outer_size: &mut ImVec2, inner_width: c_float) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    outer_window: *mut ImGuiWindow = GetCurrentWindow();
-    if (outer_window.SkipItems) {// Consistent with other tables + beneficial side effect that assert on miscalling EndTable() will be more visible.
+    let outer_window = GetCurrentWindow();
+    if outer_window.SkipItems {// Consistent with other tables + beneficial side effect that assert on miscalling EndTable() will be more visible.
         return false;
     }
 
@@ -401,7 +401,7 @@ pub unsafe fn  BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_i
     // If an outer size is specified ahead we will be able to early out when not visible. Exact clipping rules may evolve.
     let use_child_window: bool = (flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) != 0;
     let avail_size: ImVec2 = GetContentRegionAvail();
-    let actual_outer_size: ImVec2 = CalcItemSize(outer_size.clone(), ImMax(avail_size.x, 1.0), if use_child_window { ImMax(avail_size.y, 1.0) } else { 0.0 });
+    let actual_outer_size: ImVec2 = CalcItemSize(outer_size, avail_size.x.max(1.0), if use_child_window { avail_size.y.max(1.0) } else { 0.0 });
     let mut outer_rect: ImRect = ImRect::new(outer_window.DC.CursorPos, outer_window.DC.CursorPos + actual_outer_size);
     if use_child_window && IsClippedEx(&mut outer_rect, 0)
     {
@@ -570,8 +570,8 @@ pub unsafe fn  BeginTableEx(name: *const c_char, id: ImGuiID, columns_count: c_i
     // Setup memory buffer (clear data if columns count changed)
     let mut old_columns_to_preserve: *mut ImGuiTableColumn= null_mut();
     let mut old_columns_raw_data: *mut c_void= null_mut();
-    let old_columns_count: c_int = table.Columns.size();
-    if (old_columns_count != 0 && old_columns_count != columns_count)
+    let old_columns_count = table.Columns;
+    if old_columns_count != 0 && old_columns_count != columns_count
     {
         // Attempt to preserve width on column count change (#4046)
         old_columns_to_preserve = table.Columns.Data;
@@ -1591,7 +1591,7 @@ pub unsafe fn  EndTable()
 
 // See "COLUMN SIZING POLICIES" comments at the top of this file
 // If (init_width_or_weight <= 0.0) it is ignored
-pub unsafe fn TableSetupColumn(label: *const c_char, mut flags: ImGuiTableColumnFlags, init_width_or_weight: c_float, user_id: ImGuiID)
+pub unsafe fn TableSetupColumn(label: &str, mut flags: ImGuiTableColumnFlags, init_width_or_weight: c_float, user_id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut table: *mut ImGuiTable = g.CurrentTable;
@@ -2459,7 +2459,7 @@ pub unsafe fn TableMergeDrawChannels(table: *mut ImGuiTable)
             let text_pos: ImVec2 = merge_group.ClipRect.Min + ImVec2::from_floats(4.0, 4.0);
             let text_size: ImVec2 = CalcTextSize(buf, null_mut(), false, 0.0);
             GetForegroundDrawList(null_mut()).AddRectFilled(&text_pos, text_pos + text_size, IM_COL32(0, 0, 0, 255), 0.0, 0);
-            GetForegroundDrawList(null_mut()).AddText(&text_pos, IM_COL32(255, 255, 0, 255), buf, null_mut());
+            GetForegroundDrawList(null_mut()).AddText(&text_pos, IM_COL32(255, 255, 0, 255), buf);
             GetForegroundDrawList(null_mut()).AddRect(&merge_group.ClipRect.Min, &merge_group.ClipRect.Max, IM_COL32(255, 255, 0, 255), 0.0);
         }
     }

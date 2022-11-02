@@ -1,23 +1,23 @@
 #![allow(non_snake_case)]
 
-use std::borrow::BorrowMut;
-use std::ffi::CStr;
-use std::os::raw::c_void;
-use std::ptr::null_mut;
-use std::str::pattern::Pattern;
-use libc::{c_char, c_float, c_int, c_short, c_uint, size_t};
 use crate::color::IM_COL32_A_MASK;
-use crate::font_ops::FindFirstExistingGlyph;
 use crate::draw_list::ImDrawList;
 use crate::draw_vert::ImDrawVert;
 use crate::font_atlas::ImFontAtlas;
 use crate::font_config::ImFontConfig;
 use crate::font_glyph::ImFontGlyph;
-use crate::math_ops::{ImCharIsBlankA, ImCharIsBlankW, ImClamp, ImMax};
+use crate::font_ops::FindFirstExistingGlyph;
+use crate::math_ops::{char_is_blank, ImCharIsBlankA, ImClamp, ImMax};
 use crate::string_ops::ImTextCharFromUtf8;
+use crate::type_defs::{ImDrawIdx, ImWchar};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
-use crate::type_defs::{ImDrawIdx, ImWchar};
+use libc::{c_char, c_float, c_int, c_short, c_uint, size_t};
+use std::borrow::BorrowMut;
+use std::ffi::CStr;
+use std::os::raw::c_void;
+use std::ptr::null_mut;
+use std::str::pattern::Pattern;
 
 // Font runtime data and rendering
 // ImFontAtlas automatically loads a default embedded font for you when you call GetTexDataAsAlpha8() or GetTexDataAsRGBA32().
@@ -28,14 +28,14 @@ pub struct ImFont {
     // 12-16 // out //            // Sparse. Glyphs->AdvanceX in a directly indexable way (cache-friendly for CalcTextSize functions which only this this info, and are often bottleneck in large UI).
     pub FallbackAdvanceX: c_float,
     // 4     // out // = Fallbackglyph.AdvanceX
-    pub FontSize: c_float,           // 4     // in  //            // Height of characters/line, set during loading (don't change after loading)
+    pub FontSize: c_float, // 4     // in  //            // Height of characters/line, set during loading (don't change after loading)
 
     // Members: Hot ~28/40 bytes (for CalcTextSize + render loop)
     pub IndexLookup: Vec<ImWchar>,
     // 12-16 // out //            // Sparse. Index glyphs by Unicode code-point.
     pub Glyphs: Vec<ImFontGlyph>,
     // 12-16 // out //            // All glyphs.
-    pub FallbackGlyph: *const ImFontGlyph,      // 4-8   // out // = FindGlyph(FontFallbackChar)
+    pub FallbackGlyph: *const ImFontGlyph, // 4-8   // out // = FindGlyph(FontFallbackChar)
 
     // Members: Cold ~32/40 bytes
     pub ContainerAtlas: *mut ImFontAtlas,
@@ -54,19 +54,17 @@ pub struct ImFont {
     // 1     // out //
     pub Scale: c_float,
     // 4     // in  // = 1.f      // Base font scale, multiplied by the per-window font scale which you can adjust with SetWindowFontScale()
-// c_float                       Ascent, Descent;    // 4+4   // out //            // Ascent: distance from top to bottom of e.g. 'A' [0..FontSize]
+    // c_float                       Ascent, Descent;    // 4+4   // out //            // Ascent: distance from top to bottom of e.g. 'A' [0..FontSize]
     pub Ascent: c_float,
     pub Descent: c_float,
 
     pub MetricsTotalSurface: c_int,
     // 4     // out //            // Total surface in pixels to get an idea of the font rasterization/texture cost (not exact, we approximate the cost of padding between glyphs)
-// ImU8                        Used4kPagesMap[(IM_UNICODE_CODEPOINT_MAX+1)/4096/8]; // 2 bytes if ImWchar=ImWchar16, 34 bytes if ImWchar==ImWchar32. Store 1-bit for each block of 4K codepoints that has one active glyph. This is mainly used to facilitate iterations across all used codepoints.
+    // ImU8                        Used4kPagesMap[(IM_UNICODE_CODEPOINT_MAX+1)/4096/8]; // 2 bytes if ImWchar=ImWchar16, 34 bytes if ImWchar==ImWchar32. Store 1-bit for each block of 4K codepoints that has one active glyph. This is mainly used to facilitate iterations across all used codepoints.
     pub Used4kPagesMap: [u8; (IM_UNICODE_CODEPOINT_MAX + 1) / 4096 / 8],
-
 }
 
 impl ImFont {
-
     // Methods
     // ImFont();
     pub fn new() -> Self {
@@ -89,9 +87,7 @@ impl ImFont {
         out
     }
 
-
     // ~ImFont();
-
 
     // const ImFontGlyph*FindGlyph(ImWchar c) const;
     pub unsafe fn FindGlyph(&mut self, c: char) -> *mut ImFontGlyph {
@@ -120,7 +116,6 @@ impl ImFont {
         return &mut self.Glyphs[i];
     }
 
-
     // c_float                       GetCharAdvance(ImWchar c) const     { return (c < IndexAdvanceX.len()) ? IndexAdvanceX[c] : FallbackAdvanceX; }
     pub fn GetCharAdvance(&self, c: ImWchar) -> c_float {
         return if (c as usize) < self.IndexAdvanceX.len() {
@@ -130,12 +125,10 @@ impl ImFont {
         };
     }
 
-
     // bool                        IsLoaded() const                    { return ContainerAtlas != None; }
     pub fn IsLoaded(&self) -> bool {
         self.ContainerAtlas.is_null() == false
     }
-
 
     // const char*                 GetDebugName() const                { return ConfigData ? ConfigData.Name : "<unknown>"; }
     pub unsafe fn GetDebugName(&self) -> *const c_char {
@@ -149,7 +142,14 @@ impl ImFont {
     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). f32::MAX to disable.
     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0 to disable.
     // ImVec2            CalcTextSizeA(c_float size, c_float max_width, c_float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
-    pub unsafe fn CalcTextSizeA(&mut self, size: c_float, max_width: c_float, wrap_width: c_float, text_begin: &str, remaining: &mut usize) -> ImVec2 {
+    pub unsafe fn CalcTextSizeA(
+        &mut self,
+        size: c_float,
+        max_width: c_float,
+        wrap_width: c_float,
+        text_begin: &str,
+        remaining: &mut usize,
+    ) -> ImVec2 {
         // if !text_end {
         //     text_end = text_begin + libc::strlen(text_begin);
         // } // FIXME-OPT: Need to avoid this.
@@ -168,10 +168,12 @@ impl ImFont {
             if word_wrap_enabled {
                 // Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
                 if !word_wrap_eol {
-                    word_wrap_eol = CalcWordWrapPositionA(scale, s, text_end, wrap_width - line_width);
-                    if word_wrap_eol == s {// Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
+                    word_wrap_eol =
+                        CalcWordWrapPositionA(scale, s, text_end, wrap_width - line_width);
+                    if word_wrap_eol == s {
+                        // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
                         word_wrap_eol += 1;
-                    }    // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
+                    } // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
                 }
 
                 if s >= word_wrap_eol {
@@ -185,10 +187,14 @@ impl ImFont {
                     // Wrapping skips upcoming blanks
                     while s < text_end {
                         const c: c_char = *s;
-                        if ImCharIsBlankA(c) { s += 1; } else if c == '\n' as c_char {
+                        if ImCharIsBlankA(c) {
+                            s += 1;
+                        } else if c == '\n' as c_char {
                             s += 1;
                             break;
-                        } else { break; }
+                        } else {
+                            break;
+                        }
                     }
                     continue;
                 }
@@ -201,7 +207,8 @@ impl ImFont {
                 s += 1;
             } else {
                 s += ImTextCharFromUtf8(&mut c, s, text_end);
-                if c == 0 { // Malformed UTF-8?
+                if c == 0 {
+                    // Malformed UTF-8?
                     break;
                 }
             }
@@ -218,7 +225,11 @@ impl ImFont {
                 }
             }
 
-            let char_width: c_float = (if c < self.IndexAdvanceX.Size { self.IndexAdvanceX[c] } else { self.FallbackAdvanceX }) * scale;
+            let char_width: c_float = (if c < self.IndexAdvanceX.Size {
+                self.IndexAdvanceX[c]
+            } else {
+                self.FallbackAdvanceX
+            }) * scale;
             if line_width + char_width >= max_width {
                 s = prev_s;
                 break;
@@ -242,9 +253,14 @@ impl ImFont {
         return text_size;
     }
 
-
     // const char*       CalcWordWrapPositionA(c_float scale, const char* text, const char* text_end, c_float wrap_width) const;
-    pub unsafe fn CalcWordWrapPositionA(&mut self, scale: c_float, text: *const c_char, text_end: *const c_char, mut wrap_width: c_float) -> *const c_char{
+    pub unsafe fn CalcWordWrapPositionA(
+        &mut self,
+        scale: c_float,
+        text: *const c_char,
+        text_end: *const c_char,
+        mut wrap_width: c_float,
+    ) -> *const c_char {
         // Simple word-wrapping for English, not full-featured. Please submit failing cases!
         // FIXME: Much possible improvements (don't cut things like "word !", "word!!!" but cut within "word,,,,", more sensible support for punctuations, support for Unicode punctuations, etc.)
 
@@ -260,34 +276,30 @@ impl ImFont {
         // Cut words that cannot possibly fit within one line.
         // e.g.: "The tropical fish" with ~5 characters worth of width --> "The tr" "opical" "fish"
 
-        let mut line_width: c_float =  0.0;
-        let mut word_width: c_float =  0.0;
-        let mut blank_width: c_float =  0.0;
+        let mut line_width: c_float = 0.0;
+        let mut word_width: c_float = 0.0;
+        let mut blank_width: c_float = 0.0;
         wrap_width /= scale; // We work with unscaled widths to avoid scaling every characters
 
-        let mut  word_end: *const c_char = text;
-        let mut  prev_word_end: *const c_char= null_mut();
-        let mut inside_word: bool =  true;
+        let mut word_end: *const c_char = text;
+        let mut prev_word_end: *const c_char = null_mut();
+        let mut inside_word: bool = true;
 
-        let mut  s: *const c_char = text;
-        while s < text_end
-        {
+        let mut s: *const c_char = text;
+        while s < text_end {
             let mut c: c_uint = (*s).clone() as c_uint;
             let next_s: *const c_char;
             if c < 0x80 {
                 next_s = s + 1;
-            }
-            else {
+            } else {
                 next_s = s + ImTextCharFromUtf8(&mut c, s, text_end);
             }
             if c == 0 {
                 break;
             }
 
-            if c < 32
-            {
-                if c == c_uint::from('\n')
-                {
+            if c < 32 {
+                if c == c_uint::from('\n') {
                     line_width = 0.0;
                     word_width = 0.0;
                     blank_width = 0.0;
@@ -295,34 +307,30 @@ impl ImFont {
                     s = next_s;
                     continue;
                 }
-                if c == c_uint::from('\r')
-                {
+                if c == c_uint::from('\r') {
                     s = next_s;
                     continue;
                 }
             }
 
-            let char_width: c_float =  (if c < self.IndexAdvanceX.len() as c_uint { self.IndexAdvanceX[c] } else { self.FallbackAdvanceX.clone() });
-            if ImCharIsBlankW(c.clone())
-            {
-                if inside_word
-                {
+            let char_width: c_float = (if c < self.IndexAdvanceX.len() as c_uint {
+                self.IndexAdvanceX[c]
+            } else {
+                self.FallbackAdvanceX.clone()
+            });
+            if char_is_blank(c.clone()) {
+                if inside_word {
                     line_width += blank_width;
                     blank_width = 0.0;
                     word_end = s;
                 }
                 blank_width += char_width;
                 inside_word = false;
-            }
-            else
-            {
+            } else {
                 word_width += char_width;
-                if inside_word
-                {
+                if inside_word {
                     word_end = next_s;
-                }
-                else
-                {
+                } else {
                     prev_word_end = word_end;
                     line_width += word_width.clone() + blank_width;
                     word_width = 0.0;
@@ -330,17 +338,23 @@ impl ImFont {
                 }
 
                 // Allow wrapping after punctuation.
-                inside_word = (c != c_uint::from('.') && c != c_uint::from(',') && c != c_uint::from(';') && c != c_uint::from('!') && c != c_uint::from('?') && c != c_uint::from('\"'));
+                inside_word = (c != c_uint::from('.')
+                    && c != c_uint::from(',')
+                    && c != c_uint::from(';')
+                    && c != c_uint::from('!')
+                    && c != c_uint::from('?')
+                    && c != c_uint::from('\"'));
             }
 
             // We ignore blank width at the end of the line (they can be skipped)
-            if line_width.clone() + word_width.clone() > wrap_width
-            {
+            if line_width.clone() + word_width.clone() > wrap_width {
                 // Words that cannot possibly fit within an entire line will be cut anywhere.
                 if word_width < wrap_width {
                     s = if prev_word_end {
                         prev_word_end
-                    } else { word_end };
+                    } else {
+                        word_end
+                    };
                 }
                 break;
             }
@@ -351,34 +365,58 @@ impl ImFont {
         return s;
     }
 
-
     // void              RenderChar(draw_list: *mut ImDrawList, c_float size, const pos: &mut ImVec2, col: u32, ImWchar c) const;
-    pub unsafe fn RenderChar(&mut self, draw_list: &mut ImDrawList, size: c_float, pos: &ImVec2, mut col: u32, c: ImWchar) {
+    pub unsafe fn RenderChar(
+        &mut self,
+        draw_list: &mut ImDrawList,
+        size: c_float,
+        pos: &ImVec2,
+        mut col: u32,
+        c: ImWchar,
+    ) {
         let glyph: *const ImFontGlyph = self.FindGlyph(c);
         if glyph.is_null() || !glyph.Visible {
             return;
         }
         if glyph.Colored {
-
             col |= !IM_COL32_A_MASK;
         }
-        let scale: c_float =  if size >= 0.0 { (size / self.FontSize) } else { 1 };
-        let x: c_float =  IM_FLOOR(pos.x);
-        let y: c_float =  IM_FLOOR(pos.y);
+        let scale: c_float = if size >= 0.0 {
+            (size / self.FontSize)
+        } else {
+            1
+        };
+        let x: c_float = IM_FLOOR(pos.x);
+        let y: c_float = IM_FLOOR(pos.y);
         draw_list.PrimReserve(6, 4);
-        draw_list.PrimRectUV(&ImVec2::from_floats(x + glyph.X0 * scale, y + glyph.Y0 * scale), &ImVec2::from_floats(x + glyph.X1 * scale, y + glyph.Y1 * scale), &ImVec2::from_floats(glyph.U0, glyph.V0), &ImVec2::from_floats(glyph.U1, glyph.V1), col);
+        draw_list.PrimRectUV(
+            &ImVec2::from_floats(x + glyph.X0 * scale, y + glyph.Y0 * scale),
+            &ImVec2::from_floats(x + glyph.X1 * scale, y + glyph.Y1 * scale),
+            &ImVec2::from_floats(glyph.U0, glyph.V0),
+            &ImVec2::from_floats(glyph.U1, glyph.V1),
+            col,
+        );
     }
 
-
     // void              RenderText(draw_list: *mut ImDrawList, c_float size, const pos: &mut ImVec2, col: u32, clip_rect: &ImVec4, const char* text_begin, const char* text_end, c_float wrap_width = 0.0, cpu_fine_clip: bool = false) const;
-    pub unsafe fn RenderText(&mut self, draw_list: &mut ImDrawList, size: c_float, pos: &ImVec2, mut col: u32, clip_rect: &ImVec4, text_begin: *const c_char, mut text_end: *const c_char, wrap_width: c_float, cpu_fine_clip: bool) {
+    pub unsafe fn RenderText(
+        &mut self,
+        draw_list: &mut ImDrawList,
+        size: c_float,
+        pos: &ImVec2,
+        mut col: u32,
+        clip_rect: &ImVec4,
+        text_begin: &str,
+        wrap_width: c_float,
+        cpu_fine_clip: bool,
+    ) {
         if !text_end {
-            text_end = text_begin + libc::strlen(text_begin);
+            text_end = text_begin + text_begin.len();
         } //  functions generally already provides a valid text_end, so this is merely to handle direct calls.
 
         // Align to be pixel perfect
-        let mut x: c_float = IM_FLOOR(pos.x);
-        let mut y: c_float = IM_FLOOR(pos.y);
+        let mut x: c_float = pos.x.floor();
+        let mut y: c_float = pos.y.floor();;
         if y > clip_rect.w {
             return;
         }
@@ -431,8 +469,10 @@ impl ImFont {
             if word_wrap_enabled {
                 // Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
                 if !word_wrap_eol {
-                    word_wrap_eol = self.CalcWordWrapPositionA(scale, s, text_end, wrap_width - (x - start_x));
-                    if word_wrap_eol == s { // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
+                    word_wrap_eol =
+                        self.CalcWordWrapPositionA(scale, s, text_end, wrap_width - (x - start_x));
+                    if word_wrap_eol == s {
+                        // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
                         word_wrap_eol += 1;
                     } // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
                 }
@@ -445,10 +485,14 @@ impl ImFont {
                     // Wrapping skips upcoming blanks
                     while s < text_end {
                         const c: c_char = *s;
-                        if ImCharIsBlankA(c) { s += 1; } else if c == '\n' as c_char {
+                        if ImCharIsBlankA(c) {
+                            s += 1;
+                        } else if c == '\n' as c_char {
                             s += 1;
                             break;
-                        } else { break; }
+                        } else {
+                            break;
+                        }
                     }
                     continue;
                 }
@@ -460,7 +504,8 @@ impl ImFont {
                 s += 1;
             } else {
                 s += ImTextCharFromUtf8(&mut c, s, text_end);
-                if c == 0 { // Malformed UTF-8?
+                if c == 0 {
+                    // Malformed UTF-8?
                     break;
                 }
             }
@@ -565,12 +610,12 @@ impl ImFont {
         // Give back unused vertices (clipped ones, blanks) ~ this is essentially a PrimUnreserve() action.
         draw_list.VtxBuffer.len() = (vtx_write - draw_list.VtxBuffer.Data); // Same as calling shrink()
         draw_list.IdxBuffer.len() = (idx_write - draw_list.IdxBuffer.Data);
-        draw_list.CmdBuffer[draw_list.CmdBuffer.len() - 1].ElemCount -= (idx_expected_size - draw_list.IdxBuffer.len());
+        draw_list.CmdBuffer[draw_list.CmdBuffer.len() - 1].ElemCount -=
+            (idx_expected_size - draw_list.IdxBuffer.len());
         draw_list._VtxWritePtr = vtx_write;
         draw_list._IdxWritePtr = idx_write;
         draw_list._VtxCurrentIdx = vtx_current_idx;
     }
-
 
     // [Internal] Don't use!
     // void              BuildLookupTable();
@@ -586,7 +631,11 @@ impl ImFont {
         self.IndexAdvanceX.clear();
         self.IndexLookup.clear();
         self.DirtyLookupTables = false;
-        libc::memset(self.Used4kPagesMap.as_mut_ptr() as *mut c_void, 0, self.Used4kPagesMap.len());
+        libc::memset(
+            self.Used4kPagesMap.as_mut_ptr() as *mut c_void,
+            0,
+            self.Used4kPagesMap.len(),
+        );
         self.GrowIndex((max_codepoint + 1) as size_t);
         // for (let i: c_int = 0; i < Glyphs.len(); i++)
         for i in 0..self.Glyphs.len() {
@@ -603,8 +652,10 @@ impl ImFont {
         // Create a glyph to handle TAB
         // FIXME: Needs proper TAB handling but it needs to be contextualized (or we could arbitrary say that each string starts at "column 0" ?)
         if self.FindGlyph(ImWchar::from(' ')) {
-            if self.Glyphs.last().unwrap().Codepoint != '\t' {   // So we can call this function multiple times (FIXME: Flaky)
-                self.Glyphs.resize_with(self.Glyphs.len() + 1, ImFontGlyph::default());
+            if self.Glyphs.last().unwrap().Codepoint != '\t' {
+                // So we can call this function multiple times (FIXME: Flaky)
+                self.Glyphs
+                    .resize_with(self.Glyphs.len() + 1, ImFontGlyph::default());
             }
             let mut tab_glyph: &mut ImFontGlyph = self.Glyphs.last_mut().unwrap();
             tab_glyph = self.FindGlyph(ImWchar::from(' ')).borrow_mut();
@@ -624,17 +675,23 @@ impl ImFont {
         let ellipsis_chars: [ImWchar; 2] = [0x2026, 0x0085];
         let dots_chars: [ImWchar; 2] = [ImWchar::from('.'), 0xFF0E];
         if self.EllipsisChar == -1 {
-            self.EllipsisChar = FindFirstExistingGlyph(this, ellipsis_chars.as_ptr(), ellipsis_chars.len());
+            self.EllipsisChar =
+                FindFirstExistingGlyph(this, ellipsis_chars.as_ptr(), ellipsis_chars.len());
         }
         if self.DotChar == -1 {
             self.DotChar = FindFirstExistingGlyph(this, dots_chars.as_ptr(), dots_chars.len());
         }
 
         // Setup fallback character
-        let fallback_chars: [ImWchar; 3] = [ImWchar::from(IM_UNICODE_CODEPOINT_INVALID), ImWchar::from('?'), ImWchar::from(' ')];
+        let fallback_chars: [ImWchar; 3] = [
+            ImWchar::from(IM_UNICODE_CODEPOINT_INVALID),
+            ImWchar::from('?'),
+            ImWchar::from(' '),
+        ];
         self.FallbackGlyph = self.FindGlyphNoFallback(self.FallbackChar.clone());
         if self.FallbackGlyph == null_mut() {
-            self.FallbackChar = FindFirstExistingGlyph(this, fallback_chars.as_ptr(), fallback_chars.len());
+            self.FallbackChar =
+                FindFirstExistingGlyph(this, fallback_chars.as_ptr(), fallback_chars.len());
             self.FallbackGlyph = self.FindGlyphNoFallback(self.FallbackChar.clone());
             if self.FallbackGlyph == null_mut() {
                 self.FallbackGlyph = self.Glyphs.last().unwrap();
@@ -651,7 +708,6 @@ impl ImFont {
         }
     }
 
-
     // void              ClearOutputData();
     pub fn ClearOutputData(&mut self) {
         self.FontSize = 0.0;
@@ -667,7 +723,6 @@ impl ImFont {
         self.MetricsTotalSurface = 0;
     }
 
-
     // void              GrowIndex(new_size: c_int);
     pub fn GrowIndex(&mut self, new_size: size_t) {
         // IM_ASSERT(IndexAdvanceX.len() == IndexLookup.len());
@@ -678,17 +733,35 @@ impl ImFont {
         self.IndexLookup.resize(new_size.clone(), -1);
     }
 
-
     // void              AddGlyph(const ImFontConfig* src_cfg, ImWchar c, c_float x0, c_float y0, c_float x1, c_float y1, c_float u0, c_float v0, c_float u1, c_float v1, c_float advance_x);
-    pub fn AddGlyph(&mut self, src_cfg: *const ImFontConfig, c: ImWchar, mut x0: c_float, y0: c_float, mut x1: c_float, y1: c_float, u0: c_float, v0: c_float, u1: c_float, v1: c_float, mut advance_x: c_float) {
-        if cfg != null_mut()
-        {
+    pub fn AddGlyph(
+        &mut self,
+        src_cfg: *const ImFontConfig,
+        c: ImWchar,
+        mut x0: c_float,
+        y0: c_float,
+        mut x1: c_float,
+        y1: c_float,
+        u0: c_float,
+        v0: c_float,
+        u1: c_float,
+        v1: c_float,
+        mut advance_x: c_float,
+    ) {
+        if cfg != null_mut() {
             // Clamp & recenter if needed
-            let advance_x_original: c_float =  advance_x;
-            advance_x = ImClamp(advance_x.clone(), cfg.GlyphMinAdvanceX, cfg.GlyphMaxAdvanceX);
-            if advance_x != advance_x_original
-            {
-                let char_off_x: c_float =  if cfg.PixelSnapH { ImFloor((advance_x - advance_x_original) * 0.5) } else { (advance_x - advance_x_original) * 0.5 };
+            let advance_x_original: c_float = advance_x;
+            advance_x = ImClamp(
+                advance_x.clone(),
+                cfg.GlyphMinAdvanceX,
+                cfg.GlyphMaxAdvanceX,
+            );
+            if advance_x != advance_x_original {
+                let char_off_x: c_float = if cfg.PixelSnapH {
+                    ImFloor((advance_x - advance_x_original) * 0.5)
+                } else {
+                    (advance_x - advance_x_original) * 0.5
+                };
                 x0 += char_off_x;
                 x1 += char_off_x.clone();
             }
@@ -702,7 +775,8 @@ impl ImFont {
             advance_x += cfg.GlyphExtraSpacing.x;
         }
 
-        self.Glyphs.resize_with(Glyphs.Size + 1, ImFontGlyph::default());
+        self.Glyphs
+            .resize_with(Glyphs.Size + 1, ImFontGlyph::default());
         let glyph = self.Glyphs.last_mut().unwrap();
         glyph.Codepoint = codepoint;
         glyph.Visible = (x0 != x1) && (y0 != y1);
@@ -719,33 +793,43 @@ impl ImFont {
 
         // Compute rough surface usage metrics (+1 to account for average padding, +0.99 to round)
         // We use (U1-U0)*TexWidth instead of X1-X0 to account for oversampling.
-        let pad: c_float =  self.ContainerAtlas.TexGlyphPadding.clone() + 0.99;
+        let pad: c_float = self.ContainerAtlas.TexGlyphPadding.clone() + 0.99;
         self.DirtyLookupTables = true;
-        self.MetricsTotalSurface += ((glyph.U1.clone() - glyph.U0.clone()) * self.ContainerAtlas.TexWidth.clone() + pad) * ((glyph.V1.clone() - glyph.V0.clone()) * self.ContainerAtlas.TexHeight.clone() + pad.clone());
+        self.MetricsTotalSurface +=
+            ((glyph.U1.clone() - glyph.U0.clone()) * self.ContainerAtlas.TexWidth.clone() + pad)
+                * ((glyph.V1.clone() - glyph.V0.clone()) * self.ContainerAtlas.TexHeight.clone()
+                    + pad.clone());
     }
 
     // void              AddRemapChar(ImWchar dst, ImWchar src, overwrite_dst: bool = true); // Makes 'dst' character/glyph points to 'src' character/glyph. Currently needs to be called AFTER fonts have been built.
     pub fn AddRemapChar(&mut self, dst: ImWchar, src: ImWchar, overwrite_dst: bool) {
-
         // IM_ASSERT(IndexLookup.len() > 0);    // Currently this can only be called AFTER the font has been built, aka after calling ImFontAtlas::GetTexDataAs*() function.
         let mut index_size: size_t = self.IndexLookup.len();
 
-        if dst < index_size as ImWchar && self.IndexLookup[dst] == -1 && !overwrite_dst { // 'dst' already exists
+        if dst < index_size as ImWchar && self.IndexLookup[dst] == -1 && !overwrite_dst {
+            // 'dst' already exists
             return;
         }
-        if src >= index_size.clone() as ImWchar && dst >= index_size.clone() as ImWchar {// both 'dst' and 'src' don't exist -> no-op
+        if src >= index_size.clone() as ImWchar && dst >= index_size.clone() as ImWchar {
+            // both 'dst' and 'src' don't exist -> no-op
             return;
         }
 
         self.GrowIndex((dst.clone() + 1) as size_t);
-        self.IndexLookup[dst.clone()] = if src < index_size.clone() as ImWchar { self.IndexLookup[src] } else { -1 };
-        self.IndexAdvanceX[dst.clone()] = if src < index_size.clone() as ImWchar { self.IndexAdvanceX[src.clone()] } else { 1 };
+        self.IndexLookup[dst.clone()] = if src < index_size.clone() as ImWchar {
+            self.IndexLookup[src]
+        } else {
+            -1
+        };
+        self.IndexAdvanceX[dst.clone()] = if src < index_size.clone() as ImWchar {
+            self.IndexAdvanceX[src.clone()]
+        } else {
+            1
+        };
     }
-
 
     // void              SetGlyphVisible(ImWchar c, visible: bool);
     pub unsafe fn SetGlyphVisible(&mut self, c: ImWchar, visible: bool) {
-
         let glyph = self.FindGlyph(c);
         if glyph.is_null() == false {
             glyph.Visible = visible;
