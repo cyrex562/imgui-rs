@@ -12,7 +12,7 @@ add_library(${CMAKE_PROJECT_NAME} SHARED
         ../../src/imgui_demo.cpp
         ../../src/draw.rs
         ../../src/tables.rs
-        ../../src/a_widgets.rs
+        ../../src/widgets.rs
   ${CMAKE_CURRENT_SOURCE_DIR}/../../backends/imgui_impl_android.cpp
   ${CMAKE_CURRENT_SOURCE_DIR}/../../backends/imgui_impl_opengl3.cpp
   ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c

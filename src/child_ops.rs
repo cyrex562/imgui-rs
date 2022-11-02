@@ -1,11 +1,7 @@
-use std::io::SeekFrom::End;
-use std::ptr::{null, null_mut};
-use libc::{c_char, c_float, c_int};
 use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
 use crate::color::{ImGuiCol_ChildBg, ImGuiCol_FrameBg};
 use crate::condition::ImGuiCond_None;
 use crate::content_ops::GetContentRegionAvail;
-use crate::GImGui;
 use crate::id_ops::SetActiveID;
 use crate::input_source::ImGuiInputSource_Nav;
 use crate::item_ops::{ItemAdd, ItemSize};
@@ -17,40 +13,74 @@ use crate::rect::ImRect;
 use crate::render_ops::RenderNavHighlight;
 use crate::string_ops::ImFormatStringToTempBuffer;
 use crate::style_ops::{PopStyleColor, PushStyleColor};
-use crate::style_var::{ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_ChildRounding, ImGuiStyleVar_WindowPadding};
-use crate::style_var_ops::{PopStyleVar, PopStyleVarInt, PushStyleVar, PushStyleVarFloat, PushStyleVarVec2};
+use crate::style_var::{
+    ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_ChildRounding, ImGuiStyleVar_WindowPadding,
+};
+use crate::style_var_ops::{
+    PopStyleVar, PopStyleVarInt, PushStyleVar, PushStyleVarFloat, PushStyleVarVec2,
+};
 use crate::type_defs::ImGuiID;
 use crate::utils::flag_clear;
 use crate::vec2::ImVec2;
 use crate::window::focus::FocusWindow;
-use crate::window::ImGuiWindow;
 use crate::window::ops::{Begin, GetCurrentWindow, SetNextWindowSize};
-use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar};
-use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar};
+use crate::window::window_flags::{
+    ImGuiWindowFlags, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_ChildWindow,
+    ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove,
+    ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar,
+};
+use crate::window::ImGuiWindow;
+use crate::window_flags::{
+    ImGuiWindowFlags, ImGuiWindowFlags_AlwaysUseWindowPadding, ImGuiWindowFlags_ChildWindow,
+    ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoMove,
+    ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar,
+};
 use crate::window_ops::SetNextWindowSize;
+use crate::GImGui;
+use libc::{c_char, c_float, c_int};
+use std::io::SeekFrom::End;
+use std::ptr::{null, null_mut};
 
 // BeginChildEx: bool(name: *const c_char, ImGuiID id, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags flags)
-pub unsafe fn BeginChildEx(name: &str, id: ImGuiID, size_arg: &ImVec2, border: bool, mut flags: ImGuiWindowFlags) -> bool {
+pub unsafe fn BeginChildEx(
+    name: &str,
+    id: ImGuiID,
+    size_arg: &ImVec2,
+    border: bool,
+    mut flags: ImGuiWindowFlags,
+) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
 
-    flags |= ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoSavedSettings | ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_NoDocking;
-    flags |= (parent_window.Flags & ImGuiWindowFlags_NoMove);  // Inherit the NoMove flag
+    flags |= ImGuiWindowFlags_NoTitleBar
+        | ImGuiWindowFlags_NoResize
+        | ImGuiWindowFlags_NoSavedSettings
+        | ImGuiWindowFlags_ChildWindow
+        | ImGuiWindowFlags_NoDocking;
+    flags |= (parent_window.Flags & ImGuiWindowFlags_NoMove); // Inherit the NoMove flag
 
     // Size
     let content_avail: ImVec2 = GetContentRegionAvail();
     let mut size: ImVec2 = ImFloor(size_arg);
-    let auto_fit_axises: c_int = (if size.x == 0.0 { (1 << ImGuiAxis_X) } else { 0x00 }) | (if size.y == 0.0 { (1 << ImGuiAxis_Y) } else { 0x00 });
+    let auto_fit_axises: c_int = (if size.x == 0.0 {
+        (1 << ImGuiAxis_X)
+    } else {
+        0x00
+    }) | (if size.y == 0.0 {
+        (1 << ImGuiAxis_Y)
+    } else {
+        0x00
+    });
     if size.x <= 0.0 {
         size.x = ImMax(content_avail.x + size.x, 4.0);
-    }// Arbitrary minimum child size (0.0 causing too much issues)
+    } // Arbitrary minimum child size (0.0 causing too much issues)
     if size.y <= 0.0 {
         size.y = ImMax(content_avail.y + size.y, 4.0);
     }
     SetNextWindowSize(&size, ImGuiCond_None);
 
     // Build up name. If you need to append to a same child from multiple location in the ID stack, use BeginChild(ImGuiID id) with a stable value.
-    let temp_window_name: *const c_char = null_mut();
+    let mut temp_window_name: String = String::default();
     if name {
         // TODO:
         // ImFormatStringToTempBuffer(&mut temp_window_name, null_mut(), "%s/%s_%08X", parent_window.Name, name, id);
@@ -63,7 +93,7 @@ pub unsafe fn BeginChildEx(name: &str, id: ImGuiID, size_arg: &ImVec2, border: b
     if !border {
         g.Style.ChildBorderSize = 0.0;
     }
-    let mut ret: bool = Begin(temp_window_name, null_mut(), flags);
+    let mut ret: bool = Begin(temp_window_name.as_str(), None);
     g.Style.ChildBorderSize = backup_border_size;
 
     let mut child_window: *mut ImGuiWindow = g.CurrentWindow;
@@ -77,7 +107,10 @@ pub unsafe fn BeginChildEx(name: &str, id: ImGuiID, size_arg: &ImVec2, border: b
     }
 
     // Process navigation-in immediately so NavInit can run on first frame
-    if g.NavActivateId == id && flag_clear(flags, ImGuiWindowFlags_NavFlattened) && (child_window.DC.NavLayersActiveMask != 0 || child_window.DC.NavHasScroll) {
+    if g.NavActivateId == id
+        && flag_clear(flags, ImGuiWindowFlags_NavFlattened)
+        && (child_window.DC.NavLayersActiveMask != 0 || child_window.DC.NavHasScroll)
+    {
         FocusWindow(child_window);
         NavInitWindow(child_window, false);
         SetActiveID(id + 1, child_window); // Steal ActiveId with another arbitrary id so that key-press won't activate child item
@@ -87,13 +120,29 @@ pub unsafe fn BeginChildEx(name: &str, id: ImGuiID, size_arg: &ImVec2, border: b
 }
 
 // BeginChild: bool(str_id: *const c_char, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
-pub unsafe fn BeginChild(str_id: &str, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
+pub unsafe fn BeginChild(
+    str_id: &str,
+    size_arg: &ImVec2,
+    border: bool,
+    extra_flags: ImGuiWindowFlags,
+) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
-    return BeginChildEx(str_id, window.id_from_str(str_id), size_arg, border, extra_flags);
+    return BeginChildEx(
+        str_id,
+        window.id_from_str(str_id),
+        size_arg,
+        border,
+        extra_flags,
+    );
 }
 
 // BeginChild: bool(ImGuiID id, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
-pub unsafe fn BeginChild2(id: ImGuiID, size_arg: &ImVec2, border: bool, extra_flags: ImGuiWindowFlags) -> bool {
+pub unsafe fn BeginChild2(
+    id: ImGuiID,
+    size_arg: &ImVec2,
+    border: bool,
+    extra_flags: ImGuiWindowFlags,
+) -> bool {
     // IM_ASSERT(id != 0);
     return BeginChildEx("", id, size_arg, border, extra_flags);
 }
@@ -111,7 +160,8 @@ pub unsafe fn EndChild() {
         End(0);
     } else {
         let mut sz: ImVec2 = window.Size;
-        if window.AutoFitChildAxises & (1 << ImGuiAxis_X) {// Arbitrary minimum zero-ish child size of 4.0 causes less trouble than a 0.0
+        if window.AutoFitChildAxises & (1 << ImGuiAxis_X) {
+            // Arbitrary minimum zero-ish child size of 4.0 causes less trouble than a 0.0
             sz.x = ImMax(4.0, sz.x);
         }
         if window.AutoFitChildAxises & (1 << ImGuiAxis_Y) {
@@ -120,19 +170,29 @@ pub unsafe fn EndChild() {
         End(0);
 
         let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
-        let mut bb: ImRect = ImRect::from_vec2(&parent_window.DC.CursorPos, parent_window.DC.CursorPos + sz);
+        let mut bb: ImRect =
+            ImRect::from_vec2(&parent_window.DC.CursorPos, parent_window.DC.CursorPos + sz);
         ItemSize(&sz, 0.0);
-        if (window.DC.NavLayersActiveMask != 0 || window.DC.NavHasScroll) && flag_clear(window.Flags, ImGuiWindowFlags_NavFlattened) {
-            ItemAdd(&mut bb, window.ChildId, null(), 0);
+        if (window.DC.NavLayersActiveMask != 0 || window.DC.NavHasScroll)
+            && flag_clear(window.Flags, ImGuiWindowFlags_NavFlattened)
+        {
+            ItemAdd(&mut bb, window.ChildId, None, 0);
             RenderNavHighlight(&bb, window.ChildId, 0);
 
             // When browsing a window that has no activable items (scroll only) we keep a highlight on the child (pass g.NavId to trick into always displaying)
             if window.DC.NavLayersActiveMask == 0 && window == g.NavWindow {
-                RenderNavHighlight(&ImRect::from_vec2(bb.Min.clone() - ImVec2::from_floats(2.0, 2.0), bb.Max.clone() + ImVec2::from_floats(2.0, 2.0)), g.NavId, ImGuiNavHighlightFlags_TypeThin);
+                RenderNavHighlight(
+                    &ImRect::from_vec2(
+                        bb.Min.clone() - ImVec2::from_floats(2.0, 2.0),
+                        bb.Max.clone() + ImVec2::from_floats(2.0, 2.0),
+                    ),
+                    g.NavId,
+                    ImGuiNavHighlightFlags_TypeThin,
+                );
             }
         } else {
             // Not navigable into
-            ItemAdd(&mut bb, 0, null(), 0);
+            ItemAdd(&mut bb, 0, None, 0);
         }
         if g.HoveredWindow == window {
             g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow;
@@ -151,7 +211,12 @@ pub unsafe fn BeginChildFrame(id: ImGuiID, size: &ImVec2, extra_flags: ImGuiWind
     PushStyleVarFloat(ImGuiStyleVar_ChildRounding, style.FrameRounding);
     PushStyleVarFloat(ImGuiStyleVar_ChildBorderSize, style.FrameBorderSize);
     PushStyleVarVec2(ImGuiStyleVar_WindowPadding, &style.FramePadding);
-    let mut ret: bool = BeginChild2(id, size, true, ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysUseWindowPadding | extra_flags);
+    let mut ret: bool = BeginChild2(
+        id,
+        size,
+        true,
+        ImGuiWindowFlags_NoMove | ImGuiWindowFlags_AlwaysUseWindowPadding | extra_flags,
+    );
     PopStyleVarInt(3);
     PopStyleColor(0);
     return ret;

@@ -8,9 +8,9 @@ use crate::type_defs::ImGuiID;
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiPayload {
     // Members
-    pub Data: *mut c_void,
+    pub Data: Vec<u8>,
     // Data (copied and owned by dear imgui)
-    pub DataSize: c_int,           // Data size
+    pub DataSize: usize,           // Data size
 
     // [Internal]
     pub SourceId: ImGuiID,
@@ -19,7 +19,7 @@ pub struct ImGuiPayload {
     // Source parent id (if available)
     pub DataFrameCount: c_int,
     // Data timestamp
-    pub DataType: [c_char; 32 + 1],
+    pub DataType: String,
     // Data type tag (short user-supplied string, 32 characters max)
     pub Preview: bool,
     // Set when AcceptDragDropPayload() was called and mouse has been hovering the target item (nb: handle overlapping drag targets)
@@ -34,16 +34,16 @@ impl ImGuiPayload {
     pub fn Clear(&mut self) {
         self.SourceId = 0;
         self.SourceParentId = 0;
-        self.Data = null_mut();
+        self.Data = vec![];
         self.DataSize = 0;
-        self.DataType = [0; 33];
+        self.DataType = String::with_capacity(33);
         self.Preview = false;
         self.Delivery = false;
     }
 
     // IsDataType: bool( * const char type ) const { return DataFrameCount != - 1 & & strcmp( type, DataType) == 0; }
-    pub unsafe fn IsDataType(&mut self, data_type: *const c_char) -> bool {
-        self.DataFrameCount != -1 && libc::strcmp(data_type, self.DataType.as_ptr()) == 0
+    pub unsafe fn IsDataType(&mut self, data_type: &str) -> bool {
+        self.DataFrameCount != -1 && data_type == self.DataType
     }
 
 

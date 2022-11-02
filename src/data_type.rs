@@ -7,6 +7,9 @@ pub type ImGuiDataType = c_int;
 
 // Standard Drag and Drop payload types. You can define you own payload types using short strings. Types starting with '_' are defined by Dear ImGui.
 // #define IMGUI_PAYLOAD_TYPE_COLOR_3F     "_COL3F"    // float[3]: Standard type for colors, without alpha. User code may use this type.
+pub type ImGuiPayloadType = i32;
+pub const ImGuiPayloadType_Color3f: ImGuiPayloadType = 0;
+pub const IMguiPayloadType_Color4f: ImGuiPayloadType = 1;
 // #define IMGUI_PAYLOAD_TYPE_COLOR_4F     "_COL4F"    // float[4]: Standard type for colors. User code may use this type.
 
 // A primary data type

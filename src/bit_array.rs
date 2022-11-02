@@ -2,6 +2,8 @@
 // Store 1-bit per value.
 // template<BITCOUNT: c_int, let OFFSET: c_int = 0>
 
+use crate::bit_vector::ImBitVector;
+
 pub type ImBitArray = ImBitVector;
 
 // pub struct ImBitArray

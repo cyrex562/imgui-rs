@@ -81,7 +81,7 @@ impl ImGuiTextBuffer {
 
 
     // IMGUI_API void      append(const char* str, const char* str_end = NULL);
-    pub unsafe fn append(&mut self,begin: *const c_char, end: *const c_char) {
+    pub unsafe fn append(&mut self,begin: &str) {
         let len = if end.is_null() == false { (str_end - str) } else { libc::strlen(str) };
 
         // Add zero-terminator the first time

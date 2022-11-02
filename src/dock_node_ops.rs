@@ -624,7 +624,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode) {
 
             SetNextWindowBgAlpha(0.0); // Don't set ImGuiWindowFlags_NoBackground because it disables borders
             PushStyleVar(crate::style_var::ImGuiStyleVar_WindowPadding, ImVec2::from_floats(0.0, 0.0));
-            Begin(window_label, null_mut(), window_flags);
+            Begin(window_label, null_mut());
             PopStyleVar();
             beginned_into_host_window = true;
 
@@ -833,7 +833,7 @@ pub unsafe fn DockNodeBeginAmendTabBar(node: *mut ImGuiDockNode) -> bool {
     if node.MergedFlags & ImGuiDockNodeFlags_KeepAliveOnly {
         return false;
     }
-    Begin(node.Hostwindow.Name, null_mut(), 0);
+    Begin(node.Hostwindow.Name, null_mut());
     PushOverrideID(node.ID);
     let mut ret: bool = BeginTabBarEx(node.TabBar, node.TabBar.BarRect, node.TabBar.Flags, node);
     IM_UNUSED(ret);
@@ -993,10 +993,10 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
         tab_n -= 1;
     }
     if tab_bar.Tabs.Size > tabs_unsorted_start {
-        // IMGUI_DEBUG_LOG_DOCKING("[docking] In node 0x%08X: %d new appearing tabs:%s\n", node.ID, tab_bar.Tabs.Size - tabs_unsorted_start, (tab_bar.Tabs.Size > tabs_unsorted_start + 1) ? " (will sort)" : "");
+        // IMGUI_DEBUG_LOG_DOCKING("[docking] In node 0x%08X: {} new appearing tabs:%s\n", node.ID, tab_bar.Tabs.Size - tabs_unsorted_start, (tab_bar.Tabs.Size > tabs_unsorted_start + 1) ? " (will sort)" : "");
         // for (let tab_n: c_int = tabs_unsorted_start; tab_n < tab_bar.Tabs.Size; tab_n++)
         for tab_n in tabs_unsorted_start..tab_bar.Tabs.len() {
-            // IMGUI_DEBUG_LOG_DOCKING("[docking] - Tab '%s' Order %d\n", tab_bar.Tabs[tab_n].window.Name, tab_bar.Tabs[tab_n].window.DockOrder);
+            // IMGUI_DEBUG_LOG_DOCKING("[docking] - Tab '%s' Order {}\n", tab_bar.Tabs[tab_n].window.Name, tab_bar.Tabs[tab_n].window.DockOrder);
         }
         if tab_bar.Tabs.Size > tabs_unsorted_start + 1 {
             ImQsort(tab_bar.Tabs.Data + tabs_unsorted_start, tab_bar.Tabs.Size - tabs_unsorted_start, sizeof(ImGuiTabItem), TabItemComparerByDockOrder);

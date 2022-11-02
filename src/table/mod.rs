@@ -1,6 +1,5 @@
 #![allow(non_snake_case)]
 
-use libc::{c_float, c_int, c_void};
 use crate::draw_list_splitter::ImDrawListSplitter;
 use crate::rect::ImRect;
 use crate::span::ImSpan;
@@ -13,23 +12,24 @@ use crate::table_row_flags::ImGuiTableRowFlags;
 use crate::table_sort_specs::ImGuiTableSortSpecs;
 use crate::table_temp_data::ImGuiTableTempData;
 use crate::text_buffer::ImGuiTextBuffer;
-use crate::window::ImGuiWindow;
 use crate::type_defs::{ImGuiID, ImGuiTableColumnIdx, ImGuiTableDrawChannelIdx};
+use crate::window::ImGuiWindow;
+use libc::{c_float, c_int, c_void};
 
-// FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData 
-#[derive(Default,Debug,Clone)]
+// FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData
+#[derive(Default, Debug, Clone)]
 pub struct ImGuiTable {
     pub ID: ImGuiID,
     pub Flags: ImGuiTableFlags,
-    pub RawData: *mut c_void,
+    pub RawData: Vec<u8>,
     // Single allocation to hold Columns[], DisplayOrderToIndex[] and RowCellData[]
-    pub TempData: *mut ImGuiTableTempData,
+    pub TempData: ImGuiTableTempData,
     // Transient data while table is active. Point within g.CurrentTableStack[]
-    pub Columns: ImSpan<ImGuiTableColumn>,
+    pub Columns: Vec<ImGuiTableColumn>,
     // Point within RawData[]
-    pub DisplayOrderToIndex: ImSpan<ImGuiTableColumnIdx>,
+    pub DisplayOrderToIndex: Vec<ImGuiTableColumnIdx>,
     // Point within RawData[]. Store display order of columns (when not reordered, the values are 0...Count-1)
-    pub RowCellData: ImSpan<ImGuiTableCellData>,
+    pub RowCellData: Vec<ImGuiTableCellData>,
     // Point within RawData[]. Store cells background requests for current row.
     pub EnabledMaskByDisplayOrder: u64,
     // Column DisplayOrder -> IsEnabled map
@@ -41,10 +41,10 @@ pub struct ImGuiTable {
     // Column Index -> IsVisible || AutoFit (== expect user to submit items)
     pub SettingsLoadedFlags: ImGuiTableFlags,
     // Which data were loaded from the .ini file (e.g. when order is not altered we won't save order)
-    pub SettingsOffset: c_int,
+    pub SettingsOffset: usize,
     // Offset in g.SettingsTables
-    pub LastFrameActive: c_int,
-    pub ColumnsCount: c_int,
+    pub LastFrameActive: usize,
+    pub ColumnsCount: usize,
     // Number of columns declared in BeginTable()
     pub CurrentRow: c_int,
     pub CurrentColumn: c_int,
@@ -52,12 +52,12 @@ pub struct ImGuiTable {
     // Count of BeginTable() calls with same ID in the same frame (generally 0). This is a little bit similar to BeginCount for a window, but multiple table with same ID look are multiple tables, they are just synched.
     pub InstanceInteracted: i16,
     // Mark which instance (generally 0) of the same ID is being interacted with
-    pub RowPosY1: c_float,
-    pub RowPosY2: c_float,
-    pub RowMinHeight: c_float,
+    pub RowPosY1: f32,
+    pub RowPosY2: f32,
+    pub RowMinHeight: f32,
     // Height submitted to TableNextRow()
-    pub RowTextBaseline: c_float,
-    pub RowIndentOffsetX: c_float,
+    pub RowTextBaseline: f32,
+    pub RowIndentOffsetX: f32,
     pub RowFlags: ImGuiTableRowFlags,
     // Current row flags, see ImGuiTableRowFlags_
     pub LastRowFlags: ImGuiTableRowFlags,
@@ -67,29 +67,29 @@ pub struct ImGuiTable {
     // Background color override for current row.
     pub BorderColorStrong: u32,
     pub BorderColorLight: u32,
-    pub BorderX1: c_float,
-    pub BorderX2: c_float,
-    pub HostIndentX: c_float,
-    pub MinColumnWidth: c_float,
-    pub OuterPaddingX: c_float,
-    pub CellPaddingX: c_float,
+    pub BorderX1: f32,
+    pub BorderX2: f32,
+    pub HostIndentX: f32,
+    pub MinColumnWidth: f32,
+    pub OuterPaddingX: f32,
+    pub CellPaddingX: f32,
     // Padding from each borders
-    pub CellPaddingY: c_float,
-    pub CellSpacingX1: c_float,
+    pub CellPaddingY: f32,
+    pub CellSpacingX1: f32,
     // Spacing between non-bordered cells
-    pub CellSpacingX2: c_float,
-    pub InnerWidth: c_float,
+    pub CellSpacingX2: f32,
+    pub InnerWidth: f32,
     // User value passed to BeginTable(), see comments at the top of BeginTable() for details.
-    pub ColumnsGivenWidth: c_float,
+    pub ColumnsGivenWidth: f32,
     // Sum of current column width
-    pub ColumnsAutoFitWidth: c_float,
+    pub ColumnsAutoFitWidth: f32,
     // Sum of ideal column width in order nothing to be clipped, used for auto-fitting and content width submission in outer window
-    pub ColumnsStretchSumWeights: c_float,
+    pub ColumnsStretchSumWeights: f32,
     // Sum of weight of all enabled stretching columns
-    pub ResizedColumnNextWidth: c_float,
-    pub ResizeLockMinContentsX2: c_float,
+    pub ResizedColumnNextWidth: f32,
+    pub ResizeLockMinContentsX2: f32,
     // Lock minimum contents width while resizing down in order to not create feedback loops. But we allow growing the table.
-    pub RefScale: c_float,
+    pub RefScale: f32,
     // Reference scale to be able to rescale columns on font/dpi changes.
     pub OuterRect: ImRect,
     // Note: for non-scrolling table, OuterRect.Max.y is often f32::MAX until EndTable(), unless a height has been specified in BeginTable().
@@ -193,12 +193,11 @@ pub struct ImGuiTable {
     pub IsDefaultSizingPolicy: bool,
     // Set if user didn't explicitly set a sizing policy in BeginTable()
     pub MemoryCompacted: bool,
-    pub HostSkipItems: bool,              // Backup of Innerwindow.SkipItem at the end of BeginTable(), because we will overwrite Innerwindow.SkipItem on a per-column basis
+    pub HostSkipItems: bool, // Backup of Innerwindow.SkipItem at the end of BeginTable(), because we will overwrite Innerwindow.SkipItem on a per-column basis
 }
 
 impl ImGuiTable {
     // ImGuiTable()                { memset(this, 0, sizeof(*this)); LastFrameActive = -1; }
-    
-    
+
     // ~ImGuiTable()               { IM_FREE(RawData); }
 }

@@ -427,7 +427,7 @@ DockBuilderSplitNode: ImGuiID(id: ImGuiID, split_dir: ImGuiDir,size_ratio_for_no
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_dir != ImGuiDir_None);
-    IMGUI_DEBUG_LOG_DOCKING("[docking] DockBuilderSplitNode: node 0x%08X, split_dir %d\n", id, split_dir);
+    IMGUI_DEBUG_LOG_DOCKING("[docking] DockBuilderSplitNode: node 0x%08X, split_dir {}\n", id, split_dir);
 
     node:*mut ImGuiDockNode = DockContextFindNodeByID(&g, id);
     if (node == null_mut())
@@ -480,7 +480,7 @@ static DockBuilderCopyNodeRec:*mut ImGuiDockNode(src_node:*mut ImGuiDockNode, ds
             dst_node.ChildNodes[child_n].ParentNode = dst_node;
         }
 
-    IMGUI_DEBUG_LOG_DOCKING("[docking] Fork node %08X -> %08X (%d childs)\n", src_node.ID, dst_node.ID, if dst_node.IsSplitNode() { 2 }else {0});
+    IMGUI_DEBUG_LOG_DOCKING("[docking] Fork node %08X -> %08X ({} childs)\n", src_node.ID, dst_node.ID, if dst_node.IsSplitNode() { 2 }else {0});
     return dst_node;
 }
 
@@ -1015,12 +1015,12 @@ pub unsafe fn DockSettingsHandler_ReadLine(ctx: *mut ImGuiContext, ImGuiSettings
         if (sscanf(line, " SizeRef=%i,%i%n", &x, &y, &r) == 2)      { line += r; node.SizeRef = ImVec2ih(x, y); }
     }
     if (sscanf(line, " Split=%c%n", &c, &r) == 1)                   { line += r; if (c == 'X') node.SplitAxis = ImGuiAxis_X; else if (c == 'Y') node.SplitAxis = ImGuiAxis_Y; }
-    if (sscanf(line, " NoResize=%d%n", &x, &r) == 1)                { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoResize; }
-    if (sscanf(line, " CentralNode=%d%n", &x, &r) == 1)             { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_CentralNode; }
-    if (sscanf(line, " NoTabBar=%d%n", &x, &r) == 1)                { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoTabBar; }
-    if (sscanf(line, " HiddenTabBar=%d%n", &x, &r) == 1)            { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_HiddenTabBar; }
-    if (sscanf(line, " NoWindowMenuButton=%d%n", &x, &r) == 1)      { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoWindowMenuButton; }
-    if (sscanf(line, " NoCloseButton=%d%n", &x, &r) == 1)           { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoCloseButton; }
+    if (sscanf(line, " NoResize={}%n", &x, &r) == 1)                { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoResize; }
+    if (sscanf(line, " CentralNode={}%n", &x, &r) == 1)             { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_CentralNode; }
+    if (sscanf(line, " NoTabBar={}%n", &x, &r) == 1)                { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoTabBar; }
+    if (sscanf(line, " HiddenTabBar={}%n", &x, &r) == 1)            { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_HiddenTabBar; }
+    if (sscanf(line, " NoWindowMenuButton={}%n", &x, &r) == 1)      { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoWindowMenuButton; }
+    if (sscanf(line, " NoCloseButton={}%n", &x, &r) == 1)           { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoCloseButton; }
     if (sscanf(line, " Selected=0x%08X%n", &node.SelectedTabId,&r) == 1) { line += r; }
     if (node.ParentNodeId != 0)
         if (parent_settings: *mut ImGuiDockNodeSettings = DockSettingsFindNodeSettings(ctx, node.ParentNodeId))
@@ -1078,13 +1078,13 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettings
         buf->appendf(" ID=0x%08X", node_settings.ID);
         if (node_settings.ParentNodeId)
         {
-            buf->appendf(" Parent=0x%08X SizeRef=%d,%d", node_settings.ParentNodeId, node_settings.SizeRef.x, node_settings.SizeRef.y);
+            buf->appendf(" Parent=0x%08X SizeRef={},{}", node_settings.ParentNodeId, node_settings.SizeRef.x, node_settings.SizeRef.y);
         }
         else
         {
             if (node_settings->ParentWindowId)
                 buf->appendf(" Window=0x%08X", node_settings->ParentWindowId);
-            buf->appendf(" Pos=%d,%d Size=%d,%d", node_settings.Pos.x, node_settings.Pos.y, node_settings.Size.x, node_settings.Size.y);
+            buf->appendf(" Pos={},{} Size={},{}", node_settings.Pos.x, node_settings.Pos.y, node_settings.Size.x, node_settings.Size.y);
         }
         if (node_settings->SplitAxis != ImGuiAxis_None)
             buf->appendf(" Split=%c", (node_settings->SplitAxis == ImGuiAxis_X) ? 'X' : 'Y');

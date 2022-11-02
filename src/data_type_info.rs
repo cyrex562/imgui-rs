@@ -17,14 +17,14 @@ pub struct ImGuiDataTypeInfo {
 }
 
 pub const GDataTypeInfo: [ImGuiDataTypeInfo; 10] = [
-    ImGuiDataTypeInfo { Size: mem::size_of::<i8>(), Name: String::from("i8"), PrintFmt: String::from("%d"), ScanFmt: String::from("%d") },  // ImGuiDataType_S8
+    ImGuiDataTypeInfo { Size: mem::size_of::<i8>(), Name: String::from("i8"), PrintFmt: String::from("{}"), ScanFmt: String::from("{}") },  // ImGuiDataType_S8
     ImGuiDataTypeInfo { Size: mem::size_of::<u8>(), Name: String::from("u8"), PrintFmt: String::from("%u"), ScanFmt: String::from("%u") },
-    // ImGuiDataTypeInfo{ sizeof,            "S16",  "%d",   "%d"    },  // ImGuiDataType_S16
-    ImGuiDataTypeInfo { Size: mem::size_of::<i16>(), Name: String::from("i16"), PrintFmt: String::from("%d"), ScanFmt: String::from("%d") },
+    // ImGuiDataTypeInfo{ sizeof,            "S16",  "{}",   "{}"    },  // ImGuiDataType_S16
+    ImGuiDataTypeInfo { Size: mem::size_of::<i16>(), Name: String::from("i16"), PrintFmt: String::from("{}"), ScanFmt: String::from("{}") },
     // ImGuiDataTypeInfo{ sizeof,   "U16",  "%u",   "%u"    },
     ImGuiDataTypeInfo { Size: mem::size_of::<u16>(), Name: String::from("u16"), PrintFmt: String::from("%u"), ScanFmt: String::from("%u") },
-    // ImGuiDataTypeInfo{ sizeof,              "S32",  "%d",   "%d"    },  // ImGuiDataType_S32
-    ImGuiDataTypeInfo { Size: mem::size_of::<i32>(), Name: String::from("i32"), PrintFmt: String::from("%d"), ScanFmt: String::from("%d") },
+    // ImGuiDataTypeInfo{ sizeof,              "S32",  "{}",   "{}"    },  // ImGuiDataType_S32
+    ImGuiDataTypeInfo { Size: mem::size_of::<i32>(), Name: String::from("i32"), PrintFmt: String::from("{}"), ScanFmt: String::from("{}") },
     // ImGuiDataTypeInfo{ sizeof,     "U32",  "%u",   "%u"    },
     ImGuiDataTypeInfo { Size: mem::size_of::<u32>(), Name: String::from("u32"), PrintFmt: String::from("%u"), ScanFmt: String::from("%u") },
 // // #ifdef _MSC_VER
@@ -36,8 +36,8 @@ pub const GDataTypeInfo: [ImGuiDataTypeInfo; 10] = [
     ImGuiDataTypeInfo { Size: mem::size_of::<i64>(), Name: String::from("i64"), PrintFmt: String::from("%lld"), ScanFmt: String::from("%lld") },
     ImGuiDataTypeInfo { Size: mem::size_of::<u64>(), Name: String::from("u8"), PrintFmt: String::from("%llu"), ScanFmt: String::from("%llu") },
 // #endif
-//     ImGuiDataTypeInfo{ sizeof,            "float", "%.3f","%f"    },  // ImGuiDataType_Float (float are promoted to double in va_arg)
-    ImGuiDataTypeInfo { Size: mem::size_of::<f32>(), Name: String::from("f32"), PrintFmt: String::from("%.3f"), ScanFmt: String::from("%f") },
+//     ImGuiDataTypeInfo{ sizeof,            "float", "{}","%f"    },  // ImGuiDataType_Float (float are promoted to double in va_arg)
+    ImGuiDataTypeInfo { Size: mem::size_of::<f32>(), Name: String::from("f32"), PrintFmt: String::from("{}"), ScanFmt: String::from("%f") },
 //     ImGuiDataTypeInfo{ sizeof,           "double","%f",  "%lf"   },  // ImGuiDataType_Double
     ImGuiDataTypeInfo { Size: mem::size_of::<f64>(), Name: String::from("f64"), PrintFmt: String::from("%f"), ScanFmt: String::from("%lf") }
 ];

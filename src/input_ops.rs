@@ -458,7 +458,7 @@ pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
         return;
     }
     if e.Type == ImGuiInputEventType_MouseButton {
-        // IMGUI_DEBUG_LOG_IO("%s: MouseButton %d %s\n", prefix, e.MouseButton.Button, e.MouseButton.Down ? "Down": "Up"); return; }
+        // IMGUI_DEBUG_LOG_IO("%s: MouseButton {} %s\n", prefix, e.MouseButton.Button, e.MouseButton.Down ? "Down": "Up"); return; }
         if e.Type == ImGuiInputEventType_MouseWheel {
             IMGUI_DEBUG_LOG_IO("%s: MouseWheel (%.1f, %.10.0)\n", prefix, e.MouseWheel.WheelX, e.MouseWheel.WheelY);
             return;
@@ -470,7 +470,7 @@ pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
                 return;
             }
             if e.Type == ImGuiInputEventType_Focus {
-                IMGUI_DEBUG_LOG_IO("%s: AppFocused %d\n", prefix, e.AppFocused.Focused);
+                IMGUI_DEBUG_LOG_IO("%s: AppFocused {}\n", prefix, e.AppFocused.Focused);
                 return;
             }
         }
@@ -598,7 +598,7 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
     }
 
     // Record trail (for domain-specific applications wanting to access a precise trail)
-    //if (event_n != 0) IMGUI_DEBUG_LOG_IO("Processed: %d / Remaining: %d\n", event_n, g.InputEventsQueue.Size - event_n);
+    //if (event_n != 0) IMGUI_DEBUG_LOG_IO("Processed: {} / Remaining: {}\n", event_n, g.InputEventsQueue.Size - event_n);
     // for (let n: c_int = 0; n < event_n; n++)
     for n in 0..event_n {
         g.InputEventsTrail.push(g.InputEventsQueue[n].clone());

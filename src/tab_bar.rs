@@ -1,13 +1,13 @@
 #![allow(non_snake_case)]
 
-use std::borrow::{Borrow, BorrowMut};
-use libc::{c_char, c_float, c_int};
 use crate::rect::ImRect;
 use crate::tab_bar_flags::ImGuiTabBarFlags;
 use crate::tab_item::ImGuiTabItem;
 use crate::text_buffer::ImGuiTextBuffer;
 use crate::type_defs::ImGuiID;
 use crate::vec2::ImVec2;
+use libc::{c_char, c_float, c_int};
+use std::borrow::{Borrow, BorrowMut};
 
 // Storage for a tab bar (sizeof() 152 bytes)
 #[derive(Default, Debug, Clone)]
@@ -53,12 +53,20 @@ pub struct ImGuiTabBar {
     pub FramePadding: ImVec2,
     // style.FramePadding locked at the time of BeginTabBar()
     pub BackupCursorPos: ImVec2,
-    pub TabsNames: ImGuiTextBuffer,              // For non-docking tab bar we re-append names in a contiguous buffer.
+    pub TabsNames: ImGuiTextBuffer, // For non-docking tab bar we re-append names in a contiguous buffer.
 }
 
 impl ImGuiTabBar {
     // ImGuiTabBar();
-
+    pub fn new() -> Self {
+        let mut out = Self {
+            CurrFrameVisible: -1,
+            PrevFrameVisible: -1,
+            LastTabItemIdx: -1,
+            ..Default()
+        };
+        out
+    }
 
     // c_int                 GetTabOrder(*const ImGuiTabItem tab) const  { return Tabs.index_from_ptr(tab); }
     pub fn GetTabOrder(&self, tab: *const ImGuiTabItem) -> c_int {

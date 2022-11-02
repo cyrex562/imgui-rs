@@ -3,8 +3,6 @@
 // [SECTION] ImGuiContext (main Dear ImGui context)
 //-----------------------------------------------------------------------------
 
-use std::ptr::null_mut;
-use libc::{c_char, c_double, c_float, c_int, c_uchar, c_void};
 use crate::activate_flags::{ImGuiActivateFlags, ImGuiActivateFlags_None};
 use crate::chunk_stream::ImChunkStream;
 use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_DefaultOptions_};
@@ -15,27 +13,18 @@ use crate::context_hook::ImGuiContextHook;
 use crate::debug_log_flags::{ImGuiDebugLogFlags, ImGuiDebugLogFlags_OutputToTTY};
 use crate::direction::{ImGuiDir, ImGuiDir_None};
 use crate::dock_context::ImGuiDockContext;
-use crate::input_source::{ImGuiInputSource, ImGuiInputSource_None, ImGuiNavLayer};
-use crate::draw_list_shared_data::ImDrawListSharedData;
-use crate::group_data::ImGuiGroupData;
 use crate::dock_node::ImGuiDockNode;
 use crate::drag_drop_flags::{ImGuiDragDropFlags, ImGuiDragDropFlags_None};
 use crate::draw_channel::ImDrawChannel;
+use crate::draw_list_shared_data::ImDrawListSharedData;
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
+use crate::group_data::ImGuiGroupData;
 use crate::input_event::ImGuiInputEvent;
+use crate::input_source::{ImGuiInputSource, ImGuiInputSource_None, ImGuiNavLayer};
 use crate::input_text_state::ImGuiInputTextState;
-use crate::storage::ImGuiStorage;
-use crate::text_buffer::ImGuiTextBuffer;
-use crate::window::ImGuiWindow;
 use crate::io::ImGuiIO;
 use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_None};
-use crate::platform_io::ImGuiPlatformIO;
-use crate::rect::ImRect;
-use crate::style::ImGuiStyle;
-use crate::vec2::ImVec2;
-use crate::vec4::ImVec4;
-use crate::viewport::ImGuiViewport;
 use crate::last_item_data::ImGuiLastItemData;
 use crate::list_clipper_data::ImGuiListClipperData;
 use crate::log_type::{ImGuiLogType, ImGuiLogType_None};
@@ -44,28 +33,41 @@ use crate::mod_flags::{ImGuiModFlags, ImGuiModFlags_None};
 use crate::mouse_button::{ImGuiMouseButton, ImGuiMouseButton_Left};
 use crate::mouse_cursor::{ImGuiMouseCursor, ImGuiMouseCursor_Arrow};
 use crate::nav_item_data::ImGuiNavItemData;
-use crate::nav_layer::ImGuiNavLayer_Main;
+use crate::nav_layer::{ImGuiNavLayer, ImGuiNavLayer_Main};
 use crate::nav_move_flags::{ImGuiNavMoveFlags, ImGuiNavMoveFlags_None};
 use crate::next_item_data::ImGuiNextItemData;
 use crate::next_window_data::ImGuiNextWindowData;
 use crate::payload::ImGuiPayload;
 use crate::platform_ime_data::ImGuiPlatformImeData;
+use crate::platform_io::ImGuiPlatformIO;
 use crate::platform_monitor::ImGuiPlatformMonitor;
 use crate::pool::ImPool;
 use crate::popup_data::ImGuiPopupData;
 use crate::ptr_or_index::ImGuiPtrOrIndex;
+use crate::rect::ImRect;
 use crate::scroll_flags::{ImGuiScrollFlags, ImGuiScrollFlags_None};
 use crate::settings_handler::ImGuiSettingsHandler;
 use crate::shrink_width_item::ImGuiShrinkWidthItem;
 use crate::stack_tool::ImGuiStackTool;
+use crate::storage::ImGuiStorage;
+use crate::style::ImGuiStyle;
 use crate::style_mod::ImGuiStyleMod;
 use crate::tab_bar::ImGuiTabBar;
 use crate::table::ImGuiTable;
 use crate::table_settings::ImGuiTableSettings;
 use crate::table_temp_data::ImGuiTableTempData;
+use crate::text_buffer::ImGuiTextBuffer;
 use crate::type_defs::{ImBitArrayForNamedKeys, ImFileHandle, ImGuiDir, ImGuiID};
+use crate::vec2::ImVec2;
+use crate::vec4::ImVec4;
+use crate::viewport::ImGuiViewport;
+use crate::window::window_settings::ImGuiWindowSettings;
+use crate::window::window_stack_data::ImGuiWindowStackData;
+use crate::window::ImGuiWindow;
 use crate::window_settings::ImGuiWindowSettings;
 use crate::window_stack_data::ImGuiWindowStackData;
+use libc::{c_char, c_double, c_float, c_int, c_uchar, c_void};
+use std::ptr::null_mut;
 
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiContext {
@@ -97,7 +99,7 @@ pub struct ImGuiContext {
     pub ConfigFlagsLastFrame: ImGuiConfigFlags,
 
     // ImFont*                 Font;                               // (Shortcut) == FontStack.empty() ? IO.Font : FontStack.back()
-    pub Font: *mut ImFont,
+    pub Font: ImFont,
 
     // float                   FontSize;                           // (Shortcut) == FontBaseSize * g.Currentwindow.FontWindowScale == window.FontSize(). Text height for current window.
     pub FontSize: f32,
@@ -278,10 +280,10 @@ pub struct ImGuiContext {
 
     // ImBitArrayForNamedKeys  ActiveIdUsingKeyInputMask;          // Active widget will want to read those key inputs. When we grow the ImGuiKey enum we'll need to either to order the enum to make useful keys come first, either redesign this into e.g. a small array.
     pub ActiveIdUsingKeyInputMask: ImBitArrayForNamedKeys,
-// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+    // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
 
     // u32                   ActiveIdUsingNavInputMask;          // If you used this. Since (IMGUI_VERSION_NUM >= 18804) : 'g.ActiveIdUsingNavInputMask |= (1 << ImGuiNavInput_Cancel);' becomes 'SetActiveIdUsingKey(ImGuiKey_Escape); SetActiveIdUsingKey(ImGuiKey_NavGamepadCancel);'
-// #endif
+    // #endif
 
     // Next window/item data
     // ImGuiItemFlags          CurrentItemFlags;                   // == g.ItemFlagsStack.back()
@@ -560,10 +562,10 @@ pub struct ImGuiContext {
     pub DragDropHoldJustPressedId: ImGuiID,
 
     // ImVector<unsigned char> DragDropPayloadBufHeap;             // We don't expose the ImVector<> directly, ImGuiPayload only holds pointer+size
-    pub DragDropPayloadBufHead: Vec<c_uchar>,
+    pub DragDropPayloadBufHead: Vec<u8>,
 
     // unsigned char           DragDropPayloadBufLocal[16];        // Local buffer for small payloads
-    pub DragDropPayloadBufLocal: [c_uchar; 16],
+    pub DragDropPayloadBufLocal: Vec<u8>,
 
     // Clipper
 
@@ -596,7 +598,7 @@ pub struct ImGuiContext {
     // Tab bars
 
     // ImGuiTabBar*                    CurrentTabBar;
-    pub CurrentTabBar: *mut ImGuiTabBar,
+    CurrentTabBar: *mut ImGuiTabBar,
 
     // ImPool<ImGuiTabBar>             TabBars;
     pub TabBars: ImPool<ImGuiTabBar>,
@@ -824,7 +826,11 @@ impl ImGuiContext {
             Initialized: false,
             ConfigFlagsCurrFrame: ImGuiConfigFlags_None,
             ConfigFlagsLastFrame: ImGuiConfigFlags_None,
-            FontAtlasOwnedByContext: if shared_font_atlas.is_null() == false { false } else { true },
+            FontAtlasOwnedByContext: if shared_font_atlas.is_null() == false {
+                false
+            } else {
+                true
+            },
             Font: null_mut(),
             FontSize: 0.0,
             FontBaseSize: 0.0,
@@ -875,10 +881,9 @@ impl ImGuiContext {
             LastActiveId: 0,
             LastActiveIdTimer: 0.0,
             ActiveIdUsingNavDirMask: 0x00,
-// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//             ActiveIdUsingNavInputMask : 0x00,
-// #endif
-
+            // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+            //             ActiveIdUsingNavInputMask : 0x00,
+            // #endif
             CurrentItemFlags: ImGuiItemFlags_None,
             BeginMenuCount: vec![],
 
@@ -985,8 +990,8 @@ impl ImGuiContext {
 
             LogEnabled: false,
             LogType: ImGuiLogType_None,
-            LogNextPrefix: null_mut(),
-            LogNextSuffix: null_mut(),
+            LogNextPrefix: String::default(),
+            LogNextSuffix: String::default(),
             LogFile: null_mut(),
             LogLinePosY: f32::MAX,
             LogLineFirstItem: false,
@@ -1009,12 +1014,28 @@ impl ImGuiContext {
             ..Default::default()
         };
 
-        out.IO.Fonts = if shared_font_atlas.is_null() == false { shared_font_atlas } else { IM_NEW(ImFontAtlas)() };
+        out.IO.Fonts = if shared_font_atlas.is_null() == false {
+            shared_font_atlas
+        } else {
+            IM_NEW(ImFontAtlas)()
+        };
         out.ActiveIdUsingKeyInputMask.ClearAllBits();
-        out.PlatformImeData.InputPos = ImVec2::from_floats();
+        out.PlatformImeData.InputPos = ImVec2::default();
         out.PlatformImeDataPrev.InputPos = ImVec2::from_floats(-1.0, -1.0); // Different to ensure initial submission
-        libc::memset(out.DragDropPayloadBufLocal.as_mut_ptr(), 0, libc::sizeof(out.DragDropPayloadBufLocal));
-        libc::memset(out.FramerateSecPerFrame.as_mut_ptr(), 0, libc::sizeof(FramerateSecPerFrame));
+                                                                            // libc::memset(
+                                                                            //     out.DragDropPayloadBufLocal.as_mut_ptr(),
+                                                                            //     0,
+                                                                            //     libc::sizeof(out.DragDropPayloadBufLocal),
+                                                                            // );
+                                                                            // libc::memset(
+                                                                            //     out.FramerateSecPerFrame.as_mut_ptr(),
+                                                                            //     0,
+                                                                            //     libc::sizeof(FramerateSecPerFrame),
+                                                                            // );
         return out;
+    }
+
+    pub fn CurrentTabBar(&mut self) -> &mut ImGuiTabBar {
+        todo!()
     }
 }

@@ -476,7 +476,7 @@ impl ImGuiIO {
     // void ImGuiIO::AddKeyAnalogEvent(ImGuiKey key, down: bool, c_float analog_value)
     pub fn AddKeyAnalogEvent(&mut self, key: ImGuiKey, down: bool, analog_value: c_float)
     {
-        //if (e->Down) { IMGUI_DEBUG_LOG_IO("AddKeyEvent() Key='%s' %d, NativeKeycode = %d, NativeScancode = %d\n", GetKeyName(e->Key), e->Down, e->NativeKeycode, e->NativeScancode); }
+        //if (e->Down) { IMGUI_DEBUG_LOG_IO("AddKeyEvent() Key='%s' {}, NativeKeycode = {}, NativeScancode = {}\n", GetKeyName(e->Key), e->Down, e->NativeKeycode, e->NativeScancode); }
         if key == ImGuiKey_None || !self.AppAcceptingEvents {
             return;
         }

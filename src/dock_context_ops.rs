@@ -435,10 +435,10 @@ pub unsafe fn DockContextProcessDock(ctx: *mut ImGuiContext, req: *mut ImGuiDock
     let mut target_window: *mut ImGuiWindow =  req.DockTargetWindow;
     let node:*mut ImGuiDockNode = req.DockTargetNode;
     if (payload_window){
-        // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessDock node 0x%08X target '%s' dock window '%s', split_dir %d\n", node ? node.ID : 0, target_window ? target_window.Name : "NULL", payload_window.Name, req.DockSplitDir);
+        // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessDock node 0x%08X target '%s' dock window '%s', split_dir {}\n", node ? node.ID : 0, target_window ? target_window.Name : "NULL", payload_window.Name, req.DockSplitDir);
     }
     else{ 
-        // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessDock node 0x%08X, split_dir %d\n", node ? node.ID : 0, req.DockSplitDir);}
+        // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessDock node 0x%08X, split_dir {}\n", node ? node.ID : 0, req.DockSplitDir);}
     }
     // Decide which Tab will be selected at the end of the operation
     let mut next_selected_id: ImGuiID =  0;
@@ -559,7 +559,7 @@ pub unsafe fn DockContextProcessDock(ctx: *mut ImGuiContext, req: *mut ImGuiDock
     }
 
     // Update selection immediately
-    if (ImGuiTabBar* tab_bar = node.TabBar){
+    if (tab_bar: &mut ImGuiTabBar = node.TabBar){
         tab_bar.NextSelectedTabId = next_selected_id;}
     MarkIniSettingsDirty();
 }
@@ -593,7 +593,7 @@ pub unsafe fn DockContextProcessUndockWindow(
     clear_persistent_docking_re0f32: bool)
 {
     let g =  ctx;
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockWindow window '%s', clear_persistent_docking_ref = %d\n", window.Name, clear_persistent_docking_re0f32);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockWindow window '%s', clear_persistent_docking_ref = {}\n", window.Name, clear_persistent_docking_re0f32);
     if (window.DockNode){
         DockNodeRemoveWindow(window.DockNode, window, if clear_persistent_docking_ref { 0 }else {window.DockId});}
     else{
