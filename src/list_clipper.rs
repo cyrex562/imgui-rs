@@ -122,7 +122,7 @@ impl ImGuiListClipper {
         }
         if need_items_height && self.ItemsHeight > 0.0 {
             IMGUI_DEBUG_LOG_CLIPPER(
-                "Clipper: Step(): computed ItemsHeight: %.2f.\n",
+                "Clipper: Step(): computed ItemsHeight: {}.\n",
                 self.ItemsHeight,
             );
         }

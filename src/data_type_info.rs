@@ -36,8 +36,8 @@ pub const GDataTypeInfo: [ImGuiDataTypeInfo; 10] = [
     ImGuiDataTypeInfo { Size: mem::size_of::<i64>(), Name: String::from("i64"), PrintFmt: String::from("%lld"), ScanFmt: String::from("%lld") },
     ImGuiDataTypeInfo { Size: mem::size_of::<u64>(), Name: String::from("u8"), PrintFmt: String::from("%llu"), ScanFmt: String::from("%llu") },
 // #endif
-//     ImGuiDataTypeInfo{ sizeof,            "float", "{}","%f"    },  // ImGuiDataType_Float (float are promoted to double in va_arg)
-    ImGuiDataTypeInfo { Size: mem::size_of::<f32>(), Name: String::from("f32"), PrintFmt: String::from("{}"), ScanFmt: String::from("%f") },
-//     ImGuiDataTypeInfo{ sizeof,           "double","%f",  "%lf"   },  // ImGuiDataType_Double
-    ImGuiDataTypeInfo { Size: mem::size_of::<f64>(), Name: String::from("f64"), PrintFmt: String::from("%f"), ScanFmt: String::from("%lf") }
+//     ImGuiDataTypeInfo{ sizeof,            "float", "{}","{}"    },  // ImGuiDataType_Float (float are promoted to double in va_arg)
+    ImGuiDataTypeInfo { Size: mem::size_of::<f32>(), Name: String::from("f32"), PrintFmt: String::from("{}"), ScanFmt: String::from("{}") },
+//     ImGuiDataTypeInfo{ sizeof,           "double","{}",  "%lf"   },  // ImGuiDataType_Double
+    ImGuiDataTypeInfo { Size: mem::size_of::<f64>(), Name: String::from("f64"), PrintFmt: String::from("{}"), ScanFmt: String::from("%lf") }
 ];

@@ -495,7 +495,7 @@ impl ImDrawList {
     // void  AddPolyline(const ImVec2* points, num_points: c_int, col: u32, flags: ImDrawFlags, c_float thickness);
     pub unsafe fn AddPolyline(
         &mut self,
-        points: *const ImVec2,
+        points:&[ImVec2],
         points_count: size_t,
         col: u32,
         flags: ImDrawFlags,

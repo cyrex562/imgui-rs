@@ -8,7 +8,7 @@ use crate::math_ops::{ImAddClampOverflow, ImSubClampOverflow};
 use libc::{c_float, c_int};
 
 // FIXME-LEGACY: Prior to 1.61 our DragInt() function internally used floats and because of this the compile-time default value for format was "{}f".
-// Even though we changed the compile-time default, we expect users to have carried %f around, which would break the display of DragInt() calls.
+// Even though we changed the compile-time default, we expect users to have carried {} around, which would break the display of DragInt() calls.
 // To honor backward compatibility we are rewriting the format string, unless IMGUI_DISABLE_OBSOLETE_FUNCTIONS is enabled. What could possibly go wrong?!
 pub fn PatchFormatStringFloatToInt(fmt: &str) -> String {
     //     if (fmt[0] == '%' && fmt[1] == '.' && fmt[2] == '0' && fmt[3] == 'f' && fmt[4] == 0) // Fast legacy path for "{}f" which is expected to be the most common case.
@@ -201,7 +201,7 @@ pub unsafe fn DataTypeApplyFromText(
     // memcpy(&data_backup, p_data, type_info.Size);
     //
     // // Sanitize format
-    // // For float/double we have to ignore format with precision (e.g. "%.2f") because sscanf doesn't take them in, so force them into %f and %lf
+    // // For float/double we have to ignore format with precision (e.g. "{}") because sscanf doesn't take them in, so force them into {} and %lf
     // format_sanitized: [c_char;32];
     // if (data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double)
     //     format = type_info->ScanFmt;

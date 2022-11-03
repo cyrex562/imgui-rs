@@ -3568,7 +3568,7 @@ pub unsafe fn TableSettingsHandler_ReadLine(ctx: *mut ImGuiContext, handler: *mu
     // let mut r: c_int = 0;
     // let mut n: c_int = 0;
     //
-    // if (libc::sscanf(line, str_to_const_c_char_ptr("RefScale=%f"), &0.0) == 1) { settings.RefScale = f; return; }
+    // if (libc::sscanf(line, str_to_const_c_char_ptr("RefScale={}"), &0.0) == 1) { settings.RefScale = f; return; }
     //
     // if (libc::sscanf(line, str_to_const_c_char_ptr("Column {}%n"), &column_n, &r) == 1)
     // {
@@ -3579,7 +3579,7 @@ pub unsafe fn TableSettingsHandler_ReadLine(ctx: *mut ImGuiContext, handler: *mu
     //     column.Index = column_n;
     //     if (libc::sscanf(line, "UserID=0x{}%n", (*mut u32)&n, &r)==1) { line = ImStrSkipBlank(line + r); column.UserID = n; }
     //     if (sscanf(line, "Width={}%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column.WidthOrWeight = n; column.IsStretch = 0; settings.SaveFlags |= ImGuiTableFlags_Resizable; }
-    //     if (sscanf(line, "Weight=%f%n", &f, &r) == 1)           { line = ImStrSkipBlank(line + r); column.WidthOrWeight = f; column.IsStretch = 1; settings.SaveFlags |= ImGuiTableFlags_Resizable; }
+    //     if (sscanf(line, "Weight={}%n", &f, &r) == 1)           { line = ImStrSkipBlank(line + r); column.WidthOrWeight = f; column.IsStretch = 1; settings.SaveFlags |= ImGuiTableFlags_Resizable; }
     //     if (sscanf(line, "Visible={}%n", &n, &r) == 1)          { line = ImStrSkipBlank(line + r); column.IsEnabled = n; settings.SaveFlags |= ImGuiTableFlags_Hideable; }
     //     if (sscanf(line, "Order={}%n", &n, &r) == 1)            { line = ImStrSkipBlank(line + r); column.DisplayOrder = n; settings.SaveFlags |= ImGuiTableFlags_Reorderable; }
     //     if (sscanf(line, "Sort={}%c%n", &n, &c, &r) == 2)       { line = ImStrSkipBlank(line + r); column.SortOrder = n; column.SortDirection = if (c == '^') { ImGuiSortDirection_Descending } else { ImGuiSortDirection_Ascending }; settings.SaveFlags |= ImGuiTableFlags_Sortable; }

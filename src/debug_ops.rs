@@ -20,6 +20,7 @@ use crate::debug_log_flags::{ImGuiDebugLogFlags_EventActiveId, ImGuiDebugLogFlag
 use crate::dock_context_ops::DockContextClearNodes;
 use crate::dock_node::ImGuiDockNode;
 use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoTabBar, ImGuiDockNodeFlags_NoWindowMenuButton};
+use crate::drag::DragFloat;
 use crate::draw_cmd::ImDrawCmd;
 use crate::draw_flags::ImDrawFlags_Closed;
 use crate::draw_list::ImDrawList;
@@ -305,7 +306,7 @@ pub unsafe fn DebugTextEncoding(txt: &str)
     //     TextUnformatted((c == IM_UNICODE_CODEPOINT_INVALID)? "[invalid]": "[missing]");
     // }
     //     TableNextColumn();
-    //     Text("U+%04X", c);
+    //     Text("U+{}", c);
     //     p += c_utf8_len;
     // }
     EndTable();
@@ -1280,39 +1281,43 @@ pub unsafe fn DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list: &mut ImDrawL
     out_draw_list.Flags &= !ImDrawListFlags_AntiAliasedLines; // Disable AA on triangle outlines is more readable for very large and thin triangles.
     // for (let mut idx_n: c_uint =  draw_cmd.IdxOffset, idx_end = draw_cmd.IdxOffset + draw_cmd.ElemCount; idx_n < idx_end; )
     let idx_end = draw_cmd.IdxOffset + draw_cmd.ElemCount;
-    for idx_n in draw_cmd.IdxOffset .. idx_end
+    let mut idx_n = draw_cmd.IdxOffset;
+    while idx_n < idx_end
     {
 
         let idx_buffer = if draw_list.IdxBuffer.len() > 0 { draw_list.IdxBuffer.Data} else { null_mut()}; // We don't hold on those pointers past iterations as ->AddPolyline() may invalidate them if out_draw_list==draw_list
         let vtx_buffer = draw_list.VtxBuffer.Data + draw_cmd.VtxOffset;
 
-        triangle: ImVec2[3];
+        let mut triangle: [ImVec2;3] = [ImVec2::default();3];
         // for (let n: c_int = 0; n < 3; n++, idx_n++)
         for n in 0 .. 3
         {
-            vtxs_rect.Add((triangle[n] = vtx_buffer[if idx_buffer { idx_buffer[idx_n] } else { idx_n }].pos));
+            triangle[n] = vtx_buffer[if idx_buffer { idx_buffer[idx_n] } else { idx_n }].pos;
+            vtxs_rect.Add(&triangle[n]);
             idx_n += 1;
         }
-        if (show_mesh)
-            out_draw_list.AddPolyline(triangle, 3, IM_COL32(255, 255, 0, 255), ImDrawFlags_Closed, 1.0); // In yellow: mesh triangles
+        if show_mesh {
+            out_draw_list.AddPolyline(&triangle, 3, IM_COL32(255, 255, 0, 255), ImDrawFlags_Closed, 1.0);
+        } // In yellow: mesh triangles
     }
     // Draw bounding boxes
     if (show_aabb)
     {
-        out_draw_list.AddRect(ImFloor(clip_rect.Min), ImFloor(clip_rect.Max), IM_COL32(255, 0, 255, 255)); // In pink: clipping rectangle submitted to GPU
-        out_draw_list.AddRect(ImFloor(vtxs_rect.Min), ImFloor(vtxs_rect.Max), IM_COL32(0, 255, 255, 255)); // In cyan: bounding box of triangles
+        out_draw_list.AddRect((clip_rect.Min).floor(), (clip_rect.Max).floor(), IM_COL32(255, 0, 255, 255), 0.0); // In pink: clipping rectangle submitted to GPU
+        out_draw_list.AddRect((vtxs_rect.Min).floor(), (vtxs_rect.Max).floor(), IM_COL32(0, 255, 255, 255), 0.0); // In cyan: bounding box of triangles
     }
     out_draw_list.Flags = backup_flags;
 }
 
 // [DEBUG] Display details for a single font, called by ShowStyleEditor().
-pub unsafe fn DebugNodeFont(font: *mut ImFont)
+pub unsafe fn DebugNodeFont(font: &mut ImFont)
 {
-    let mut opened: bool =  TreeNode(font, "Font: \"{}\"\n%.2f px, {} glyphs, {} file(s)",
-        if font.ConfigData { font.ConfigData[0].Name } else { "" }, font.FontSize, font.Glyphs.Size, font.ConfigDataCount);
-    SameLine();
-    if (SmallButton("Set as default"))
+    let mut opened: bool =  TreeNode(font.to_string().as_str(), format!("Font: \"{}\"\n{} px, {} glyphs, {} file(s)",
+        if font.ConfigData { font.ConfigData[0].Name } else { "" }, font.FontSize, font.Glyphs.Size, font.ConfigDataCount).as_str());
+    SameLine(0.0, 0.0);
+    if SmallButton("Set as default") {
         GetIO().FontDefault = font;
+    }
     if !opened { return ; }
 
     // Display preview text
@@ -1322,55 +1327,67 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
 
     // Display details
     SetNextItemWidth(GetFontSize() * 8);
-    DragFloat("Font scale", &font.Scale, 0.005f, 0.3f, 2.0, "%.1f");
-    SameLine(); MetricsHelpMarker(
-        "Note than the default embedded font is NOT meant to be scaled.\n\n"
-        "Font are currently rendered into bitmaps at a given size at the time of building the atlas. "
-        "You may oversample them to get some flexibility with scaling. "
-        "You can also render at multiple sizes and select which one to use at runtime.\n\n"
+    DragFloat("Font scale", &mut font.Scale, 0.005, 0.3, 2.0, &mut String::from("%.1f"), 0);
+    SameLine(0.0, 0.0); MetricsHelpMarker(
+        "Note than the default embedded font is NOT meant to be scaled.\n\n" +
+        "Font are currently rendered into bitmaps at a given size at the time of building the atlas. " +
+        "You may oversample them to get some flexibility with scaling. " +
+        "You can also render at multiple sizes and select which one to use at runtime.\n\n" +
         "(Glimmer of hope: the atlas system will be rewritten in the future to make scaling more flexible.)");
-    Text("Ascent: %f, Descent: %f, Height: %f", font.Ascent, font.Descent, font.Ascent - font.Descent);
-    c_str: [c_char;5];
-    Text("Fallback character: '{}' (U+%04X)", ImTextCharToUtf8(c_str, font.FallbackChar), font.FallbackChar);
-    Text("Ellipsis character: '{}' (U+%04X)", ImTextCharToUtf8(c_str, font.EllipsisChar), font.EllipsisChar);
-    let surface_sqrt: c_int = ImSqrt(font.MetricsTotalSurface);
-    Text("Texture Area: about {} px ~{}x{} px", font.MetricsTotalSurface, surface_sqrt, surface_sqrt);
-    for (let config_i: c_int = 0; config_i < font.ConfigDataCount; config_i++)
-        if (font.ConfigData)
-            if (*const ImFontConfig cfg = &font.ConfigData[config_i])
-                BulletText("Input {}: \'{}\', Oversample: ({},{}), PixelSnapH: {}, Offset: (%.1f,%.10.0)",
-                    config_i, cfg.Name, cfg.OversampleH, cfg.OversampleV, cfg.PixelSnapH, cfg.GlyphOffset.x, cfg.GlyphOffset.y);
+    Text(format!("Ascent: {}, Descent: {}, Height: {}", font.Ascent, font.Descent, font.Ascent - font.Descent).as_str());
+    // c_str: [c_char;5];
+    let mut c_str = String::with_capacity(5);
+    // Text(format!("Fallback character: '{}' (U+{})", c_str);
+    // Text(format!("Ellipsis character: '{}' (U+{})", ImTextCharToUtf8(c_str, font.EllipsisChar), font.EllipsisChar).as_str());
+    let surface_sqrt = f32::from(font.MetricsTotalSurface).sqrt();
+    Text(format!("Texture Area: about {} px ~{}x{} px", font.MetricsTotalSurface, surface_sqrt, surface_sqrt).as_str());
+    // for (let config_i: c_int = 0; config_i < font.ConfigDataCount; config_i++)
+    for config_i in 0 .. font.ConfigDataCount
+    {
+        if font.ConfigData.is_null() == false {
+            let cfg = &font.ConfigData[config_i];
+            BulletText(format!("Input {}: \'{}\', Oversample: ({},{}), PixelSnapH: {}, Offset: (%.1f,%.10.0)",
+                               config_i, cfg.Name, cfg.OversampleH, cfg.OversampleV, cfg.PixelSnapH, cfg.GlyphOffset.x, cfg.GlyphOffset.y).as_str());
+        }
+    }
 
     // Display all glyphs of the fonts in separate pages of 256 characters
-    if (TreeNode("Glyphs", "Glyphs ({})", font.Glyphs.Size))
+    if TreeNode("Glyphs", "Glyphs ({})")
     {
         let mut  draw_list: *mut ImDrawList =  GetWindowDrawList();
-        glyph_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
+        let glyph_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
         let cell_size: c_float =  font.FontSize * 1;
         let cell_spacing: c_float =  GetStyle().ItemSpacing.y;
-        for (let mut base: c_uint =  0; base <= IM_UNICODE_CODEPOINT_MAX; base += 256)
+        // for (let mut base: c_uint =  0; base <= IM_UNICODE_CODEPOINT_MAX; base += 256)
+        for mut base in (0 .. IM_UNICODE_CODEPOINT_MAX).step_by(256)
         {
             // Skip ahead if a large bunch of glyphs are not present in the font (test in chunks of 4k)
             // This is only a small optimization to reduce the number of iterations when IM_UNICODE_MAX_CODEPOINT
             // is large // (if ImWchar==ImWchar32 we will do at least about 272 queries here)
-            if (!(base & 4095) && font.IsGlyphRangeUnused(base, base + 4095))
+            if !(base & 4095) != 0 && font.IsGlyphRangeUnused(base, base + 4095)
             {
                 base += 4096 - 256;
                 continue;
             }
 
-            let count: c_int = 0;
-            for (let mut n: c_uint =  0; n < 256; n++)
-                if (font.FindGlyphNoFallback((base + n)))
-                    count+= 1;
+            let mut count: c_int = 0;
+            // for (let mut n: c_uint =  0; n < 256; n++)
+            for n in 0 .. 256
+            {
+                if font.FindGlyphNoFallback((base + n)) {
+                    count += 1;
+                }
+            }
             if count <= 0 {
-                continue(); }
-            if (!TreeNode(base, "U+%04X..U+%04X ({} {})", base, base + 255, count, count > 1 ? "glyphs" : "glyph"))
                 continue;
+            }
+            if !TreeNode(base.to_string().as_str(), format!("U+{}..U+{} ({} {})", base, base + 255, count, count > 1 ? "glyphs" : "glyph").as_str()) {
+                continue;
+            }
 
             // Draw a 16x16 grid of glyphs
             let base_pos: ImVec2 = GetCursorScreenPos();
-            for (let mut n: c_uint =  0; n < 256; n++)
+            // for (let mut n: c_uint =  0; n < 256; n++)
             {
                 // We use ImFont::RenderChar as a shortcut because we don't have UTF-8 conversion functions
                 // available here and thus cannot easily generate a zero-terminated UTF-8 encoded string.
@@ -1398,11 +1415,11 @@ pub unsafe fn DebugNodeFont(font: *mut ImFont)
 
 pub unsafe fn DebugNodeFontGlyph(ImFont*, *const ImFontGlyph glyph)
 {
-    Text("Codepoint: U+%04X", glyph->Codepoint);
+    Text("Codepoint: U+{}", glyph->Codepoint);
     Separator();
     Text("Visible: {}", glyph->Visible);
     Text("AdvanceX: %.1f", glyph->AdvanceX);
-    Text("Pos: (%.2f,%.20)->(%.2f,%.20)", glyph->X0, glyph->Y0, glyph->X1, glyph->Y1);
+    Text("Pos: ({},%.20)->({},%.20)", glyph->X0, glyph->Y0, glyph->X1, glyph->Y1);
     Text("UV: ({},{})->({},{})", glyph->U0, glyph->V0, glyph->U1, glyph->V1);
 }
 
@@ -1453,7 +1470,7 @@ pub unsafe fn DebugNodeTabBar(tab_bar: &mut ImGuiTabBar, label: &str)
             PushID(tab);
             if (SmallButton("<")) { TabBarQueueReorder(tab_bar, tab, -1); } SameLine(0, 2);
             if (SmallButton(">")) { TabBarQueueReorder(tab_bar, tab, 1); } SameLine();
-            Text("%02d%c Tab 0x{} '{}' Offset: %.2f, Width: %.2f/%.2f",
+            Text("%02d%c Tab 0x{} '{}' Offset: {}, Width: {}/{}",
                 tab_n, (tab.ID == tab_bar.SelectedTabId) ? '*' : ' ', tab.ID, (tab.Window || tab.NameOffset != -1) ? tab_bar.GetTabNametab) : "???", tab->Offset, tab->Width, tab->ContentWidth);
             PopID();
         }
@@ -1524,7 +1541,7 @@ pub unsafe fn DebugNodeWindow(window: Option<&mut ImGuiWindow>, label: &str)
         flag_set(flags, ImGuiWindowFlags_Modal)        ? "Modal " : "",      flag_set(flags, ImGuiWindowFlags_ChildMenu)   ? "ChildMenu " : "",  flag_set(flags, ImGuiWindowFlags_NoSavedSettings) ? "NoSavedSettings " : "",
         (flags & ImGuiWindowFlags_NoMouseInputs)? "NoMouseInputs":"", flag_set(flags, ImGuiWindowFlags_NoNavInputs) ? "NoNavInputs" : "", flag_set(flags, ImGuiWindowFlags_AlwaysAutoResize) ? "AlwaysAutoResize" : "");
     BulletText("WindowClassId: 0x{}", window.WindowClass.ClassId);
-    BulletText("Scroll: (%.2f/%.2f,%.2f/%.20) Scrollbar:{}{}", window.Scroll.x, window.ScrollMax.x, window.Scroll.y, window.ScrollMax.y, window.ScrollbarX ? "X" : "", window.ScrollbarY ? "Y" : "");
+    BulletText("Scroll: ({}/{},{}/%.20) Scrollbar:{}{}", window.Scroll.x, window.ScrollMax.x, window.Scroll.y, window.ScrollMax.y, window.ScrollbarX ? "X" : "", window.ScrollbarY ? "Y" : "");
     BulletText("Active: {}/{}, WriteAccessed: {}, BeginOrderWithinContext: {}", window.Active, window.WasActive, window.WriteAccessed, if (window.Active || window.WasActive) { window.BeginOrderWithinContext } else { -1 });
     BulletText("Appearing: {}, Hidden: {} (CanSkip {} Cannot {}), SkipItems: {}", window.Appearing, window.Hidden, window.HiddenFramesCanSkipItems, window.HiddenFramesCannotSkipItems, window.SkipItems);
     for (let layer: c_int = 0; layer < ImGuiNavLayer_COUNT; layer++)

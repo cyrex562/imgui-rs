@@ -834,7 +834,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 Text("I am a fancy tooltip");
                 staticarr: c_float[] = { 0.6f, 0.1f, 1.0, 0.5, 0.92f, 0.1f, 0.2f };
                 PlotLines("Curve", arr, arr.len());
-                Text("Sin(time) = %f", sinf(GetTime()));
+                Text("Sin(time) = {}", sinf(GetTime()));
                 EndTooltip();
             }
 
@@ -1126,8 +1126,8 @@ pub unsafe fn ShowDemoWindowWidgets()
                 else if (region_x > my_tex_w - region_sz) { region_x = my_tex_w - region_sz; }
                 if (region_y < 0.0) { region_y = 0.0; }
                 else if (region_y > my_tex_h - region_sz) { region_y = my_tex_h - region_sz; }
-                Text("Min: (%.2f, %.20)", region_x, region_y);
-                Text("Max: (%.2f, %.20)", region_x + region_sz, region_y + region_sz);
+                Text("Min: ({}, %.20)", region_x, region_y);
+                Text("Max: ({}, %.20)", region_x + region_sz, region_y + region_sz);
                 let uv0: ImVec2 = ImVec2::new((region_x) / my_tex_w, (region_y) / my_tex_h);
                 let uv1: ImVec2 = ImVec2::new((region_x + region_sz) / my_tex_w, (region_y + region_sz) / my_tex_h);
                 Image(my_tex_id, ImVec2::new(region_sz * zoom, region_sz * zoom), uv0, uv1, tint_col, border_col);
@@ -1764,7 +1764,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 average += values[n];
             average /= values.len();
             overlay: [c_char;32];
-            sprintf(overlay, "avg %f", average);
+            sprintf(overlay, "avg {}", average);
             PlotLines("Lines", values, values.len(), values_offset, overlay, -1.0, 1.0, ImVec2::new(0, 80f32));
         }
 
@@ -2017,7 +2017,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         // Drags
         static let drag_f: c_float =  0.5;
         static let drag_i: c_int = 50;
-        Text("Underlying float value: %f", drag_0f32);
+        Text("Underlying float value: {}", drag_0f32);
         DragFloat("DragFloat (0 -> 1)", &drag_f, 0.005f, 0.0, 1.0, "{}", flags);
         DragFloat("DragFloat (0 -> +in0f32)", &drag_f, 0.005f, 0.0, f32::MAX, "{}", flags);
         DragFloat("DragFloat (-inf -> 1)", &drag_f, 0.005f, -f32::MAX, 1.0, "{}", flags);
@@ -2027,7 +2027,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         // Sliders
         static let slider_f: c_float =  0.5;
         static let slider_i: c_int = 50;
-        Text("Underlying float value: %f", slider_0f32);
+        Text("Underlying float value: {}", slider_0f32);
         SliderFloat("SliderFloat (0 -> 1)", &slider_f, 0.0, 1.0, "{}", flags);
         SliderInt("SliderInt (0 -> 100)", &slider_i, 0, 100, "{}", flags);
 
@@ -2110,8 +2110,8 @@ pub unsafe fn ShowDemoWindowWidgets()
         DragScalar("drag u32",       ImGuiDataType_U32,    &u32_v, drag_speed, if drag_clamp { & u32_zero }else {null_mut()}, if drag_clamp { & u32_fifty} else {null_mut()}, "%u ms");
         DragScalar("drag s64",       ImGuiDataType_S64,    &s64_v, drag_speed, if drag_clamp { & s64_zero} else {null_mut()}, if drag_clamp { & s64_fifty} else  {null_mut()});
         DragScalar("drag u64",       ImGuiDataType_U64,    &u64_v, drag_speed, if drag_clamp { & u64_zero} else {null_mut()}, if drag_clamp { & u64_fifty} else {null_mut()});
-        DragScalar("drag float",     ImGuiDataType_Float,  &f32_v, 0.005f,  &f32_zero, &f32_one, "%f");
-        DragScalar("drag float log", ImGuiDataType_Float,  &f32_v, 0.005f,  &f32_zero, &f32_one, "%f", ImGuiSliderFlags_Logarithmic);
+        DragScalar("drag float",     ImGuiDataType_Float,  &f32_v, 0.005f,  &f32_zero, &f32_one, "{}");
+        DragScalar("drag float log", ImGuiDataType_Float,  &f32_v, 0.005f,  &f32_zero, &f32_one, "{}", ImGuiSliderFlags_Logarithmic);
         DragScalar("drag double",    ImGuiDataType_Double, &f64_v, 0.05f, &f64_zero, null_mut(),     "%.10.0 grams");
         DragScalar("drag double log",ImGuiDataType_Double, &f64_v, 0.05f, &f64_zero, &f64_one, "0 < %.10.0 < 1", ImGuiSliderFlags_Logarithmic);
 
@@ -2158,7 +2158,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         InputScalar("input s16",     ImGuiDataType_S16,    &s16_v, if inputs_step { & s16_one} else {null_mut()}, null_mut(), "{}");
         InputScalar("input u16",     ImGuiDataType_U16,    &u16_v, if inputs_step { &u16_one} else { null_mut() }, null_mut(), "%u");
         InputScalar("input s32",     ImGuiDataType_S32,    &s32_v, if inputs_step { &s32_one} else { null_mut() }, null_mut(), "{}");
-        InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, if inputs_step { &s32_one} else { null_mut() }, null_mut(), "%04X");
+        InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, if inputs_step { &s32_one} else { null_mut() }, null_mut(), "{}");
         InputScalar("input u32",     ImGuiDataType_U32,    &u32_v, if inputs_step { &u32_one} else { null_mut() }, null_mut(), "%u");
         InputScalar("input hex: u32", ImGuiDataType_U32,    &u32_v, if inputs_step { &u32_one} else { null_mut() }, null_mut(), "{}");
         InputScalar("input s64",     ImGuiDataType_S64,    &s64_v, if inputs_step { &s64_one} else { null_mut() });
@@ -2257,7 +2257,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             if i > 0 {  SameLine(); }
             PushID(i);
             PushStyleVar(ImGuiStyleVar_GrabMinSize, 40);
-            VSliderFloat("##v", ImVec2::new(40, 160), &values[i], 0.0, 1.0, "%.2f\nsec");
+            VSliderFloat("##v", ImVec2::new(40, 160), &values[i], 0.0, 1.0, "{}\nsec");
             PopStyleVar();
             PopID();
         }
@@ -3277,7 +3277,7 @@ pub unsafe fn ShowDemoWindowLayout()
                     for (let n: c_int = 0; n < 4; n++)
                     {
                         TableNextColumn();
-                        Text("Width %.2f", GetContentRegionAvail().x);
+                        Text("Width {}", GetContentRegionAvail().x);
                     }
                     EndTable();
                 }
@@ -3285,7 +3285,7 @@ pub unsafe fn ShowDemoWindowLayout()
                 Columns(4);
                 for (let n: c_int = 0; n < 4; n++)
                 {
-                    Text("Width %.2f", GetColumnWidth());
+                    Text("Width {}", GetColumnWidth());
                     NextColumn();
                 }
                 Columns(1);
@@ -4217,7 +4217,7 @@ pub unsafe fn ShowDemoWindowTables()
                     TableSetColumnIndex(column);
                     if (row == 0)
                     {
-                        Text("Avail %.2f", GetContentRegionAvail().x);
+                        Text("Avail {}", GetContentRegionAvail().x);
                     }
                     else
                     {
@@ -4705,7 +4705,7 @@ pub unsafe fn ShowDemoWindowTables()
                 let min_row_height: c_float =  (TEXT_BASE_HEIGHT * 0.3f32 * row);
                 TableNextRow(ImGuiTableRowFlags_None, min_row_height);
                 TableNextColumn();
-                Text("min_row_height = %.2f", min_row_height);
+                Text("min_row_height = {}", min_row_height);
             }
             EndTable();
         }
@@ -5627,9 +5627,9 @@ pub unsafe fn ShowDemoWindowColumns()
             if h_borders && GetColumnIndex() == 0{
                 Separator();}
             Text("%c%c%c", 'a' + i, 'a' + i, 'a' + i);
-            Text("Width %.2f", GetColumnWidth());
-            Text("Avail %.2f", GetContentRegionAvail().x);
-            Text("Offset %.2f", GetColumnOffset());
+            Text("Width {}", GetColumnWidth());
+            Text("Avail {}", GetContentRegionAvail().x);
+            Text("Offset {}", GetColumnOffset());
             Text("Long text that is likely to clip");
             Button("Button", ImVec2::new(-FLT_MIN, 0.0));
             NextColumn();
@@ -6178,16 +6178,16 @@ pub unsafe fn ShowAboutWindow(p_open: *mut bool)
         if (io.BackendFlags & ImGuiBackendFlags_RendererHasViewports)   Text(" RendererHasViewports");
         Separator();
         Text("io.Fonts: {} fonts, Flags: 0x{}, TexSize: {},{}", io.Fonts.Fonts.Size, io.Fonts.Flags, io.Fonts.TexWidth, io.Fonts.TexHeight);
-        Text("io.DisplaySize: %.2f,%.2f", io.DisplaySize.x, io.DisplaySize.y);
-        Text("io.DisplayFramebufferScale: %.2f,%.2f", io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
+        Text("io.DisplaySize: {},{}", io.DisplaySize.x, io.DisplaySize.y);
+        Text("io.DisplayFramebufferScale: {},{}", io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
         Separator();
-        Text("style.WindowPadding: %.2f,%.2f", style.WindowPadding.x, style.WindowPadding.y);
-        Text("style.WindowBorderSize: %.2f", style.WindowBorderSize);
-        Text("style.FramePadding: %.2f,%.2f", style.FramePadding.x, style.FramePadding.y);
-        Text("style.FrameRounding: %.2f", style.FrameRounding);
-        Text("style.FrameBorderSize: %.2f", style.FrameBorderSize);
-        Text("style.ItemSpacing: %.2f,%.2f", style.ItemSpacing.x, style.ItemSpacing.y);
-        Text("style.ItemInnerSpacing: %.2f,%.2f", style.ItemInnerSpacing.x, style.ItemInnerSpacing.y);
+        Text("style.WindowPadding: {},{}", style.WindowPadding.x, style.WindowPadding.y);
+        Text("style.WindowBorderSize: {}", style.WindowBorderSize);
+        Text("style.FramePadding: {},{}", style.FramePadding.x, style.FramePadding.y);
+        Text("style.FrameRounding: {}", style.FrameRounding);
+        Text("style.FrameBorderSize: {}", style.FrameBorderSize);
+        Text("style.ItemSpacing: {},{}", style.ItemSpacing.x, style.ItemSpacing.y);
+        Text("style.ItemInnerSpacing: {},{}", style.ItemInnerSpacing.x, style.ItemInnerSpacing.y);
 
         if (copy_to_clipboard)
         {
@@ -6329,14 +6329,14 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             SliderFloat("LogSliderDeadzone", &style.LogSliderDeadzone, 0.0, 12.0, "{}f");
             SliderFloat("TabRounding", &style.TabRounding, 0.0, 12.0, "{}f");
             Text("Alignment");
-            SliderFloat2("WindowTitleAlign", &style.WindowTitleAlign, 0.0, 1.0, "%.2f");
+            SliderFloat2("WindowTitleAlign", &style.WindowTitleAlign, 0.0, 1.0, "{}");
             let window_menu_button_position: c_int = style.WindowMenuButtonPosition + 1;
             if (Combo("WindowMenuButtonPosition", (c_int*)&window_menu_button_position, "None\0Left\0Right\0"))
                 style.WindowMenuButtonPosition = window_menu_button_position - 1;
             Combo("ColorButtonPosition", (c_int*)&style.ColorButtonPosition, "Left\0Right\0");
-            SliderFloat2("ButtonTextAlign", &style.ButtonTextAlign, 0.0, 1.0, "%.2f");
+            SliderFloat2("ButtonTextAlign", &style.ButtonTextAlign, 0.0, 1.0, "{}");
             SameLine(); HelpMarker("Alignment applies when a button is larger than its text content.");
-            SliderFloat2("SelectableTextAlign", &style.SelectableTextAlign, 0.0, 1.0, "%.2f");
+            SliderFloat2("SelectableTextAlign", &style.SelectableTextAlign, 0.0, 1.0, "{}");
             SameLine(); HelpMarker("Alignment applies when a selectable is larger than its text content.");
             Text("Safe Area Padding");
             SameLine(); HelpMarker("Adjust if you cannot see the edges of your screen (e.g. on a TV where scaling has not been configured).");
@@ -6425,9 +6425,9 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
                 "Using those settings here will give you poor quality results.");
             static let window_scale: c_float =  1.0;
             PushItemWidth(GetFontSize() * 8);
-            if (DragFloat("window scale", &window_scale, 0.005f, MIN_SCALE, MAX_SCALE, "%.2f", ImGuiSliderFlags_AlwaysClamp)) // Scale only this window
+            if (DragFloat("window scale", &window_scale, 0.005f, MIN_SCALE, MAX_SCALE, "{}", ImGuiSliderFlags_AlwaysClamp)) // Scale only this window
                 SetWindowFontScale(window_scale);
-            DragFloat("global scale", &io.FontGlobalScale, 0.005f, MIN_SCALE, MAX_SCALE, "%.2f", ImGuiSliderFlags_AlwaysClamp); // Scale everything
+            DragFloat("global scale", &io.FontGlobalScale, 0.005f, MIN_SCALE, MAX_SCALE, "{}", ImGuiSliderFlags_AlwaysClamp); // Scale everything
             PopItemWidth();
 
             EndTabItem();
@@ -6445,11 +6445,11 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
 
             Checkbox("Anti-aliased fill", &style.AntiAliasedFill);
             PushItemWidth(GetFontSize() * 8);
-            DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02f, 0.1.0, 10.0, "%.2f");
+            DragFloat("Curve Tessellation Tolerance", &style.CurveTessellationTol, 0.02f, 0.1.0, 10.0, "{}");
             if style.CurveTessellationTol < 0.100{ style.CurveTessellationTol = 0.1.0;}
 
             // When editing the "Circle Segment Max Error" value, draw a preview of its effect on auto-tessellated circles.
-            DragFloat("Circle Tessellation Max Error", &style.CircleTessellationMaxError , 0.005f, 0.1.0, 5f32, "%.2f", ImGuiSliderFlags_AlwaysClamp);
+            DragFloat("Circle Tessellation Max Error", &style.CircleTessellationMaxError , 0.005f, 0.1.0, 5f32, "{}", ImGuiSliderFlags_AlwaysClamp);
             if (IsItemActive())
             {
                 SetNextWindowPos(GetCursorScreenPos());
@@ -6490,8 +6490,8 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             SameLine();
             HelpMarker("When drawing circle primitives with \"num_segments == 0\" tesselation will be calculated automatically.");
 
-            DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20, 1.0, "%.2f"); // Not exposing zero here so user doesn't "lose" the UI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
-            DragFloat("Disabled Alpha", &style.DisabledAlpha, 0.005f, 0.0, 1.0, "%.2f"); SameLine(); HelpMarker("Additional alpha multiplier for disabled items (multiply over current value of Alpha).");
+            DragFloat("Global Alpha", &style.Alpha, 0.005f, 0.20, 1.0, "{}"); // Not exposing zero here so user doesn't "lose" the UI (zero alpha clips all widgets). But application code could have a toggle to switch between zero and non-zero.
+            DragFloat("Disabled Alpha", &style.DisabledAlpha, 0.005f, 0.0, 1.0, "{}"); SameLine(); HelpMarker("Additional alpha multiplier for disabled items (multiply over current value of Alpha).");
             PopItemWidth();
 
             EndTabItem();
@@ -6717,7 +6717,7 @@ struct ExampleAppConsole
         if (SmallButton("Clear"))           { ClearLog(); }
         SameLine();
         let mut copy_to_clipboard: bool =  SmallButton("Copy");
-        //static float t = 0.0; if (GetTime() - t > 0.020f32) { t = GetTime(); AddLog("Spam %f", t); }
+        //static float t = 0.0; if (GetTime() - t > 0.020f32) { t = GetTime(); AddLog("Spam {}", t); }
 
         Separator();
 
@@ -7439,7 +7439,7 @@ pub unsafe fn ShowExampleAppConstrainedResize(bool* p_open)
             let pos: ImVec2 = GetCursorScreenPos();
             ColorButton("viewport", ImVec4(0.5, 0.2f, 0.5, 1.0), ImGuiColorEditFlags_NoTooltip | ImGuiColorEditFlags_NoDragDrop, avail_size);
             SetCursorScreenPos(ImVec2::new(pos.x + 10, pos.y + 10));
-            Text("%.2f x %.2f", avail_size.x, avail_size.y);
+            Text("{} x {}", avail_size.x, avail_size.y);
         }
         else
         {

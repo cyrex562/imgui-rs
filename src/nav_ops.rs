@@ -276,7 +276,7 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
     let mut buf: [c_char;128] = [0;128];
     if (IsMouseHoveringRect(&cand.Min, &cand.Max, false))
     {
-        // ImFormatString(buf, buf.len(), "dbox (%.2f,%.2f->%.40f32)\ndcen (%.2f,%.2f->%.40f32)\nd (%.2f,%.2f->%.40f32)\nnav %c, quadrant %c", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.NavMoveDir], "WENS"[quadrant]);
+        // ImFormatString(buf, buf.len(), "dbox ({},{}->%.40f32)\ndcen ({},{}->%.40f32)\nd ({},{}->%.40f32)\nnav %c, quadrant %c", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.NavMoveDir], "WENS"[quadrant]);
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window.Viewport);
         draw_list.AddRect(&curr.Min, &curr.Max, IM_COL32(255, 200, 0, 100), 0.0);
         draw_list.AddRect(&cand.Min, &cand.Max, IM_COL32(255, 255, 0, 200), 0.0);
