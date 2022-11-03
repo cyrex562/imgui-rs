@@ -107,13 +107,13 @@ pub struct ImGuiTable {
     // This is used to check if we can eventually merge our columns draw calls into the current draw call of the current window.
     pub HostBackupInnerClipRect: ImRect,
     // Backup of Innerwindow.ClipRect during PushTableBackground()/PopTableBackground()
-    pub OuterWindow: *mut ImGuiWindow,
+    pub OuterWindow: ImGuiWindow,
     // Parent window for the table
-    pub InnerWindow: *mut ImGuiWindow,
+    pub InnerWindow: ImGuiWindow,
     // Window holding the table data (== OuterWindow or a child window)
     pub ColumnsNames: ImGuiTextBuffer,
     // Contiguous buffer holding columns names
-    pub DrawSplitter: *mut ImDrawListSplitter,
+    pub DrawSplitter: ImDrawListSplitter,
     // Shortcut to TempData->DrawSplitter while in table. Isolate draw commands per columns to avoid switching clip rect constantly
     pub InstanceDataFirst: ImGuiTableInstanceData,
     pub InstanceDataExtra: Vec<ImGuiTableInstanceData>,

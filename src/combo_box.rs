@@ -494,7 +494,7 @@ pub unsafe fn Combo2(
 // Combo box helper allowing to pass all items in a single string literal holding multiple zero-terminated items "item1\0item2\0"
 pub unsafe fn Combo3(
     label: &str,
-    current_item: &mut usize,
+    current_item: &mut i32,
     items_separated_by_zeros: &[String],
     height_in_items: c_int,
 ) -> bool {

@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use std::borrow::BorrowMut;
 use std::ptr::null_mut;
 use libc::{c_void, memcmp};
 use crate::{type_defs::ImGuiID, viewport::ImGuiViewport, imgui::GImGui, window::{ImGuiWindow, window_flags::{ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_Tooltip, ImGuiWindowFlags_Popup, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground}}, rect::ImRect, vec2::ImVec2, config_flags::{ImGuiConfigFlags_ViewportsEnable, ImGuiConfigFlags_DpiEnableScaleViewports}, viewport_flags::{ImGuiViewportFlags_NoInputs, ImGuiViewportFlags_Minimized, ImGuiViewportFlags_OwnedByApp, ImGuiViewportFlags_CanHostOtherWindows, ImGuiViewportFlags_NoFocusOnAppearing, ImGuiViewportFlags_IsPlatformWindow, ImGuiViewportFlags_TopMost, ImGuiViewportFlags_NoDecoration, ImGuiViewportFlags_NoTaskBarIcon, ImGuiViewportFlags_NoRendererClear, ImGuiViewportFlags_NoFocusOnClick}, ImHashStr};
@@ -79,10 +80,10 @@ pub fn SetupViewportDrawData(viewport: *mut ImGuiViewport, draw_lists: *mut Vec<
 // - DestroyPlatformWindows()
 //-----------------------------------------------------------------------------
 
-pub unsafe fn GetMainViewport() -> *mut ImGuiViewport
+pub unsafe fn GetMainViewport() -> &mut ImGuiViewport
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.Viewports[0];
+    return g.Viewports[0].borrow_mut();
 }
 
 // FIXME: This leaks access to viewports not listed in PlatformIO.Viewports[]. Problematic? (#4236)

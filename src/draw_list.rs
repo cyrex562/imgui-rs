@@ -449,7 +449,7 @@ impl ImDrawList {
         col: u32,
         text_begin: &str,
         mut wrap_width: c_float,
-        cpu_fine_clip_rect: &ImVec4,
+        cpu_fine_clip_rect: Option<&ImVec4>,
     ) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;

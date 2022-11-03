@@ -65,11 +65,12 @@ use crate::table_ops::TableGetInstanceData;
 use crate::tables::{BeginTable, DebugNodeTable, EndTable, TableHeadersRow, TableNextColumn, TableSetupColumn};
 use crate::text_ops::{BulletText, CalcTextSize, GetTextLineHeight, Text, TextDisabled, TextUnformatted};
 use crate::tooltip_ops::{BeginTooltip, EndTooltip};
-use crate::type_defs::ImGuiID;
-use crate::utils::{flag_set, GetVersion};
+use crate::type_defs::{ImGuiID, ImGuiTableColumnIdx};
+use crate::utils::{flag_clear, flag_set, GetVersion};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use crate::viewport_flags::ImGuiViewportFlags_Minimized;
+use crate::viewport_ops::GetMainViewport;
 use crate::widget_ops::{PopTextWrapPos, PushTextWrapPos};
 use crate::widgets::{GetTreeNodeToLabelSpacing, Selectable, TreeNode, TreePop};
 use crate::window::find::FindWindowByID;
@@ -509,14 +510,14 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
             String::from(wrt_rects_names[6]),
             String::from(wrt_rects_names[7])];
         cfg.ShowWindowsRects |= Combo2("##show_windows_rect_type", &mut cfg.ShowWindowsRectsType, &data, WRT_Count as usize, WRT_Count);
-        if cfg.ShowWindowsRects && g.NavWindow != null_mut()
+        if cfg.ShowWindowsRects && g.NavWindow.is_some()
         {
             BulletText(format!("'{}':", g.NavWindow.Name).as_str());
             Indent(0.0);
             // for (let rect_n: c_int = 0; rect_n < WRT_Count; rect_n++)
             for rect_n in 0 .. WRT_Count
             {
-                let mut r: ImRect =  Funcs::GetWindowRect(&mut *g.NavWindow, rect_n);
+                let mut r: ImRect =  Funcs::GetWindowRect(&mut g.NavWindow.unwrap(), rect_n);
                 Text(format!("({},{}) ({},{}) Size ({},{}) {}", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), wrt_rects_names[rect_n]).as_str());
             }
             Unindent(0.0);
@@ -547,7 +548,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
             for (_, table) in g.Tables.iter_mut()
             {
                 // let table = g.Tables.get_key_value(table_n);
-                if table.LastFrameActive < g.FrameCount - 1 || (table.OuterWindow != g.NavWindow && table.InnerWindow != g.NavWindow) {
+                if table.LastFrameActive < g.FrameCount - 1 || (table.OuterWindow != g.NavWindow.unwrap() && table.InnerWindow != g.NavWindow) {
                     continue;
                 }
 
@@ -934,80 +935,89 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
         Text(format!("NavDisableHighlight: {}, NavDisableMouseHover: {}", g.NavDisableHighlight, g.NavDisableMouseHover).as_str());
         Text(format!("NavFocusScopeId = 0x{}", g.NavFocusScopeId).as_str());
         Text(format!("NavWindowingTarget: '{}'", if g.NavWindowingTarget { g.NavWindowingTarget.Name }else {"NULL"}).as_str());
-        Unindent();
+        Unindent(0.0);
 
         TreePop();
     }
 
     // Overlay: Display windows Rectangles and Begin Order
-    if (cfg.ShowWindowsRects || cfg.ShowWindowsBeginOrder)
+    if cfg.ShowWindowsRects || cfg.ShowWindowsBeginOrder
     {
-        for (let n: c_int = 0; n < g.Windows.len(); n++)
+        // for (let n: c_int = 0; n < g.Windows.len(); n++)
+        for window in g.Windows.iter_mut()
         {
-            let mut window: *mut ImGuiWindow =  g.Windows[n];
-            if (!window.WasActive)
+            // let mut window: *mut ImGuiWindow =  g.Windows[n];
+            if !window.WasActive {
                 continue;
-            let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window);
-            if (cfg.ShowWindowsRects)
+            }
+            let mut  draw_list =  GetForegroundDrawList(Some(window));
+            if cfg.ShowWindowsRects
             {
                 let r: ImRect =  Funcs::GetWindowRect(window, cfg.ShowWindowsRectsType);
-                draw_list.AddRect(r.Min, r.Max, IM_COL32(255, 0, 128, 255));
+                draw_list.AddRect(&r.Min, &r.Max, IM_COL32(255, 0, 128, 255), 0.0);
             }
-            if (cfg.ShowWindowsBeginOrder && flag_clear(window.Flags, ImGuiWindowFlags_ChildWindow))
+            if cfg.ShowWindowsBeginOrder && flag_clear(window.Flags, ImGuiWindowFlags_ChildWindow)
             {
-                buf: [c_char;32];
-                ImFormatString(buf, buf.len(), "{}", window.BeginOrderWithinContext);
+                // buf: [c_char;32];
+                let mut buf = String::with_capacity(32);
+                // ImFormatString(buf, buf.len(), "{}", window.BeginOrderWithinContext);
                 let font_size: c_float =  GetFontSize();
-                draw_list.AddRectFilled(window.Pos, window.Pos + ImVec2::new(font_size, font_size), IM_COL32(200, 100, 100, 255));
-                draw_list.AddText(window.Pos, IM_COL32(255, 255, 255, 255), buf);
+                draw_list.AddRectFilled(&window.Pos, window.Pos + ImVec2::from_floats(font_size, font_size), IM_COL32(200, 100, 100, 255), 0.0, 0);
+                draw_list.AddText(&window.Pos, IM_COL32(255, 255, 255, 255), buf.as_str());
             }
         }
     }
 
     // Overlay: Display Tables Rectangles
-    if (cfg.ShowTablesRects)
+    if cfg.ShowTablesRects
     {
-        for (let table_n: c_int = 0; table_n < g.Tables.GetMapSize(); table_n++)
+        // for (let table_n: c_int = 0; table_n < g.Tables.GetMapSize(); table_n++)
+        for table in g.Tables.values_mut()
         {
-            ImGuiTable* table = g.Tables.TryGetMapData(table_n);
-            if (table == null_mut() || table.LastFrameActive < g.FrameCount - 1)
-                continue;
-            let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(table.OuterWindow);
-            if (cfg.ShowTablesRectsType >= TRT_ColumnsRect)
+            // ImGuiTable* table = g.Tables.TryGetMapData(table_n);
+            // if (table == null_mut() || table.LastFrameActive < g.FrameCount - 1)
+            if table.LastFrameActive < g.FrameCount - 1
             {
-                for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
+                continue;
+            }
+            let mut  draw_list =  GetForegroundDrawList2();
+            if cfg.ShowTablesRectsType >= TRT_ColumnsRect
+            {
+                // for (let column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
+                for column_n in 0 .. table.ColumnsCount
                 {
-                    let r: ImRect =  Funcs::GetTableRect(table, cfg.ShowTablesRectsType, column_n);
-                    col: u32 = if table.HoveredColumnBody == column_n { IM_COL32(255, 255, 128, 255)} else { IM_COL32(255, 0, 128, 255)};
-                    let thickness: c_float =  if (table.HoveredColumnBody == column_n) { 3.0} else {1.0};
-                    draw_list.AddRect(r.Min, r.Max, col, 0.0, 0, thickness);
+                    let r =  Funcs::GetTableRect(table, cfg.ShowTablesRectsType, column_n as i32);
+                    let col = if table.HoveredColumnBody == column_n as ImGuiTableColumnIdx { IM_COL32(255, 255, 128, 255)} else { IM_COL32(255, 0, 128, 255)};
+                    let thickness: c_float =  if table.HoveredColumnBody == column_n as ImGuiTableColumnIdx { 3.0} else {1.0};
+                    draw_list.AddRect(&r.Min, &r.Max, col, 0.0);
                 }
             }
             else
             {
                 let r: ImRect =  Funcs::GetTableRect(table, cfg.ShowTablesRectsType, -1);
-                draw_list.AddRect(r.Min, r.Max, IM_COL32(255, 0, 128, 255));
+                draw_list.AddRect(&r.Min, &r.Max, IM_COL32(255, 0, 128, 255), 0.0);
             }
         }
     }
 
 // #ifdef IMGUI_HAS_DOCK
     // Overlay: Display Docking info
-    if (cfg.ShowDockingNodes && g.IO.KeyCtrl && g.DebugHoveredDockNode)
+    if cfg.ShowDockingNodes && g.IO.KeyCtrl && g.DebugHoveredDockNode.is_some()
     {
-        buf: [c_char;64] = "";
-        char* p = buf;
-        node:*mut ImGuiDockNode = g.DebugHoveredDockNode;
-        let mut  overlay_draw_list: *mut ImDrawList =  if node.HostWindow { GetForegroundDrawList(node.HostWindow)} else{ GetForegroundDrawList(GetMainViewport()});
-        p += ImFormatString(p, buf + buf.len() - p, "DockId: %X{}\n", node.ID, if node.IsCentralNode() { " *CentralNode*"}else{ ""});
-        p += ImFormatString(p, buf + buf.len() - p, "WindowClass: {}\n", node.WindowClass.ClassId);
-        p += ImFormatString(p, buf + buf.len() - p, "Size: (%.0, %.0)\n", node.Size.x, node.Size.y);
-        p += ImFormatString(p, buf + buf.len() - p, "SizeRef: (%.0, %.0)\n", node.SizeRef.x, node.SizeRef.y);
+        // buf: [c_char;64] = "";
+        let buf = String::with_capacity(64);
+        // char* p = buf;
+        let node = &mut g.DebugHoveredDockNode;
+        let mut  overlay_draw_list =  if node.HostWindow { GetForegroundDrawList(node.HostWindow)} else{ GetForegroundDrawList(Some(GetMainViewport()))};
+        // p += ImFormatString(p, buf + buf.len() - p, "DockId: %X{}\n", node.ID, if node.IsCentralNode() { " *CentralNode*"}else{ ""});
+        // p += ImFormatString(p, buf + buf.len() - p, "WindowClass: {}\n", node.WindowClass.ClassId);
+        // p += ImFormatString(p, buf + buf.len() - p, "Size: (%.0, %.0)\n", node.Size.x, node.Size.y);
+        // p += ImFormatString(p, buf + buf.len() - p, "SizeRef: (%.0, %.0)\n", node.SizeRef.x, node.SizeRef.y);
         let depth: c_int = DockNodeGetDepth(node);
-        overlay_draw_list.AddRect(node.Pos + ImVec2::new(3, 3) * depth, node.Pos + node.Size - ImVec2::new(3, 3) * depth, IM_COL32(200, 100, 100, 255));
+        overlay_draw_list.AddRect(node.Pos + ImVec2::new(3, 3) * depth, node.Pos + node.Size - ImVec2::new(3, 3) * depth, IM_COL32(200, 100, 100, 255), 0.0);
         let pos: ImVec2 = node.Pos + ImVec2::new(3, 3) * depth;
-        overlay_draw_list.AddRectFilled(pos - ImVec2::new(1, 1), pos + CalcTextSize(buf) + ImVec2::new(1, 1), IM_COL32(200, 100, 100, 255));
-        overlay_draw_list.AddText(null_mut(), 0.0, pos, IM_COL32(255, 255, 255, 255), buf);
+        overlay_draw_list.AddRectFilled(pos - ImVec2::new(1, 1), pos + CalcTextSize(buf.as_str(), false, 0.0) + ImVec2::from_ints(1, 1), IM_COL32(200, 100, 100, 255), 0.0, 0);
+        overlay_draw_list.AddText2(None, 0.0, &pos, IM_COL32(255, 255, 255, 255), buf.as_str(), 0.0, None);
     }
 // #endif // #ifdef IMGUI_HAS_DOCK
 
