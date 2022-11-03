@@ -20,7 +20,9 @@ use crate::debug_log_flags::{ImGuiDebugLogFlags_EventActiveId, ImGuiDebugLogFlag
 use crate::dock_context_ops::DockContextClearNodes;
 use crate::dock_node::ImGuiDockNode;
 use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoTabBar, ImGuiDockNodeFlags_NoWindowMenuButton};
+use crate::draw_flags::ImDrawFlags_Closed;
 use crate::draw_list::ImDrawList;
+use crate::draw_list_flags::ImDrawListFlags_AntiAliasedLines;
 use crate::draw_list_ops::{GetForegroundDrawList, GetForegroundDrawList2};
 use crate::draw_vert::ImDrawVert;
 use crate::font::ImFont;
@@ -1231,28 +1233,32 @@ pub unsafe fn DebugNodeDrawList(window: Option<&mut ImGuiWindow>,
         clipper.Begin(pcmd.ElemCount / 3, 0.0); // Manually coarse clip our print out of individual vertices to save CPU, only items that may be visible.
         while clipper.Step() {
             // for (let prim: c_int = clipper.DisplayStart, idx_i = pcmd.IdxOffset + clipper.DisplayStart * 3; prim < clipper.DisplayEnd; prim+ +)
-            let idx_i = pcmd.IdxOffset + clipper.DisplayStart * 3;
+            let mut idx_i = pcmd.IdxOffset + clipper.DisplayStart * 3;
             for prim in clipper.DisplayStart .. clipper.DisplayEnd
             {
                 // let buf_p = buf;
                 // let buf_end = buf + buf.len();
-                triangle: ImVec2[3];
-                for (let n: c_int = 0; n < 3; n+ +, idx_i+ +)
+                // triangle: ImVec2[3];
+                let mut triangle: [ImVec2;3] = [ImVec2::default();3];
+                // for (let n: c_int = 0; n < 3; n+ +, idx_i+ +)
+                for n in 0 .. 3
                 {
-                    const ImDrawVert
-                    &v = vtx_buffer[if idx_buffer { idx_buffer[idx_i] } else { idx_i }];
+
+                    let v = vtx_buffer[if idx_buffer { idx_buffer[idx_i] } else { idx_i }];
                     triangle[n] = v.pos;
-                    buf_p += ImFormatString(buf_p, buf_end - buf_p, "{} %04d: pos (%8.2f,%8.20), uv (%.6f,%.60), col {}\n",
-                                            (n == 0)? "Vert:": "     ", idx_i, v.pos.x, v.pos.y, v.uv.x, v.uv.y, v.col);
+                    // buf_p += ImFormatString(buf_p, buf_end - buf_p, "{} %04d: pos (%8.2f,%8.20), uv (%.6f,%.60), col {}\n",
+                    //                         (n == 0)? "Vert:": "     ", idx_i, v.pos.x, v.pos.y, v.uv.x, v.uv.y, v.col);
+                    idx_i += 1;
                 }
 
-                Selectable(buf, false);
-                if (fg_draw_list && IsItemHovered()) {
-                    ImDrawListFlags
-                    backup_flags = fg_draw_list.Flags;
-                    fg_draw_list.Flags &= !ImDrawListFlags_AntiAliasedLines; // Disable AA on triangle outlines is more readable for very large and thin triangles.
-                    fg_draw_list.AddPolyline(triangle, 3, IM_COL32(255, 255, 0, 255), ImDrawFlags_Closed, 1.0);
-                    fg_draw_list.Flags = backup_flags;
+                Selectable(buf.as_str(), false, 0, None);
+                if fg_draw_list.is_some() && IsItemHovered(0) {
+                   let backup_flags = fg_draw_list.unwrap().Flags;
+                    let dl = gd_draw_list.unwrap();
+                    dl.Flags &= !ImDrawListFlags_AntiAliasedLines; // Disable AA on triangle outlines is more readable for very large and thin triangles.
+                    dl.AddPolyline(triangle, 3, IM_COL32(255, 255, 0, 255), ImDrawFlags_Closed, 1.0);
+                    dl.Flags = backup_flags;
+                    fg_draw_list.replace(dl);
                 }
             }
         }
