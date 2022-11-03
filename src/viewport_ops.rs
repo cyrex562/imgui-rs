@@ -123,7 +123,7 @@ pub unsafe fn SetCurrentViewport(current_window: *mut ImGuiWindow, viewport: *mu
         return;}
     g.CurrentDpiScale = if viewport { viewport.DpiScale} else {1.0};
     g.CurrentViewport = viewport;
-    //IMGUI_DEBUG_LOG_VIEWPORT("[viewport] SetCurrentViewport changed '%s' 0x%08X\n", current_window ? current_window.Name : NULL, viewport ? viewport.ID : 0);
+    //IMGUI_DEBUG_LOG_VIEWPORT("[viewport] SetCurrentViewport changed '{}' 0x{}\n", current_window ? current_window.Name : NULL, viewport ? viewport.ID : 0);
 
     // Notify platform layer of viewport changes
     // FIXME-DPI: This is only currently used for experimenting with handling of multiple DPI
@@ -503,7 +503,7 @@ pub unsafe fn AddUpdateViewport(window: *mut ImGuiWindow, id: ImGuiID, pos: &ImV
         viewport.Flags = flags;
         UpdateViewportPlatformMonitor(viewport);
         g.Viewports.push(viewport);
-        // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Add Viewport %08X '%s'\n", id, window ? window.Name : "<NULL>");
+        // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Add Viewport {} '{}'\n", id, window ? window.Name : "<NULL>");
 
         // We normally setup for all viewports in NewFrame() but here need to handle the mid-frame creation of a new viewport.
         // We need to extend the fullscreen clip rect so the OverlayDrawList clip is correct for that the first frame
@@ -546,7 +546,7 @@ pub unsafe fn DestroyViewport(viewport: *mut ImGuiViewport)
         g.MouseLastHoveredViewport= null_mut();}
 
     // Destroy
-    // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Delete Viewport %08X '%s'\n", viewport.ID, viewport.Window ? viewport.window.Name : "n/a");
+    // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Delete Viewport {} '{}'\n", viewport.ID, viewport.Window ? viewport.window.Name : "n/a");
     DestroyPlatformWindow(viewport); // In most circumstances the platform window will already be destroyed here.
     // IM_ASSERT(g.PlatformIO.Viewports.contains(viewport) == false);
     // IM_ASSERT(g.Viewports[viewport.Idx] == viewport);
@@ -662,7 +662,7 @@ pub unsafe fn WindowSelectViewport(window: *mut ImGuiWindow)
             if ((window.Flags & ImGuiWindowFlags_DockNodeHost) && window.Viewport.LastFrameActive < g.FrameCount && will_be_visible)
             {
                 // Steal/transfer ownership
-                // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Window '%s' steal Viewport %08X from Window '%s'\n", window.Name, window.Viewport.ID, window.Viewport.window.Name);
+                // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Window '{}' steal Viewport {} from Window '{}'\n", window.Name, window.Viewport.ID, window.Viewport.window.Name);
                 window.Viewport.Window = window;
                 window.Viewport.ID = window.ID;
                 window.Viewport.LastNameHash = 0;
@@ -813,7 +813,7 @@ pub unsafe fn UpdatePlatformWindows()
         let mut is_new_platform_window: bool =  (viewport.PlatformWindowCreated == false);
         if (is_new_platform_window)
         {
-            // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Create Platform Window %08X '%s'\n", viewport.ID, viewport.Window ? viewport.window.Name : "n/a");
+            // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Create Platform Window {} '{}'\n", viewport.ID, viewport.Window ? viewport.window.Name : "n/a");
             g.PlatformIO.Platform_CreateWindow(viewport);
             if (g.PlatformIO.Renderer_CreateWindow != null_mut()){
                 g.PlatformIO.Renderer_CreateWindow(viewport);}

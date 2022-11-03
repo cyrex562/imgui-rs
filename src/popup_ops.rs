@@ -125,7 +125,7 @@ pub unsafe fn GetTopMostAndVisiblePopupModal() -> *mut ImGuiWindow {
 pub unsafe fn OpenPopup(str_id: &str, popup_flags: ImGuiPopupFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut id: ImGuiID = g.Currentwindow.GetID(str_id);
-    IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopup(\"%s\" -> 0x%08X\n", str_id, id);
+    IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopup(\"{}\" -> 0x{}\n", str_id, id);
     OpenPopupEx(id, popup_flags);
 }
 
@@ -162,7 +162,7 @@ pub unsafe fn OpenPopupEx(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
         popup_ref.OpenPopupPos
     };
 
-    IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopupEx(0x%08X)\n", id);
+    IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopupEx(0x{})\n", id);
     if (g.OpenPopupStack.len() < current_stack_size + 1) {
         g.OpenPopupStack.push(popup_re0f32);
     } else {
@@ -238,7 +238,7 @@ pub unsafe fn ClosePopupsOverWindow(
     if popup_count_to_keep < g.OpenPopupStack.len()
     // This test is not required but it allows to set a convenient breakpoint on the statement below
     {
-        // IMGUI_DEBUG_LOG_POPUP("[popup] ClosePopupsOverWindow(\"%s\")\n", ref_window ? ref_window.Name : "<NULL>");
+        // IMGUI_DEBUG_LOG_POPUP("[popup] ClosePopupsOverWindow(\"{}\")\n", ref_window ? ref_window.Name : "<NULL>");
         ClosePopupToLevel(popup_count_to_keep, restore_focus_to_window_under_popup);
     }
 }
@@ -350,7 +350,7 @@ pub unsafe fn BeginPopupEx(id: ImGuiID, mut flags: ImGuiWindowFlags) -> bool {
     }
     // Recycle windows based on depth
     else {
-        // ImFormatString(name, name.len(), "##Popup_%08x", id);
+        // ImFormatString(name, name.len(), "##Popup_{}", id);
     } // Not recycling, so we can close/open during the same frame
 
     flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoDocking;

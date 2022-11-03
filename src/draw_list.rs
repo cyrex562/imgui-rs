@@ -197,7 +197,7 @@ impl ImDrawList {
 
     // void  AddRect(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0, c_float thickness = 1.0);   // a: upper-left, b: lower-right (== upper-left + size)
     pub unsafe fn AddRect(&mut self, p_min: &ImVec2, p_max: &ImVec2, col: u32, rounding: c_float) {
-        if ((col & IM_COL32_A_MASK) == 0) {
+        if (col & IM_COL32_A_MASK) == 0 {
             return;
         }
         if flag_set(Flags, ImDrawListFlags_AntiAliasedLines) {
@@ -558,9 +558,8 @@ impl ImDrawList {
                 5
             };
             let mut temp_normals: Vec<ImVec2> = vec![];
-                // libc::malloc(points_count * count * mem::size_of::<ImVec2>()); //-V630
+            // libc::malloc(points_count * count * mem::size_of::<ImVec2>()); //-V630
             // let mut temp_points_offset: *mut ImVec2 = temp_normals + points_count;
-
 
             // Calculate normals (tangents) for each line segment
             // for (let i1: c_int = 0; i1 < count; i1++)
@@ -878,7 +877,7 @@ impl ImDrawList {
             // Compute normals
             // let mut temp_normals: *mut ImVec2 =
             //     libc::malloc(points_count * mem::size_of::<ImVec2>()); //-V630
-                                                                       // for (let i0: c_int = points_count - 1, i1 = 0; i1 < points_count; i0 = i1++)
+            // for (let i0: c_int = points_count - 1, i1 = 0; i1 < points_count; i0 = i1++)
             let mut temp_normals: Vec<ImVec2> = vec![];
             let mut i0 = points_count - 1;
             let mut i1: size_t = 0;
@@ -1070,8 +1069,7 @@ impl ImDrawList {
         }
 
         flags = FixRectCornerFlags(flags);
-        if rounding < 0.5
-            || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
+        if rounding < 0.5 || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
         {
             self.AddImage(user_texture_id, p_min, p_max, uv_min, uv_max, col);
             return;

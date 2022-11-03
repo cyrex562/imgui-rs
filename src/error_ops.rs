@@ -1,9 +1,12 @@
-use std::ptr::null_mut;
-use libc::c_void;
+use crate::backend_flags::{
+    ImGuiBackendFlags_HasMouseCursors, ImGuiBackendFlags_PlatformHasViewports,
+    ImGuiBackendFlags_RendererHasViewports,
+};
 use crate::child_ops::EndChild;
-use crate::config_flags::{ImGuiConfigFlags_DockingEnable, ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_ViewportsEnable};
-use crate::GImGui;
-use crate::backend_flags::{ImGuiBackendFlags_HasMouseCursors, ImGuiBackendFlags_PlatformHasViewports, ImGuiBackendFlags_RendererHasViewports};
+use crate::config_flags::{
+    ImGuiConfigFlags_DockingEnable, ImGuiConfigFlags_NavEnableKeyboard,
+    ImGuiConfigFlags_ViewportsEnable,
+};
 use crate::group_ops::EndGroup;
 use crate::id_ops::PopID;
 use crate::item_ops::PopItemFlag;
@@ -16,9 +19,11 @@ use crate::utils::{flag_clear, flag_set, is_not_null};
 use crate::window::focus::PopFocusScope;
 use crate::window::ops::{End, EndDisabled};
 use crate::window::window_flags::ImGuiWindowFlags_ChildWindow;
+use crate::GImGui;
+use libc::c_void;
+use std::ptr::null_mut;
 
-pub unsafe fn ErrorCheckNewFrameSanityChecks()
-{
+pub unsafe fn ErrorCheckNewFrameSanityChecks() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Check user IM_ASSERT macro
@@ -42,32 +47,41 @@ pub unsafe fn ErrorCheckNewFrameSanityChecks()
     // IM_ASSERT(g.Style.WindowMinSize.x >= 1.0 && g.Style.WindowMinSize.y >= 1.0 && "Invalid style setting.");
     // IM_ASSERT(g.Style.WindowMenuButtonPosition == ImGuiDir_None || g.Style.WindowMenuButtonPosition == ImGuiDir_Left || g.Style.WindowMenuButtonPosition == ImGuiDir_Right);
     // IM_ASSERT(g.Style.ColorButtonPosition == ImGuiDir_Left || g.Style.ColorButtonPosition == ImGuiDir_Right);
-// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//     for (let n: c_int = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_COUNT; n++)
-    for n in ImGuiKey_NamedKey_BEGIN .. ImGuiKey_COUNT
-    {}
-        // IM_ASSERT(g.IO.KeyMap[n] >= -1 && g.IO.KeyMap[n] < ImGuiKey_LegacyNativeKey_END && "io.KeyMap[] contains an out of bound value (need to be 0..511, or -1 for unmapped key)");
+    // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+    //     for (let n: c_int = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_COUNT; n++)
+    for n in ImGuiKey_NamedKey_BEGIN..ImGuiKey_COUNT {}
+    // IM_ASSERT(g.IO.KeyMap[n] >= -1 && g.IO.KeyMap[n] < ImGuiKey_LegacyNativeKey_END && "io.KeyMap[] contains an out of bound value (need to be 0..511, or -1 for unmapped key)");
 
     // Check: required key mapping (we intentionally do NOT check all keys to not pressure user into setting up everything, but Space is required and was only added in 1.60 WIP)
-    if (flg_set(g.IO.ConfigFlags, ImGuiConfigFlags_NavEnableKeyboard) && g.IO.BackendUsingLegacyKeyArrays == 1) {}
-        // IM_ASSERT(g.IO.KeyMap[ImGuiKey_Space] != -1 && "ImGuiKey_Space is not mapped, required for keyboard navigation.");
-// #endif
+    if (flg_set(g.IO.ConfigFlags, ImGuiConfigFlags_NavEnableKeyboard)
+        && g.IO.BackendUsingLegacyKeyArrays == 1)
+    {}
+    // IM_ASSERT(g.IO.KeyMap[ImGuiKey_Space] != -1 && "ImGuiKey_Space is not mapped, required for keyboard navigation.");
+    // #endif
 
     // Check: the io.ConfigWindowsResizeFromEdges option requires backend to honor mouse cursor changes and set the ImGuiBackendFlags_HasMouseCursors flag accordingly.
-    if (g.IO.ConfigWindowsResizeFromEdges && flag_clear(g.IO.BackendFlags , ImGuiBackendFlags_HasMouseCursors)) {
+    if (g.IO.ConfigWindowsResizeFromEdges
+        && flag_clear(g.IO.BackendFlags, ImGuiBackendFlags_HasMouseCursors))
+    {
         g.IO.ConfigWindowsResizeFromEdges = false;
     }
 
     // Perform simple check: error if Docking or Viewport are enabled _exactly_ on frame 1 (instead of frame 0 or later), which is a common error leading to loss of .ini data.
-    if (g.FrameCount == 1 && flag_set(g.IO.ConfigFlags, ImGuiConfigFlags_DockingEnable) && (g.ConfigFlagsLastFrame & ImGuiConfigFlags_DockingEnable) == 0) {}
-        // IM_ASSERT(0 && "Please set DockingEnable before the first call to NewFrame()! Otherwise you will lose your .ini settings!");
-    if (g.FrameCount == 1 && flag_set(g.IO.ConfigFlags, ImGuiConfigFlags_ViewportsEnable) && (g.ConfigFlagsLastFrame & ImGuiConfigFlags_ViewportsEnable) == 0) {}
-        // IM_ASSERT(0 && "Please set ViewportsEnable before the first call to NewFrame()! Otherwise you will lose your .ini settings!");
+    if (g.FrameCount == 1
+        && flag_set(g.IO.ConfigFlags, ImGuiConfigFlags_DockingEnable)
+        && (g.ConfigFlagsLastFrame & ImGuiConfigFlags_DockingEnable) == 0)
+    {}
+    // IM_ASSERT(0 && "Please set DockingEnable before the first call to NewFrame()! Otherwise you will lose your .ini settings!");
+    if (g.FrameCount == 1
+        && flag_set(g.IO.ConfigFlags, ImGuiConfigFlags_ViewportsEnable)
+        && (g.ConfigFlagsLastFrame & ImGuiConfigFlags_ViewportsEnable) == 0)
+    {}
+    // IM_ASSERT(0 && "Please set ViewportsEnable before the first call to NewFrame()! Otherwise you will lose your .ini settings!");
 
     // Perform simple checks: multi-viewport and platform windows support
-    if (g.IO.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
-    {
-        if ((g.IO.BackendFlags & ImGuiBackendFlags_PlatformHasViewports) && (g.IO.BackendFlags & ImGuiBackendFlags_RendererHasViewports))
+    if (g.IO.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
+        if ((g.IO.BackendFlags & ImGuiBackendFlags_PlatformHasViewports)
+            && (g.IO.BackendFlags & ImGuiBackendFlags_RendererHasViewports))
         {
             // IM_ASSERT((g.FrameCount == 0 || g.FrameCount == g.FrameCountPlatformEnded) && "Forgot to call UpdatePlatformWindows() in main loop after EndFrame()? Check examples/ applications for reference.");
             // IM_ASSERT(g.PlatformIO.Platform_CreateWindow  != NULL && "Platform init didn't install handlers?");
@@ -78,19 +92,18 @@ pub unsafe fn ErrorCheckNewFrameSanityChecks()
             // IM_ASSERT(g.PlatformIO.Platform_SetWindowSize != NULL && "Platform init didn't install handlers?");
             // IM_ASSERT(g.PlatformIO.Monitors.Size > 0 && "Platform init didn't setup Monitors list?");
             // IM_ASSERT((g.Viewports[0]->PlatformUserData != NULL || g.Viewports[0]->PlatformHandle != NULL) && "Platform init didn't setup main viewport.");
-            if (g.IO.ConfigDockingTransparentPayload && flag_set(g.IO.ConfigFlags, ImGuiConfigFlags_DockingEnable)) {}
-                // IM_ASSERT(g.PlatformIO.Platform_SetWindowAlpha != NULL && "Platform_SetWindowAlpha handler is required to use io.ConfigDockingTransparent!");
-        }
-        else
-        {
+            if (g.IO.ConfigDockingTransparentPayload
+                && flag_set(g.IO.ConfigFlags, ImGuiConfigFlags_DockingEnable))
+            {}
+            // IM_ASSERT(g.PlatformIO.Platform_SetWindowAlpha != NULL && "Platform_SetWindowAlpha handler is required to use io.ConfigDockingTransparent!");
+        } else {
             // Disable feature, our backends do not support it
             g.IO.ConfigFlags &= !ImGuiConfigFlags_ViewportsEnable;
         }
 
         // Perform simple checks on platform monitor data + compute a total bounding box for quick early outs
         // for (let monitor_n: c_int = 0; monitor_n < g.PlatformIO.Monitors.Size; monitor_n++)
-        for monitor_n in 0 .. g.PlatformIO.Monitors.len()
-        {
+        for monitor_n in 0..g.PlatformIO.Monitors.len() {
             let mon = &g.PlatformIO.Monitors[monitor_n];
             // IM_UNUSED(mon);
             // IM_ASSERT(mon.MainSize.x > 0.0 && mon.MainSize.y > 0.0 && "Monitor main bounds not setup properly.");
@@ -100,8 +113,7 @@ pub unsafe fn ErrorCheckNewFrameSanityChecks()
     }
 }
 
-pub unsafe fn ErrorCheckEndFrameSanityChecks()
-{
+pub unsafe fn ErrorCheckEndFrameSanityChecks() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Verify that io.KeyXXX fields haven't been tampered with. Key mods should not be modified between NewFrame() and EndFrame()
@@ -119,17 +131,13 @@ pub unsafe fn ErrorCheckEndFrameSanityChecks()
 
     // Report when there is a mismatch of Begin/BeginChild vs End/EndChild calls. Important: Remember that the Begin/BeginChild API requires you
     // to always call End/EndChild even if Begin/BeginChild returns false! (this is unfortunately inconsistent with most other Begin* API).
-    if g.CurrentWindowStack.Size != 1
-    {
-        if g.CurrentWindowStack.Size > 1
-        {
+    if g.CurrentWindowStack.Size != 1 {
+        if g.CurrentWindowStack.Size > 1 {
             // IM_ASSERT_USER_ERROR(g.CurrentWindowStack.Size == 1, "Mismatched Begin/BeginChild vs End/EndChild calls: did you forget to call End/EndChild?");
             while g.CurrentWindowStack.Size > 1 {
                 End();
             }
-        }
-        else
-        {
+        } else {
             // IM_ASSERT_USER_ERROR(g.CurrentWindowStack.Size == 1, "Mismatched Begin/BeginChild vs End/EndChild calls: did you call End/EndChild too much?");
         }
     }
@@ -142,88 +150,94 @@ pub unsafe fn ErrorCheckEndFrameSanityChecks()
 // This is generally flawed as we are not necessarily End/Popping things in the right order.
 // FIXME: Can't recover from inside BeginTabItem/EndTabItem yet.
 // FIXME: Can't recover from interleaved BeginTabBar/Begin
-pub unsafe fn    ErrorCheckEndFrameRecover(log_callback: ImGuiErrorLogCallback , user_data: *mut c_void)
-{
+pub unsafe fn ErrorCheckEndFrameRecover(
+    log_callback: ImGuiErrorLogCallback,
+    user_data: *mut c_void,
+) {
     // PVS-Studio V1044 is "Loop break conditions do not depend on the number of iterations"
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    while g.CurrentWindowStack.Size > 0 //-V1044
+    while g.CurrentWindowStack.Size > 0
+    //-V1044
     {
         ErrorCheckEndWindowRecover(log_callback, user_data);
         let mut window = g.CurrentWindow;
-        if g.CurrentWindowStack.Size == 1
-        {
+        if g.CurrentWindowStack.Size == 1 {
             // IM_ASSERT(window.IsFallbackWindow);
             break;
         }
-        if window.Flags & ImGuiWindowFlags_ChildWindow
-        {
-            // if (log_callback) log_callback(user_data, "Recovered from missing EndChild() for '%s'", window.Name);
+        if window.Flags & ImGuiWindowFlags_ChildWindow {
+            // if (log_callback) log_callback(user_data, "Recovered from missing EndChild() for '{}'", window.Name);
             // EndChild();
-        }
-        else
-        {
-            // if (log_callback) log_callback(user_data, "Recovered from missing End() for '%s'", window.Name);
+        } else {
+            // if (log_callback) log_callback(user_data, "Recovered from missing End() for '{}'", window.Name);
             // End();
         }
     }
 }
 
 // Must be called before End()/EndChild()
-pub unsafe fn    ErrorCheckEndWindowRecover(log_callback: ImGuiErrorLogCallback, user_data: *mut c_void)
-{
+pub unsafe fn ErrorCheckEndWindowRecover(
+    log_callback: ImGuiErrorLogCallback,
+    user_data: *mut c_void,
+) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    while is_not_null(g.CurrentTable) && (g.Currenttable.OuterWindow == g.CurrentWindow || g.Currenttable.InnerWindow == g.CurrentWindow)
+    while is_not_null(g.CurrentTable)
+        && (g.Currenttable.OuterWindow == g.CurrentWindow
+            || g.Currenttable.InnerWindow == g.CurrentWindow)
     {
-        // if log_callback { log_callback(user_data, "Recovered from missing EndTable() in '%s'", g.Currenttable.Outerwindow.Name); }
+        // if log_callback { log_callback(user_data, "Recovered from missing EndTable() in '{}'", g.Currenttable.Outerwindow.Name); }
         EndTable();
     }
 
     let mut window = g.CurrentWindow;
     let stack_sizes = &g.CurrentWindowStack.last().unwrap().StackSizesOnBegin;
     // IM_ASSERT(window != NULL);
-    while (g.CurrentTabBar != null_mut()) //-V1044
+    while (g.CurrentTabBar != null_mut())
+    //-V1044
     {
-        // if (log_callback) { log_callback(user_data, "Recovered from missing EndTabBar() in '%s'", window.Name); }
+        // if (log_callback) { log_callback(user_data, "Recovered from missing EndTabBar() in '{}'", window.Name); }
         EndTabBar();
     }
-    while (window.DC.TreeDepth > 0)
-    {
-        // if (log_callback) { log_callback(user_data, "Recovered from missing TreePop() in '%s'", window.Name); }
+    while (window.DC.TreeDepth > 0) {
+        // if (log_callback) { log_callback(user_data, "Recovered from missing TreePop() in '{}'", window.Name); }
         TreePop();
     }
-    while g.GroupStack.Size > stack_sizes.SizeOfGroupStack //-V1044
+    while g.GroupStack.Size > stack_sizes.SizeOfGroupStack
+    //-V1044
     {
-        // if (log_callback) { log_callback(user_data, "Recovered from missing EndGroup() in '%s'", window.Name); }
+        // if (log_callback) { log_callback(user_data, "Recovered from missing EndGroup() in '{}'", window.Name); }
         EndGroup();
     }
-    while window.IDStack.Size > 1
-    {
-        // if (log_callback) { log_callback(user_data, "Recovered from missing PopID() in '%s'", window.Name); }
+    while window.IDStack.Size > 1 {
+        // if (log_callback) { log_callback(user_data, "Recovered from missing PopID() in '{}'", window.Name); }
         PopID();
     }
-    while g.DisabledStackSize > stack_sizes.SizeOfDisabledStack //-V1044
+    while g.DisabledStackSize > stack_sizes.SizeOfDisabledStack
+    //-V1044
     {
-        // if (log_callback) { log_callback(user_data, "Recovered from missing EndDisabled() in '%s'", window.Name); }
+        // if (log_callback) { log_callback(user_data, "Recovered from missing EndDisabled() in '{}'", window.Name); }
         EndDisabled();
     }
-    while g.ColorStack.Size > stack_sizes.SizeOfColorStack
-    {
-        // if (log_callback) { log_callback(user_data, "Recovered from missing PopStyleColor() in '%s' for ImGuiCol_%s", window.Name, GetStyleColorName(g.ColorStack.last().unwrap().Col)); }
+    while g.ColorStack.Size > stack_sizes.SizeOfColorStack {
+        // if (log_callback) { log_callback(user_data, "Recovered from missing PopStyleColor() in '{}' for ImGuiCol_{}", window.Name, GetStyleColorName(g.ColorStack.last().unwrap().Col)); }
         PopStyleColor(0);
     }
-    while g.ItemFlagsStack.Size > stack_sizes.SizeOfItemFlagsStack //-V1044
+    while g.ItemFlagsStack.Size > stack_sizes.SizeOfItemFlagsStack
+    //-V1044
     {
-        // if (log_callback) log_callback(user_data, "Recovered from missing PopItemFlag() in '%s'", window.Name);
+        // if (log_callback) log_callback(user_data, "Recovered from missing PopItemFlag() in '{}'", window.Name);
         PopItemFlag();
     }
-    while g.StyleVarStack.Size > stack_sizes.SizeOfStyleVarStack //-V1044
+    while g.StyleVarStack.Size > stack_sizes.SizeOfStyleVarStack
+    //-V1044
     {
-        // if (log_callback) log_callback(user_data, "Recovered from missing PopStyleVar() in '%s'", window.Name);
+        // if (log_callback) log_callback(user_data, "Recovered from missing PopStyleVar() in '{}'", window.Name);
         PopStyleVar();
     }
-    while (g.FocusScopeStack.Size > stack_sizes.SizeOfFocusScopeStack) //-V1044
+    while (g.FocusScopeStack.Size > stack_sizes.SizeOfFocusScopeStack)
+    //-V1044
     {
-        // if (log_callback) log_callback(user_data, "Recovered from missing PopFocusScope() in '%s'", window.Name);
+        // if (log_callback) log_callback(user_data, "Recovered from missing PopFocusScope() in '{}'", window.Name);
         PopFocusScope();
     }
 }

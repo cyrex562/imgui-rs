@@ -89,12 +89,12 @@ DockSpace: ImGuiID(id: ImGuiID, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *co
     node:*mut ImGuiDockNode = DockContextFindNodeByID(ctx, id);
     if (!node)
     {
-        IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X created\n", id);
+        IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x{} created\n", id);
         node = DockContextAddNode(ctx, id);
         node.SetLocalFlags(ImGuiDockNodeFlags_CentralNode);
     }
     if (window_class && window_class.ClassId != node.WindowClass.ClassId)
-        IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x%08X: setup WindowClass 0x%08X -> 0x%08X\n", id, node.WindowClass.ClassId, window_class.ClassId);
+        IMGUI_DEBUG_LOG_DOCKING("[docking] DockSpace: dockspace node 0x{}: setup WindowClass 0x{} -> 0x{}\n", id, node.WindowClass.ClassId, window_class.ClassId);
     node.SharedFlags = flags;
     node.WindowClass = if window_class { * window_class} else {ImGuiWindowClass()};
 
@@ -137,7 +137,7 @@ DockSpace: ImGuiID(id: ImGuiID, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *co
     window_flags |= ImGuiWindowFlags_NoBackground;
 
     title: [c_char;256];
-    ImFormatString(title, title.len(), "%s/DockSpace_%08X", window.Name, id);
+    ImFormatString(title, title.len(), "{}/DockSpace_{}", window.Name, id);
 
     PushStyleVar(ImGuiStyleVar_ChildBorderSize, 0.0);
     Begin(title, null_mut(), window_flags);
@@ -187,7 +187,7 @@ DockSpaceOverViewport: ImGuiID(*const ImGuiViewport viewport, ImGuiDockNodeFlags
         host_window_flags |= ImGuiWindowFlags_NoBackground;
 
     label: [c_char;32];
-    ImFormatString(label, label.len(), "DockSpaceViewport_%08X", viewport.ID);
+    ImFormatString(label, label.len(), "DockSpaceViewport_{}", viewport.ID);
 
     PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0);
     PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0);
@@ -427,7 +427,7 @@ DockBuilderSplitNode: ImGuiID(id: ImGuiID, split_dir: ImGuiDir,size_ratio_for_no
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_dir != ImGuiDir_None);
-    IMGUI_DEBUG_LOG_DOCKING("[docking] DockBuilderSplitNode: node 0x%08X, split_dir {}\n", id, split_dir);
+    IMGUI_DEBUG_LOG_DOCKING("[docking] DockBuilderSplitNode: node 0x{}, split_dir {}\n", id, split_dir);
 
     node:*mut ImGuiDockNode = DockContextFindNodeByID(&g, id);
     if (node == null_mut())
@@ -480,7 +480,7 @@ static DockBuilderCopyNodeRec:*mut ImGuiDockNode(src_node:*mut ImGuiDockNode, ds
             dst_node.ChildNodes[child_n].ParentNode = dst_node;
         }
 
-    IMGUI_DEBUG_LOG_DOCKING("[docking] Fork node %08X -> %08X ({} childs)\n", src_node.ID, dst_node.ID, if dst_node.IsSplitNode() { 2 }else {0});
+    IMGUI_DEBUG_LOG_DOCKING("[docking] Fork node {} -> {} ({} childs)\n", src_node.ID, dst_node.ID, if dst_node.IsSplitNode() { 2 }else {0});
     return dst_node;
 }
 
@@ -574,14 +574,14 @@ pub unsafe fn DockBuilderCopyDockSpace(src_dockspace_id: ImGuiID, dst_dockspace_
         if (dst_dock_id != 0)
         {
             // Docked windows gets redocked into the new node hierarchy.
-            IMGUI_DEBUG_LOG_DOCKING("[docking] Remap live window '%s' 0x%08X -> '%s' 0x%08X\n", src_window_name, src_dock_id, dst_window_name, dst_dock_id);
+            IMGUI_DEBUG_LOG_DOCKING("[docking] Remap live window '{}' 0x{} -> '{}' 0x{}\n", src_window_name, src_dock_id, dst_window_name, dst_dock_id);
             DockBuilderDockWindow(dst_window_name, dst_dock_id);
         }
         else
         {
             // Floating windows gets their settings transferred (regardless of whether the new window already exist or not)
             // When this is leading to a Copy and not a Move, we would get two overlapping floating windows. Could we possibly dock them together?
-            IMGUI_DEBUG_LOG_DOCKING("[docking] Remap window settings '%s' -> '%s'\n", src_window_name, dst_window_name);
+            IMGUI_DEBUG_LOG_DOCKING("[docking] Remap window settings '{}' -> '{}'\n", src_window_name, dst_window_name);
             DockBuilderCopyWindowSettings(src_window_name, dst_window_name);
         }
     }
@@ -600,7 +600,7 @@ pub unsafe fn DockBuilderCopyDockSpace(src_dockspace_id: ImGuiID, dst_dockspace_
                     continue;}
 
                 // Docked windows gets redocked into the new node hierarchy.
-                IMGUI_DEBUG_LOG_DOCKING("[docking] Remap window '%s' %08X -> %08X\n", window.Name, src_dock_id, dst_dock_id);
+                IMGUI_DEBUG_LOG_DOCKING("[docking] Remap window '{}' {} -> {}\n", window.Name, src_dock_id, dst_dock_id);
                 DockBuilderDockWindow(window.Name, dst_dock_id);
             }
         }
@@ -920,7 +920,7 @@ pub unsafe fn BeginDockableDragDropTarget(window: *mut ImGuiWindow)
 pub unsafe fn DockSettingsRenameNodeReferences(old_node_id: ImGuiID, new_node_id: ImGuiID)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    IMGUI_DEBUG_LOG_DOCKING("[docking] DockSettingsRenameNodeReferences: from 0x%08X -> to 0x%08X\n", old_node_id, new_node_id);
+    IMGUI_DEBUG_LOG_DOCKING("[docking] DockSettingsRenameNodeReferences: from 0x{} -> to 0x{}\n", old_node_id, new_node_id);
     for (let window_n: c_int = 0; window_n < g.Windows.len(); window_n++)
     {
         let mut window: *mut ImGuiWindow =  g.Windows[window_n];
@@ -1002,9 +1002,9 @@ pub unsafe fn DockSettingsHandler_ReadLine(ctx: *mut ImGuiContext, ImGuiSettings
     if      (strncmp(line, "DockNode", 8) == 0)  { line = ImStrSkipBlank(line + strlen("DockNode")); }
     else if (strncmp(line, "DockSpace", 9) == 0) { line = ImStrSkipBlank(line + strlen("DockSpace")); node.Flags |= ImGuiDockNodeFlags_DockSpace; }
     else return;
-    if (sscanf(line, "ID=0x%08X%n",      &node.ID, &r) == 1)            { line += r; } else return;
-    if sscanf(line, " Parent=0x%08X%n", &node.ParentNodeId, &r) == 1)  { line += r; if (node.ParentNodeId == 0 { return ; } }
-    if sscanf(line, " Window=0x%08X%n", &node.ParentWindowId, &r) ==1) { line += r; if (node.ParentWindowId == 0 { return ; } }
+    if (sscanf(line, "ID=0x{}%n",      &node.ID, &r) == 1)            { line += r; } else return;
+    if sscanf(line, " Parent=0x{}%n", &node.ParentNodeId, &r) == 1)  { line += r; if (node.ParentNodeId == 0 { return ; } }
+    if sscanf(line, " Window=0x{}%n", &node.ParentWindowId, &r) ==1) { line += r; if (node.ParentWindowId == 0 { return ; } }
     if (node.ParentNodeId == 0)
     {
         if (sscanf(line, " Pos=%i,%i%n",  &x, &y, &r) == 2)         { line += r; node.Pos = ImVec2ih(x, y); } else return;
@@ -1021,7 +1021,7 @@ pub unsafe fn DockSettingsHandler_ReadLine(ctx: *mut ImGuiContext, ImGuiSettings
     if (sscanf(line, " HiddenTabBar={}%n", &x, &r) == 1)            { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_HiddenTabBar; }
     if (sscanf(line, " NoWindowMenuButton={}%n", &x, &r) == 1)      { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoWindowMenuButton; }
     if (sscanf(line, " NoCloseButton={}%n", &x, &r) == 1)           { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoCloseButton; }
-    if (sscanf(line, " Selected=0x%08X%n", &node.SelectedTabId,&r) == 1) { line += r; }
+    if (sscanf(line, " Selected=0x{}%n", &node.SelectedTabId,&r) == 1) { line += r; }
     if (node.ParentNodeId != 0)
         if (parent_settings: *mut ImGuiDockNodeSettings = DockSettingsFindNodeSettings(ctx, node.ParentNodeId))
             node.Depth = parent_settings->Depth + 1;
@@ -1069,21 +1069,21 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettings
         max_depth = ImMax(dc->NodesSettings[node_n].Depth, max_depth);
 
     // Write to text buffer
-    buf->appendf("[%s][Data]\n", handler.TypeName);
+    buf->appendf("[{}][Data]\n", handler.TypeName);
     for (let node_n: c_int = 0; node_n < dc->NodesSettings.Size; node_n++)
     {
         let line_start_pos: c_int = buf->size(); line_start_pos;
         let node_settings: *const ImGuiDockNodeSettings = &dc->NodesSettings[node_n];
-        buf->appendf("%*s%s%*s", node_settings->Depth * 2, "", flag_set(node_settings.Flags, ImGuiDockNodeFlags_DockSpace) ? "DockSpace" : "DockNode ", (max_depth - node_settings->Depth) * 2, "");  // Text align nodes to facilitate looking at .ini file
-        buf->appendf(" ID=0x%08X", node_settings.ID);
+        buf->appendf("%*s{}%*s", node_settings->Depth * 2, "", flag_set(node_settings.Flags, ImGuiDockNodeFlags_DockSpace) ? "DockSpace" : "DockNode ", (max_depth - node_settings->Depth) * 2, "");  // Text align nodes to facilitate looking at .ini file
+        buf->appendf(" ID=0x{}", node_settings.ID);
         if (node_settings.ParentNodeId)
         {
-            buf->appendf(" Parent=0x%08X SizeRef={},{}", node_settings.ParentNodeId, node_settings.SizeRef.x, node_settings.SizeRef.y);
+            buf->appendf(" Parent=0x{} SizeRef={},{}", node_settings.ParentNodeId, node_settings.SizeRef.x, node_settings.SizeRef.y);
         }
         else
         {
             if (node_settings->ParentWindowId)
-                buf->appendf(" Window=0x%08X", node_settings->ParentWindowId);
+                buf->appendf(" Window=0x{}", node_settings->ParentWindowId);
             buf->appendf(" Pos={},{} Size={},{}", node_settings.Pos.x, node_settings.Pos.y, node_settings.Size.x, node_settings.Size.y);
         }
         if (node_settings->SplitAxis != ImGuiAxis_None)
@@ -1101,7 +1101,7 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettings
         if flag_set(node_settings.Flags, ImGuiDockNodeFlags_NoCloseButton)
             buf->appendf(" NoCloseButton=1");
         if (node_settings.SelectedTabId)
-            buf->appendf(" Selected=0x%08X", node_settings.SelectedTabId);
+            buf->appendf(" Selected=0x{}", node_settings.SelectedTabId);
 
 // #if IMGUI_DEBUG_INI_SETTINGS
         // [DEBUG] Include comments in the .ini file to ease debugging
@@ -1109,7 +1109,7 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettings
         {
             buf->appendf("%*s", ImMax(2, (line_start_pos + 92) - buf->size()), "");     // Align everything
             if (node.IsDockSpace() && node.HostWindow && node.Hostwindow.ParentWindow)
-                buf->appendf(" ; in '%s'", node.Hostwindow.Parentwindow.Name);
+                buf->appendf(" ; in '{}'", node.Hostwindow.Parentwindow.Name);
             // Iterate settings so we can give info about windows that didn't exist during the session.
             let contains_window: c_int = 0;
             for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
@@ -1117,7 +1117,7 @@ pub unsafe fn DockSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettings
                 {
                     if (contains_window++ == 0)
                         buf->appendf(" ; contains ");
-                    buf->appendf("'%s' ", settings.GetName());
+                    buf->appendf("'{}' ", settings.GetName());
                 }
         }
 // #endif

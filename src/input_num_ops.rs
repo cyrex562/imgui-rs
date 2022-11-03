@@ -347,7 +347,7 @@ pub unsafe fn InputInt(
     let mut v_float: c_float = c_flaot::from(*v);
     let mut format: String =
         String::from(if flag_set(flags, ImGuiInputTextFlags_CharsHexadecimal) {
-            "%08X"
+            "{}"
         } else {
             "{}"
         });

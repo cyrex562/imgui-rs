@@ -3374,27 +3374,27 @@ pub unsafe fn PlotHistogram2(
 }
 
 pub unsafe fn Value(prefix: &str, b: bool) {
-    // Text("%s: %s", prefix, (b ? "true": "false"));
+    // Text("{}: {}", prefix, (b ? "true": "false"));
 }
 
 pub unsafe fn Value2(prefix: &str, v: c_int) {
-    // Text("%s: {}", prefix, v);
+    // Text("{}: {}", prefix, v);
 }
 
 pub unsafe fn Value3(prefix: &str, v: c_uint) {
-    // Text("%s: {}", prefix, v);
+    // Text("{}: {}", prefix, v);
 }
 
 pub unsafe fn Value4(prefix: &str, v: c_float, float_format: &str) {
     // if (float_format)
     // {
     //     fmt: [c_char;64];
-    //     ImFormatString(fmt, fmt.len(), "%%s: %s", float_format);
+    //     ImFormatString(fmt, fmt.len(), "%{}: {}", float_format);
     //     Text(fmt, prefix, v);
     // }
     // else
     // {
-    //     Text("%s: {}", prefix, v);
+    //     Text("{}: {}", prefix, v);
     // }
 }
 

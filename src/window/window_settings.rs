@@ -3,9 +3,9 @@
 // Because we never destroy or rename ImGuiWindowSettings, we can store the names in a separate buffer easily.
 // (this is designed to be stored in a ImChunkStream buffer, with the variable-length Name following our structure)
 
-use libc::{c_char, c_short};
 use crate::type_defs::ImGuiID;
 use crate::vec2::ImVec2ih;
+use libc::{c_char, c_short};
 
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiWindowSettings {
@@ -22,7 +22,7 @@ pub struct ImGuiWindowSettings {
     pub DockOrder: c_short,
     // Order of the last time the window was visible within its DockNode. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
     pub Collapsed: bool,
-    pub WantApply: bool,      // Set when loaded from .ini data (to enable merging/loading .ini data into an already running context)
+    pub WantApply: bool, // Set when loaded from .ini data (to enable merging/loading .ini data into an already running context)
 }
 
 impl ImGuiWindowSettings {
@@ -35,7 +35,7 @@ impl ImGuiWindowSettings {
     }
 
     // *mut char GetName()             { return (this + 1); }
-    pub fn GetName(&mut self) -> *mut c_char {
+    pub fn GetName(&mut self) -> String {
         todo!()
     }
 }

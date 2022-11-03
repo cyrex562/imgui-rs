@@ -3,7 +3,6 @@
 // [SECTION] ImGuiContext (main Dear ImGui context)
 //-----------------------------------------------------------------------------
 
-use std::collections::HashMap;
 use crate::activate_flags::{ImGuiActivateFlags, ImGuiActivateFlags_None};
 use crate::chunk_stream::ImChunkStream;
 use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_DefaultOptions_};
@@ -68,6 +67,7 @@ use crate::window::ImGuiWindow;
 use crate::window_settings::ImGuiWindowSettings;
 use crate::window_stack_data::ImGuiWindowStackData;
 use libc::{c_char, c_double, c_float, c_int, c_uchar, c_void};
+use std::collections::HashMap;
 use std::ptr::null_mut;
 
 #[derive(Default, Debug, Clone)]
@@ -142,18 +142,18 @@ pub struct ImGuiContext {
     pub TestEngineHookItems: bool,
 
     // void*                   TestEngine;                         // Test engine user data
-    pub TestEngine: *mut c_void,
+    pub TestEngine: Vec<u8>,
 
     // Windows state
 
     // ImVector<ImGuiWindow*>  Windows;                            // Windows, sorted in display order, back to front
-    pub Windows: Vec<*mut ImGuiWindow>,
+    pub Windows: Vec<ImGuiWindow>,
 
     // ImVector<ImGuiWindow*>  WindowsFocusOrder;                  // Root windows, sorted in focus order, back to front.
-    pub WindowsFocusOrder: Vec<*mut ImGuiWindow>,
+    pub WindowsFocusOrder: Vec<ImGuiWindow>,
 
     // ImVector<ImGuiWindow*>  WindowsTempSortBuffer;              // Temporary buffer used in EndFrame() to reorder windows so parents are kept before their child
-    pub WindowsTempSortBuffer: Vec<*mut ImGuiWindow>,
+    pub WindowsTempSortBuffer: Vec<ImGuiWindow>,
 
     // ImVector<ImGuiWindowStackData> CurrentWindowStack;
     pub CurrentWindowStack: Vec<ImGuiWindowStackData>,
@@ -168,19 +168,19 @@ pub struct ImGuiContext {
     pub WindowsHoverPadding: ImVec2,
 
     // ImGuiWindow*            CurrentWindow;                      // Window being drawn into
-    pub CurrentWindow: *mut ImGuiWindow,
+    pub CurrentWindow: ImGuiWindow,
 
     // ImGuiWindow*            HoveredWindow;                      // Window the mouse is hovering. Will typically catch mouse inputs.
-    pub HoveredWindow: *mut ImGuiWindow,
+    pub HoveredWindow: Option<ImGuiWindow>,
 
     // ImGuiWindow*            HoveredWindowUnderMovingWindow;     // Hovered window ignoring MovingWindow. Only set if MovingWindow is set.
-    pub HoveredWindowUnderMovingWindow: *mut ImGuiWindow,
+    pub HoveredWindowUnderMovingWindow: Option<ImGuiWindow>,
 
     // ImGuiWindow*            MovingWindow;                       // Track the window we clicked on (in order to preserve focus). The actual window that is moved is generally Movingwindow.RootWindowDockTree.
-    pub MovingWindow: *mut ImGuiWindow,
+    pub MovingWindow: ImGuiWindow,
 
     // ImGuiWindow*            WheelingWindow;                     // Track the window we started mouse-wheeling on. Until a timer elapse or mouse has moved, generally keep scrolling the same window even if during the course of scrolling the mouse ends up hovering a child window.
-    pub WheelingWindow: *mut ImGuiWindow,
+    pub WheelingWindow: ImGuiWindow,
 
     // ImVec2                  WheelingWindowRefMousePos;
     pub WheelingWindowRefMousePos: ImVec2,
@@ -248,7 +248,7 @@ pub struct ImGuiContext {
     pub ActiveIdClickOffset: ImVec2,
 
     // ImGuiWindow*            ActiveIdWindow;
-    pub ActiveIdWindow: *mut ImGuiWindow,
+    pub ActiveIdWindow: ImGuiWindow,
 
     // ImGuiInputSource        ActiveIdSource;                     // Activating with mouse or nav (gamepad/keyboard)
     pub ActiveIdSource: ImGuiInputSource,
@@ -266,7 +266,7 @@ pub struct ImGuiContext {
     pub ActiveIdPreviousFrameHasBeenEditedBefore: bool,
 
     // ImGuiWindow*            ActiveIdPreviousFrameWindow;
-    pub ActiveIdPreviousFrameWindow: *mut ImGuiWindow,
+    pub ActiveIdPreviousFrameWindow: ImGuiWindow,
 
     // ImGuiID                 LastActiveId;                       // Store the last non-zero ActiveId, useful for animation.
     pub LastActiveId: ImGuiID,
@@ -330,16 +330,16 @@ pub struct ImGuiContext {
     // Viewports
 
     // ImVector<ImGuiViewportP*> Viewports;                        // Active viewports (always 1+, and generally 1 unless multi-viewports are enabled). Each viewports hold their copy of ImDrawData.
-    pub Viewports: Vec<*mut ImGuiViewport>,
+    pub Viewports: Vec<ImGuiViewport>,
 
     // float                   CurrentDpiScale;                    // == CurrentViewport->DpiScale
     pub CurrentDpiScale: c_float,
 
     // ImGuiViewportP*         CurrentViewport;                    // We track changes of viewport (happening in Begin) so we can call Platform_OnChangedViewport()
-    pub CurrentViewport: *mut ImGuiViewport,
+    pub CurrentViewport: ImGuiViewport,
 
     // ImGuiViewportP*         MouseViewport;
-    pub MouseViewport: *mut ImGuiViewport,
+    pub MouseViewport: ImGuiViewport,
 
     // ImGuiViewportP*         MouseLastHoveredViewport;           // Last known viewport that was hovered by mouse (even if we are not hovering any viewport any more) + honoring the _NoInputs flag.
     pub MouseLastHoveredViewport: *mut ImGuiViewport,
@@ -356,7 +356,7 @@ pub struct ImGuiContext {
     // Gamepad/keyboard Navigation
 
     // ImGuiWindow*            NavWindow;                          // Focused window for navigation. Could be called 'FocusedWindow'
-    pub NavWindow: *mut ImGuiWindow,
+    pub NavWindow: Option<ImGuiWindow>,
 
     // ImGuiID                 NavId;                              // Focused item for navigation
     pub NavId: ImGuiID,
@@ -599,10 +599,10 @@ pub struct ImGuiContext {
     // Tab bars
 
     // ImGuiTabBar*                    CurrentTabBar;
-    CurrentTabBar: *mut ImGuiTabBar,
+    CurrentTabBar: ImGuiTabBar,
 
     // ImPool<ImGuiTabBar>             TabBars;
-    pub TabBars: ImPool<ImGuiTabBar>,
+    pub TabBars: HashMap<i32, ImGuiTabBar>,
 
     // ImVector<ImGuiPtrOrIndex>       CurrentTabBarStack;
     pub CurrentTabBarStack: Vec<ImGuiPtrOrIndex>,
@@ -718,7 +718,7 @@ pub struct ImGuiContext {
     pub SettingsDirtyTimer: c_float,
 
     // ImGuiTextBuffer         SettingsIniData;                    // In memory .ini settings
-    pub SettingsIniData: ImGuiTextBuffer,
+    pub SettingsIniData: String,
 
     // ImVector<ImGuiSettingsHandler>      SettingsHandlers;       // List of .ini settings handlers
     pub SettingsHandlers: Vec<ImGuiSettingsHandler>,
@@ -793,7 +793,7 @@ pub struct ImGuiContext {
     pub DebugStackTool: ImGuiStackTool,
 
     // ImGuiDockNode*          DebugHoveredDockNode;               // Hovered dock node.
-    pub DebugHoveredDockNode: *mut ImGuiDockNode,
+    pub DebugHoveredDockNode: Option<ImGuiDockNode>,
 
     // Misc
     // float                   FramerateSecPerFrame[60];           // Calculate estimate of framerate for user over the last 60 frames..
@@ -822,7 +822,7 @@ pub struct ImGuiContext {
 }
 
 impl ImGuiContext {
-    pub unsafe fn new(shared_font_atlas: *mut ImFontAtlas) -> Self {
+    pub unsafe fn new(shared_font_atlas: Option<&mut ImFontAtlas>) -> Self {
         let mut out = Self {
             Initialized: false,
             ConfigFlagsCurrFrame: ImGuiConfigFlags_None,
@@ -832,7 +832,7 @@ impl ImGuiContext {
             } else {
                 true
             },
-            Font: null_mut(),
+            Font: ImFont::default(),
             FontSize: 0.0,
             FontBaseSize: 0.0,
             Time: 0.0,
@@ -845,13 +845,13 @@ impl ImGuiContext {
             WithinEndChild: false,
             GcCompactAll: false,
             TestEngineHookItems: false,
-            TestEngine: null_mut(),
+            TestEngine: vec![],
             WindowsActiveCount: 0,
-            CurrentWindow: null_mut(),
-            HoveredWindow: null_mut(),
-            HoveredWindowUnderMovingWindow: null_mut(),
-            MovingWindow: null_mut(),
-            WheelingWindow: null_mut(),
+            CurrentWindow: ImGuiWindow::default(),
+            HoveredWindow: ImGuiWindow::default(),
+            HoveredWindowUnderMovingWindow: ImGuiWindow::default(),
+            MovingWindow: ImGuiWindow::default(),
+            WheelingWindow: ImGuiWindow::default(),
             WheelingWindowTimer: 0.0,
             DebugHookIdInfo: 0,
             HoveredId: 0,
@@ -872,13 +872,13 @@ impl ImGuiContext {
             ActiveIdHasBeenEditedBefore: false,
             ActiveIdHasBeenEditedThisFrame: false,
             ActiveIdClickOffset: ImVec2::from_floats(-1.0, -1.0),
-            ActiveIdWindow: null_mut(),
+            ActiveIdWindow: ImGuiWindow::default(),
             ActiveIdSource: ImGuiInputSource_None,
             ActiveIdMouseButton: -1,
             ActiveIdPreviousFrame: 0,
             ActiveIdPreviousFrameIsAlive: false,
             ActiveIdPreviousFrameHasBeenEditedBefore: false,
-            ActiveIdPreviousFrameWindow: null_mut(),
+            ActiveIdPreviousFrameWindow: ImGuiWindow::default(),
             LastActiveId: 0,
             LastActiveIdTimer: 0.0,
             ActiveIdUsingNavDirMask: 0x00,
@@ -889,9 +889,9 @@ impl ImGuiContext {
             BeginMenuCount: vec![],
 
             CurrentDpiScale: 0.0,
-            CurrentViewport: null_mut(),
-            MouseViewport: null_mut(),
-            MouseLastHoveredViewport: null_mut(),
+            CurrentViewport: ImGuiViewport::default(),
+            MouseViewport: ImGuiViewport::default(),
+            MouseLastHoveredViewport: ImGuiViewport::default(),
             PlatformLastFocusedViewportId: 0,
             ViewportFrontMostStampCount: 0,
 
@@ -959,7 +959,7 @@ impl ImGuiContext {
 
             CurrentTable: null_mut(),
             TablesTempDataStacked: 0,
-            CurrentTabBar: null_mut(),
+            CurrentTabBar: ImGuiTabBar::default(),
 
             HoverDelayId: 0,
             HoverDelayIdPreviousFrame: 0,
@@ -1015,10 +1015,9 @@ impl ImGuiContext {
             ..Default::default()
         };
 
-        out.IO.Fonts = if shared_font_atlas.is_null() == false {
-            shared_font_atlas
-        } else {
-            IM_NEW(ImFontAtlas)()
+        out.IO.Fonts = match shared_font_atlas {
+            Some(x) => x.clone(),
+            None() => ImFontAtlas::default(),
         };
         out.ActiveIdUsingKeyInputMask.ClearAllBits();
         out.PlatformImeData.InputPos = ImVec2::default();

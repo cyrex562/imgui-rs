@@ -56,7 +56,7 @@ impl ImGuiListClipper {
     pub unsafe fn Begin(&mut self, items_count: usize, items_height: f32) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         let mut window = g.CurrentWindow;
-        // IMGUI_DEBUG_LOG_CLIPPER("Clipper: Begin({},%.20) in '%s'\n", items_count, items_height, window.Name);
+        // IMGUI_DEBUG_LOG_CLIPPER("Clipper: Begin({},%.20) in '{}'\n", items_count, items_height, window.Name);
 
         let table = g.CurrentTable;
         if table.is_null() == false {
@@ -89,7 +89,7 @@ impl ImGuiListClipper {
         let mut data = self.TempData as *mut ImGuiListClipperData;
         if data.is_null() == false {
             // In theory here we should assert that we are already at the right position, but it seems saner to just seek at the end and not assert/crash the user.
-            // IMGUI_DEBUG_LOG_CLIPPER("Clipper: End() in '%s'\n", g.Currentwindow.Name);
+            // IMGUI_DEBUG_LOG_CLIPPER("Clipper: End() in '{}'\n", g.Currentwindow.Name);
             if self.ItemsCount >= 0 && self.ItemsCount < i32::MAX && self.DisplayStart >= 0 {
                 ImGuiListClipper_SeekCursorForItem(self, self.ItemsCount);
             }

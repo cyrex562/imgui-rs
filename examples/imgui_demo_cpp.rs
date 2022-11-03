@@ -435,7 +435,7 @@ pub unsafe fn ShowDemoWindow(p_open: *mut bool)
         EndMenuBar();
     }
 
-    Text("dear imgui says hello! (%s) ({})", IMGUI_VERSION, IMGUI_VERSION_NUM);
+    Text("dear imgui says hello! ({}) ({})", IMGUI_VERSION, IMGUI_VERSION_NUM);
     Spacing();
 
     IMGUI_DEMO_MARKER("Help");
@@ -1644,7 +1644,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 for (let n: c_int = 0; n < opened.len(); n++)
                     if (opened[n] && BeginTabItem(names[n], &opened[n], ImGuiTabItemFlags_None))
                     {
-                        Text("This is the %s tab!", names[n]);
+                        Text("This is the {} tab!", names[n]);
                         if n & 1{
                             Text("I am an odd tab.");}
                         EndTabItem();
@@ -1706,7 +1706,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                     snprintf(name, name.len(), "%04d", active_tabs[n]);
                     if (BeginTabItem(name, &open, ImGuiTabItemFlags_None))
                     {
-                        Text("This is the %s tab!", name);
+                        Text("This is the {} tab!", name);
                         EndTabItem();
                     }
 
@@ -2106,7 +2106,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         DragScalar("drag s16",       ImGuiDataType_S16,    &s16_v, drag_speed, if drag_clamp { & s16_zero} else {null_mut()}, if drag_clamp { & s16_fifty} else {null_mut()});
         DragScalar("drag u16",       ImGuiDataType_U16,    &u16_v, drag_speed, if drag_clamp { & u16_zero} else {null_mut()}, if drag_clamp{  & u16_fifty } else {null_mut()}, "%u ms");
         DragScalar("drag s32",       ImGuiDataType_S32,    &s32_v, drag_speed, if drag_clamp { & s32_zero} else {null_mut()}, if drag_clamp {& s32_fifty} else {null_mut()});
-        DragScalar("drag s32 hex",   ImGuiDataType_S32,    &s32_v, drag_speed, if drag_clamp { & s32_zero} else {null_mut()}, if drag_clamp { & s32_fifty} else {null_mut()}, "0x%08X");
+        DragScalar("drag s32 hex",   ImGuiDataType_S32,    &s32_v, drag_speed, if drag_clamp { & s32_zero} else {null_mut()}, if drag_clamp { & s32_fifty} else {null_mut()}, "0x{}");
         DragScalar("drag u32",       ImGuiDataType_U32,    &u32_v, drag_speed, if drag_clamp { & u32_zero }else {null_mut()}, if drag_clamp { & u32_fifty} else {null_mut()}, "%u ms");
         DragScalar("drag s64",       ImGuiDataType_S64,    &s64_v, drag_speed, if drag_clamp { & s64_zero} else {null_mut()}, if drag_clamp { & s64_fifty} else  {null_mut()});
         DragScalar("drag u64",       ImGuiDataType_U64,    &u64_v, drag_speed, if drag_clamp { & u64_zero} else {null_mut()}, if drag_clamp { & u64_fifty} else {null_mut()});
@@ -2160,7 +2160,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         InputScalar("input s32",     ImGuiDataType_S32,    &s32_v, if inputs_step { &s32_one} else { null_mut() }, null_mut(), "{}");
         InputScalar("input s32 hex", ImGuiDataType_S32,    &s32_v, if inputs_step { &s32_one} else { null_mut() }, null_mut(), "%04X");
         InputScalar("input u32",     ImGuiDataType_U32,    &u32_v, if inputs_step { &u32_one} else { null_mut() }, null_mut(), "%u");
-        InputScalar("input hex: u32", ImGuiDataType_U32,    &u32_v, if inputs_step { &u32_one} else { null_mut() }, null_mut(), "%08X");
+        InputScalar("input hex: u32", ImGuiDataType_U32,    &u32_v, if inputs_step { &u32_one} else { null_mut() }, null_mut(), "{}");
         InputScalar("input s64",     ImGuiDataType_S64,    &s64_v, if inputs_step { &s64_one} else { null_mut() });
         InputScalar("input u64",     ImGuiDataType_U64,    &u64_v, if inputs_step { &u64_one} else { null_mut() });
         InputScalar("input float",   ImGuiDataType_Float,  &f32_v, if inputs_step { &f32_one} else { null_mut() });
@@ -2318,9 +2318,9 @@ pub unsafe fn ShowDemoWindowWidgets()
 
                     // Display preview (could be anything, e.g. when dragging an image we could decide to display
                     // the filename and a small preview of the image, etc.)
-                    if (mode == Mode_Copy) { Text("Copy %s", names[n]); }
-                    if (mode == Mode_Move) { Text("Move %s", names[n]); }
-                    if (mode == Mode_Swap) { Text("Swap %s", names[n]); }
+                    if (mode == Mode_Copy) { Text("Copy {}", names[n]); }
+                    if (mode == Mode_Move) { Text("Move {}", names[n]); }
+                    if (mode == Mode_Swap) { Text("Swap {}", names[n]); }
                     EndDragDropSource();
                 }
                 if (BeginDragDropTarget())
@@ -3140,7 +3140,7 @@ pub unsafe fn ShowDemoWindowLayout()
             EndChild();
             SameLine();
             names: *const c_char[] = { "Left", "25%", "Center", "75%", "Right" };
-            Text("%s\n%.0f/%.0f", names[i], scroll_x, scroll_max_x);
+            Text("{}\n%.0f/%.0f", names[i], scroll_x, scroll_max_x);
             Spacing();
         }
         PopID();
@@ -3517,7 +3517,7 @@ pub unsafe fn ShowDemoWindowPopups()
                 Selectable(names[n]);
                 if (BeginPopupContextItem()) // <-- use last item id as popup id
                 {
-                    Text("This a popup for \"%s\"!", names[n]);
+                    Text("This a popup for \"{}\"!", names[n]);
                     if (Button("Close"))
                         CloseCurrentPopup();
                     EndPopup();
@@ -3562,7 +3562,7 @@ pub unsafe fn ShowDemoWindowPopups()
             HelpMarker("Showcase using a popup ID linked to item ID, with the item having a changing label + stable ID using the ### operator.");
             static name: [c_char;32] = "Label1";
             buf: [c_char;64];
-            sprintf(buf, "Button: %s###Button", name); // ### operator override ID ignoring the preceding label
+            sprintf(buf, "Button: {}###Button", name); // ### operator override ID ignoring the preceding label
             Button(buf);
             if (BeginPopupContextItem())
             {
@@ -3782,7 +3782,7 @@ pub unsafe fn EditTableSizingFlags(*mut p_flags: ImGuiTableFlags)
         for (let m: c_int = 0; m < policies.len(); m++)
         {
             Separator();
-            Text("%s:", policies[m].Name);
+            Text("{}:", policies[m].Name);
             Separator();
             SetCursorPosX(GetCursorPosX() + GetStyle().IndentSpacing * 0.5);
             TextUnformatted(policies[m].Tooltip);
@@ -4083,7 +4083,7 @@ pub unsafe fn ShowDemoWindowTables()
                 for (let column: c_int = 0; column < 3; column++)
                 {
                     TableSetColumnIndex(column);
-                    Text("%s {},{}", (column == 2) ? "Stretch" : "Fixed", column, row);
+                    Text("{} {},{}", (column == 2) ? "Stretch" : "Fixed", column, row);
                 }
             }
             EndTable();
@@ -4103,7 +4103,7 @@ pub unsafe fn ShowDemoWindowTables()
                 for (let column: c_int = 0; column < 6; column++)
                 {
                     TableSetColumnIndex(column);
-                    Text("%s {},{}", (column >= 3) ? "Stretch" : "Fixed", column, row);
+                    Text("{} {},{}", (column >= 3) ? "Stretch" : "Fixed", column, row);
                 }
             }
             EndTable();
@@ -4369,7 +4369,7 @@ pub unsafe fn ShowDemoWindowTables()
                 switch (contents_type)
                 {
                 CT_ShortText =>  TextUnformatted(label); break;
-                CT_LongText =>   Text("Some %s text {},{}\nOver two lines..", column == 0 ? "long" : "longeeer", column, row); break;
+                CT_LongText =>   Text("Some {} text {},{}\nOver two lines..", column == 0 ? "long" : "longeeer", column, row); break;
                 CT_ShowWidth =>  Text("W: %.1f", GetContentRegionAvail().x); break;
                 CT_Button =>     Button(label); break;
                 CT_FillButton => Button(label, ImVec2::new(-FLT_MIN, 0.0)); break;
@@ -4533,7 +4533,7 @@ pub unsafe fn ShowDemoWindowTables()
                 TableNextColumn();
                 PushID(column);
                 AlignTextToFramePadding(); // FIXME-TABLE: Workaround for wrong text baseline propagation across columns
-                Text("'%s'", column_names[column]);
+                Text("'{}'", column_names[column]);
                 Spacing();
                 Text("Input flags:");
                 EditTableColumnsFlags(&column_flags[column]);
@@ -4571,7 +4571,7 @@ pub unsafe fn ShowDemoWindowTables()
                 for (let column: c_int = 0; column < column_count; column++)
                 {
                     TableSetColumnIndex(column);
-                    Text("%s %s", (column == 0) ? "Indented" : "Hello", TableGetColumnName(column));
+                    Text("{} {}", (column == 0) ? "Indented" : "Hello", TableGetColumnName(column));
                 }
             }
             Unindent(indent_step * 8.0);
@@ -5773,7 +5773,7 @@ pub unsafe fn ShowDemoWindowMisc()
         lines: *const c_char[] = { "aaa1.c", "bbb1.c", "ccc1.c", "aaa2.cpp", "bbb2.cpp", "ccc2.cpp", "abc.h", "hello, world" };
         for (let i: c_int = 0; i < lines.len(); i++)
             if (filter.PassFilter(lines[i]))
-                BulletText("%s", lines[i]);
+                BulletText("{}", lines[i]);
     }
 
     IMGUI_DEMO_MARKER("Inputs, Navigation & Focus");
@@ -5826,12 +5826,12 @@ pub unsafe fn ShowDemoWindowMisc()
 // #else
             struct funcs { static IsLegacyNativeDupe: bool(ImGuiKey key) { return key < 512 && GetIO().KeyMap[key] != -1; } }; // Hide Native<>ImGuiKey duplicates when both exists in the array
             let mut key_first: ImGuiKey =  0;
-            //Text("Legacy raw:");       for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (io.KeysDown[key]) { SameLine(); Text("\"%s\" {}", GetKeyName(key), key); } }
+            //Text("Legacy raw:");       for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (io.KeysDown[key]) { SameLine(); Text("\"{}\" {}", GetKeyName(key), key); } }
 // #endif
-            Text("Keys down:");          for (let mut key: ImGuiKey =  key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (IsKeyDown(key)) { SameLine(); Text("\"%s\" {} (%.02f secs)", GetKeyName(key), key, GetKeyData(key)->DownDuration); } }
-            Text("Keys pressed:");       for (let mut key: ImGuiKey =  key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (IsKeyPressed(key)) { SameLine(); Text("\"%s\" {}", GetKeyName(key), key); } }
-            Text("Keys released:");      for (let mut key: ImGuiKey =  key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (IsKeyReleased(key)) { SameLine(); Text("\"%s\" {}", GetKeyName(key), key); } }
-            Text("Keys mods: %s%s%s%s", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
+            Text("Keys down:");          for (let mut key: ImGuiKey =  key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (IsKeyDown(key)) { SameLine(); Text("\"{}\" {} (%.02f secs)", GetKeyName(key), key, GetKeyData(key)->DownDuration); } }
+            Text("Keys pressed:");       for (let mut key: ImGuiKey =  key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (IsKeyPressed(key)) { SameLine(); Text("\"{}\" {}", GetKeyName(key), key); } }
+            Text("Keys released:");      for (let mut key: ImGuiKey =  key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (IsKeyReleased(key)) { SameLine(); Text("\"{}\" {}", GetKeyName(key), key); } }
+            Text("Keys mods: {}{}{}{}", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
             Text("Chars queue:");        for (let i: c_int = 0; i < io.InputQueueCharacters.Size; i++) { let c: ImWchar = io.InputQueueCharacters[i]; SameLine();  Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
 
             // Draw an arbitrary US keyboard layout to visualize translated keys
@@ -6014,7 +6014,7 @@ pub unsafe fn ShowDemoWindowMisc()
             // IM_ASSERT(IM_ARRAYSIZE(mouse_cursors_names) == ImGuiMouseCursor_COUNT);
 
             ImGuiMouseCursor current = GetMouseCursor();
-            Text("Current mouse cursor = {}: %s", current, mouse_cursors_names[current]);
+            Text("Current mouse cursor = {}: {}", current, mouse_cursors_names[current]);
             Text("Hover to see mouse cursors:");
             SameLine(); HelpMarker(
                 "Your application can render a different mouse cursor based on what GetMouseCursor() returns. "
@@ -6023,7 +6023,7 @@ pub unsafe fn ShowDemoWindowMisc()
             for (let i: c_int = 0; i < ImGuiMouseCursor_COUNT; i++)
             {
                 label: [c_char;32];
-                sprintf(label, "Mouse cursor {}: %s", i, mouse_cursors_names[i]);
+                sprintf(label, "Mouse cursor {}: {}", i, mouse_cursors_names[i]);
                 Bullet(); Selectable(label, false);
                 if IsItemHovered() {
                     SetMouseCursor(i)(); }
@@ -6046,7 +6046,7 @@ pub unsafe fn ShowAboutWindow(p_open: *mut bool)
         return;
     }
     IMGUI_DEMO_MARKER("Tools/About Dear ImGui");
-    Text("Dear ImGui %s", GetVersion());
+    Text("Dear ImGui {}", GetVersion());
     Separator();
     Text("By Omar Cornut and all Dear ImGui contributors.");
     Text("Dear ImGui is licensed under the MIT License, see LICENSE for more information.");
@@ -6067,7 +6067,7 @@ pub unsafe fn ShowAboutWindow(p_open: *mut bool)
             LogText("```\n"); // Back quotes will make text appears without formatting when pasting on GitHub
         }
 
-        Text("Dear ImGui %s ({})", IMGUI_VERSION, IMGUI_VERSION_NUM);
+        Text("Dear ImGui {} ({})", IMGUI_VERSION, IMGUI_VERSION_NUM);
         Separator();
         Text("sizeof: {}, sizeof(ImDrawIdx): {}, sizeof(ImDrawVert): {}", sizeof, sizeof, sizeof(ImDrawVert));
         Text("define: __cplusplus={}", __cplusplus);
@@ -6132,7 +6132,7 @@ pub unsafe fn ShowAboutWindow(p_open: *mut bool)
         Text("define: __GNUC__={}", __GNUC__);
 // #endif
 // #ifdef __clang_version__
-        Text("define: __clang_version__=%s", __clang_version__);
+        Text("define: __clang_version__={}", __clang_version__);
 // #endif
 // #ifdef IMGUI_HAS_VIEWPORT
         Text("define: IMGUI_HAS_VIEWPORT");
@@ -6141,9 +6141,9 @@ pub unsafe fn ShowAboutWindow(p_open: *mut bool)
         Text("define: IMGUI_HAS_DOCK");
 // #endif
         Separator();
-        Text("io.BackendPlatformName: %s", if io.BackendPlatformName { io.BackendPlatformName } else {"NULL"});
-        Text("io.BackendRendererName: %s", if io.BackendRendererName { io.BackendRendererName } else { "NULL" });
-        Text("io.ConfigFlags: 0x%08X", io.ConfigFlags);
+        Text("io.BackendPlatformName: {}", if io.BackendPlatformName { io.BackendPlatformName } else {"NULL"});
+        Text("io.BackendRendererName: {}", if io.BackendRendererName { io.BackendRendererName } else { "NULL" });
+        Text("io.ConfigFlags: 0x{}", io.ConfigFlags);
         if io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard{        Text(" NavEnableKeyboard");}
         if io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad{         Text(" NavEnableGamepad");}
         if io.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos{     Text(" NavEnableSetMousePos");}
@@ -6168,7 +6168,7 @@ pub unsafe fn ShowAboutWindow(p_open: *mut bool)
         if io.ConfigWindowsResizeFromEdges{                            Text("io.ConfigWindowsResizeFromEdges");}
         if io.ConfigWindowsMoveFromTitleBarOnly{                       Text("io.ConfigWindowsMoveFromTitleBarOnly");}
         if (io.ConfigMemoryCompactTimer >= 0.0)                        Text("io.ConfigMemoryCompactTimer = %.1f", io.ConfigMemoryCompactTimer);
-        Text("io.BackendFlags: 0x%08X", io.BackendFlags);
+        Text("io.BackendFlags: 0x{}", io.BackendFlags);
         if (io.BackendFlags & ImGuiBackendFlags_HasGamepad)             Text(" HasGamepad");
         if (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors)        Text(" HasMouseCursors");
         if (io.BackendFlags & ImGuiBackendFlags_HasSetMousePos)         Text(" HasSetMousePos");
@@ -6177,7 +6177,7 @@ pub unsafe fn ShowAboutWindow(p_open: *mut bool)
         if (io.BackendFlags & ImGuiBackendFlags_RendererHasVtxOffset)   Text(" RendererHasVtxOffset");
         if (io.BackendFlags & ImGuiBackendFlags_RendererHasViewports)   Text(" RendererHasViewports");
         Separator();
-        Text("io.Fonts: {} fonts, Flags: 0x%08X, TexSize: {},{}", io.Fonts.Fonts.Size, io.Fonts.Flags, io.Fonts.TexWidth, io.Fonts.TexHeight);
+        Text("io.Fonts: {} fonts, Flags: 0x{}, TexSize: {},{}", io.Fonts.Fonts.Size, io.Fonts.Flags, io.Fonts.TexWidth, io.Fonts.TexHeight);
         Text("io.DisplaySize: %.2f,%.2f", io.DisplaySize.x, io.DisplaySize.y);
         Text("io.DisplayFramebufferScale: %.2f,%.2f", io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
         Separator();
@@ -6360,7 +6360,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
                     col: &ImVec4 = style.Colors[i];
                     let mut  name: *const c_char = GetStyleColorName(i);
                     if (!output_only_modified || memcmp(&col, &ref->Colors[i], sizeof(ImVec4)) != 0)
-                        LogText("colors[ImGuiCol_%s]%*s= ImVec4(%.2ff, %.2ff, %.2ff, %.2f0f32);" IM_NEWLINE,
+                        LogText("colors[ImGuiCol_{}]%*s= ImVec4(%.2ff, %.2ff, %.2ff, %.2f0f32);" IM_NEWLINE,
                             name, 23 - strlen(name), "", col.x, col.y, col.z, col.w);
                 }
                 LogFinish();
@@ -6823,7 +6823,7 @@ struct ExampleAppConsole
 
     c_void    ExecCommand(command_line: *const c_char)
     {
-        AddLog("# %s\n", command_line);
+        AddLog("# {}\n", command_line);
 
         // Insert into history. First find match and delete it so it can be pushed to the back.
         // This isn't trying to be smart or optimal.
@@ -6846,17 +6846,17 @@ struct ExampleAppConsole
         {
             AddLog("Commands:");
             for (let i: c_int = 0; i < Commands.Size; i++)
-                AddLog("- %s", Commands[i]);
+                AddLog("- {}", Commands[i]);
         }
         else if (Stricmp(command_line, "HISTORY") == 0)
         {
             let first: c_int = History.Size - 10;
             for (let i: c_int = if first > 0 { first }else {0}; i < History.Size; i++)
-                AddLog("%3d: %s\n", i, History[i]);
+                AddLog("%3d: {}\n", i, History[i]);
         }
         else
         {
-            AddLog("Unknown command: '%s'\n", command_line);
+            AddLog("Unknown command: '{}'\n", command_line);
         }
 
         // On command input, we scroll to bottom even if AutoScroll==false
@@ -6936,7 +6936,7 @@ struct ExampleAppConsole
                     // List matches
                     AddLog("Possible matches:\n");
                     for (let i: c_int = 0; i < candidates.Size; i++)
-                        AddLog("- %s\n", candidates[i]);
+                        AddLog("- {}\n", candidates[i]);
                 }
 
                 break;
@@ -7126,7 +7126,7 @@ pub unsafe fn ShowExampleAppLog(bool* p_open)
         {
             let mut  category: *const c_char = categories[counter % categories.len()];
             let mut  word: *const c_char = words[counter % words.len()];
-            log.AddLog("[%05d] [%s] Hello, current time is %.1f, here's a word: '%s'\n",
+            log.AddLog("[%05d] [{}] Hello, current time is %.1f, here's a word: '{}'\n",
                 GetFrameCount(), category, GetTime(), word);
             counter+= 1;
         }
@@ -7217,7 +7217,7 @@ pub unsafe fn ShowPlaceholderObject(prefix: *const c_char, uid: c_int)
     TableNextRow();
     TableSetColumnIndex(0);
     AlignTextToFramePadding();
-    let mut node_open: bool =  TreeNode("Object", "%s_%u", prefix, uid);
+    let mut node_open: bool =  TreeNode("Object", "{}_%u", prefix, uid);
     TableSetColumnIndex(1);
     Text("my sailor is rich");
 
@@ -7989,7 +7989,7 @@ let Name: *const c_char;       // Document title
     static c_void DisplayContents(MyDocument* doc)
     {
         PushID(doc);
-        Text("Document \"%s\"", doc.Name);
+        Text("Document \"{}\"", doc.Name);
         PushStyleColor(ImGuiCol_Text, doc->Color);
         TextWrapped("Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.");
         PopStyleColor();
@@ -8008,7 +8008,7 @@ let Name: *const c_char;       // Document title
         if !BeginPopupContextItem() { return ; }
 
         buf: [c_char;256];
-        sprintf(buf, "Save %s", doc.Name);
+        sprintf(buf, "Save {}", doc.Name);
         if (MenuItem(buf, "CTRL+S", false, doc->Open))
             doc->DoSave();
         if (MenuItem("Close", "CTRL+W", false, doc->Open))
@@ -8273,7 +8273,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
                 {
                     for (let n: c_int = 0; n < close_queue.Size; n++)
                         if (close_queue[n]->Dirty)
-                            Text("%s", close_queue[n].Name);
+                            Text("{}", close_queue[n].Name);
                     EndChildFrame();
                 }
 

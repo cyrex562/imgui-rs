@@ -191,7 +191,7 @@ pub struct ImGuiWindow {
     // Define an optional rectangular hole where mouse will pass-through the window.
     pub HitTestHoleOffset: ImVec2ih,
 
-    pub LastFrameActive: c_int,
+    pub LastFrameActive: usize,
     // Last frame number the window was Active.
     pub LastFrameJustFocused: c_int,
     // Last frame number the window was made Focused.

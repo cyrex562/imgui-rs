@@ -54,7 +54,7 @@ pub struct ImGuiIO {
     // = 0.10 sec       // Delay on hovering before IsItemHovered(ImGuiHoveredFlags_DelayShort) returns true.
     // void*       UserData;                       // = NULL           // Store your own data for retrieval by callbacks.
     pub UserData: *mut c_void,
-    pub Fonts: *mut ImFontAtlas,
+    pub Fonts: ImFontAtlas,
     // <auto>           // Font atlas: load, rasterize and pack one or more fonts into a single texture.
     pub FontGlobalScale: c_float,
     // = 1.0           // Global scale all fonts
@@ -476,7 +476,7 @@ impl ImGuiIO {
     // void ImGuiIO::AddKeyAnalogEvent(ImGuiKey key, down: bool, c_float analog_value)
     pub fn AddKeyAnalogEvent(&mut self, key: ImGuiKey, down: bool, analog_value: c_float)
     {
-        //if (e->Down) { IMGUI_DEBUG_LOG_IO("AddKeyEvent() Key='%s' {}, NativeKeycode = {}, NativeScancode = {}\n", GetKeyName(e->Key), e->Down, e->NativeKeycode, e->NativeScancode); }
+        //if (e->Down) { IMGUI_DEBUG_LOG_IO("AddKeyEvent() Key='{}' {}, NativeKeycode = {}, NativeScancode = {}\n", GetKeyName(e->Key), e->Down, e->NativeKeycode, e->NativeScancode); }
         if key == ImGuiKey_None || !self.AppAcceptingEvents {
             return;
         }

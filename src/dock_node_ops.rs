@@ -75,7 +75,7 @@ pub unsafe fn DockNodeAddWindow(node: *mut ImGuiDockNode, window: *mut ImGuiWind
         DockNodeRemoveWindow(window.DockNode, window, 0);
     }
     // IM_ASSERT(window.DockNode == NULL || window.DockNodeAsHost == NULL);
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeAddWindow node 0x%08X window '%s'\n", node.ID, window.Name);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeAddWindow node 0x{} window '{}'\n", node.ID, window.Name);
 
     // If more than 2 windows appeared on the same frame leading to the creation of a new hosting window,
     // we'll hide windows until the host window is ready. Hide the 1st window after its been output (so it is not visible for one frame).
@@ -135,7 +135,7 @@ pub unsafe fn DockNodeRemoveWindow(node: *mut ImGuiDockNode, window: *mut ImGuiW
     //IM_ASSERT(window.RootWindowDockTree == node->HostWindow);
     //IM_ASSERT(window.LastFrameActive < g.FrameCount);    // We may call this from Begin()
     // IM_ASSERT(save_dock_id == 0 || save_dock_id == node.ID);
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeRemoveWindow node 0x%08X window '%s'\n", node.ID, window.Name);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeRemoveWindow node 0x{} window '{}'\n", node.ID, window.Name);
 
     window.DockNode = null_mut();
     window.DockIsActive = false;
@@ -183,7 +183,7 @@ pub unsafe fn DockNodeRemoveWindow(node: *mut ImGuiDockNode, window: *mut ImGuiW
         let mut remaining_window: *mut ImGuiWindow = node.Windows[0];
         if node.Hostwindow.ViewportOwned && node.IsRootNode() {
             // Transfer viewport back to the remaining loose window
-            IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Node %08X transfer Viewport %08X=>%08X for Window '%s'\n", node.ID, node.Hostwindow.Viewport.ID, remaining_window.ID, remaining_window.Name);
+            IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Node {} transfer Viewport {}=>{} for Window '{}'\n", node.ID, node.Hostwindow.Viewport.ID, remaining_window.ID, remaining_window.Name);
             // IM_ASSERT(node->Hostwindow.Viewport.Window == node->HostWindow);
             node.Hostwindow.Viewport.Window = remaining_window;
             node.Hostwindow.Viewport.ID = remaining_window.ID;
@@ -993,10 +993,10 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
         tab_n -= 1;
     }
     if tab_bar.Tabs.Size > tabs_unsorted_start {
-        // IMGUI_DEBUG_LOG_DOCKING("[docking] In node 0x%08X: {} new appearing tabs:%s\n", node.ID, tab_bar.Tabs.Size - tabs_unsorted_start, (tab_bar.Tabs.Size > tabs_unsorted_start + 1) ? " (will sort)" : "");
+        // IMGUI_DEBUG_LOG_DOCKING("[docking] In node 0x{}: {} new appearing tabs:{}\n", node.ID, tab_bar.Tabs.Size - tabs_unsorted_start, (tab_bar.Tabs.Size > tabs_unsorted_start + 1) ? " (will sort)" : "");
         // for (let tab_n: c_int = tabs_unsorted_start; tab_n < tab_bar.Tabs.Size; tab_n++)
         for tab_n in tabs_unsorted_start..tab_bar.Tabs.len() {
-            // IMGUI_DEBUG_LOG_DOCKING("[docking] - Tab '%s' Order {}\n", tab_bar.Tabs[tab_n].window.Name, tab_bar.Tabs[tab_n].window.DockOrder);
+            // IMGUI_DEBUG_LOG_DOCKING("[docking] - Tab '{}' Order {}\n", tab_bar.Tabs[tab_n].window.Name, tab_bar.Tabs[tab_n].window.DockOrder);
         }
         if tab_bar.Tabs.Size > tabs_unsorted_start + 1 {
             ImQsort(tab_bar.Tabs.Data + tabs_unsorted_start, tab_bar.Tabs.Size - tabs_unsorted_start, sizeof(ImGuiTabItem), TabItemComparerByDockOrder);
@@ -1656,7 +1656,7 @@ pub unsafe fn DockNodeTreeMerge(ctx: *mut crate::context::ImGuiContext, parent_n
         // IM_ASSERT(parent_node.TabBar == NULL);
         // IM_ASSERT(parent_node.Windows.Size == 0);
     }
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeTreeMerge: 0x%08X + 0x%08X back into parent 0x%08X\n", child_0 ? child_0.ID : 0, child_1 ? child_1.ID : 0, parent_node.ID);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeTreeMerge: 0x{} + 0x{} back into parent 0x{}\n", child_0 ? child_0.ID : 0, child_1 ? child_1.ID : 0, parent_node.ID);
 
     let backup_last_explicit_size: ImVec2 = parent_node.SizeRef;
     DockNodeMoveChildNodes(parent_node, merge_lead_child);

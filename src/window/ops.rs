@@ -272,7 +272,7 @@ pub unsafe fn UpdateWindowInFocusOrderList(window: *mut ImGuiWindow, just_create
 pub unsafe fn CreateNewWindow(name: *const c_char, flags: ImGuiWindowFlags) -> *mut ImGuiWindow
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    //IMGUI_DEBUG_LOG("CreateNewWindow '%s', flags = 0x%08X\n", name, flags);
+    //IMGUI_DEBUG_LOG("CreateNewWindow '{}', flags = 0x{}\n", name, flags);
 
     // Create window the first time
     let mut window: *mut ImGuiWindow =  IM_NEW(ImGuiWindow)(&g, name);
@@ -1433,7 +1433,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
             {
                 window.Viewport.PlatformRequestClose = false;
                 g.NavWindowingToggleLayer = false; // Assume user mapped PlatformRequestClose on ALT-F4 so we disable ALT for menu toggle. False positive not an issue.
-                IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Window '%s' PlatformRequestClose\n", window.Name);
+                IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Window '{}' PlatformRequestClose\n", window.Name);
                 *p_open = false;
             }
         }

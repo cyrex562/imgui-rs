@@ -1,20 +1,20 @@
 #![allow(non_snake_case)]
 
-use core::ptr::null_mut;
-use std::ptr::null;
-use libc::{c_char, c_int, c_void};
-use imgui_rs::imgui::GImGui;
-use imgui_rs::input_source::{ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
-use imgui_rs::type_defs::ImGuiID;
-use imgui_rs::window::ImGuiWindow;
 use crate::data_type::{ImGuiDataType_ID, ImGuiDataType_String};
 use crate::debug_ops::DebugHookIdInfo;
 use crate::imgui::GImGui;
-use crate::ImHashStr;
 use crate::input_source::{ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
 use crate::type_defs::ImGuiID;
 use crate::utils::is_not_null;
 use crate::window::ImGuiWindow;
+use crate::ImHashStr;
+use core::ptr::null_mut;
+use imgui_rs::imgui::GImGui;
+use imgui_rs::input_source::{ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
+use imgui_rs::type_defs::ImGuiID;
+use imgui_rs::window::ImGuiWindow;
+use libc::{c_char, c_int, c_void};
+use std::ptr::null;
 
 // c_void SetActiveID(ImGuiID id, window: *mut ImGuiWindow)
 pub unsafe fn SetActiveID(id: ImGuiID, window: *mut ImGuiWindow) {
@@ -31,7 +31,7 @@ pub unsafe fn SetActiveID(id: ImGuiID, window: *mut ImGuiWindow) {
     // Set active id
     g.ActiveIdIsJustActivated = (g.ActiveId != id);
     if g.ActiveIdIsJustActivated {
-        // IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() old:0x%08X (window \"%s\") -> new:0x%08X (window \"%s\")\n", g.ActiveId, g.ActiveIdWindow ? g.ActiveIdwindow.Name : "", id, window ? window.Name : "");
+        // IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() old:0x{} (window \"{}\") -> new:0x{} (window \"{}\")\n", g.ActiveId, g.ActiveIdWindow ? g.ActiveIdwindow.Name : "", id, window ? window.Name : "");
         g.ActiveIdTimer = 0.0;
         g.ActiveIdHasBeenPressedBefore = false;
         g.ActiveIdHasBeenEditedBefore = false;
@@ -48,18 +48,22 @@ pub unsafe fn SetActiveID(id: ImGuiID, window: *mut ImGuiWindow) {
     g.ActiveIdHasBeenEditedThisFrame = false;
     if id {
         g.ActiveIdIsAlive = id;
-        g.ActiveIdSource = if g.NavActivateId == id || g.NavActivateInputId == id || g.NavJustMovedToId == id { ImGuiInputSource_Nav } else { ImGuiInputSource_Mouse };
+        g.ActiveIdSource =
+            if g.NavActivateId == id || g.NavActivateInputId == id || g.NavJustMovedToId == id {
+                ImGuiInputSource_Nav
+            } else {
+                ImGuiInputSource_Mouse
+            };
     }
 
     // Clear declaration of inputs claimed by the widget
     // (Please note that this is WIP and not all keys/inputs are thoroughly declared by all widgets yet)
     g.ActiveIdUsingNavDirMask = 0x00;
     g.ActiveIdUsingKeyInputMask.ClearAllBits();
-// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//     g.ActiveIdUsingNavInputMask = 0x00;
-// #endif
+    // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
+    //     g.ActiveIdUsingNavInputMask = 0x00;
+    // #endif
 }
-
 
 // c_void ClearActiveID()
 pub unsafe fn ClearActiveID() {
@@ -81,7 +85,11 @@ pub unsafe fn SetHoveredID(id: ImGuiID) {
 // ImGuiID GetHoveredID()
 pub unsafe fn GetHoveredID() -> ImGuiID {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return if g.HoveredId { g.HoveredId } else { g.HoveredIdPreviousFrame };
+    return if g.HoveredId {
+        g.HoveredId
+    } else {
+        g.HoveredIdPreviousFrame
+    };
 }
 
 // This is called by ItemAdd().
@@ -96,7 +104,6 @@ pub unsafe fn KeepAliveID(id: ImGuiID) {
         g.ActiveIdPreviousFrameIsAlive = true;
     }
 }
-
 
 // pub unsafe fn PushID(str_id: &str) {
 //     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -128,7 +135,7 @@ pub unsafe fn push_int_id(int_id: c_int) {
 
 // Push a given id value ignoring the ID stack as a seed.
 pub unsafe fn PushOverrideID(id: ImGuiID) {
-    let g = GImGui; // ImGuiContext& g = *GImGui; 
+    let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     if g.DebugHookIdInfo == id {
         DebugHookIdInfo(id, ImGuiDataType_ID, null_mut(), null_mut());
@@ -148,7 +155,7 @@ pub unsafe fn GetIDWithSeed(arg: &str, seed: ImGuiID) -> ImGuiID {
 
 pub unsafe fn PopID() {
     let mut window: *mut ImGuiWindow = GimGui.CurrentWindow;
-// IM_ASSERT(window.IDStack.Size > 1); // Too many PopID(), or could be popping in a wrong/different window?
+    // IM_ASSERT(window.IDStack.Size > 1); // Too many PopID(), or could be popping in a wrong/different window?
     window.IDStack.pop_back();
 }
 
@@ -169,4 +176,3 @@ pub unsafe fn id_from_void_ptr(ptr_id: *const c_void) -> ImGuiID {
     let mut window: *mut ImGuiWindow = g.CurrentWindow;
     return window.GetID2(ptr_id);
 }
-

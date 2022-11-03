@@ -296,7 +296,7 @@ pub unsafe fn WindowSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler
     u1: u32;
     if (sscanf(line, "Pos=%i,%i", &x, &y) == 2)             { settings.Pos = ImVec2ih(x, y); }
     else if (sscanf(line, "Size=%i,%i", &x, &y) == 2)       { settings.Size = ImVec2ih(x, y); }
-    else if (sscanf(line, "ViewportId=0x%08X", &u1) == 1)   { settings.ViewportId = u1; }
+    else if (sscanf(line, "ViewportId=0x{}", &u1) == 1)   { settings.ViewportId = u1; }
     else if (sscanf(line, "ViewportPos=%i,%i", &x, &y) == 2){ settings.ViewportPos = ImVec2ih(x, y); }
     else if (sscanf(line, "Collapsed={}", &i) == 1)         { settings.Collapsed = (i != 0); }
     else if (sscanf(line, "DockId=0x%X,{}", &u1, &i) == 2)  { settings.DockId = u1; settings.DockOrder = i; }
@@ -351,11 +351,11 @@ pub unsafe fn WindowSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettin
     for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
     {
         let mut  settings_name: *const c_char = settings.GetName();
-        buf->appendf("[%s][%s]\n", handler.TypeName, settings_name);
+        buf->appendf("[{}][{}]\n", handler.TypeName, settings_name);
         if (settings.ViewportId != 0 && settings.ViewportId != IMGUI_VIEWPORT_DEFAULT_ID)
         {
             buf->appendf("ViewportPos={},{}\n", settings.ViewportPos.x, settings.ViewportPos.y);
-            buf->appendf("ViewportId=0x%08X\n", settings.ViewportId);
+            buf->appendf("ViewportId=0x{}\n", settings.ViewportId);
         }
         if (settings.Pos.x != 0 || settings.Pos.y != 0 || settings.ViewportId == IMGUI_VIEWPORT_DEFAULT_ID)
             buf->appendf("Pos={},{}\n", settings.Pos.x, settings.Pos.y);
@@ -364,13 +364,13 @@ pub unsafe fn WindowSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettin
         buf->appendf("Collapsed={}\n", settings.Collapsed);
         if (settings.DockId != 0)
         {
-            //buf->appendf("TabId=0x%08X\n", ImHashStr("#TAB", 4, settings.ID)); // window.TabId: this is not read back but writing it makes "debugging" the .ini data easier.
+            //buf->appendf("TabId=0x{}\n", ImHashStr("#TAB", 4, settings.ID)); // window.TabId: this is not read back but writing it makes "debugging" the .ini data easier.
             if (settings.DockOrder == -1)
-                buf->appendf("DockId=0x%08X\n", settings.DockId);
+                buf->appendf("DockId=0x{}\n", settings.DockId);
             else
-                buf->appendf("DockId=0x%08X,{}\n", settings.DockId, settings.DockOrder);
+                buf->appendf("DockId=0x{},{}\n", settings.DockId, settings.DockOrder);
             if (settings.ClassId != 0)
-                buf->appendf("ClassId=0x%08X\n", settings.ClassId);
+                buf->appendf("ClassId=0x{}\n", settings.ClassId);
         }
         buf->append("\n");
     }

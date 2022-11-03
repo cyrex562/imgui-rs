@@ -83,10 +83,10 @@ pub unsafe fn BeginChildEx(
     let mut temp_window_name: String = String::default();
     if name {
         // TODO:
-        // ImFormatStringToTempBuffer(&mut temp_window_name, null_mut(), "%s/%s_%08X", parent_window.Name, name, id);
+        // ImFormatStringToTempBuffer(&mut temp_window_name, null_mut(), "{}/{}_{}", parent_window.Name, name, id);
     } else {
         // TODO:
-        // ImFormatStringToTempBuffer(&mut temp_window_name, null_mut(), "%s/%08X", parent_window.Name, id);
+        // ImFormatStringToTempBuffer(&mut temp_window_name, null_mut(), "{}/{}", parent_window.Name, id);
     }
 
     let backup_border_size: c_float = g.Style.ChildBorderSize;

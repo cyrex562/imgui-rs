@@ -185,7 +185,7 @@ pub unsafe fn DockContextAddNode(ctx: *mut ImGuiContext, id: ImGuiID) -> *mut Im
         // IM_ASSERT(DockContextFindNodeByID(ctx, id) == NULL);
 
     // We don't set node.LastFrameAlive on construction. Nodes are always created at all time to reflect .ini settings!
-    IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextAddNode 0x%08X\n", id);
+    IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextAddNode 0x{}\n", id);
     // node:*mut ImGuiDockNode = IM_NEW(ImGuiDockNode)(id);
     let mut node: ImGuiDockNode = ImGuiDockNode::new(id);
     ctx.DockContext.Nodes.SetVoidPtr(node.ID, node);
@@ -200,7 +200,7 @@ pub unsafe fn DockContextRemoveNode(
     let g =  ctx;
     let dc  = &mut ctx.DockContext;
 
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextRemoveNode 0x%08X\n", node.ID);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextRemoveNode 0x{}\n", node.ID);
     // IM_ASSERT(DockContextFindNodeByID(ctx, node.ID) == node);
     // IM_ASSERT(node.ChildNodes[0] == NULL && node.ChildNodes[1] == NULL);
     // IM_ASSERT(node.Windows.Size == 0);
@@ -312,7 +312,7 @@ pub unsafe fn DockContextPruneUnusedSettingsNodes(ctx: *mut ImGuiContext)
         remove |= (data_root.CountChildWindows == 0);
         if (remove)
         {
-            IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextPruneUnusedSettingsNodes: Prune 0x%08X\n", settings.ID);
+            IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextPruneUnusedSettingsNodes: Prune 0x{}\n", settings.ID);
             DockSettingsRemoveNodeReferences(&settings.ID, 1);
             settings.ID = 0;
         }
@@ -435,10 +435,10 @@ pub unsafe fn DockContextProcessDock(ctx: *mut ImGuiContext, req: *mut ImGuiDock
     let mut target_window: *mut ImGuiWindow =  req.DockTargetWindow;
     let node:*mut ImGuiDockNode = req.DockTargetNode;
     if (payload_window){
-        // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessDock node 0x%08X target '%s' dock window '%s', split_dir {}\n", node ? node.ID : 0, target_window ? target_window.Name : "NULL", payload_window.Name, req.DockSplitDir);
+        // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessDock node 0x{} target '{}' dock window '{}', split_dir {}\n", node ? node.ID : 0, target_window ? target_window.Name : "NULL", payload_window.Name, req.DockSplitDir);
     }
     else{ 
-        // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessDock node 0x%08X, split_dir {}\n", node ? node.ID : 0, req.DockSplitDir);}
+        // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessDock node 0x{}, split_dir {}\n", node ? node.ID : 0, req.DockSplitDir);}
     }
     // Decide which Tab will be selected at the end of the operation
     let mut next_selected_id: ImGuiID =  0;
@@ -593,7 +593,7 @@ pub unsafe fn DockContextProcessUndockWindow(
     clear_persistent_docking_re0f32: bool)
 {
     let g =  ctx;
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockWindow window '%s', clear_persistent_docking_ref = {}\n", window.Name, clear_persistent_docking_re0f32);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockWindow window '{}', clear_persistent_docking_ref = {}\n", window.Name, clear_persistent_docking_re0f32);
     if (window.DockNode){
         DockNodeRemoveWindow(window.DockNode, window, if clear_persistent_docking_ref { 0 }else {window.DockId});}
     else{
@@ -609,7 +609,7 @@ pub unsafe fn DockContextProcessUndockWindow(
 pub unsafe fn DockContextProcessUndockNode(ctx: *mut ImGuiContext, node:*mut ImGuiDockNode)
 {
     let g =  ctx;
-    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockNode node %08X\n", node.ID);
+    // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockNode node {}\n", node.ID);
     // IM_ASSERT(node.IsLeafNode());
     // IM_ASSERT(node.Windows.Size >= 1);
 

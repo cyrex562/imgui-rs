@@ -96,7 +96,7 @@ pub unsafe fn TempInputText(bb: &mut ImRect,
     return value_changed;
 }
 
-pub unsafe fn InputTextMultiline(label: &str, buf: &mut String, buf_size: size_t, size: &mut ImVec2, flags: ImGuiInputTextFlags, callback: ImGuiInputTextCallback, user_data: &Vec<u8>) -> bool
+pub unsafe fn InputTextMultiline(label: &str, buf: &mut String, buf_size: size_t, size: &mut ImVec2, flags: ImGuiInputTextFlags, callback: Option<ImGuiInputTextCallback>, user_data: Option<&Vec<u8>>) -> bool
 {
     return InputTextEx(label, "", buf, buf_size, size, flags | ImGuiInputTextFlags_Multiline, Some(callback), Some(user_data));
 }
@@ -1025,7 +1025,7 @@ pub unsafe fn InputTextEx(label: &str,
             apply_new_text_length = callback_data.BufTextLen.min(buf_size - 1);
             // IM_ASSERT(apply_new_text_length <= buf_size);
         }
-        //IMGUI_DEBUG_PRINT("InputText(\"%s\"): apply_new_text length {}\n", label, apply_new_text_length);
+        //IMGUI_DEBUG_PRINT("InputText(\"{}\"): apply_new_text length {}\n", label, apply_new_text_length);
 
         // If the underlying buffer resize was denied or not carried to the next frame, apply_new_text_length+1 may be >= buf_size.
         // ImStrncpy(buf, apply_new_text, ImMin(apply_new_text_length + 1, buf_size));
@@ -1321,7 +1321,7 @@ pub unsafe fn DebugNodeInputTextState(state: &mut ImGuiInputTextState)
 //     let g = GImGui; // ImGuiContext& g = *GImGui;
 //     ImStb::stb_state: &mut STB_TexteditState = &state.Stb;
 //     ImStb::*mut StbUndoState undo_state = &stb_state.undostate;
-//     text_ops::Text("ID: 0x%08X, ActiveID: 0x%08X", state.ID, g.ActiveId);
+//     text_ops::Text("ID: 0x{}, ActiveID: 0x{}", state.ID, g.ActiveId);
 //     text_ops::Text("CurLenW: {}, CurLenA: {}, Cursor: {}, Selection: {}..{}", state.CurLenA, state.CurLenW, stb_state.cursor, stb_state.select_start, stb_state.select_end);
 //     text_ops::Text("undo_point: {}, redo_point: {}, undo_char_point: {}, redo_char_point: {}", undo_state.undo_point, undo_state.redo_point, undo_state.undo_char_point, undo_state.redo_char_point);
 //     if (BeginChild("undopoints", ImVec2::new(0.0, GetTextLineHeight() * 15), true)) // Visualize undo state
@@ -1336,7 +1336,7 @@ pub unsafe fn DebugNodeInputTextState(state: &mut ImGuiInputTextState)
 //             buf: [c_char;64] = "";
 //             if (undo_rec_type != ' ' && undo_rec->char_storage != -1)
 //                 ImTextStrToUtf8(buf, buf.len(), undo_state.undo_char + undo_rec->char_storage, undo_state.undo_char + undo_rec->char_storage + undo_rec->insert_length);
-//             text_ops::Text("%c [%02d] where %03d, insert %03d, delete %03d, char_storage %03d \"%s\"",
+//             text_ops::Text("%c [%02d] where %03d, insert %03d, delete %03d, char_storage %03d \"{}\"",
 //                            undo_rec_type, n, undo_rec-> where, undo_rec->insert_length, undo_rec->delete_length, undo_rec->char_storage, buf);
 //             if (undo_rec_type == ' ')
 //                 EndDisabled();
