@@ -3760,7 +3760,7 @@ pub unsafe fn DebugNodeTable(table: *mut ImGuiTable)
 //             "WidthGiven: %.1f, Request/Auto: %.1f/%.1f, StretchWeight: {} (%.1f%%)\n"
 //             "MinX: %.1f, MaxX: %.1f (%+.10.0), ClipRect: %.1f to %.1f (+%.10.0)\n"
 //             "ContentWidth: %.1f,%.1f, HeadersUsed/Ideal %.1f/%.1f\n"
-//             "Sort: {}{}, UserID: 0x{}, Flags: 0x%04X: {}{}{}..",
+//             "Sort: {}{}, UserID: 0x{}, Flags: {}: {}{}{}..",
 //             n, column.DisplayOrder, name, column.MinX - table.WorkRect.Min.x, column.MaxX - table.WorkRect.Min.x, (n < table.FreezeColumnsRequest) ? " (Frozen)" : "",
 //             column.IsEnabled, column.IsVisibleX, column.IsVisibleY, column.IsRequestOutput, column.IsSkipItems, column.DrawChannelFrozen, column.DrawChannelUnfrozen,
 //             column.WidthGiven, column.WidthRequest, column.WidthAuto, column.StretchWeight, if column.StretchWeight > 0.0 { (column.StretchWeight / sum_weights) * 100 } else { 0.0 },

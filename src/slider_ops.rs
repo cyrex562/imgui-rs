@@ -450,7 +450,7 @@ pub unsafe fn SliderScalar(
     if format == null_mut() {
         *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
     } else if data_type == ImGuiDataType_S32 && format != String::from("{}") {
-        // (FIXME-LEGACY: Patch old "%.0f" format string to use "{}", read function more details.)
+        // (FIXME-LEGACY: Patch old "{}f" format string to use "{}", read function more details.)
         *format = data_type_ops::PatchFormatStringFloatToInt(format);
     }
     let hovered: bool = ItemHoverable(&frame_bb, id);
@@ -712,7 +712,7 @@ pub unsafe fn SliderAngle(
     flags: ImGuiSliderFlags,
 ) -> bool {
     if format.is_empty() {
-        *format = "%.0 deg".into_string();
+        *format = "{} deg".into_string();
     }
     let mut v_deg: c_float = (*v_rad) * 360f32 / (2 * IM_PI);
     let mut value_changed: bool = SliderFloat(
@@ -884,7 +884,7 @@ pub unsafe fn VSliderScalar(
     if format.is_empty() {
         *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
     } else if data_type == ImGuiDataType_S32 && format != "{}".into_string() {
-        // (FIXME-LEGACY: Patch old "%.0f" format string to use "{}", read function more details.)
+        // (FIXME-LEGACY: Patch old "{}f" format string to use "{}", read function more details.)
         *format = data_type_ops::PatchFormatStringFloatToInt(format);
     }
 

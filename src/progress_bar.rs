@@ -38,7 +38,7 @@ pub unsafe fn ProgressBar(mut fraction: c_float, size_arg: &mut ImVec2, overlay:
     overlay_buf: [c_char;32];
     if !overlay
     {
-        // ImFormatString(overlay_buf, overlay_buf.len(), "%.0f%%", fraction * 100 + 0.010f32);
+        // ImFormatString(overlay_buf, overlay_buf.len(), "{}f%%", fraction * 100 + 0.010f32);
         // overlay = overlay_buf;
     }
 

@@ -287,7 +287,7 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
     {
         if (quadrant == g.NavMoveDir)
         {
-            // ImFormatString(buf, buf.len(), "%.0f/%.0f", dist_box, dist_center);
+            // ImFormatString(buf, buf.len(), "{}f/{}f", dist_box, dist_center);
             let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window.Viewport);
             draw_list.AddRectFilled(&cand.Min, &cand.Max, IM_COL32(255, 0, 0, 200), 0.0, 0);
             draw_list.AddText(&cand.Min, IM_COL32(255, 255, 255, 255), buf.as_ptr());

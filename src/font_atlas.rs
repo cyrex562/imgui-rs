@@ -208,7 +208,7 @@ impl ImFontAtlas {
             let mut p: *const c_char = null();
             // for (p = filename + strlen(filename); p > filename && p[-1] != '/' && p[-1] != '\\'; p--)
             while p > filename && p[-1] != '/' as c_char && p[-1] != '\\' as c_char {
-                // ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "{}, %.0px", p, size_pixels);
+                // ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "{}, {}px", p, size_pixels);
                 p = filename + libc: strlen(filename)
             }
         }

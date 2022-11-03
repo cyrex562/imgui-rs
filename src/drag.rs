@@ -350,7 +350,7 @@ pub unsafe fn DragScalar<T>(
     if format.is_empty() {
         *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
     } else if data_type == ImGuiDataType_S32 && format != String::format("{}") {
-        // (FIXME-LEGACY: Patch old "%.0f" format string to use "{}", read function more details.)
+        // (FIXME-LEGACY: Patch old "{}f" format string to use "{}", read function more details.)
         *format = data_type_ops::PatchFormatStringFloatToInt(format);
     }
 

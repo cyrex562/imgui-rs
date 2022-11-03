@@ -24,21 +24,21 @@ pub LocalFlags: ImGuiDockNodeFlags,                 // (Write) Flags specific to
 pub LocalFlagsInWindows: ImGuiDockNodeFlags,        // (Write) Flags specific to this node, applied from windows
 pub MergedFlags: ImGuiDockNodeFlags,                // (Read)  Effective flags (== SharedFlags | LocalFlagsInNode | LocalFlagsInWindows)
 pub State: ImGuiDockNodeState,
-pub ParentNode: *mut ImGuiDockNode,
+pub ParentNode: ImGuiDockNode,
     // ImGuiDockNode*          ChildNodes[2];              // [Split node only] Child nodes (left/right or top/bottom). Consider switching to an array.
-pub ChildNodes: [*mut ImGuiDockNode;2],
-    pub Windows: Vec<*mut ImGuiWindow>,                    // Note: unordered list! Iterate TabBar.Tabs for user-order.
-pub TabBar: *mut ImGuiTabBar,
+pub ChildNodes: [ImGuiDockNode;2],
+    pub Windows: Vec<ImGuiWindow>,                    // Note: unordered list! Iterate TabBar.Tabs for user-order.
+pub TabBar: ImGuiTabBar,
 pub Pos: ImVec2,                        // Current position
 pub Size: ImVec2,                       // Current size
 pub SizeRef: ImVec2,                    // [Split node only] Last explicitly written-to size (overridden when using a splitter affecting the node), used to calculate Size.
 pub SplitAxis: ImGuiAxis,                  // [Split node only] Split axis (X or Y)
 pub WindowClass: ImGuiWindowClass,                // [Root node only]
 pub LastBgColor: u32,
-pub HostWindow: *mut ImGuiWindow,
-pub VisibleWindow: *mut ImGuiWindow,              // Generally point to window which is ID is == SelectedTabID, but when CTRL+Tabbing this can be a different window.
-pub CentralNode: *mut ImGuiDockNode,                // [Root node only] Pointer to central node.
-pub OnlyNodeWithWindows: *mut ImGuiDockNode,        // [Root node only] Set when there is a single visible node within the hierarchy.
+pub HostWindow: Option<ImGuiWindow>,
+pub VisibleWindow: Option<ImGuiWindow>,              // Generally point to window which is ID is == SelectedTabID, but when CTRL+Tabbing this can be a different window.
+pub CentralNode: ImGuiDockNode,                // [Root node only] Pointer to central node.
+pub OnlyNodeWithWindows: ImGuiDockNode,        // [Root node only] Set when there is a single visible node within the hierarchy.
 pub CountNodeWithWindows: size_t,       // [Root node only]
 pub LastFrameAlive: c_int,             // Last frame number the node was updated or kept alive explicitly with DockSpace() + ImGuiDockNodeFlags_KeepAliveOnly
 pub LastFrameActive: c_int,            // Last frame number the node was updated.

@@ -21,7 +21,6 @@ pub ElemCount:  size_t,          // 4    // Number of indices (multiple of 3) to
 pub UserCallback:  ImDrawCallback,       // 4-8  // If != NULL, call the function instead of rendering the vertices. clip_rect and texture_id will be set normally.
 pub UserCallbackData:  *mut c_void,   // 4-8  // The draw callback code can access this.
 
-
 }
 
 impl ImDrawCmd {

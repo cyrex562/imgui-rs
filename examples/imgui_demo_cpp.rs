@@ -761,7 +761,7 @@ pub unsafe fn ShowDemoWindowWidgets()
 
             static let f1: c_float =  1.0, f2 = 0.0067f;
             DragFloat("drag float", &f1, 0.0050f32);
-            DragFloat("drag small float", &f2, 0.01f, 0.0, 0.0, "%.06f ns");
+            DragFloat("drag small float", &f2, 0.01f, 0.0, 0.0, "{}6f ns");
         }
 
         {
@@ -1029,7 +1029,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             Spacing();
 
             static let wrap_width: c_float =  200;
-            SliderFloat("Wrap width", &wrap_width, -20, 600, "%.0f");
+            SliderFloat("Wrap width", &wrap_width, -20, 600, "{}f");
 
             draw_list: *mut ImDrawList = GetWindowDrawList();
             for (let n: c_int = 0; n < 2; n++)
@@ -1040,7 +1040,7 @@ pub unsafe fn ShowDemoWindowWidgets()
                 let marker_max: ImVec2 = ImVec2::new(pos.x + wrap_width + 10, pos.y + GetTextLineHeight());
                 PushTextWrapPos(GetCursorPos().x + wrap_width);
                 if (n == 0)
-                    Text("The lazy dog is a good dog. This paragraph should fit within %.0 pixels. Testing a 1 character word. The quick brown fox jumps over the lazy dog.", wrap_width);
+                    Text("The lazy dog is a good dog. This paragraph should fit within {} pixels. Testing a 1 character word. The quick brown fox jumps over the lazy dog.", wrap_width);
                 else
                     Text("aaaaaaaa bbbbbbbb, c cccccccc,dddddddd. d eeeeeeee   ffffffff. gggggggg!hhhhhhhh");
 
@@ -1108,7 +1108,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         let my_tex_w: c_float =  io.Fonts.TexWidth;
         let my_tex_h: c_float =  io.Fonts.TexHeight;
         {
-            Text("%.0fx%.0f", my_tex_w, my_tex_h);
+            Text("{}fx{}f", my_tex_w, my_tex_h);
             let pos: ImVec2 = GetCursorScreenPos();
             let uv_min: ImVec2 = ImVec2::new(0.0, 0.0);                 // Top-left
             let uv_max: ImVec2 = ImVec2::new(1.0, 1.0);                 // Lower-right
@@ -1574,7 +1574,7 @@ pub unsafe fn ShowDemoWindowWidgets()
             if my_str.empty(){
                 my_str.push(0);}
             Funcs::MyInputTextMultiline("##MyStr", &my_str, ImVec2::new(-FLT_MIN, GetTextLineHeight() * 16));
-            Text("Data: %p\nSize: {}\nCapacity: {}", my_str.begin(), my_str.size(), my_str.capacity());
+            Text("Data: {}\nSize: {}\nCapacity: {}", my_str.begin(), my_str.size(), my_str.capacity());
             TreePop();
         }
 
@@ -2124,7 +2124,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         SliderScalar("slider s32 low",       ImGuiDataType_S32,    &s32_v, &s32_zero, &s32_fifty,"{}");
         SliderScalar("slider s32 high",      ImGuiDataType_S32,    &s32_v, &s32_hi_a, &s32_hi_b, "{}");
         SliderScalar("slider s32 full",      ImGuiDataType_S32,    &s32_v, &s32_min,  &s32_max,  "{}");
-        SliderScalar("slider s32 hex",       ImGuiDataType_S32,    &s32_v, &s32_zero, &s32_fifty, "0x%04X");
+        SliderScalar("slider s32 hex",       ImGuiDataType_S32,    &s32_v, &s32_zero, &s32_fifty, "{}");
         SliderScalar("slider low: u32",       ImGuiDataType_U32,    &u32_v, &u32_zero, &u32_fifty,"%u");
         SliderScalar("slider high: u32",      ImGuiDataType_U32,    &u32_v, &u32_hi_a, &u32_hi_b, "%u");
         SliderScalar("slider full: u32",      ImGuiDataType_U32,    &u32_v, &u32_min,  &u32_max,  "%u");
@@ -2678,7 +2678,7 @@ pub unsafe fn ShowDemoWindowLayout()
             let child_rect_max: ImVec2 = GetItemRectMax();
             PopStyleColor();
             Text("Hovered: {}", child_is_hovered);
-            Text("Rect of child window is: (%.0,%.0) (%.0,%.0)", child_rect_min.x, child_rect_min.y, child_rect_max.x, child_rect_max.y);
+            Text("Rect of child window is: ({},{}) ({},{})", child_rect_min.x, child_rect_min.y, child_rect_max.x, child_rect_max.y);
         }
 
         TreePop();
@@ -3043,10 +3043,10 @@ pub unsafe fn ShowDemoWindowLayout()
         SameLine(140); enable_track |= DragInt("##item", &track_item, 0.25f, 0, 99, "Item = {}");
 
         let mut scroll_to_off: bool =  Button("Scroll Offset");
-        SameLine(140); scroll_to_off |= DragFloat("##off", &scroll_to_off_px, 1.0, 0, f32::MAX, "+%.0 px");
+        SameLine(140); scroll_to_off |= DragFloat("##off", &scroll_to_off_px, 1.0, 0, f32::MAX, "+{} px");
 
         let mut scroll_to_pos: bool =  Button("Scroll To Pos");
-        SameLine(140); scroll_to_pos |= DragFloat("##pos", &scroll_to_pos_px, 1.0, -10, f32::MAX, "X/Y = %.0 px");
+        SameLine(140); scroll_to_pos |= DragFloat("##pos", &scroll_to_pos_px, 1.0, -10, f32::MAX, "X/Y = {} px");
         PopItemWidth();
 
         if scroll_to_off || scroll_to_pos {
@@ -3094,7 +3094,7 @@ pub unsafe fn ShowDemoWindowLayout()
             let scroll_y: c_float =  GetScrollY();
             let scroll_max_y: c_float =  GetScrollMaxY();
             EndChild();
-            Text("%.0f/%.0f", scroll_y, scroll_max_y);
+            Text("{}f/{}f", scroll_y, scroll_max_y);
             EndGroup();
         }
         PopID();
@@ -3140,7 +3140,7 @@ pub unsafe fn ShowDemoWindowLayout()
             EndChild();
             SameLine();
             names: *const c_char[] = { "Left", "25%", "Center", "75%", "Right" };
-            Text("{}\n%.0f/%.0f", names[i], scroll_x, scroll_max_x);
+            Text("{}\n{}f/{}f", names[i], scroll_x, scroll_max_x);
             Spacing();
         }
         PopID();
@@ -3193,7 +3193,7 @@ pub unsafe fn ShowDemoWindowLayout()
         if (IsItemActive())
             scroll_x_delta = +GetIO().DeltaTime * 1000;
         SameLine();
-        Text("%.0f/%.0f", scroll_x, scroll_max_x);
+        Text("{}f/{}f", scroll_x, scroll_max_x);
         if (scroll_x_delta != 0.0)
         {
             // Demonstrate a trick: you can use Begin to set yourself in the context of another window
@@ -3314,7 +3314,7 @@ pub unsafe fn ShowDemoWindowLayout()
     {
         static size: ImVec2::new(100, 100);
         static offset: ImVec2::new(30f32, 30f32);
-        DragFloat2("size", (&mut c_float)&size, 0.5, 1.0, 200, "%.0f");
+        DragFloat2("size", (&mut c_float)&size, 0.5, 1.0, 200, "{}f");
         TextWrapped("(Click and drag to scroll)");
 
         HelpMarker(
@@ -4248,7 +4248,7 @@ pub unsafe fn ShowDemoWindowTables()
         CheckboxFlags("ImGuiTableFlags_RowBg", &flags2, ImGuiTableFlags_RowBg);
         CheckboxFlags("ImGuiTableFlags_Resizable", &flags2, ImGuiTableFlags_Resizable);
         Checkbox("show_widget_frame_bg", &show_widget_frame_bg);
-        SliderFloat2("CellPadding", &cell_padding.x, 0.0, 10.0, "%.0f");
+        SliderFloat2("CellPadding", &cell_padding.x, 0.0, 10.0, "{}f");
         PopStyleCompact();
 
         PushStyleVar(ImGuiStyleVar_CellPadding, cell_padding);
@@ -5535,7 +5535,7 @@ pub unsafe fn ShowDemoWindowTables()
                 Text(": DrawCmd: +{} (in same window)",
                     table_draw_list_draw_cmd_count - parent_draw_list_draw_cmd_count);
             else
-                Text(": DrawCmd: +{} (in child window), Scroll: (%.f/%.0) (%.f/%.0)",
+                Text(": DrawCmd: +{} (in child window), Scroll: (%.f/{}) (%.f/{})",
                     table_draw_list_draw_cmd_count - 1, table_scroll_cur.x, table_scroll_max.x, table_scroll_cur.y, table_scroll_max.y);
         }
         TreePop();
@@ -5806,7 +5806,7 @@ pub unsafe fn ShowDemoWindowMisc()
             Text("Mouse delta: (%g, %g)", io.MouseDelta.x, io.MouseDelta.y);
 
             let count: c_int = IM_ARRAYSIZE(io.MouseDown);
-            Text("Mouse down:");         for (let i: c_int = 0; i < count; i++) if (IsMouseDown(i))      { SameLine(); Text("b{} (%.02f secs)", i, io.MouseDownDuration[i]); }
+            Text("Mouse down:");         for (let i: c_int = 0; i < count; i++) if (IsMouseDown(i))      { SameLine(); Text("b{} ({}2f secs)", i, io.MouseDownDuration[i]); }
             Text("Mouse clicked:");      for (let i: c_int = 0; i < count; i++) if (IsMouseClicked(i))   { SameLine(); Text("b{} ({})", i, GetMouseClickedCount(i)); }
             Text("Mouse released:");     for (let i: c_int = 0; i < count; i++) if (IsMouseReleased(i))  { SameLine(); Text("b{}", i); }
             Text("Mouse wheel: %.1f", io.MouseWheel);
@@ -5828,11 +5828,11 @@ pub unsafe fn ShowDemoWindowMisc()
             let mut key_first: ImGuiKey =  0;
             //Text("Legacy raw:");       for (ImGuiKey key = key_first; key < ImGuiKey_COUNT; key++) { if (io.KeysDown[key]) { SameLine(); Text("\"{}\" {}", GetKeyName(key), key); } }
 // #endif
-            Text("Keys down:");          for (let mut key: ImGuiKey =  key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (IsKeyDown(key)) { SameLine(); Text("\"{}\" {} (%.02f secs)", GetKeyName(key), key, GetKeyData(key)->DownDuration); } }
+            Text("Keys down:");          for (let mut key: ImGuiKey =  key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (IsKeyDown(key)) { SameLine(); Text("\"{}\" {} ({}2f secs)", GetKeyName(key), key, GetKeyData(key)->DownDuration); } }
             Text("Keys pressed:");       for (let mut key: ImGuiKey =  key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (IsKeyPressed(key)) { SameLine(); Text("\"{}\" {}", GetKeyName(key), key); } }
             Text("Keys released:");      for (let mut key: ImGuiKey =  key_first; key < ImGuiKey_COUNT; key++) { if (funcs::IsLegacyNativeDupe(key)) continue; if (IsKeyReleased(key)) { SameLine(); Text("\"{}\" {}", GetKeyName(key), key); } }
             Text("Keys mods: {}{}{}{}", io.KeyCtrl ? "CTRL " : "", io.KeyShift ? "SHIFT " : "", io.KeyAlt ? "ALT " : "", io.KeySuper ? "SUPER " : "");
-            Text("Chars queue:");        for (let i: c_int = 0; i < io.InputQueueCharacters.Size; i++) { let c: ImWchar = io.InputQueueCharacters[i]; SameLine();  Text("\'%c\' (0x%04X)", (c > ' ' && c <= 255) ? c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
+            Text("Chars queue:");        for (let i: c_int = 0; i < io.InputQueueCharacters.Size; i++) { let c: ImWchar = io.InputQueueCharacters[i]; SameLine();  Text("\'%c\' ({})", (c > ' ' && c <= 255) ? c : '?', c); } // FIXME: We should convert 'c' to UTF-8 here but the functions are not public.
 
             // Draw an arbitrary US keyboard layout to visualize translated keys
             {
@@ -6278,7 +6278,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
     ShowFontSelector("Fonts##Selector");
 
     // Simplified Settings (expose floating-pointer border sizes as boolean representing 0.0 or 1.0)
-    if (SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0, "%.0f"))
+    if (SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0, "{}f"))
         style.GrabRounding = style.FrameRounding; // Make GrabRounding always the same value as FrameRounding
     { let mut border: bool =  (style.WindowBorderSize > 0.0); if (Checkbox("WindowBorder", &border)) { if style.WindowBorderSize = border { 1.0 } else { 0.0 }; } }
     SameLine();
@@ -6304,30 +6304,30 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
         if (BeginTabItem("Sizes"))
         {
             Text("Main");
-            SliderFloat2("WindowPadding", (&mut c_float)&style.WindowPadding, 0.0, 20f32, "%.0f");
-            SliderFloat2("FramePadding", &style.FramePadding, 0.0, 20f32, "%.0f");
-            SliderFloat2("CellPadding", &style.CellPadding, 0.0, 20f32, "%.0f");
-            SliderFloat2("ItemSpacing", &style.ItemSpacing, 0.0, 20f32, "%.0f");
-            SliderFloat2("ItemInnerSpacing", &style.ItemInnerSpacing, 0.0, 20f32, "%.0f");
-            SliderFloat2("TouchExtraPadding", &style.TouchExtraPadding, 0.0, 10.0, "%.0f");
-            SliderFloat("IndentSpacing", &style.IndentSpacing, 0.0, 30f32, "%.0f");
-            SliderFloat("ScrollbarSize", &style.ScrollbarSize, 1.0, 20f32, "%.0f");
-            SliderFloat("GrabMinSize", &style.GrabMinSize, 1.0, 20f32, "%.0f");
+            SliderFloat2("WindowPadding", (&mut c_float)&style.WindowPadding, 0.0, 20f32, "{}f");
+            SliderFloat2("FramePadding", &style.FramePadding, 0.0, 20f32, "{}f");
+            SliderFloat2("CellPadding", &style.CellPadding, 0.0, 20f32, "{}f");
+            SliderFloat2("ItemSpacing", &style.ItemSpacing, 0.0, 20f32, "{}f");
+            SliderFloat2("ItemInnerSpacing", &style.ItemInnerSpacing, 0.0, 20f32, "{}f");
+            SliderFloat2("TouchExtraPadding", &style.TouchExtraPadding, 0.0, 10.0, "{}f");
+            SliderFloat("IndentSpacing", &style.IndentSpacing, 0.0, 30f32, "{}f");
+            SliderFloat("ScrollbarSize", &style.ScrollbarSize, 1.0, 20f32, "{}f");
+            SliderFloat("GrabMinSize", &style.GrabMinSize, 1.0, 20f32, "{}f");
             Text("Borders");
-            SliderFloat("WindowBorderSize", &style.WindowBorderSize, 0.0, 1.0, "%.0f");
-            SliderFloat("ChildBorderSize", &style.ChildBorderSize, 0.0, 1.0, "%.0f");
-            SliderFloat("PopupBorderSize", &style.PopupBorderSize, 0.0, 1.0, "%.0f");
-            SliderFloat("FrameBorderSize", &style.FrameBorderSize, 0.0, 1.0, "%.0f");
-            SliderFloat("TabBorderSize", &style.TabBorderSize, 0.0, 1.0, "%.0f");
+            SliderFloat("WindowBorderSize", &style.WindowBorderSize, 0.0, 1.0, "{}f");
+            SliderFloat("ChildBorderSize", &style.ChildBorderSize, 0.0, 1.0, "{}f");
+            SliderFloat("PopupBorderSize", &style.PopupBorderSize, 0.0, 1.0, "{}f");
+            SliderFloat("FrameBorderSize", &style.FrameBorderSize, 0.0, 1.0, "{}f");
+            SliderFloat("TabBorderSize", &style.TabBorderSize, 0.0, 1.0, "{}f");
             Text("Rounding");
-            SliderFloat("WindowRounding", &style.WindowRounding, 0.0, 12.0, "%.0f");
-            SliderFloat("ChildRounding", &style.ChildRounding, 0.0, 12.0, "%.0f");
-            SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0, "%.0f");
-            SliderFloat("PopupRounding", &style.PopupRounding, 0.0, 12.0, "%.0f");
-            SliderFloat("ScrollbarRounding", &style.ScrollbarRounding, 0.0, 12.0, "%.0f");
-            SliderFloat("GrabRounding", &style.GrabRounding, 0.0, 12.0, "%.0f");
-            SliderFloat("LogSliderDeadzone", &style.LogSliderDeadzone, 0.0, 12.0, "%.0f");
-            SliderFloat("TabRounding", &style.TabRounding, 0.0, 12.0, "%.0f");
+            SliderFloat("WindowRounding", &style.WindowRounding, 0.0, 12.0, "{}f");
+            SliderFloat("ChildRounding", &style.ChildRounding, 0.0, 12.0, "{}f");
+            SliderFloat("FrameRounding", &style.FrameRounding, 0.0, 12.0, "{}f");
+            SliderFloat("PopupRounding", &style.PopupRounding, 0.0, 12.0, "{}f");
+            SliderFloat("ScrollbarRounding", &style.ScrollbarRounding, 0.0, 12.0, "{}f");
+            SliderFloat("GrabRounding", &style.GrabRounding, 0.0, 12.0, "{}f");
+            SliderFloat("LogSliderDeadzone", &style.LogSliderDeadzone, 0.0, 12.0, "{}f");
+            SliderFloat("TabRounding", &style.TabRounding, 0.0, 12.0, "{}f");
             Text("Alignment");
             SliderFloat2("WindowTitleAlign", &style.WindowTitleAlign, 0.0, 1.0, "%.2f");
             let window_menu_button_position: c_int = style.WindowMenuButtonPosition + 1;
@@ -6340,7 +6340,7 @@ pub unsafe fn ShowStyleEditor(re0f32: *mut ImGuiStyle)
             SameLine(); HelpMarker("Alignment applies when a selectable is larger than its text content.");
             Text("Safe Area Padding");
             SameLine(); HelpMarker("Adjust if you cannot see the edges of your screen (e.g. on a TV where scaling has not been configured).");
-            SliderFloat2("DisplaySafeAreaPadding", &style.DisplaySafeAreaPadding, 0.0, 30f32, "%.0f");
+            SliderFloat2("DisplaySafeAreaPadding", &style.DisplaySafeAreaPadding, 0.0, 30f32, "{}f");
             EndTabItem();
         }
 
@@ -7649,8 +7649,8 @@ pub unsafe fn ShowExampleAppCustomRendering(bool* p_open)
             static let mut curve_segments_override: bool =  false;
             static let curve_segments_override_v: c_int = 8;
             static colf: ImVec4 = ImVec4(1.0, 1.0, 0.4f, 1.0);
-            DragFloat("Size", &sz, 0.2f, 2.0, 100, "%.0f");
-            DragFloat("Thickness", &thickness, 0.05f, 1.0, 8.0, "%.02f");
+            DragFloat("Size", &sz, 0.2f, 2.0, 100, "{}f");
+            DragFloat("Thickness", &thickness, 0.05f, 1.0, 8.0, "{}2f");
             SliderInt("N-gon sides", &ngon_sides, 3, 12);
             Checkbox("##circlesegmentoverride", &circle_segments_override);
             SameLine(0.0, GetStyle().ItemInnerSpacing.x);

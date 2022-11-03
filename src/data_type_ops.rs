@@ -7,11 +7,11 @@ use crate::data_type_info::{GDataTypeInfo, ImGuiDataTypeInfo};
 use crate::math_ops::{ImAddClampOverflow, ImSubClampOverflow};
 use libc::{c_float, c_int};
 
-// FIXME-LEGACY: Prior to 1.61 our DragInt() function internally used floats and because of this the compile-time default value for format was "%.0f".
+// FIXME-LEGACY: Prior to 1.61 our DragInt() function internally used floats and because of this the compile-time default value for format was "{}f".
 // Even though we changed the compile-time default, we expect users to have carried %f around, which would break the display of DragInt() calls.
 // To honor backward compatibility we are rewriting the format string, unless IMGUI_DISABLE_OBSOLETE_FUNCTIONS is enabled. What could possibly go wrong?!
 pub fn PatchFormatStringFloatToInt(fmt: &str) -> String {
-    //     if (fmt[0] == '%' && fmt[1] == '.' && fmt[2] == '0' && fmt[3] == 'f' && fmt[4] == 0) // Fast legacy path for "%.0f" which is expected to be the most common case.
+    //     if (fmt[0] == '%' && fmt[1] == '.' && fmt[2] == '0' && fmt[3] == 'f' && fmt[4] == 0) // Fast legacy path for "{}f" which is expected to be the most common case.
     //         return "{}";
     //     let mut  fmt_start: &str = ImParseFormatFindStart(fmt);    // Find % (if any, and ignore %%)
     //     let mut  fmt_end: &str = ImParseFormatFindEnd(fmt_start);  // Find end of format specifier, which itself is an exercise of confidence/recklessness (because snprintf is dependent on libc or user).
@@ -24,7 +24,7 @@ pub fn PatchFormatStringFloatToInt(fmt: &str) -> String {
     //         ImFormatStringToTempBuffer(&tmp_format, null_mut(), "%.*s%{}{}", (fmt_start - fmt), fmt, fmt_end); // Honor leading and trailing decorations, but lose alignment/precision.
     //         return tmp_format;
     // // #else
-    //         // IM_ASSERT(0 && "DragInt(): Invalid format string!"); // Old versions used a default parameter of "%.0f", please replace with e.g. "{}"
+    //         // IM_ASSERT(0 && "DragInt(): Invalid format string!"); // Old versions used a default parameter of "{}f", please replace with e.g. "{}"
     // // #endif
     //     }
     //     return fmt;

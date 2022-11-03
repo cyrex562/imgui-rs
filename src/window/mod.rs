@@ -62,7 +62,7 @@ pub struct ImGuiWindow {
     pub FlagsPreviousFrame: ImGuiWindowFlags,
     pub WindowClass: ImGuiWindowClass,
     // Advanced users only. Set with SetNextWindowClass()
-    pub Viewport: *mut ImGuiViewport,
+    pub Viewport: ImGuiViewport,
     // Always set in Begin(). Inactive windows may have a NULL value here if their viewport was discarded.
     pub ViewportId: ImGuiID,
     // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)

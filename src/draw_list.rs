@@ -47,6 +47,7 @@ use std::ptr::null_mut;
 // Important: Primitives are always added to the list and not culled (culling is done at higher-level by  functions), if you use this API a lot consider coarse culling your drawn objects.
 #[derive(Default, Debug, Clone)]
 pub struct ImDrawList {
+    pub id: i32,
     // This is what you have to render
     pub CmdBuffer: Vec<ImDrawCmd>,
     // Draw commands. Typically 1 command = 1 GPU draw call, unless the command is a callback.
@@ -1114,9 +1115,10 @@ impl ImDrawList {
 
     // inline    void  PathLineToMergeDuplicate(const pos: &mut ImVec2)
     pub unsafe fn PathLineToMergeDuplicate(&mut self, pos: &ImVec2) {
-        if self._Path.len() == 0 || libc::memcmp(&self._Path[self._Path.Size - 1], &pos, 8) != 0 {
-            self._Path.push(pos.clone());
-        }
+        // if self._Path.len() == 0 || libc::memcmp(&self._Path[self._Path.Size - 1], pos, 8) != 0 {
+        //     self._Path.push(pos.clone());
+        // }
+        todo!()
     }
 
     // inline    void  PathFillConvex(col: u32)                                   { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
