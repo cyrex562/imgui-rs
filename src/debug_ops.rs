@@ -20,6 +20,7 @@ use crate::debug_log_flags::{ImGuiDebugLogFlags_EventActiveId, ImGuiDebugLogFlag
 use crate::dock_context_ops::DockContextClearNodes;
 use crate::dock_node::ImGuiDockNode;
 use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoTabBar, ImGuiDockNodeFlags_NoWindowMenuButton};
+use crate::draw_cmd::ImDrawCmd;
 use crate::draw_flags::ImDrawFlags_Closed;
 use crate::draw_list::ImDrawList;
 use crate::draw_list_flags::ImDrawListFlags_AntiAliasedLines;
@@ -1268,23 +1269,30 @@ pub unsafe fn DebugNodeDrawList(window: Option<&mut ImGuiWindow>,
 }
 
 // [DEBUG] Display mesh/aabb of a ImDrawCmd
-pub unsafe fn DebugNodeDrawCmdShowMeshAndBoundingBox(ImDrawList* out_draw_list, *const ImDrawList draw_list, *const ImDrawCmd draw_cmd, show_mesh: bool, show_aabb: bool)
+pub unsafe fn DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list: &mut ImDrawList, draw_list: &ImDrawList, draw_cmd: &ImDrawCmd, show_mesh: bool, show_aabb: bool)
 {
     // IM_ASSERT(show_mesh || show_aabb);
 
     // Draw wire-frame version of all triangles
-    let clip_rect: ImRect =  draw_cmd->ClipRect;
-    let mut vtxs_rect: ImRect = ImRect::new(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
-    ImDrawListFlags backup_flags = out_draw_list.Flags;
+    let clip_rect =  draw_cmd.ClipRect;
+    let mut vtxs_rect = ImRect::from_floats(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);
+    let backup_flags = out_draw_list.Flags;
     out_draw_list.Flags &= !ImDrawListFlags_AntiAliasedLines; // Disable AA on triangle outlines is more readable for very large and thin triangles.
-    for (let mut idx_n: c_uint =  draw_cmd->IdxOffset, idx_end = draw_cmd->IdxOffset + draw_cmd->ElemCount; idx_n < idx_end; )
+    // for (let mut idx_n: c_uint =  draw_cmd.IdxOffset, idx_end = draw_cmd.IdxOffset + draw_cmd.ElemCount; idx_n < idx_end; )
+    let idx_end = draw_cmd.IdxOffset + draw_cmd.ElemCount;
+    for idx_n in draw_cmd.IdxOffset .. idx_end
     {
-        ImDrawIdx* idx_buffer = if draw_list.IdxBuffer.len() > 0 { draw_list.IdxBuffer.Data} else { null_mut()}; // We don't hold on those pointers past iterations as ->AddPolyline() may invalidate them if out_draw_list==draw_list
-        vtx_buffer: *mut ImDrawVert = draw_list.VtxBuffer.Data + draw_cmd->VtxOffset;
+
+        let idx_buffer = if draw_list.IdxBuffer.len() > 0 { draw_list.IdxBuffer.Data} else { null_mut()}; // We don't hold on those pointers past iterations as ->AddPolyline() may invalidate them if out_draw_list==draw_list
+        let vtx_buffer = draw_list.VtxBuffer.Data + draw_cmd.VtxOffset;
 
         triangle: ImVec2[3];
-        for (let n: c_int = 0; n < 3; n++, idx_n++)
-            vtxs_rect.Add((triangle[n] = vtx_buffer[if idx_buffer { idx_buffer[idx_n]} else {idx_n}].pos));
+        // for (let n: c_int = 0; n < 3; n++, idx_n++)
+        for n in 0 .. 3
+        {
+            vtxs_rect.Add((triangle[n] = vtx_buffer[if idx_buffer { idx_buffer[idx_n] } else { idx_n }].pos));
+            idx_n += 1;
+        }
         if (show_mesh)
             out_draw_list.AddPolyline(triangle, 3, IM_COL32(255, 255, 0, 255), ImDrawFlags_Closed, 1.0); // In yellow: mesh triangles
     }
