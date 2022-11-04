@@ -23,9 +23,9 @@ pub unsafe fn SetActiveID(id: ImGuiID, window: *mut ImGuiWindow) {
     // While most behaved code would make an effort to not steal active id during window move/drag operations,
     // we at least need to be resilient to it. Cancelling the move is rather aggressive and users of 'master' branch
     // may prefer the weird ill-defined half working situation ('docking' did assert), so may need to rework that.
-    if g.MovingWindow != null_mut() && g.ActiveId == g.Movingwindow.MoveId {
+    if g.MovingWindow != None && g.ActiveId == g.Movingwindow.MoveId {
         IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() cancel MovingWindow\n");
-        g.MovingWindow = null_mut();
+        g.MovingWindow = None;
     }
 
     // Set active id
@@ -138,7 +138,7 @@ pub unsafe fn PushOverrideID(id: ImGuiID) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     if g.DebugHookIdInfo == id {
-        DebugHookIdInfo(id, ImGuiDataType_ID, null_mut(), null_mut());
+        DebugHookIdInfo(id, ImGuiDataType_ID, None, null_mut());
     }
     window.IDStack.push(id);
 }

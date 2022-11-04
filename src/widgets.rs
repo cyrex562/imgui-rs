@@ -122,7 +122,7 @@ use crate::color::{
     ImGuiCol_SeparatorActive, ImGuiCol_SeparatorHovered, ImGuiCol_SliderGrab,
     ImGuiCol_SliderGrabActive, ImGuiCol_Tab, ImGuiCol_TabActive, ImGuiCol_TabHovered,
     ImGuiCol_TabUnfocused, ImGuiCol_TabUnfocusedActive, ImGuiCol_Text, ImGuiCol_TextDisabled,
-    ImGuiCol_TextSelectedBg, ImGuiCol_TitleBgActive, IM_COL32, IM_COL32_A_MASK,
+    ImGuiCol_TextSelectedBg, ImGuiCol_TitleBgActive, color_u32_from_rgba, IM_COL32_A_MASK,
 };
 use crate::color_edit_flags::{
     ImGuiColorEditFlags, ImGuiColorEditFlags_AlphaBar, ImGuiColorEditFlags_AlphaPreview,
@@ -452,7 +452,7 @@ use std::ptr::{null, null_mut}; // Time for drag-hold to activate items acceptin
 // - ColorPickerOptionsPopup() [Internal]
 //-------------------------------------------------------------------------
 
-pub unsafe fn ColorEdit3(label: &str, col: [c_float; 3], flags: ImGuiColorEditFlags) -> bool {
+pub unsafe fn ColorEdit3(label: String, col: [c_float; 3], flags: ImGuiColorEditFlags) -> bool {
     let mut color_b: [c_float; 4] = [col[0], col[1], col[2], 0.0];
 
     return ColorEdit4(label, &mut color_b, flags | ImGuiColorEditFlags_NoAlpha);
@@ -493,11 +493,11 @@ pub unsafe fn ColorEditRestoreHS(
 // See enum ImGuiColorEditFlags_ for available options. e.g. Only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
 // With typical options: Left-click on color square to open color picker. Right-click to open option menu. CTRL-Click over input fields to edit them and TAB to go to next item.
 pub unsafe fn ColorEdit4(
-    label: &str,
+    label: String,
     col: &mut [c_float; 4],
     mut flags: ImGuiColorEditFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -722,7 +722,7 @@ pub unsafe fn ColorEdit4(
             if alpha {
                 // r = sscanf(p, "{:02X}{:02X}{:02X}{:02X}", &i[0], &i[1], &i[2], &i[3]);
             }
-            // Treat at unsigned (%X is unsigned)
+            // Treat at unsigned ({} is unsigned)
             else {
                 // r = sscanf(p, "{:02X}{:02X}{:02X}", &i[0], &i[1], &i[2]);
             }
@@ -733,7 +733,7 @@ pub unsafe fn ColorEdit4(
         }
     }
 
-    picker_active_window: *mut ImGuiWindow = null_mut();
+    picker_active_window: *mut ImGuiWindow = None;
     if flag_clear(flags, ImGuiColorEditFlags_NoSmallPreview) {
         let button_offset_x: c_float = if flag_set(flags, ImGuiColorEditFlags_NoInputs)
             || (style.ColorButtonPosition == ImGuiDir_Left)
@@ -763,7 +763,7 @@ pub unsafe fn ColorEdit4(
         }
 
         if BeginPopup("picker", 0) {
-            picker_active_window = g.CurrentWindow;
+            picker_active_window = g.CurrentWindow.unwrap();
             if label != label_display_end {
                 TextEx(label, 0);
                 layout_ops::Spacing();
@@ -790,7 +790,7 @@ pub unsafe fn ColorEdit4(
     }
 
     // Convert back
-    if value_changed && picker_active_window == null_mut() {
+    if value_changed && picker_active_window == None {
         if !value_changed_as_float {
             // for (let n: c_int = 0; n < 4; n++)
             for n in 0..4 {
@@ -869,7 +869,7 @@ pub unsafe fn ColorEdit4(
 }
 
 pub unsafe fn ColorPicker3(
-    label: &str,
+    label: String,
     col: &mut [c_float; 3],
     flags: ImGuiColorEditFlags,
 ) -> bool {
@@ -897,28 +897,28 @@ pub unsafe fn RenderArrowsForVerticalBar(
         ImVec2::new(pos.x + half_sz.x + 1, pos.y),
         ImVec2::new(half_sz.x + 2, half_sz.y + 1),
         ImGuiDir_Right,
-        IM_COL32(0, 0, 0, alpha8),
+        color_u32_from_rgba(0, 0, 0, alpha8),
     );
     RenderArrowPointingAt(
         draw_list,
         ImVec2::new(pos.x + half_sz.x, pos.y),
         half_sz,
         ImGuiDir_Right,
-        IM_COL32(255, 255, 255, alpha8),
+        color_u32_from_rgba(255, 255, 255, alpha8),
     );
     RenderArrowPointingAt(
         draw_list,
         ImVec2::new(pos.x + bar_w - half_sz.x - 1, pos.y),
         ImVec2::new(half_sz.x + 2, half_sz.y + 1),
         ImGuiDir_Left,
-        IM_COL32(0, 0, 0, alpha8),
+        color_u32_from_rgba(0, 0, 0, alpha8),
     );
     RenderArrowPointingAt(
         draw_list,
         ImVec2::new(pos.x + bar_w - half_sz.x, pos.y),
         half_sz,
         ImGuiDir_Left,
-        IM_COL32(255, 255, 255, alpha8),
+        color_u32_from_rgba(255, 255, 255, alpha8),
     );
 }
 
@@ -927,7 +927,7 @@ pub unsafe fn RenderArrowsForVerticalBar(
 // FIXME: we adjust the big color square height based on item width, which may cause a flickering feedback loop (if automatic height makes a vertical scrollbar appears, affecting automatic width..)
 // FIXME: this is trying to be aware of style.Alpha but not fully correct. Also, the color wheel will have overlapping glitches with (style.Alpha < 1.0)
 pub unsafe fn ColorPicker4(
-    label: &str,
+    label: String,
     col: &mut [c_float; 4],
     mut flags: ImGuiColorEditFlags,
     ref_col: c_float,
@@ -1314,17 +1314,17 @@ pub unsafe fn ColorPicker4(
     }
 
     let style_alpha8 = IM_F32_TO_INT8_SAT(style.Alpha);
-    let col_black: u32 = IM_COL32(0, 0, 0, style_alpha8);
-    let col_white: u32 = IM_COL32(255, 255, 255, style_alpha8);
-    let col_midgrey: u32 = IM_COL32(128, 128, 128, style_alpha8);
+    let col_black: u32 = color_u32_from_rgba(0, 0, 0, style_alpha8);
+    let col_white: u32 = color_u32_from_rgba(255, 255, 255, style_alpha8);
+    let col_midgrey: u32 = color_u32_from_rgba(128, 128, 128, style_alpha8);
     let col_hues: [u32; 6 + 1] = [
-        IM_COL32(255, 0, 0, style_alpha8),
-        IM_COL32(255, 255, 0, style_alpha8),
-        IM_COL32(0, 255, 0, style_alpha8),
-        IM_COL32(0, 255, 255, style_alpha8),
-        IM_COL32(0, 0, 255, style_alpha8),
-        IM_COL32(255, 0, 255, style_alpha8),
-        IM_COL32(255, 0, 0, style_alpha8),
+        color_u32_from_rgba(255, 0, 0, style_alpha8),
+        color_u32_from_rgba(255, 255, 0, style_alpha8),
+        color_u32_from_rgba(0, 255, 0, style_alpha8),
+        color_u32_from_rgba(0, 255, 255, style_alpha8),
+        color_u32_from_rgba(0, 0, 255, style_alpha8),
+        color_u32_from_rgba(255, 0, 255, style_alpha8),
+        color_u32_from_rgba(255, 0, 0, style_alpha8),
     ];
 
     let mut hue_color_f = ImVec4::from_floats(1.0, 1.0, 1.0, style.Alpha);
@@ -1739,7 +1739,7 @@ pub unsafe fn SetColorEditOptions(mut flags: ImGuiColorEditFlags) {
 }
 
 // Note: only access 3 floats if ImGuiColorEditFlags_NoAlpha flag is set.
-pub unsafe fn ColorTooltip(text: &str, col: c_float, flags: ImGuiColorEditFlags) {
+pub unsafe fn ColorTooltip(text: String, col: c_float, flags: ImGuiColorEditFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     BeginTooltipEx(
@@ -1969,7 +1969,7 @@ pub unsafe fn ColorPickerOptionsPopup(ref_col: &[c_float], flags: ImGuiColorEdit
 // - CollapsingHeader()
 //-------------------------------------------------------------------------
 
-pub unsafe fn TreeNode(str_id: &str, fmt: &str) -> bool {
+pub unsafe fn TreeNode(str_id: String, fmt: String) -> bool {
     // va_list args;
     // va_start(args, fmt);
     let mut is_open: bool = TreeNodeExV(str_id, 0, fmt);
@@ -1977,7 +1977,7 @@ pub unsafe fn TreeNode(str_id: &str, fmt: &str) -> bool {
     return is_open;
 }
 
-pub unsafe fn TreeNode2(ptr_id: &str, fmt: &str) -> bool {
+pub unsafe fn TreeNode2(ptr_id: String, fmt: String) -> bool {
     // va_list args;
     // va_start(args, fmt);
     let mut is_open: bool = TreeNodeExV(ptr_id, 0, fmt);
@@ -1985,7 +1985,7 @@ pub unsafe fn TreeNode2(ptr_id: &str, fmt: &str) -> bool {
     return is_open;
 }
 
-pub unsafe fn TreeNode3(label: &str) -> bool {
+pub unsafe fn TreeNode3(label: String) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems {
         return false;
@@ -1993,15 +1993,15 @@ pub unsafe fn TreeNode3(label: &str) -> bool {
     return TreeNodeBehavior(window.GetID(label), 0, label);
 }
 
-pub unsafe fn TreeNodeV(str_id: &str, fmt: &str) -> bool {
+pub unsafe fn TreeNodeV(str_id: String, fmt: String) -> bool {
     return TreeNodeExV(str_id, 0, fmt);
 }
 
-pub unsafe fn TreeNodeV2(ptr_id: &str, fmt: &str) -> bool {
+pub unsafe fn TreeNodeV2(ptr_id: String, fmt: String) -> bool {
     return TreeNodeExV(ptr_id, 0, fmt);
 }
 
-pub unsafe fn TreeNodeEx(label: &str, flags: ImGuiTreeNodeFlags) -> bool {
+pub unsafe fn TreeNodeEx(label: String, flags: ImGuiTreeNodeFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems {
         return false;
@@ -2010,7 +2010,7 @@ pub unsafe fn TreeNodeEx(label: &str, flags: ImGuiTreeNodeFlags) -> bool {
     return TreeNodeBehavior(window.GetID(label), flags, label);
 }
 
-pub unsafe fn TreeNodeEx2(str_id: &str, flags: ImGuiTreeNodeFlags, fmt: &str) -> bool {
+pub unsafe fn TreeNodeEx2(str_id: String, flags: ImGuiTreeNodeFlags, fmt: String) -> bool {
     // va_list args;
     // va_start(args, fmt);
     let mut is_open: bool = TreeNodeExV(str_id, flags, fmt);
@@ -2018,7 +2018,7 @@ pub unsafe fn TreeNodeEx2(str_id: &str, flags: ImGuiTreeNodeFlags, fmt: &str) ->
     return is_open;
 }
 
-pub unsafe fn TreeNodeEx3(ptr_id: &str, flags: ImGuiTreeNodeFlags, fmt: &str) -> bool {
+pub unsafe fn TreeNodeEx3(ptr_id: String, flags: ImGuiTreeNodeFlags, fmt: String) -> bool {
     // va_list args;
     // va_start(args, fmt);
     let mut is_open: bool = TreeNodeExV(ptr_id, flags, fmt);
@@ -2026,26 +2026,26 @@ pub unsafe fn TreeNodeEx3(ptr_id: &str, flags: ImGuiTreeNodeFlags, fmt: &str) ->
     return is_open;
 }
 
-pub unsafe fn TreeNodeExV(str_id: &str, flags: ImGuiTreeNodeFlags, fmt: &str) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+pub unsafe fn TreeNodeExV(str_id: String, flags: ImGuiTreeNodeFlags, fmt: String) -> bool {
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
 
-    // label: &str, *label_end;
+    // label: String, *label_end;
     let mut label = String::default();
     let mut label_end = String::default();
     label = ImFormatStringToTempBufferV(fmt);
     return TreeNodeBehavior(window.GetID(str_id), flags, label.as_str());
 }
 
-pub unsafe fn TreeNodeExV2(ptr_id: *const c_void, flags: ImGuiTreeNodeFlags, fmt: &str) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+pub unsafe fn TreeNodeExV2(ptr_id: *const c_void, flags: ImGuiTreeNodeFlags, fmt: String) -> bool {
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
 
-    // label: &str, *label_end;
+    // label: String, *label_end;
     let mut label = String::default();
     label = ImFormatStringToTempBufferV(fmt);
     return TreeNodeBehavior(window.GetID(ptr_id), flags, label.as_str());
@@ -2105,7 +2105,7 @@ pub unsafe fn TreeNodeUpdateNextOpen(id: ImGuiID, flags: ImGuiTreeNodeFlags) -> 
     return is_open;
 }
 
-pub unsafe fn TreeNodeBehavior(id: ImGuiID, flags: ImGuiTreeNodeFlags, label: &str) -> bool {
+pub unsafe fn TreeNodeBehavior(id: ImGuiID, flags: ImGuiTreeNodeFlags, label: String) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems {
         return false;
@@ -2521,7 +2521,7 @@ pub unsafe fn SetNextItemOpen(is_open: bool, cond: ImGuiCond) {
 
 // CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGuiTreeNodeFlags_NoTreePushOnOpen flag).
 // This is basically the same as calling TreeNodeEx(label, ImGuiTreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
-pub unsafe fn CollapsingHeader(label: &str, flags: ImGuiTreeNodeFlags) -> bool {
+pub unsafe fn CollapsingHeader(label: String, flags: ImGuiTreeNodeFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems {
         return false;
@@ -2539,7 +2539,7 @@ pub unsafe fn CollapsingHeader(label: &str, flags: ImGuiTreeNodeFlags) -> bool {
 // p_visible != NULL && *p_visible == false : do not show the header at all
 // Do not mistake this with the Open state of the header itself, which you can adjust with SetNextItemOpen() or ImGuiTreeNodeFlags_DefaultOpen.
 pub unsafe fn CollapsingHeader2(
-    label: &str,
+    label: String,
     p_visible: *mut bool,
     mut flags: ImGuiTreeNodeFlags,
 ) -> bool {
@@ -2559,7 +2559,7 @@ pub unsafe fn CollapsingHeader2(
             ImGuiTreeNodeFlags_AllowItemOverlap | ImGuiTreeNodeFlags_ClipLabelForTrailingButton;
     }
     let mut is_open: bool = TreeNodeBehavior(id, flags, label);
-    if p_visible != null_mut() {
+    if p_visible != None {
         // Create a small overlapping close button
         // FIXME: We can evolve this into user accessible helpers to add extra buttons on title bars, headers, etc.
         // FIXME: CloseButton can overlap into text, need find a way to clip the text somehow.
@@ -2592,12 +2592,12 @@ pub unsafe fn CollapsingHeader2(
 // With this scheme, ImGuiSelectableFlags_SpanAllColumns and ImGuiSelectableFlags_AllowItemOverlap are also frequently used flags.
 // FIXME: Selectable() with (size.x == 0.0) and (SelectableTextAlign.x > 0.0) followed by SameLine() is currently not supported.
 pub unsafe fn Selectable(
-    label: &str,
+    label: String,
     selected: bool,
     flags: ImGuiSelectableFlags,
-    size_arg: Option<&ImVec2>,
+    size_arg: Option<ImVec2>,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -2607,7 +2607,7 @@ pub unsafe fn Selectable(
 
     // Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
     let mut id: ImGuiID = window.GetID(label);
-    let label_size: ImVec2 = CalcTextSize(label, true, 0.0);
+    let label_size: ImVec2 = CalcTextSize(label.clone(), true, 0.0);
     let mut size = ImVec2::from_floats(
         if size_arg.x != 0.0 {
             size_arg.x
@@ -2837,7 +2837,7 @@ pub unsafe fn Selectable(
 }
 
 pub unsafe fn Selectable2(
-    label: &str,
+    label: String,
     p_selected: &mut bool,
     flags: ImGuiSelectableFlags,
     size_arg: &ImVec2,
@@ -2859,7 +2859,7 @@ pub unsafe fn Selectable2(
 
 // Tip: To have a list filling the entire window width, use size.x = -FLT_MIN and pass an non-visible label e.g. "##empty"
 // Tip: If your vertical size is calculated from an item count (e.g. 10 * item_height) consider adding a fractional part to facilitate seeing scrolling boundaries (e.g. 10.25 * item_height).
-pub unsafe fn BeginListBox(label: &str, size_arg: &mut ImVec2) -> bool {
+pub unsafe fn BeginListBox(label: String, size_arg: &mut ImVec2) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems {
@@ -2916,7 +2916,7 @@ pub unsafe fn BeginListBox(label: &str, size_arg: &mut ImVec2) -> bool {
 
 // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
 // OBSOLETED in 1.81 (from February 2021)
-pub unsafe fn ListBoxHeader(label: &str, items_count: c_int, height_in_items: c_int) -> bool {
+pub unsafe fn ListBoxHeader(label: String, items_count: c_int, height_in_items: c_int) -> bool {
     // If height_in_items == -1, default height is maximum 7.
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let height_in_items_f: c_float = (if height_in_items < 0 {
@@ -2942,7 +2942,7 @@ pub unsafe fn EndListBox() {
 }
 
 pub unsafe fn ListBox(
-    label: &str,
+    label: String,
     current_item: &mut usize,
     items: &[String],
     items_count: usize,
@@ -2962,7 +2962,7 @@ pub unsafe fn ListBox(
 // This is merely a helper around BeginListBox(), EndListBox().
 // Considering using those directly to submit custom data or store selection differently.
 pub unsafe fn ListBox2(
-    label: &str,
+    label: String,
     current_item: &mut usize,
     items_getter: fn(&[String], usize, &mut String) -> bool,
     data: &[String],
@@ -3034,12 +3034,12 @@ pub unsafe fn ListBox2(
 
 pub unsafe fn PlotEx(
     plot_type: ImGuiPlotType,
-    label: &str,
+    label: String,
     values_getter: fn(data: &ImGuiPlotArrayGetterData, idx: usize) -> c_float,
     data: &ImGuiPlotArrayGetterData,
     values_count: usize,
     values_offset: usize,
-    overlay_text: &str,
+    overlay_text: String,
     mut scale_min: c_float,
     mut scale_max: c_float,
     mut frame_size: ImVec2,
@@ -3272,11 +3272,11 @@ pub fn Plot_ArrayGetter(data: &ImGuiPlotArrayGetterData, idx: usize) -> c_float 
 }
 
 pub unsafe fn PlotLines(
-    label: &str,
+    label: String,
     values: &[c_float],
     values_count: usize,
     values_offset: usize,
-    overlay_text: &str,
+    overlay_text: String,
     scale_min: c_float,
     scale_max: c_float,
     graph_size: &ImVec2,
@@ -3298,12 +3298,12 @@ pub unsafe fn PlotLines(
 }
 
 pub unsafe fn PlotLines2(
-    label: &str,
+    label: String,
     values_getter: fn(&ImGuiPlotArrayGetterData, usize) -> c_float,
     data: &ImGuiPlotArrayGetterData,
     values_count: c_int,
     values_offset: c_int,
-    overlay_text: &str,
+    overlay_text: String,
     scale_min: c_float,
     scale_max: c_float,
     graph_size: ImVec2,
@@ -3323,11 +3323,11 @@ pub unsafe fn PlotLines2(
 }
 
 pub unsafe fn PlotHistogram(
-    label: &str,
+    label: String,
     values: &[c_float],
     values_count: usize,
     values_offset: usize,
-    overlay_text: &str,
+    overlay_text: String,
     scale_min: c_float,
     scale_max: c_float,
     graph_size: ImVec2,
@@ -3349,12 +3349,12 @@ pub unsafe fn PlotHistogram(
 }
 
 pub unsafe fn PlotHistogram2(
-    label: &str,
+    label: String,
     values_getter: fn(&ImGuiPlotArrayGetterData, usize) -> c_float,
     data: &ImGuiPlotArrayGetterData,
     values_count: usize,
     values_offset: usize,
-    overlay_text: &str,
+    overlay_text: String,
     scale_min: c_float,
     scale_max: c_float,
     graph_size: ImVec2,
@@ -3517,7 +3517,7 @@ pub unsafe fn BeginViewportSideBar(
     } else {
         GetMainViewport()
     });
-    if bar_window == null_mut() || bar_window.BeginCount == 0 {
+    if bar_window == None || bar_window.BeginCount == 0 {
         // Calculate and set window size/position
         let mut avail_rect: ImRect = viewport.GetBuildWorkRect();
         axis: ImGuiAxis = if dir == ImGuiDir_Up || dir == ImGuiDir_Down {
@@ -3560,7 +3560,7 @@ pub unsafe fn BeginMainMenuBar() -> bool {
     let mut viewport: *mut ImGuiViewport = GetMainViewport();
 
     // Notify of viewport change so GetFrameHeight() can be accurate in case of DPI change
-    SetCurrentViewport(null_mut(), viewport);
+    SetCurrentViewport(None, viewport);
 
     // For the main menu bar, which cannot be moved, we honor g.Style.DisplaySafeAreaPadding to ensure text can be visible on a TV set.
     // FIXME: This could be generalized as an opt-in way to clamp window.DC.CursorStartPos to avoid SafeArea?
@@ -3626,7 +3626,7 @@ pub unsafe fn IsRootOfOpenMenuSet() -> bool {
         && flag_set(upper_popup.window.Flags, ImGuiWindowFlags_ChildMenu);
 }
 
-pub unsafe fn BeginMenuEx(label: &str, icon: &str, enabled: bool) -> bool {
+pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems {
         return false;
@@ -3900,7 +3900,7 @@ pub unsafe fn BeginMenuEx(label: &str, icon: &str, enabled: bool) -> bool {
     return menu_is_open;
 }
 
-pub unsafe fn BeginMenu(label: &str, enabled: bool) -> bool {
+pub unsafe fn BeginMenu(label: String, enabled: bool) -> bool {
     return BeginMenuEx(label, "", enabled);
 }
 
@@ -3928,7 +3928,7 @@ pub unsafe fn EndMenu() {
 }
 
 pub unsafe fn MenuItemEx(
-    label: &str,
+    label: String,
     icon: &str,
     shortcut: &str,
     selected: bool,
@@ -4052,11 +4052,11 @@ pub unsafe fn MenuItemEx(
     return pressed;
 }
 
-pub unsafe fn MenuItem(label: &str, shortcut: &str, selected: bool, enabled: bool) -> bool {
+pub unsafe fn MenuItem(label: String, shortcut: &str, selected: bool, enabled: bool) -> bool {
     return MenuItemEx(label, "", shortcut, selected, enabled);
 }
 
-pub unsafe fn MenuItem2(label: &str, shortcut: &str, p_selected: *mut bool, enabled: bool) -> bool {
+pub unsafe fn MenuItem2(label: String, shortcut: &str, p_selected: *mut bool, enabled: bool) -> bool {
     if MenuItemEx(
         label,
         "",
@@ -4157,7 +4157,7 @@ pub unsafe fn BeginTabBar(str_id: &str, flags: ImGuiTabBarFlags) -> bool {
         tab_bar,
         &tab_bar_bb,
         flags | ImGuiTabBarFlags_IsFocused,
-        null_mut(),
+        None,
     );
 }
 
@@ -4238,7 +4238,7 @@ pub unsafe fn BeginTabBarEx(
         0.0,
     );
     let y: c_float = tab_bar.BarRect.Max.y - 1.0;
-    if dock_node != null_mut() {
+    if dock_node != None {
         let separator_min_x: c_float = dock_node.Pos.x + window.WindowBorderSize;
         let separator_max_x: c_float = dock_node.Pos.x + dock_node.Size.x - window.WindowBorderSize;
         window.DrawList.AddLine(
@@ -4270,7 +4270,7 @@ pub unsafe fn EndTabBar() {
     }
 
     let tab_bar = g.CurrentTabBar();
-    // if tab_bar == null_mut()
+    // if tab_bar == None
     // {
     //     // IM_ASSERT_USER_ERROR(tab_bar != NULL, "Mismatched BeginTabBar()/EndTabBar()!");
     //     return;
@@ -4428,7 +4428,7 @@ pub unsafe fn TabBarLayout(tab_bar: &mut ImGuiTabBar) {
         let tab = &mut tab_bar.Tabs[tab_n];
         // IM_ASSERT(tab.LastFrameVisible >= tab_bar.PrevFrameVisible);
 
-        if (most_recently_selected_tab == null_mut()
+        if (most_recently_selected_tab == None
             || most_recently_selected_tab.LastFrameSelected < tab.LastFrameSelected)
             && flag_clear(tab.Flags, ImGuiTabItemFlags_Button)
         {
@@ -4590,7 +4590,7 @@ pub unsafe fn TabBarLayout(tab_bar: &mut ImGuiTabBar) {
     }
     if tab_bar.SelectedTabId == 0
         && tab_bar.NextSelectedTabId == 0
-        && most_recently_selected_tab != null_mut()
+        && most_recently_selected_tab != None
     {
         scroll_to_tab_id = most_recently_selected_tab.ID;
         tab_bar.SelectedTabId = most_recently_selected_tab.ID;
@@ -4656,10 +4656,10 @@ pub unsafe fn TabBarLayout(tab_bar: &mut ImGuiTabBar) {
 // Dockable uses Name/ID in the global namespace. Non-dockable items use the ID stack.
 pub unsafe fn TabBarCalcTabID(
     tab_bar: &mut ImGuiTabBar,
-    label: &str,
+    label: String,
     docked_window: *mut ImGuiWindow,
 ) -> u32 {
-    if docked_window != null_mut() {
+    if docked_window != None {
         IM_UNUSED(tab_bar);
         // IM_ASSERT(tab_bar.Flags & ImGuiTabBarFlags_DockNode);
         let mut id: ImGuiID = docked_window.TabId;
@@ -4685,18 +4685,18 @@ pub unsafe fn TabBarFindTabByID(tab_bar: &mut ImGuiTabBar, tab_id: ImGuiID) -> *
             }
         }
     }
-    return null_mut();
+    return None;
 }
 
 // FIXME: See references to #2304 in TODO.txt
 pub unsafe fn TabBarFindMostRecentlySelectedTabForActiveWindow(
     tab_bar: &mut ImGuiTabBar,
 ) -> *mut ImGuiTabItem {
-    let mut most_recently_selected_tab: *mut ImGuiTabItem = null_mut();
+    let mut most_recently_selected_tab: *mut ImGuiTabItem = None;
     // for (let tab_n: c_int = 0; tab_n < tab_bar.Tabs.Size; tab_n++)
     for tab_n in 0..tab_bar.Tabs.len() {
         let tab = &mut tab_bar.Tabs[tab_n];
-        if most_recently_selected_tab == null_mut()
+        if most_recently_selected_tab == None
             || most_recently_selected_tab.LastFrameSelected < tab.LastFrameSelected
         {
             if tab.Window && tab.window.WasActive {
@@ -4788,7 +4788,7 @@ pub unsafe fn TabBarScrollToTab(
     sections: &mut [ImGuiTabBarSection],
 ) {
     let tab = TabBarFindTabByID(tab_bar, tab_id);
-    if tab == null_mut() {
+    if tab == None {
         return;
     }
     if tab.Flags & ImGuiTabItemFlags_SectionMask_ {
@@ -4899,7 +4899,7 @@ pub unsafe fn TabBarQueueReorderFromMousePos(
 
 pub unsafe fn TabBarProcessReorder(tab_bar: &mut ImGuiTabBar) -> bool {
     let tab1 = TabBarFindTabByID(tab_bar, tab_bar.ReorderRequestTabId);
-    if tab1 == null_mut() || flag_set(tab1.Flags, ImGuiTabItemFlags_NoReorder) {
+    if tab1 == None || flag_set(tab1.Flags, ImGuiTabItemFlags_NoReorder) {
         return false;
     }
 
@@ -4993,7 +4993,7 @@ pub unsafe fn TabBarScrollingButtons(tab_bar: &mut ImGuiTabBar) {
     g.IO.KeyRepeatRate = backup_repeat_rate;
     g.IO.KeyRepeatDelay = backup_repeat_delay;
 
-    ImGuiTabItem * tab_to_scroll_to = null_mut();
+    ImGuiTabItem * tab_to_scroll_to = None;
     if select_dir != 0 {
         let tab_item = TabBarFindTabByID(tab_bar, tab_bar.SelectedTabId);
         if () {
@@ -5001,7 +5001,7 @@ pub unsafe fn TabBarScrollingButtons(tab_bar: &mut ImGuiTabBar) {
             let mut target_order = selected_order + select_dir;
 
             // Skip tab item buttons until another tab item is found or end is reached
-            while tab_to_scroll_to == null_mut() {
+            while tab_to_scroll_to == None {
                 // If we are at the end of the list, still scroll to make our tab visible
                 tab_to_scroll_to =
                     &tab_bar.Tabs[if target_order >= 0 && target_order < tab_bar.Tabs.Size {
@@ -5018,7 +5018,7 @@ pub unsafe fn TabBarScrollingButtons(tab_bar: &mut ImGuiTabBar) {
                     tab_to_scroll_to = if target_order < 0 || target_order >= tab_bar.Tabs.Size {
                         tab_to_scroll_to
                     } else {
-                        null_mut()
+                        None
                     };
                 }
             }
@@ -5054,7 +5054,7 @@ pub unsafe fn TabBarTabListPopupButton(tab_bar: &mut ImGuiTabBar) -> *mut ImGuiT
     );
     PopStyleColor(2);
 
-    let mut tab_to_select: *mut ImGuiTabItem = null_mut();
+    let mut tab_to_select: *mut ImGuiTabItem = None;
     if open {
         // for (let tab_n: c_int = 0; tab_n < tab_bar.Tabs.Size; tab_n++)
         for tab_n in 0..tab_bar.Tabs.len() {
@@ -5093,7 +5093,7 @@ pub unsafe fn TabBarTabListPopupButton(tab_bar: &mut ImGuiTabBar) -> *mut ImGuiT
 // - TabItemLabelAndCloseButton() [Internal]
 //-------------------------------------------------------------------------
 
-pub unsafe fn BeginTabItem(label: &str, p_open: *mut bool, flags: ImGuiTabItemFlags) -> bool {
+pub unsafe fn BeginTabItem(label: String, p_open: *mut bool, flags: ImGuiTabItemFlags) -> bool {
     let mut g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     if window.SkipItems {
@@ -5101,7 +5101,7 @@ pub unsafe fn BeginTabItem(label: &str, p_open: *mut bool, flags: ImGuiTabItemFl
     }
 
     let tab_bar = g.CurrentTabBar();
-    if tab_bar == null_mut() {
+    if tab_bar == None {
         // IM_ASSERT_USER_ERROR(tab_bar, "Needs to be called between BeginTabBar() and EndTabBar()!");
         return false;
     }
@@ -5123,7 +5123,7 @@ pub unsafe fn EndTabItem() {
     }
 
     let tab_bar = g.CurrentTabBar();
-    if tab_bar == null_mut() {
+    if tab_bar == None {
         // IM_ASSERT_USER_ERROR(tab_bar != NULL, "Needs to be called between BeginTabBar() and EndTabBar()!");
         return;
     }
@@ -5134,7 +5134,7 @@ pub unsafe fn EndTabItem() {
     }
 }
 
-pub unsafe fn TabItemButton(label: &str, flags: ImGuiTabItemFlags) -> bool {
+pub unsafe fn TabItemButton(label: String, flags: ImGuiTabItemFlags) -> bool {
     let mut g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow;
     if window.SkipItems {
@@ -5142,7 +5142,7 @@ pub unsafe fn TabItemButton(label: &str, flags: ImGuiTabItemFlags) -> bool {
     }
 
     let tab_bar = g.CurrentTabBar();
-    if tab_bar == null_mut() {
+    if tab_bar == None {
         // IM_ASSERT_USER_ERROR(tab_bar != NULL, "Needs to be called between BeginTabBar() and EndTabBar()!");
         return false;
     }
@@ -5151,13 +5151,13 @@ pub unsafe fn TabItemButton(label: &str, flags: ImGuiTabItemFlags) -> bool {
         label,
         None,
         flags | ImGuiTabItemFlags_Button | ImGuiTabItemFlags_NoReorder,
-        null_mut(),
+        None,
     );
 }
 
 pub unsafe fn TabItemEx(
     tab_bar: &mut ImGuiTabBar,
-    label: &str,
+    label: String,
     mut p_open: Option<&mut bool>,
     mut flags: ImGuiTabItemFlags,
     docked_window: *mut ImGuiWindow,
@@ -5236,7 +5236,7 @@ pub unsafe fn TabItemEx(
 
     // Append name with zero-terminator
     // (regular tabs are permitted in a DockNode tab bar, but window tabs not permitted in a non-DockNode tab bar)
-    if tab.Window != null_mut() {
+    if tab.Window != None {
         // IM_ASSERT(tab_bar.Flags & ImGuiTabBarFlags_DockNode);
         tab.NameOffset = -1;
     } else {
@@ -5274,7 +5274,7 @@ pub unsafe fn TabItemEx(
     if !tab_contents_visible
         && tab_bar.SelectedTabId == 0
         && tab_bar_appearing
-        && docked_window == null_mut()
+        && docked_window == None
     {
         if tab_bar.Tabs.Size == 1 && flag_clear(tab_bar.Flags, ImGuiTabBarFlags_AutoSelectNewTabs) {
             tab_contents_visible = true;
@@ -5377,7 +5377,7 @@ pub unsafe fn TabItemEx(
     node: *mut ImGuiDockNode = if docked_window {
         docked_window.DockNode
     } else {
-        null_mut()
+        None
     };
     let single_floating_window_node: bool =
         node && node.IsFloatingNode() && (node.Windows.len() == 1);
@@ -5405,7 +5405,7 @@ pub unsafe fn TabItemEx(
         }
 
         // Extract a Dockable window out of it's tab bar
-        if docked_window != null_mut() && flag_clear(docked_window.Flags, ImGuiWindowFlags_NoMove) {
+        if docked_window != None && flag_clear(docked_window.Flags, ImGuiWindowFlags_NoMove) {
             // We use a variable threshold to distinguish dragging tabs within a tab bar and extracting them out of the tab bar
             let mut undocking_tab: bool =
                 (g.DragDropActive && g.DragDropPayload.SourceId == id as ImGuiID);
@@ -5487,7 +5487,7 @@ pub unsafe fn TabItemEx(
     }
 
     // Render tab label, process close button
-    // let mut close_button_id: ImGuiID =  if p_open.is_some() { GetIDWithSeed("#CLOSE", null_mut(), if docked_window { docked_window.ID } else { id }) } else { 0 };
+    // let mut close_button_id: ImGuiID =  if p_open.is_some() { GetIDWithSeed("#CLOSE", None, if docked_window { docked_window.ID } else { id }) } else { 0 };
     just_closed: bool;
     text_clipped: bool;
     TabItemLabelAndCloseButton(
@@ -5502,7 +5502,7 @@ pub unsafe fn TabItemEx(
         just_closed,
         text_clipped,
     );
-    if just_closed && p_open != null_mut() {
+    if just_closed && p_open != None {
         // p_open.unwrap() = false;
         TabBarCloseTab(tab_bar, tab);
     }
@@ -5544,7 +5544,7 @@ pub unsafe fn TabItemEx(
 // [Public] This is call is 100% optional but it allows to remove some one-frame glitches when a tab has been unexpectedly removed.
 // To use it to need to call the function SetTabItemClosed() between BeginTabBar() and EndTabBar().
 // Tabs closed by the close button will automatically be flagged to avoid this issue.
-pub unsafe fn SetTabItemClosed(label: &str) {
+pub unsafe fn SetTabItemClosed(label: String) {
     let mut g = GImGui; // ImGuiContext& g = *GImGui;
                         // let mut is_within_manual_tab_bar: bool =  g.CurrentTabBar() && flag_clear(g.CurrentTabBar().Flags , ImGuiTabBarFlags_DockNode);
     if is_within_manual_tab_bar {
@@ -5569,7 +5569,7 @@ pub unsafe fn SetTabItemClosed(label: &str) {
     }
 }
 
-pub unsafe fn TabItemCalcSize(label: &str, has_close_button: bool) -> ImVec2 {
+pub unsafe fn TabItemCalcSize(label: String, has_close_button: bool) -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let label_size: ImVec2 = CalcTextSize(label, true, 0.0);
     let mut size: ImVec2 = ImVec2::new(
@@ -5656,7 +5656,7 @@ pub unsafe fn TabItemLabelAndCloseButton(
     bb: &mut ImRect,
     flags: ImGuiTabItemFlags,
     frame_padding: ImVec2,
-    label: &str,
+    label: String,
     tab_id: ImGuiID,
     close_button_id: ImGuiID,
     is_contents_visible: bool,

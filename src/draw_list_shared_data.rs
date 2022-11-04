@@ -14,7 +14,7 @@ use crate::constants::{IM_DRAWLIST_ARCFAST_SAMPLE_MAX, IM_DRAWLIST_ARCFAST_TABLE
 pub struct ImDrawListSharedData {
     pub TexUvWhitePixel: ImVec2,
     // UV of white pixel in the atlas
-    pub Font: *mut ImFont,
+    pub Font: ImFont,
     // Current/default font (optional, for simplified AddText overload)
     pub FontSize: c_float,
     // Current/default font size (optional, for simplified AddText overload)
@@ -33,7 +33,7 @@ pub struct ImDrawListSharedData {
     // Cutoff radius after which arc drawing will fallback to slower PathArcTo()
     pub CircleSegmentCounts: [u8; 64],
     // Precomputed segment count for given radius before we calculate it dynamically (to avoid calculation overhead)
-    pub TexUvLines: *const ImVec4, // UV of anti-aliased lines in the atlas
+    pub TexUvLines: Vec<ImVec4> //*const ImVec4, // UV of anti-aliased lines in the atlas
 }
 
 impl ImDrawListSharedData {

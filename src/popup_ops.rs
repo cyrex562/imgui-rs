@@ -104,7 +104,7 @@ pub unsafe fn GetTopMostPopupModal() -> *mut ImGuiWindow {
             }
         }
     }
-    return null_mut();
+    return None;
 }
 
 // GetTopMostAndVisiblePopupModal: *mut ImGuiWindow()
@@ -119,7 +119,7 @@ pub unsafe fn GetTopMostAndVisiblePopupModal() -> *mut ImGuiWindow {
             }
         }
     }
-    return null_mut();
+    return None;
 }
 
 pub unsafe fn OpenPopup(str_id: &str, popup_flags: ImGuiPopupFlags) {
@@ -151,7 +151,7 @@ pub unsafe fn OpenPopupEx(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
     // ImGuiPopupData popup_ref; // Tagged as new ref as Window will be set back to NULL if we write this into OpenPopupStack.
     let mut popup_ref = ImGuiPopupData::default();
     popup_ref.PopupId = id;
-    popup_ref.Window = null_mut();
+    popup_ref.Window = None;
     popup_ref.BackupNavWindow = g.NavWindow; // When popup closes focus may be restored to NavWindow (depend on window type).
     popup_ref.OpenFrameCount = g.FrameCount;
     popup_ref.OpenParentId = parent_window.IDStack.last().unwrap().clone();
@@ -346,7 +346,7 @@ pub unsafe fn BeginPopupEx(id: ImGuiID, mut flags: ImGuiWindowFlags) -> bool {
 
     name: [c_char; 20];
     if flag_set(flags, ImGuiWindowFlags_ChildMenu) {
-        // ImFormatString(name, name.len(), "##Menu_%02d", g.BeginMenuCount);
+        // ImFormatString(name, name.len(), "##Menu_{}", g.BeginMenuCount);
     }
     // Recycle windows based on depth
     else {
@@ -541,7 +541,7 @@ pub unsafe fn BeginPopupContextVoid(
     let mut id: ImGuiID = window.id_from_str(str_id, null());
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if IsMouseReleased(mouse_button) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow) {
-        if GetTopMostPopupModal() == null_mut() {
+        if GetTopMostPopupModal() == None {
             OpenPopupEx(id, popup_flags);
         }
     }

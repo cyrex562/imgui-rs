@@ -77,7 +77,7 @@ pub unsafe fn DeleteChars(&mut self, pos: usize, bytes_count: usize)
 }
 
     // c_void      InsertChars(pos: c_int, text: *const c_char, text_end: *const c_char = null_mut());
-    pub unsafe fn InsertChars(&mut self, pos: usize, new_text: &str, new_text_end: &str)
+    pub unsafe fn InsertChars(&mut self, pos: usize, new_text: String, new_text_end: &str)
 {
     let is_resizable: bool = flag_set(self.Flags, ImGuiInputTextFlags_CallbackResize);
     let new_text_len: usize = if new_text_end { (new_text_end - new_text)} else {new_text.len()};

@@ -45,17 +45,17 @@ pub unsafe fn FocusWindow(window: *mut ImGuiWindow) {
     let mut focus_front_window: *mut ImGuiWindow = if is_not_null(window) {
         window.RootWindow
     } else {
-        null_mut()
+        None
     };
     let mut display_front_window: *mut ImGuiWindow = if is_not_null(window) {
         window.RootWindowDockTree
     } else {
-        null_mut()
+        None
     };
     let dock_node = if is_not_null(window) {
         window.DockNode
     } else {
-        null_mut()
+        None
     };
     let mut active_id_window_is_dock_node_host: bool = (is_not_null(g.ActiveIdWindow)
         && is_not_null(dock_node)
@@ -102,7 +102,7 @@ pub unsafe fn FocusTopMostWindowUnderOne(
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut start_idx: c_int = g.WindowsFocusOrder.Size - 1;
-    if under_this_window != null_mut() {
+    if under_this_window != None {
         // Aim at root window behind us, if we are in a child window that's our own root (see #4640)
         let mut offset: c_int = -1;
         while flag_set(under_this_window.Flags & ImGuiWindowFlags_ChildWindow) {
@@ -163,7 +163,7 @@ pub unsafe fn SetKeyboardFocusHere(offset: c_int) {
     // When we refactor this function into ActivateItem() we may want to make this an option.
     // MovingWindow is protected from most user inputs using SetActiveIdUsingNavAndKeys(), but
     // is also automatically dropped in the event g.ActiveId is stolen.
-    if g.DragDropActive || g.MovingWindow != null_mut() {
+    if g.DragDropActive || g.MovingWindow != None {
         IMGUI_DEBUG_LOG_ACTIVEID("SetKeyboardFocusHere() ignored while DragDropActive!\n");
         return;
     }

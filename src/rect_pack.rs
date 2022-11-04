@@ -268,7 +268,7 @@ STBRP_DEF c_void stbrp_init_target(context: *mut stbrp_context, width: c_int, he
 
    for (i=0; i < num_nodes-1; ++i)
       nodes[i].next = &nodes[i1];
-   nodes[i].next= null_mut();
+   nodes[i].next= None;
    context.init_mode = STBRP__INIT_skyline;
    context.heuristic = STBRP_HEURISTIC_Skyline_default;
    context.free_head = &nodes[0];
@@ -284,7 +284,7 @@ STBRP_DEF c_void stbrp_init_target(context: *mut stbrp_context, width: c_int, he
    context.extra[0].next = &context.extra[1];
    context.extra[1].x =  width;
    context.extra[1].y = (1<<30);
-   context.extra[1].next= null_mut();
+   context.extra[1].next= None;
 }
 
 // find minimum y position if it starts at x1
@@ -348,7 +348,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(c: *mut stbrp_context, wid
 {
    let best_waste: c_int = (1<<30), best_x, best_y = (1 << 30);
    stbrp__findresult fr;
-   stbrp_node **prev, *node, *tail, **best= null_mut();
+   stbrp_node **prev, *node, *tail, **best= None;
 
    // align to multiple of c->align
    width = (width + c.align - 1);
@@ -357,7 +357,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(c: *mut stbrp_context, wid
 
    // if it can't possibly fit, bail immediately
    if (width > c.width || height > c.height) {
-      fr.prev_link= null_mut();
+      fr.prev_link= None;
       fr.x = fr.y = 0;
       return fr;
    }
@@ -388,7 +388,7 @@ static stbrp__findresult stbrp__skyline_find_best_pos(c: *mut stbrp_context, wid
       node = node.next;
    }
 
-   best_x = if best == null_mut() { 0} else { (*best)->x};
+   best_x = if best == None { 0} else { (*best)->x};
 
    // if doing best-fit (B0f32), we also have to try aligning right edge to each node position
    //
@@ -456,8 +456,8 @@ static stbrp__findresult stbrp__skyline_pack_rectangle(context: *mut stbrp_conte
    //    1. it failed
    //    2. the best node doesn't fit (we don't always check this)
    //    3. we're out of memory
-   if (res.prev_link == null_mut() || res.y + height > context.height || context.free_head == null_mut()) {
-      res.prev_link= null_mut();
+   if (res.prev_link == None || res.y + height > context.height || context.free_head == null_mut()) {
+      res.prev_link= None;
       return res;
    }
 

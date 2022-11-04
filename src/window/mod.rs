@@ -246,9 +246,9 @@ pub struct ImGuiWindow {
     pub DockOrder: i32,
     // Order of the last time the window was visible within its DockNode. This is used to reorder windows that are reappearing on the same frame. Same value between windows that were active and windows that were none are possible.
     pub DockStyle: ImGuiWindowDockStyle,
-    pub DockNode: *mut ImGuiDockNode,
+    pub DockNode: Option<ImGuiDockNode>,
     // Which node are we docked into. Important: Prefer testing DockIsActive in many cases as this will still be set when the dock node is hidden.
-    pub DockNodeAsHost: *mut ImGuiDockNode,
+    pub DockNodeAsHost: Option<ImGuiDockNode>,
     // Which node are we owning (for parent windows)
     pub DockId: ImGuiID,
     // Backup of last valid DockNode.ID, so single window remember their dock node id even when they are not bound any more
@@ -297,8 +297,8 @@ impl ImGuiWindow {
             FontDpiScale: 1.0,
             SettingsOffset: -1,
             DockOrder: -1,
-            DrawList: null_mut(),
-            DrawListInst: null_mut(),
+            DrawList: None,
+            DrawListInst: None,
             ..Default::default()
         };
 
@@ -310,7 +310,7 @@ impl ImGuiWindow {
     //~ImGuiWindow();
 
     // ImGuiID     GetID(*const c_char str, *const c_char str_end = NULL);
-    pub unsafe fn id_from_str(&self, begin: &str) -> ImGuiID {
+    pub unsafe fn id_from_str(&self, begin: String) -> ImGuiID {
         let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
         let mut id: ImGuiID = ImHashStr(begin, begin.len(), seed as u32);
         let g = GImGui; // ImGuiContext& g = *GImGui;

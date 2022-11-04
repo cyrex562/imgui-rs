@@ -1072,7 +1072,7 @@ pub fn stbtt__new_buf(p: *const c_void, size: size_t) -> stbtt__buf
 // #define stbtt__buf_get32(b)  stbtt__buf_get((b), 4)
 
 pub fn stbtt__buf_range(b: *mut stbtt__buf, o: size_t, s: size_t) -> stbtt__buf {
-    // r: stbtt__buf = stbtt__new_buf(null_mut(), 0);
+    // r: stbtt__buf = stbtt__new_buf(None, 0);
     let mut r = stbtt__buf::default();
     if o < 0 || s < 0 || o > b.size || s > b.size - o { return r; }
     r.data = b.data + o;
@@ -1265,10 +1265,10 @@ pub fn stbtt__get_subrs(mut cff: stbtt__buf, mut fontdict: stbtt__buf) -> stbtt_
     let private_loc: [size_t; 2] = [0; 2];
     let mut pdict = stbtt__buf::default();
     stbtt__dict_get_ints(&mut fontdict, 18, 2, private_loc.as_mut_ptr());
-    if !private_loc[1] || !private_loc[0] { return stbtt__new_buf(null_mut(), 0); }
+    if !private_loc[1] || !private_loc[0] { return stbtt__new_buf(None, 0); }
     pdict = stbtt__buf_range(&mut cff, private_loc[1], private_loc[0]);
     stbtt__dict_get_ints(&mut pdict, 19, 1, &mut subrsoff);
-    if !subrsoff { return stbtt__new_buf(null_mut(), 0); }
+    if !subrsoff { return stbtt__new_buf(None, 0); }
     stbtt__buf_seek(&mut cff, (private_loc[1] + subrsoff) as size_t);
     return stbtt__cff_get_index(&mut cff);
 }
@@ -1300,7 +1300,7 @@ pub unsafe fn stbtt_InitFont_internal(info: *mut stbtt_fontinfo, c_udata: *const
 
    info.data = data;
    info.fontstart = fontstart;
-   info.cff = stbtt__new_buf(null_mut(), 0);
+   info.cff = stbtt__new_buf(None, 0);
 
    cmap = stbtt__find_table(data, fontstart, str_to_const_c_char_ptr("cmap"));       // required
    info.loca = stbtt__find_table(data, fontstart, str_to_const_c_char_ptr("loca")); // required
@@ -1333,8 +1333,8 @@ pub unsafe fn stbtt_InitFont_internal(info: *mut stbtt_fontinfo, c_udata: *const
       cff = stbtt__find_table(data, fontstart, str_to_const_c_char_ptr("CFF "));
       if (!cff) { return 0; }
 
-      info.fontdicts = stbtt__new_buf(null_mut(), 0);
-      info.fdselect = stbtt__new_buf(null_mut(), 0);
+      info.fontdicts = stbtt__new_buf(None, 0);
+      info.fdselect = stbtt__new_buf(None, 0);
 
       // @TODO this should use size from table (not 512MB)
       info.cff = stbtt__new_buf(data+cff, 512*1024*1024);
@@ -1594,7 +1594,7 @@ pub unsafe fn stbtt_IsGlyphEmpty(info: *const stbtt_fontinfo, glyph_index: c_int
    let mut numberOfContours = 0i16;
    let mut g: c_int = 0;
    if info.cff.size {
-       return stbtt__GetGlyphInfoT2(info, glyph_index, null_mut(), null_mut(), null_mut(), null_mut()) == 0;
+       return stbtt__GetGlyphInfoT2(info, glyph_index, None, None, None, null_mut()) == 0;
    }
    g = stbtt__GetGlyfOffset(info, glyph_index);
    if (g < 0) { return true; }
@@ -1628,13 +1628,13 @@ pub fn stbtt__close_shape(vertices: *mut stbtt_vertex, mut num_vertices: c_int, 
 pub unsafe fn stbtt__GetGlyphShapeTT(info: *const stbtt_fontinfo, glyph_index: c_int, pvertices: *mut *mut stbtt_vertex) -> c_int
 {
    let mut numberOfContours = 0i16;
-   let mut endPtsOfContours: *mut u8 = null_mut();
+   let mut endPtsOfContours: *mut u8 = None;
    let mut data: *mut u8 = info.data;
-   let mut vertices: *mut stbtt_vertex= null_mut();
+   let mut vertices: *mut stbtt_vertex= None;
    let mut num_vertices: c_int = 0;
    let g: c_int = stbtt__GetGlyfOffset(info, glyph_index);
 
-   *pvertices = null_mut();
+   *pvertices = None;
 
    if g < 0 {
        return 0;
@@ -1663,7 +1663,7 @@ pub unsafe fn stbtt__GetGlyphShapeTT(info: *const stbtt_fontinfo, glyph_index: c
        let mut sy = 0i32;
        let mut scx = 0i32;
        let mut scy = 0i32;
-       let mut points: *mut u8 = null_mut();
+       let mut points: *mut u8 = None;
       endPtsOfContours = (data + g + 10);
       ins = ttUSHORT(data + g + 10 + numberOfContours * 2);
       points = data + g + 10 + numberOfContours * 2 + 2 + ins;
@@ -1816,7 +1816,7 @@ pub unsafe fn stbtt__GetGlyphShapeTT(info: *const stbtt_fontinfo, glyph_index: c
       let mut more: c_int = 1;
       comp: *mut u8 = data + g + 10;
       num_vertices = 0;
-      vertices = null_mut();
+      vertices = None;
       while more {
          // stbtt_uint16 flags, gidx;
          let mut flags = 0u16;
@@ -1824,8 +1824,8 @@ pub unsafe fn stbtt__GetGlyphShapeTT(info: *const stbtt_fontinfo, glyph_index: c
           // let comp_num_verts: c_int = 0, i;
          let mut comp_num_verts = 0i32;
           let mut i = 0i32;
-          let mut comp_verts: *mut stbtt_vertex = null_mut();
-          let mut tmp: *mut stbtt_vertex = null_mut();
+          let mut comp_verts: *mut stbtt_vertex = None;
+          let mut tmp: *mut stbtt_vertex = None;
           let mut mtx: [c_float;6] = [0.0,0.0,0.0,1.0,0.0,0.0];
           let mut m = 0.0;
           let mut n =  0.0;
@@ -1992,7 +1992,7 @@ pub fn stbtt__get_subr(mut idx: stbtt__buf, mut n: c_int) -> stbtt__buf {
     }
     n += bias;
     if n < 0 || n >= count {
-        return stbtt__new_buf(null_mut(), 0);
+        return stbtt__new_buf(None, 0);
     }
     return stbtt__cff_index_get(idx, n);
 }
@@ -2030,7 +2030,7 @@ let mut nranges: c_int = -1;
          start = end;
       }
    }
-   if fdselector == -1 { stbtt__new_buf(null_mut(), 0); }
+   if fdselector == -1 { stbtt__new_buf(None, 0); }
    return stbtt__get_subrs(info.cff, stbtt__cff_index_get(info.fontdicts, fdselector));
 }
 
@@ -2393,7 +2393,7 @@ pub unsafe fn stbtt__GetGlyphShapeT2(info: *const stbtt_fontinfo, glyph_index: c
             return output_ctx.num_vertices;
         }
     }
-    *pvertices = null_mut();
+    *pvertices = None;
     return 0;
 }
 
@@ -2560,7 +2560,7 @@ pub fn stbtt__GetCoverageIndex(coverageTable: *mut u8, glyph: c_int) -> i32 {
             let mut strawEnd = 0i32;
             let mut needle = glyph;
             while l <= r as i32 {
-                let mut rangeRecord: *mut u8 = null_mut();
+                let mut rangeRecord: *mut u8 = None;
                 m = (l + r) >> 1;
                 rangeRecord = rangeArray + 6 * m;
                 strawStart = ttUSHORT(rangeRecord) as i32;
@@ -2611,7 +2611,7 @@ pub fn stbtt__GetGlyphClass(classDefTable: *mut u8, glyph: c_int) -> u16 {
             let mut strawEnd = 0i32;
             let mut needle = glyph;
             while l <= r as i32 {
-                let mut classRangeRecord: *mut u8 = null_mut();
+                let mut classRangeRecord: *mut u8 = None;
                 m = (l + r) >> 1;
                 classRangeRecord = classRangeRecords + 6 * m;
                 strawStart = ttUSHORT(classRangeRecord) as i32;
@@ -2642,9 +2642,9 @@ pub fn stbtt__GetGlyphClass(classDefTable: *mut u8, glyph: c_int) -> u16 {
 
 pub fn stbtt__GetGlyphGPOSInfoAdvance(info: *const stbtt_fontinfo, glyph1: c_int, glyph2: c_int) -> i32 {
     let mut lookupListOffset = 0i16;
-    let mut lookupList: *mut u8 = null_mut();
+    let mut lookupList: *mut u8 = None;
     let mut lookupCount = 0i16;
-    let mut data: *mut u8 = null_mut();
+    let mut data: *mut u8 = None;
     // i: i32, sti;
     let mut i = 0i32;
     let mut sti = 0i32;
@@ -2710,7 +2710,7 @@ pub fn stbtt__GetGlyphGPOSInfoAdvance(info: *const stbtt_fontinfo, glyph1: c_int
                         // Binary search.
                         while l <= r {
                             let mut secondGlyph: u16;
-                            let mut pairValue: *mut u8 = null_mut();
+                            let mut pairValue: *mut u8 = None;
                             m = (l + r) >> 1;
                             pairValue = pairValueArray + (2 + valueRecordPairSizeInBytes) * m;
                             secondGlyph = ttUSHORT(pairValue);
@@ -2848,19 +2848,19 @@ pub unsafe fn stbtt_FindSVGDoc(info: *mut stbtt_fontinfo, gl: c_int) -> *mut u8 
             return svg_doc;
         }
     }
-    return null_mut();
+    return None;
 }
 
 pub unsafe fn stbtt_GetGlyphSVG(info: *mut stbtt_fontinfo, gl: c_int, mut svg: *mut *mut c_char) -> c_int {
     data: *mut u8 = info.data;
-    let mut svg_doc: *mut u8 = null_mut();
+    let mut svg_doc: *mut u8 = None;
 
     if info.svg == 0 {
         return 0;
     }
 
     svg_doc = stbtt_FindSVGDoc(info, gl);
-    if svg_doc != null_mut() {
+    if svg_doc != None {
         *svg = data + info.svg + ttULONG(svg_doc + 4);
         return ttULONG(svg_doc + 8) as c_int;
     } else {
@@ -2937,8 +2937,8 @@ pub unsafe fn stbtt__hheap_alloc(hh: *mut stbtt__hheap, size: size_t, userdata: 
              } else { 100 }
          });
          c: *mut stbtt__hheap_chunk = STBTT_malloc(mem::size_of::<stbtt__hheap_chunk>() + size * count, userdata);
-         if c == null_mut() {
-            return null_mut(); }
+         if c == None {
+            return None; }
          c.next = hh.head;
          hh.head = c;
          hh.num_remaining_in_head_chunk = count;
@@ -2989,7 +2989,7 @@ pub unsafe fn stbtt__new_active(hh: *mut stbtt__hheap, e: *mut stbtt__edge, off_
     z.x -= off_x * STBTT_FIX;
 
     z.ey = e.y1;
-    z.next = null_mut();
+    z.next = None;
     z.direction = if e.invert { 1 } else { -1 } as c_float;
     return z;
 }
@@ -3009,7 +3009,7 @@ pub unsafe fn stbtt__new_active2(hh: *mut stbtt__hheap, e: *mut stbtt__edge, off
    z.direction = if e.invert { 1.0 } else { -1.0 };
    z.sy = e.y0;
    z.ey = e.y1;
-   z.next = null_mut();
+   z.next = None;
    return z;
 }
 // #else
@@ -3082,7 +3082,7 @@ pub unsafe fn stbtt__rasterize_sorted_edges(result: *mut stbtt__bitmap, mut e: *
 {
    // stbtt__hheap hh = { 0, 0, 0 };
    let mut hh = stbtt__hheap::default();
-    let mut active: *mut stbtt__active_edge= null_mut();
+    let mut active: *mut stbtt__active_edge= None;
    // y: c_int,j=0;
    let mut y = 0i32;
     let mut j = 0i32;
@@ -3090,7 +3090,7 @@ pub unsafe fn stbtt__rasterize_sorted_edges(result: *mut stbtt__bitmap, mut e: *
    let mut s: c_int = 0; // vertical subsample index
    // unsigned scanline_data: [c_char;512], *scanline;
     let mut scanline_data: [c_uchar;512] = [0;512];
-    let mut scanline: *mut c_uchar = null_mut();
+    let mut scanline: *mut c_uchar = None;
 
    if result.w > 512 {
        scanline = STBTT_malloc(result.w, userdata);
@@ -3500,14 +3500,14 @@ pub unsafe fn stbtt__rasterize_sorted_edges2(result: *mut stbtt__bitmap, mut e: 
 {
    // stbtt__hheap hh = { 0, 0, 0 };
    let mut hh = stbtt__hheap::default();
-   let mut active: *mut stbtt__active_edge= null_mut();
+   let mut active: *mut stbtt__active_edge= None;
    // y: c_int,j=0, i;scanline_data: c_float[129], *scanline, *scanline2;
     let mut y: c_int = 0;
     let mut j: c_int = 0;
     let mut i: c_int = 0;
     let mut scanline_data: [c_float;129] = [0.0;129];
-    let mut scanline: &mut c_float = null_mut();
-    let mut scanline2: &mut c_float = null_mut();
+    let mut scanline: &mut c_float = None;
+    let mut scanline2: &mut c_float = None;
 
    // STBTT__NOTUSED(vsubsample);
 
@@ -3854,7 +3854,7 @@ pub unsafe fn stbtt__tesselate_cubic(points: *mut stbtt__point, num_points: *mut
 // returns number of contours
 pub unsafe fn stbtt_FlattenCurves(vertices: *mut stbtt_vertex, num_verts: c_int,objspace_flatness: c_float, contour_lengths: *mut *mut c_int, num_contours: *mut c_int, userdata: *mut c_void) -> *mut stbtt__point
 {
-   let mut points: *mut stbtt__point=null_mut();
+   let mut points: *mut stbtt__point=None;
    let mut num_points: c_int = 0;
 
    let objspace_flatness_squared: c_float =  objspace_flatness * objspace_flatness;
@@ -3874,13 +3874,13 @@ pub unsafe fn stbtt_FlattenCurves(vertices: *mut stbtt_vertex, num_verts: c_int,
    }
 
    *num_contours = n;
-   if n == 0 { return  null_mut(); }
+   if n == 0 { return  None; }
 
    *contour_lengths = STBTT_malloc(sizeof(**contour_lengths) * n, userdata);
 
    if (*contour_lengths).is_null() {
       *num_contours = 0;
-      return null_mut();
+      return None;
    }
 
    // make two passes through the points so we don't need to realloc
@@ -3892,7 +3892,7 @@ pub unsafe fn stbtt_FlattenCurves(vertices: *mut stbtt_vertex, num_verts: c_int,
         let mut y: c_float = 0.0;
         if (pass == 1) {
          points = STBTT_malloc(num_points * sizeof(points[0]), userdata);
-         // if points == null_mut() {  goto error(); }
+         // if points == None {  goto error(); }
       }
       num_points = 0;
       n= -1;
@@ -3949,14 +3949,14 @@ pub unsafe fn stbtt_FlattenCurves(vertices: *mut stbtt_vertex, num_verts: c_int,
 //    STBTT_free(*contour_lengths, userdata);
 //    *contour_lengths = 0;
 //    *num_contours = 0;
-//    return null_mut();
+//    return None;
 }
 
 pub unsafe fn stbtt_Rasterize(result: *mut stbtt__bitmap,flatness_in_pixels: c_float, vertices: *mut stbtt_vertex, num_verts: c_int,scale_x: c_float,scale_y: c_float,shift_x: c_float,shift_y: c_float, x_off: c_int, y_off: c_int, invert: c_int, userdata: *mut c_void)
 {
     let mut scale: c_float            = if scale_x > scale_y { scale_y } else { scale_x };
    let mut winding_count: c_int =  0;
-   winding_lengths: *mut c_int   = null_mut();
+   winding_lengths: *mut c_int   = None;
    windings: *mut stbtt__point = stbtt_FlattenCurves(vertices, num_verts, flatness_in_pixels / scale, &mut winding_lengths, &mut winding_count, userdata);
    if windings {
       stbtt__rasterize(result, windings, winding_lengths, winding_count, scale_x, scale_y, shift_x, shift_y, x_off, y_off, invert, userdata);
@@ -3979,14 +3979,14 @@ pub unsafe fn  c_ustbtt_GetGlyphBitmapSubpixel(info: *const stbtt_fontinfo, mut 
     let mut iy1: c_int = 0;
     // stbtt__bitmap gbm;
    let mut gbm = stbtt__bitmap::default();
-    let mut vertices: *mut stbtt_vertex = null_mut();
+    let mut vertices: *mut stbtt_vertex = None;
    let num_verts: c_int = stbtt_GetGlyphShape(info, glyph, &mut vertices);
 
    if scale_x == 0.0 {  scale_x = scale_y;}
    if scale_y == 0.0 {
       if scale_x == 0.0 {
          STBTT_free(vertices, info.userdata);
-         return null_mut();
+         return None;
       }
       scale_y = scale_x;
    }
@@ -3996,7 +3996,7 @@ pub unsafe fn  c_ustbtt_GetGlyphBitmapSubpixel(info: *const stbtt_fontinfo, mut 
    // now we get the size
    gbm.w = (ix1 - ix0);
    gbm.h = (iy1 - iy0);
-   gbm.pixels= null_mut(); // in case we error
+   gbm.pixels= None; // in case we error
 
    if (width ) { *width = gbm.w; }
    if (height) { *height = gbm.h; }
@@ -4025,12 +4025,12 @@ pub unsafe fn stbtt_MakeGlyphBitmapSubpixel(info: *const stbtt_fontinfo, c_uoutp
    // ix0: c_int,iy0;
    let mut ix0: c_int = 0;
     let mut iy0: c_int = 0;
-    let mut vertices: *mut stbtt_vertex = null_mut();
+    let mut vertices: *mut stbtt_vertex = None;
    let num_verts: c_int = stbtt_GetGlyphShape(info, glyph, &mut vertices);
    // stbtt__bitmap gbm;
     let mut gbm = stbtt__bitmap::default();
 
-   stbtt_GetGlyphBitmapBoxSubpixel(info, glyph, scale_x, scale_y, shift_x, shift_y, &mut ix0,&mut iy0,null_mut(),null_mut());
+   stbtt_GetGlyphBitmapBoxSubpixel(info, glyph, scale_x, scale_y, shift_x, shift_y, &mut ix0,&mut iy0,None,null_mut());
    gbm.pixels = output;
    gbm.w = out_w;
    gbm.h = out_h;
@@ -4095,7 +4095,7 @@ pub unsafe fn stbtt_BakeFontBitmap_internal(c_udata: *const c_uchar, offset: c_i
     let mut bottom_y: c_int = 0;
     let mut i: c_int = 0;
     let mut f = stbtt_fontinfo::default();
-   f.userdata= null_mut();
+   f.userdata= None;
    if !stbtt_InitFont(&mut f, data, offset) {
        return -1;
    }
@@ -4247,9 +4247,9 @@ pub unsafe fn stbtt_PackBegin(spc: *mut stbtt_pack_context, c_upixels: *mut c_ch
    let mut num_nodes: c_int =  pw - padding;
    let mut nodes: *mut stbrp_node   = STBTT_malloc(sizeof(*nodes  ) * num_nodes,alloc_context);
 
-   if context == null_mut() || nodes == null_mut() {
-      if context != null_mut() { STBTT_free(context, alloc_context); }
-      if nodes   != null_mut() { STBTT_free(nodes, alloc_context); }
+   if context == None || nodes == None {
+      if context != None { STBTT_free(context, alloc_context); }
+      if nodes   != None { STBTT_free(nodes, alloc_context); }
       return 0;
    }
 
@@ -4500,7 +4500,7 @@ pub unsafe fn stbtt_PackFontRangesGatherRects(spc: *mut stbtt_pack_context, info
             let mut y0: c_int = 0;
             let mut x1: c_int = 0;
             let mut y1: c_int = 0;
-            let codepoint: c_int = if ranges[i].array_of_unicode_codepoints == null_mut() { ranges[i].first_unicode_codepoint_in_range + j } else { ranges[i].array_of_unicode_codepoints[j] };
+            let codepoint: c_int = if ranges[i].array_of_unicode_codepoints == None { ranges[i].first_unicode_codepoint_in_range + j } else { ranges[i].array_of_unicode_codepoints[j] };
          let glyph: c_int = stbtt_FindGlyphIndex(info, codepoint);
          if glyph == 0 && (spc.skip_missing || missing_glyph_added) {
             rects[k].w = rects[k].h = 0;
@@ -4592,7 +4592,7 @@ pub unsafe fn stbtt_PackFontRangesRenderIntoRects(spc: *mut stbtt_pack_context, 
              let mut y0: c_int = 0;
              let mut x1: c_int = 0;
              let mut y1: c_int = 0;
-             let codepoint: c_int = if ranges[i].array_of_unicode_codepoints == null_mut() { ranges[i].first_unicode_codepoint_in_range + j } else { ranges[i].array_of_unicode_codepoints[j] };
+             let codepoint: c_int = if ranges[i].array_of_unicode_codepoints == None { ranges[i].first_unicode_codepoint_in_range + j } else { ranges[i].array_of_unicode_codepoints[j] };
             let glyph: c_int = stbtt_FindGlyphIndex(info, codepoint);
             let mut pad =  spc.padding;
 
@@ -4676,7 +4676,7 @@ pub unsafe fn stbtt_PackFontRanges(spc: *mut stbtt_pack_context, fontdata: *cons
 
     //stbrp_context *context = (stbrp_context *) spc->pack_info;
    // stbrp_rect    *rects;
-    let mut rects: *mut stbrp_rect = null_mut();
+    let mut rects: *mut stbrp_rect = None;
 
    // flag all characters as NOT packed
    // for (i=0; i < num_ranges; ++i)
@@ -4700,7 +4700,7 @@ pub unsafe fn stbtt_PackFontRanges(spc: *mut stbtt_pack_context, fontdata: *cons
    }
 
    rects = STBTT_malloc(sizeof(*rects) * n, spc.user_allocator_context);
-   if rects == null_mut() { return  0; }
+   if rects == None { return  0; }
 
    info.userdata = spc.user_allocator_context;
    stbtt_InitFont(&mut info, fontdata, stbtt_GetFontOffsetForIndex(fontdata,font_index));
@@ -4721,7 +4721,7 @@ pub unsafe fn stbtt_PackFontRange(spc: *mut stbtt_pack_context, fontdata: *const
    // stbtt_pack_range range;
    let mut range = stbtt_pack_range::default();
     range.first_unicode_codepoint_in_range = first_unicode_codepoint_in_range;
-   range.array_of_unicode_codepoints= null_mut();
+   range.array_of_unicode_codepoints= None;
    range.num_chars                   = num_chars_in_range;
    range.chardata_for_range          = chardata_for_range;
    range.font_size                   = font_size;
@@ -4998,15 +4998,15 @@ pub unsafe fn stbtt_GetGlyphSDF(info: *const stbtt_fontinfo,scale: c_float, glyp
     // w: c_int,h;
     let mut w: c_int = 0;
     let mut h: c_int = 0;
-   let mut c_udata: *mut c_char = null_mut();
+   let mut c_udata: *mut c_char = None;
 
-   if scale == 0.0 {  return null_mut(); }
+   if scale == 0.0 {  return None; }
 
    stbtt_GetGlyphBitmapBoxSubpixel(info, glyph, scale, scale, 0.0,0.0, &mut ix0,&mut iy0,&mut ix1,&mut iy1);
 
    // if empty, return NULL
    if ix0 == ix1 || iy0 == iy1{
-      return null_mut();}
+      return None;}
 
    ix0 -= padding;
    iy0 -= padding;
@@ -5030,8 +5030,8 @@ pub unsafe fn stbtt_GetGlyphSDF(info: *const stbtt_fontinfo,scale: c_float, glyp
        let mut y: c_int = 0;
        let mut i: c_int = 0;
        let mut j: c_int = 0;
-       let mut precompute: &mut c_float = null_mut();
-      let mut verts: *mut stbtt_vertex = null_mut();
+       let mut precompute: &mut c_float = None;
+      let mut verts: *mut stbtt_vertex = None;
       let num_verts: c_int = stbtt_GetGlyphShape(info, glyph, &mut verts);
       data = STBTT_malloc(w * h, info.userdata);
       precompute =  STBTT_malloc(num_verts * sizeof, info.userdata);
@@ -5308,7 +5308,7 @@ let mut stringOffset: i32 = 0;
 let mut fc: *mut u8 = font.data;
    let mut offset: u32 = font.fontstart;
    let mut nm: u32 = stbtt__find_table(fc, offset, str_to_const_c_char_ptr("name"));
-   if (!nm) {return null_mut(); }
+   if (!nm) {return None; }
 
    count = ttUSHORT(fc + nm2) as i32;
    stringOffset = (nm + ttUSHORT(fc + nm4)) as i32;
@@ -5322,7 +5322,7 @@ let mut fc: *mut u8 = font.data;
          return fc+stringOffset+ttUSHORT(fc+loc10);
       }
    }
-   return null_mut();
+   return None;
 }
 
 pub fn stbtt__matchpair(fc: *mut u8, nm: u32, name: *mut u8, nlen: i32, target_id: i32, next_id: i32) -> c_int

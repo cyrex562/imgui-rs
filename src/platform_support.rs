@@ -17,18 +17,18 @@ static GetClipboardTextFn_DefaultImpl: *const c_char
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.ClipboardHandlerData.clear();
     if (!::OpenClipboard(null_mut()))
-        return null_mut();
+        return None;
     HANDLE wbuf_handle = ::GetClipboardData(CF_UNICODETEXT);
     if (wbuf_handle == null_mut())
     {
         ::CloseClipboard();
-        return null_mut();
+        return None;
     }
     if (*const WCHAR wbuf_global = (*const WCHAR)::GlobalLock(wbuf_handle))
     {
-        let buf_len: c_int = ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, null_mut(), 0, null_mut(), null_mut());
+        let buf_len: c_int = ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, None, 0, None, null_mut());
         g.ClipboardHandlerData.resize(buf_len);
-        ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, g.ClipboardHandlerData.Data, buf_len, null_mut(), null_mut());
+        ::WideCharToMultiByte(CP_UTF8, 0, wbuf_global, -1, g.ClipboardHandlerData.Data, buf_len, None, null_mut());
     }
     ::GlobalUnlock(wbuf_handle);
     ::CloseClipboard();
@@ -38,7 +38,7 @@ static GetClipboardTextFn_DefaultImpl: *const c_char
 pub unsafe fn SetClipboardTextFn_DefaultImpl(*mut c_void, text: *const c_char)
 {
     if !::OpenClipboard(null_mut()) { return ; }
-    let wbuf_length: c_int = ::MultiByteToWideChar(CP_UTF8, 0, text, -1, null_mut(), 0);
+    let wbuf_length: c_int = ::MultiByteToWideChar(CP_UTF8, 0, text, -1, None, 0);
     HGLOBAL wbuf_handle = ::GlobalAlloc(GMEM_MOVEABLE, wbuf_length * sizeof(WCHAR));
     if (wbuf_handle == null_mut())
     {
@@ -104,7 +104,7 @@ static GetClipboardTextFn_DefaultImpl: *const c_char
             }
         }
     }
-    return null_mut();
+    return None;
 }
 
 // #else
@@ -113,7 +113,7 @@ static GetClipboardTextFn_DefaultImpl: *const c_char
 static GetClipboardTextFn_DefaultImpl: *const c_char
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return if g.ClipboardHandlerData.empty() { null_mut()} else {g.ClipboardHandlerData.begin()};
+    return if g.ClipboardHandlerData.empty() { None} else {g.ClipboardHandlerData.begin()};
 }
 
 pub unsafe fn SetClipboardTextFn_DefaultImpl(*mut c_void, text: *const c_char)

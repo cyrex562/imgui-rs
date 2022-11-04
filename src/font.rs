@@ -15,13 +15,14 @@ use crate::vec4::ImVec4;
 use libc::{c_char, c_float, c_int, c_short, c_uint, size_t};
 use std::borrow::BorrowMut;
 use std::ffi::CStr;
+use std::ops::DerefMut;
 use std::os::raw::c_void;
 use std::ptr::null_mut;
 use std::str::pattern::Pattern;
 
 // Font runtime data and rendering
 // ImFontAtlas automatically loads a default embedded font for you when you call GetTexDataAsAlpha8() or GetTexDataAsRGBA32().
-#[derive(Default, Debug, Clone)]
+#[derive(Default, Debug, Clone,Copy)]
 pub struct ImFont {
     // Members: Hot ~20/24 bytes (for CalcTextSize)
     pub IndexAdvanceX: Vec<c_float>,
@@ -31,24 +32,24 @@ pub struct ImFont {
     pub FontSize: c_float, // 4     // in  //            // Height of characters/line, set during loading (don't change after loading)
 
     // Members: Hot ~28/40 bytes (for CalcTextSize + render loop)
-    pub IndexLookup: Vec<ImWchar>,
+    pub IndexLookup: Vec<char>,
     // 12-16 // out //            // Sparse. Index glyphs by Unicode code-point.
     pub Glyphs: Vec<ImFontGlyph>,
     // 12-16 // out //            // All glyphs.
-    pub FallbackGlyph: *const ImFontGlyph, // 4-8   // out // = FindGlyph(FontFallbackChar)
+    pub FallbackGlyph: Option<ImFontGlyph>, // 4-8   // out // = FindGlyph(FontFallbackChar)
 
     // Members: Cold ~32/40 bytes
-    pub ContainerAtlas: *mut ImFontAtlas,
+    pub ContainerAtlas: Option<ImFontAtlas>,
     // 4-8   // out //            // What we has been loaded into
-    pub ConfigData: *const ImFontConfig,
+    pub ConfigData: Option<ImFontConfig>,
     // 4-8   // in  //            // Pointer within ContainerAtlas->ConfigData
-    pub ConfigDataCount: c_short,
+    pub ConfigDataCount: usize,
     // 2     // in  // ~ 1        // Number of ImFontConfig involved in creating this font. Bigger than 1 when merging multiple font sources into one ImFont.
-    pub FallbackChar: ImWchar,
+    pub FallbackChar: char,
     // 2     // out // = FFFD/'?' // Character used if a glyph isn't found.
-    pub EllipsisChar: ImWchar,
+    pub EllipsisChar: char,
     // 2     // out // = '...'    // Character used for ellipsis rendering.
-    pub DotChar: ImWchar,
+    pub DotChar: char,
     // 2     // out // = '.'      // Character used for ellipsis rendering (if a single '...' character isn't found)
     pub DirtyLookupTables: bool,
     // 1     // out //
@@ -61,59 +62,56 @@ pub struct ImFont {
     pub MetricsTotalSurface: c_int,
     // 4     // out //            // Total surface in pixels to get an idea of the font rasterization/texture cost (not exact, we approximate the cost of padding between glyphs)
     // ImU8                        Used4kPagesMap[(IM_UNICODE_CODEPOINT_MAX+1)/4096/8]; // 2 bytes if ImWchar=ImWchar16, 34 bytes if ImWchar==ImWchar32. Store 1-bit for each block of 4K codepoints that has one active glyph. This is mainly used to facilitate iterations across all used codepoints.
-    pub Used4kPagesMap: [u8; (IM_UNICODE_CODEPOINT_MAX + 1) / 4096 / 8],
+    pub Used4kPagesMap: Vec<u8>,
 }
 
 impl ImFont {
-    // Methods
-    // ImFont();
     pub fn new() -> Self {
         let mut out = Self::default();
         out.FontSize = 0.0;
         out.FallbackAdvanceX = 0.0;
-        out.FallbackChar = -1;
-        out.EllipsisChar = -1;
-        out.DotChar = -1;
-        out.FallbackGlyph = null_mut();
-        out.ContainerAtlas = null_mut();
-        out.ConfigData = null_mut();
+        out.FallbackChar = '\0';
+        out.EllipsisChar = '\0';
+        out.DotChar = '\0';
+        out.FallbackGlyph = None;
+        out.ContainerAtlas = None;
+        out.ConfigData = None;
         out.ConfigDataCount = 0;
         out.DirtyLookupTables = false;
         out.Scale = 1.0;
         out.Ascent = 0.0;
         out.Descent = 0.0;
         out.MetricsTotalSurface = 0;
-        // memset(Used4kPagesMap, 0, sizeof(Used4kPagesMap));
+        out.Used4kPagesMap = vec![];
         out
     }
 
     // ~ImFont();
 
     // const ImFontGlyph*FindGlyph(ImWchar c) const;
-    pub unsafe fn FindGlyph(&mut self, c: char) -> *mut ImFontGlyph {
+    pub unsafe fn FindGlyph(&mut self, c: char) -> ImFontGlyph {
         let mut out_glyph: ImFontGlyph = ImFontGlyph::default();
-        if c >= self.IndexLookup.len() as ImWchar {
-            out_glyph = *(self.FallbackGlyph.clone());
-            return &mut out_glyph;
-        }
+        // if c >= self.IndexLookup.len() {
+        //     out_glyph = *(self.FallbackGlyph.clone());
+        //     return out_glyph;
+        // }
         let i = self.IndexLookup[c];
         if i == -1 {
-            out_glyph = *(self.FallbackGlyph.clone());
-            return &mut out_glyph;
+            return self.FallbackGlyph.unwrap().clone();
         }
-        return &mut self.Glyphs[i];
+        return self.Glyphs[i].clone();
     }
 
     // const ImFontGlyph*FindGlyphNoFallback(ImWchar c) const;
-    pub fn FindGlyphNoFallback(&mut self, c: ImWchar) -> *mut ImFontGlyph {
-        if c >= self.IndexLookup.len() as ImWchar {
-            return null_mut();
+    pub fn FindGlyphNoFallback(&mut self, c: char) -> Option<ImFontGlyph> {
+        if c >= self.IndexLookup.len() as char {
+            None
         }
         let i: ImWchar = self.IndexLookup[c];
         if i == -1 {
-            return null_mut();
+            None
         }
-        return &mut self.Glyphs[i];
+        return Some(self.Glyphs[i].clone());
     }
 
     // c_float                       GetCharAdvance(ImWchar c) const     { return (c < IndexAdvanceX.len()) ? IndexAdvanceX[c] : FallbackAdvanceX; }
@@ -131,12 +129,13 @@ impl ImFont {
     }
 
     // const char*                 GetDebugName() const                { return ConfigData ? ConfigData.Name : "<unknown>"; }
-    pub unsafe fn GetDebugName(&self) -> *const c_char {
-        return if self.ConfigData.is_null() == false {
-            self.ConfigData.Name.as_ptr()
-        } else {
-            CStr::from_bytes_with_nul_unchecked(String::from("<unknown>").as_bytes()).as_ptr()
-        };
+    pub unsafe fn GetDebugName(&self) -> String {
+        // return if self.ConfigData.is_null() == false {
+        //     self.ConfigData.Name
+        // } else {
+        //     String::from("unkown")
+        // };
+        self.ConfigData.Name.clone()
     }
 
     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). f32::MAX to disable.
@@ -147,8 +146,8 @@ impl ImFont {
         size: c_float,
         max_width: c_float,
         wrap_width: c_float,
-        text_begin: &str,
-        remaining: &mut usize,
+        text: String,
+        remaining: Option<&mut usize>,
     ) -> ImVec2 {
         // if !text_end {
         //     text_end = text_begin + libc::strlen(text_begin);
@@ -160,19 +159,21 @@ impl ImFont {
         let mut text_size: ImVec2 = ImVec2::from_floats(0.0, 0.0);
         let mut line_width: c_float = 0.0;
 
-        let word_wrap_enabled: bool = (wrap_width > 0.0);
-        let mut word_wrap_eol: *const c_char = null_mut();
+        let word_wrap_enabled = (wrap_width > 0.0);
+        // let mut word_wrap_eol = String::default();
+        let mut word_wrap_eol: usize = 0;
+        let mut s: usize = 0;
+        let mut text_end: usize = text.len() - 1;
 
-        let mut s: *const c_char = text_begin;
+        // let mut s = text_begin;
         while s < text_end {
             if word_wrap_enabled {
                 // Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
-                if !word_wrap_eol {
-                    word_wrap_eol =
-                        CalcWordWrapPositionA(scale, s, text_end, wrap_width - line_width);
+                if word_wrap_eol.is_empty() {
+                    word_wrap_eol = self.calc_word_wrap_position(scale, &text[s..].to_string(), wrap_width - line_width);
                     if word_wrap_eol == s {
                         // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
-                        word_wrap_eol += 1;
+                        word_wrap_eol = word_wrap_eol[1..].to_string();
                     } // +1 may not be a character start point in UTF-8 but it's ok because we use s >= word_wrap_eol below
                 }
 
@@ -182,7 +183,7 @@ impl ImFont {
                     }
                     text_size.y += line_height;
                     line_width = 0.0;
-                    word_wrap_eol = null_mut();
+                    word_wrap_eol = 0;
 
                     // Wrapping skips upcoming blanks
                     while s < text_end {
@@ -201,12 +202,12 @@ impl ImFont {
             }
 
             // Decode and advance source
-            let mut prev_s: *const c_char = s;
-            let mut c: c_uint = *s as c_uint;
+            let mut prev_s = s;
+            let mut c: c_uint = text[s] as c_uint;
             if c < 0x80 {
                 s += 1;
             } else {
-                s += ImTextCharFromUtf8(&mut c, s, text_end);
+                s += ImTextCharFromUtf8(&mut c, text.clone());
                 if c == 0 {
                     // Malformed UTF-8?
                     break;
@@ -246,21 +247,22 @@ impl ImFont {
             text_size.y += line_height;
         }
 
-        if remaining {
-            *remaining = s;
+        if remaining.is_some() {
+            // remaining.unwrap().deref_mut() = s;
+            let rem = remaining.unwrap();
+            *rem = s;
         }
 
         return text_size;
     }
 
     // const char*       CalcWordWrapPositionA(c_float scale, const char* text, const char* text_end, c_float wrap_width) const;
-    pub unsafe fn CalcWordWrapPositionA(
+    pub unsafe fn calc_word_wrap_position(
         &mut self,
         scale: c_float,
-        text: *const c_char,
-        text_end: *const c_char,
-        mut wrap_width: c_float,
-    ) -> *const c_char {
+        text: Stringing,
+        wrap_width: c_float,
+    ) -> usize {
         // Simple word-wrapping for English, not full-featured. Please submit failing cases!
         // FIXME: Much possible improvements (don't cut things like "word !", "word!!!" but cut within "word,,,,", more sensible support for punctuations, support for Unicode punctuations, etc.)
 
@@ -279,36 +281,39 @@ impl ImFont {
         let mut line_width: c_float = 0.0;
         let mut word_width: c_float = 0.0;
         let mut blank_width: c_float = 0.0;
-        wrap_width /= scale; // We work with unscaled widths to avoid scaling every characters
+        // wrap_width /= scale; // We work with unscaled widths to avoid scaling every characters
+        let calc_wrap_width = wrap_width / scale;
 
-        let mut word_end: *const c_char = text;
-        let mut prev_word_end: *const c_char = null_mut();
+        let mut word_end: usize = 0;
+        let mut prev_word_end: usize = 0;
         let mut inside_word: bool = true;
 
-        let mut s: *const c_char = text;
-        while s < text_end {
-            let mut c: c_uint = (*s).clone() as c_uint;
-            let next_s: *const c_char;
+        let mut idx: usize = 0;
+        let mut next_idx: usize = 0;
+        let mut prev_idx: usize = 0;
+        while idx < text_end {
+            let mut c = text[idx];
+            let mut next_s: usize = 0;
             if c < 0x80 {
-                next_s = s + 1;
+                next_s = idx + 1;
             } else {
-                next_s = s + ImTextCharFromUtf8(&mut c, s, text_end);
+                next_s = idx + c;
             }
             if c == 0 {
                 break;
             }
 
             if c < 32 {
-                if c == c_uint::from('\n') {
+                if c == '\n'{
                     line_width = 0.0;
                     word_width = 0.0;
                     blank_width = 0.0;
                     inside_word = true;
-                    s = next_s;
+                    idx = next_s;
                     continue;
                 }
-                if c == c_uint::from('\r') {
-                    s = next_s;
+                if c == '\r' {
+                    idx = next_s;
                     continue;
                 }
             }
@@ -322,7 +327,7 @@ impl ImFont {
                 if inside_word {
                     line_width += blank_width;
                     blank_width = 0.0;
-                    word_end = s;
+                    word_end = idx;
                 }
                 blank_width += char_width;
                 inside_word = false;
@@ -350,7 +355,7 @@ impl ImFont {
             if line_width.clone() + word_width.clone() > wrap_width {
                 // Words that cannot possibly fit within an entire line will be cut anywhere.
                 if word_width < wrap_width {
-                    s = if prev_word_end {
+                    idx = if prev_word_end {
                         prev_word_end
                     } else {
                         word_end
@@ -359,10 +364,10 @@ impl ImFont {
                 break;
             }
 
-            s = next_s;
+            idx = next_s;
         }
 
-        return s;
+        return idx;
     }
 
     // void              RenderChar(draw_list: *mut ImDrawList, c_float size, const pos: &mut ImVec2, col: u32, ImWchar c) const;
@@ -372,9 +377,9 @@ impl ImFont {
         size: c_float,
         pos: &ImVec2,
         mut col: u32,
-        c: ImWchar,
+        c: char,
     ) {
-        let glyph: *const ImFontGlyph = self.FindGlyph(c);
+        let glyph = self.FindGlyph(c);
         if glyph.is_null() || !glyph.Visible {
             return;
         }
@@ -425,13 +430,12 @@ impl ImFont {
         let scale: c_float = size / FontSize;
         let line_height: c_float = FontSize * scale;
         let word_wrap_enabled: bool = (wrap_width > 0.0);
-        let mut word_wrap_eol: *const c_char = null_mut();
-
+        let mut word_wrap_eol: usize = 0;
         // Fast-forward to first visible line
-        let mut s: *const c_char = text_begin;
+        let mut s = 0usize;
         if y + line_height < clip_rect.y && !word_wrap_enabled {
             while y + line_height < clip_rect.y && s < text_end {
-                s = libc::memchr(s, '\n' as c_int, text_end - s);
+                // s = libc::memchr(s, '\n' as c_int, text_end - s);
                 s = if s { s + 1 } else { text_end };
                 y += line_height;
             }
@@ -440,10 +444,10 @@ impl ImFont {
         // For large text, scan for the last visible line in order to avoid over-reserving in the call to PrimReserve()
         // Note that very large horizontal line will still be affected by the issue (e.g. a one megabyte string buffer without a newline will likely crash atm)
         if text_end - s > 10000 && !word_wrap_enabled {
-            let mut s_end: *const c_char = s;
+            let mut s_end = s;
             let mut y_end: c_float = y;
             while y_end < clip_rect.w && s_end < text_end {
-                s_end = libc::memchr(s_end, '\n' as c_int, text_end - s_end);
+                // s_end = libc::memchr(s_end, '\n' as c_int, text_end - s_end);
                 s_end = if s_end { s_end + 1 } else { text_end };
                 y_end += line_height;
             }
@@ -470,7 +474,7 @@ impl ImFont {
                 // Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
                 if !word_wrap_eol {
                     word_wrap_eol =
-                        self.CalcWordWrapPositionA(scale, s, text_end, wrap_width - (x - start_x));
+                        self.calc_word_wrap_position(scale, text[s..].to_string(), wrap_width - (x - start_x));
                     if word_wrap_eol == s {
                         // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
                         word_wrap_eol += 1;
@@ -480,7 +484,7 @@ impl ImFont {
                 if s >= word_wrap_eol {
                     x = start_x;
                     y += line_height;
-                    word_wrap_eol = null_mut();
+                    word_wrap_eol = 0;
 
                     // Wrapping skips upcoming blanks
                     while s < text_end {
@@ -499,11 +503,11 @@ impl ImFont {
             }
 
             // Decode and advance source
-            let mut c: c_uint = *s as c_uint;
+            let mut c = text[s];
             if c < 0x80 {
                 s += 1;
             } else {
-                s += ImTextCharFromUtf8(&mut c, s, text_end);
+                s += ImTextCharFromUtf8(&mut c, text[s..]);
                 if c == 0 {
                     // Malformed UTF-8?
                     break;
@@ -525,7 +529,7 @@ impl ImFont {
             }
 
             let glyph: *const ImFontGlyph = FindGlyph(c);
-            if glyph == null_mut() {
+            if glyph == None {
                 continue;
             }
 
@@ -651,14 +655,14 @@ impl ImFont {
 
         // Create a glyph to handle TAB
         // FIXME: Needs proper TAB handling but it needs to be contextualized (or we could arbitrary say that each string starts at "column 0" ?)
-        if self.FindGlyph(ImWchar::from(' ')) {
+        if self.FindGlyph(' ') {
             if self.Glyphs.last().unwrap().Codepoint != '\t' {
                 // So we can call this function multiple times (FIXME: Flaky)
                 self.Glyphs
                     .resize_with(self.Glyphs.len() + 1, ImFontGlyph::default());
             }
             let mut tab_glyph: &mut ImFontGlyph = self.Glyphs.last_mut().unwrap();
-            tab_glyph = self.FindGlyph(ImWchar::from(' ')).borrow_mut();
+            tab_glyph = &mut self.FindGlyph(' ');
             tab_glyph.Codepoint = '\t';
             tab_glyph.AdvanceX *= IM_TABSIZE;
             self.IndexAdvanceX[tab_glyph.Codepoint] = tab_glyph.AdvanceX.clone();
@@ -666,35 +670,33 @@ impl ImFont {
         }
 
         // Mark special glyphs as not visible (note that AddGlyph already mark as non-visible glyphs with zero-size polygons)
-        self.SetGlyphVisible(ImWchar::from(' '), false);
-        self.SetGlyphVisible(ImWchar::from('\t'), false);
+        self.SetGlyphVisible(' ', false);
+        self.SetGlyphVisible('\t', false);
 
         // Ellipsis character is required for rendering elided text. We prefer using U+2026 (horizontal ellipsis).
         // However some old fonts may contain ellipsis at U+0085. Here we auto-detect most suitable ellipsis character.
         // FIXME: Note that 0x2026 is rarely included in our font ranges. Because of this we are more likely to use three individual dots.
-        let ellipsis_chars: [ImWchar; 2] = [0x2026, 0x0085];
-        let dots_chars: [ImWchar; 2] = [ImWchar::from('.'), 0xFF0E];
+        let ellipsis_chars: [u8; 2] = [0x2026, 0x0085];
+        let dots_chars: [u8; 2] = [u8::from('.'), 0xFF0E];
         if self.EllipsisChar == -1 {
-            self.EllipsisChar =
-                FindFirstExistingGlyph(this, ellipsis_chars.as_ptr(), ellipsis_chars.len());
+            self.EllipsisChar = FindFirstExistingGlyph(self, &ellipsis_chars).unwrap();
         }
         if self.DotChar == -1 {
-            self.DotChar = FindFirstExistingGlyph(this, dots_chars.as_ptr(), dots_chars.len());
+            self.DotChar = FindFirstExistingGlyph(self, &dots_chars).unwrap();
         }
 
         // Setup fallback character
-        let fallback_chars: [ImWchar; 3] = [
-            ImWchar::from(IM_UNICODE_CODEPOINT_INVALID),
-            ImWchar::from('?'),
-            ImWchar::from(' '),
+        let fallback_chars: [u8; 3] = [
+            IM_UNICODE_CODEPOINT_INVALID,
+            '?'.into(),
+            ' '.into(),
         ];
-        self.FallbackGlyph = self.FindGlyphNoFallback(self.FallbackChar.clone());
-        if self.FallbackGlyph == null_mut() {
-            self.FallbackChar =
-                FindFirstExistingGlyph(this, fallback_chars.as_ptr(), fallback_chars.len());
-            self.FallbackGlyph = self.FindGlyphNoFallback(self.FallbackChar.clone());
-            if self.FallbackGlyph == null_mut() {
-                self.FallbackGlyph = self.Glyphs.last().unwrap();
+        self.FallbackGlyph.replace(self.FindGlyphNoFallback(self.FallbackChar.clone()).unwrap());
+        if self.FallbackGlyph.is_none() {
+            self.FallbackChar = FindFirstExistingGlyph(self, &fallback_chars).unwrap();
+            self.FallbackGlyph.replace(self.FindGlyphNoFallback(self.FallbackChar.clone()).unwrap());
+            if self.FallbackGlyph.is_none() {
+                self.FallbackGlyph.replace(self.Glyphs.last().unwrap().clone());
                 self.FallbackChar = self.FallbackGlyph.Codepoint;
             }
         }
@@ -715,8 +717,8 @@ impl ImFont {
         self.Glyphs.clear();
         self.IndexAdvanceX.clear();
         self.IndexLookup.clear();
-        self.FallbackGlyph = null_mut();
-        self.ContainerAtlas = null_mut();
+        self.FallbackGlyph = None;
+        self.ContainerAtlas = None;
         self.DirtyLookupTables = true;
         self.Ascent = 0.0;
         self.Descent = 0.0;
@@ -729,8 +731,8 @@ impl ImFont {
         if new_size <= self.IndexLookup.len() {
             return;
         }
-        self.IndexAdvanceX.resize(new_size, -1.0);
-        self.IndexLookup.resize(new_size.clone(), -1);
+        // self.IndexAdvanceX.resize(new_size, -1.0);
+        // self.IndexLookup.resize(new_size.clone(), -1);
     }
 
     // void              AddGlyph(const ImFontConfig* src_cfg, ImWchar c, c_float x0, c_float y0, c_float x1, c_float y1, c_float u0, c_float v0, c_float u1, c_float v1, c_float advance_x);
@@ -748,7 +750,7 @@ impl ImFont {
         v1: c_float,
         mut advance_x: c_float,
     ) {
-        if cfg != null_mut() {
+        if cfg != None {
             // Clamp & recenter if needed
             let advance_x_original: c_float = advance_x;
             advance_x = ImClamp(
@@ -829,8 +831,8 @@ impl ImFont {
     }
 
     // void              SetGlyphVisible(ImWchar c, visible: bool);
-    pub unsafe fn SetGlyphVisible(&mut self, c: ImWchar, visible: bool) {
-        let glyph = self.FindGlyph(c);
+    pub unsafe fn SetGlyphVisible(&mut self, c: char, visible: bool) {
+        let mut glyph = self.FindGlyph(c);
         if glyph.is_null() == false {
             glyph.Visible = visible;
         }

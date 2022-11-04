@@ -103,13 +103,13 @@ pub unsafe fn CreateNewWindowSettings(name: *const c_char) -> *mut ImGuiWindowSe
 pub unsafe fn FindWindowSettings(id: ImGuiID) -> *mut ImGuiWindowSettings
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    // for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
+    // for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != None; settings = g.SettingsWindows.next_chunk(settings))
     for s in g.SettingsWindow.iter_mut() {
         if s.ID == id {
             return settings;
         }
     }
-    return null_mut();
+    return None;
 }
 
 pub unsafe fn FindOrCreateWindowSettings(name: *const c_char) -> *mut ImGuiWindowSettings
@@ -146,7 +146,7 @@ pub unsafe fn FindSettingsHandler(type_name: *const c_char) -> *mut ImGuiSetting
             return &g.SettingsHandlers[handler_n];
         }
     }
-    return null_mut();
+    return None;
 }
 
 pub unsafe fn ClearIniSettings()
@@ -192,10 +192,10 @@ pub unsafe fn LoadIniSettingsFromMemory(ini_data: *const c_char, ini_size: size_
         if (g.SettingsHandlers[handler_n].ReadInitFn)
             g.SettingsHandlers[handler_n].ReadInitFn(&g, &g.SettingsHandlers[handler_n]);
 
-    entry_data: *mut c_void= null_mut();
-    ImGuiSettingsHandler* entry_handler= null_mut();
+    entry_data: *mut c_void= None;
+    ImGuiSettingsHandler* entry_handler= None;
 
-    char* line_end= null_mut();
+    char* line_end= None;
     for (char* line = buf; line < buf_end; line = line_end + 1)
     {
         // Skip new lines markers, then find end of the line
@@ -214,15 +214,15 @@ pub unsafe fn LoadIniSettingsFromMemory(ini_data: *const c_char, ini_size: size_
             let mut  name_end: *const c_char = line_end - 1;
             let mut  type_start: *const c_char = line + 1;
             char* type_end = ImStrchrRange(type_start, name_end, ']');
-            let mut  name_start: *const c_char = type_end ? ImStrchrRange(type_end + 1, name_end, '[') : null_mut();
+            let mut  name_start: *const c_char = type_end ? ImStrchrRange(type_end + 1, name_end, '[') : None;
             if (!type_end || !name_start)
                 continue;
             *type_end = 0; // Overwrite first ']'
             name_start+= 1;  // Skip second '['
             entry_handler = FindSettingsHandler(type_start);
-            entry_data = if entry_handler { entry_handler -> ReadOpenFn(&g, entry_handler, name_start) } else { null_mut() };
+            entry_data = if entry_handler { entry_handler -> ReadOpenFn(&g, entry_handler, name_start) } else { None };
         }
-        else if (entry_handler != null_mut() && entry_data != null_mut())
+        else if (entry_handler != None && entry_data != null_mut())
         {
             // Let type handler parse the line
             entry_handler->ReadLineFn(&g, entry_handler, entry_data, line);
@@ -299,16 +299,16 @@ pub unsafe fn WindowSettingsHandler_ReadLine(ImGuiContext*, ImGuiSettingsHandler
     else if (sscanf(line, "ViewportId=0x{}", &u1) == 1)   { settings.ViewportId = u1; }
     else if (sscanf(line, "ViewportPos=%i,%i", &x, &y) == 2){ settings.ViewportPos = ImVec2ih(x, y); }
     else if (sscanf(line, "Collapsed={}", &i) == 1)         { settings.Collapsed = (i != 0); }
-    else if (sscanf(line, "DockId=0x%X,{}", &u1, &i) == 2)  { settings.DockId = u1; settings.DockOrder = i; }
-    else if (sscanf(line, "DockId=0x%X", &u1) == 1)         { settings.DockId = u1; settings.DockOrder = -1; }
-    else if (sscanf(line, "ClassId=0x%X", &u1) == 1)        { settings.ClassId = u1; }
+    else if (sscanf(line, "DockId=0x{},{}", &u1, &i) == 2)  { settings.DockId = u1; settings.DockOrder = i; }
+    else if (sscanf(line, "DockId=0x{}", &u1) == 1)         { settings.DockId = u1; settings.DockOrder = -1; }
+    else if (sscanf(line, "ClassId=0x{}", &u1) == 1)        { settings.ClassId = u1; }
 }
 
 // Apply to existing windows (if any)
 pub unsafe fn WindowSettingsHandler_ApplyAll(ctx: *mut ImGuiContext, ImGuiSettingsHandler*)
 {
     let g =  ctx;
-    for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
+    for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != None; settings = g.SettingsWindows.next_chunk(settings))
         if (settings.WantApply)
         {
             if (let mut window: *mut ImGuiWindow =  FindWindowByID(settings.ID))
@@ -348,7 +348,7 @@ pub unsafe fn WindowSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettin
 
     // Write to text buffer
     buf->reserve(buf->size() + g.SettingsWindows.size() * 6); // ballpark reserve
-    for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
+    for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != None; settings = g.SettingsWindows.next_chunk(settings))
     {
         let mut  settings_name: *const c_char = settings.GetName();
         buf->appendf("[{}][{}]\n", handler.TypeName, settings_name);

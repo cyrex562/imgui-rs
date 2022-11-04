@@ -292,11 +292,11 @@ impl ImGuiIO {
         out.KeyRepeatRate = 0.05f32;
         out.HoverDelayNormal = 0.3f32;
         out.HoverDelayShort = 0.1.0;
-        out.UserData = null_mut();
+        out.UserData = None;
 
-        out.Fonts = null_mut();
+        out.Fonts = None;
         out.FontGlobalScale = 1.0;
-        out.FontDefault = null_mut();
+        out.FontDefault = None;
         out.FontAllowUserScaling = false;
         out.DisplayFramebufferScale = ImVec2::from_floats(1.0, 1.0);
 
@@ -328,14 +328,14 @@ impl ImGuiIO {
         out.ConfigMemoryCompactTimer = 60f32;
 
         // Platform Functions
-        out.BackendPlatformName = null_mut();
-        out.BackendRendererName = null_mut();
-        out.BackendPlatformUserData = null_mut();
-        out.BackendRendererUserData = null_mut();
-        out.BackendLanguageUserData = null_mut();
+        out.BackendPlatformName = None;
+        out.BackendRendererName = None;
+        out.BackendPlatformUserData = None;
+        out.BackendRendererUserData = None;
+        out.BackendLanguageUserData = None;
         out.GetClipboardTextFn = GetClipboardTextFn_DefaultImpl;   // Platform dependent default implementations
         out.SetClipboardTextFn = SetClipboardTextFn_DefaultImpl;
-        out.ClipboardUserData = null_mut();
+        out.ClipboardUserData = None;
         out.SetPlatformImeDataFn = SetPlatformImeDataFn_DefaultImpl;
 
         // Input (NB: we already have memset zero the entire structure!)

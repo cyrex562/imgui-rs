@@ -153,7 +153,7 @@ pub unsafe fn STB_TEXTEDIT_DELETECHARS(obj: &mut ImGuiInputTextState, pos: c_int
 pub unsafe fn STB_TEXTEDIT_INSERTCHARS(
     obj: &mut ImGuiInputTextState,
     pos: usize,
-    new_text: &String,
+    new_text: Stringing,
     new_text_len: usize,
 ) -> bool {
     let is_resizable: bool = flag_set(obj.Flags, ImGuiInputTextFlags_CallbackResize);

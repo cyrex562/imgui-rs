@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::activate_flags::ImGuiActivateFlags_None;
-use crate::color::IM_COL32;
+use crate::color::color_u32_from_rgba;
 use crate::content_ops::GetContentRegionMaxAbs;
 use crate::draw_flags::ImDrawFlags_None;
 use crate::draw_list_ops::GetForegroundDrawList;
@@ -221,7 +221,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
             GetForegroundDrawList(null_mut()).AddRect(
                 &bb.Min,
                 &bb.Max,
-                IM_COL32(255, 255, 0, 255),
+                color_u32_from_rgba(255, 255, 0, 255),
                 0.0,
             );
         }

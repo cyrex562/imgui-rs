@@ -48,7 +48,7 @@ impl ImChunkStream<T> {
     // *mut T      begin()
     pub fn begin(&mut self) -> *mut T {
         let mut HDR_SZ = 4usize;
-        if !self.Buf.as_ptr() { return null_mut(); };
+        if !self.Buf.as_ptr() { return None; };
         // return (*mut T)(Buf.Data + HDR_SZ);
         return self.Buf.as_mut_ptr() + HDR_SZ;
     }
@@ -64,7 +64,7 @@ impl ImChunkStream<T> {
 
         // if (p == (*mut T)(end() + HDR_SZ)) {return ( * mut T)0;}
         if p == self.end() + HDR_SZ {
-            return null_mut();
+            return None;
         }
 
         // IM_ASSERT(p < end());

@@ -60,7 +60,7 @@ pub unsafe fn InputScalar_DefaultCharsFilter(
 pub unsafe fn TempInputScalar(
     bb: &mut ImRect,
     id: ImGuiID,
-    label: &str,
+    label: String,
     data_type: ImGuiDataType,
     p_data: &mut c_float,
     format: &mut String,
@@ -119,7 +119,7 @@ pub unsafe fn TempInputScalar(
 // Note: p_data, p_step, p_step_fast are _pointers_ to a memory address holding the data. For an Input widget, p_step and p_step_fast are optional.
 // Read code of e.g. InputFloat(), InputInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
 pub unsafe fn InputScalar(
-    label: &str,
+    label: String,
     data_type: ImGuiDataType,
     p_data: &mut c_float,
     p_step: Option<c_float>,
@@ -234,7 +234,7 @@ pub unsafe fn InputScalar(
 }
 
 pub unsafe fn InputScalarN(
-    label: &str,
+    label: String,
     data_type: ImGuiDataType,
     p_data: &mut [c_float],
     components: usize,
@@ -286,7 +286,7 @@ pub unsafe fn InputScalarN(
 }
 
 pub unsafe fn InputFloat(
-    label: &str,
+    label: String,
     v: &mut c_float,
     step: c_float,
     step_fast: c_float,
@@ -310,7 +310,7 @@ pub unsafe fn InputFloat(
 }
 
 pub unsafe fn InputFloat2(
-    label: &str,
+    label: String,
     v: &mut [c_float; 2],
     format: &mut String,
     flags: ImGuiInputTextFlags,
@@ -319,7 +319,7 @@ pub unsafe fn InputFloat2(
 }
 
 pub unsafe fn InputFloat3(
-    label: &str,
+    label: String,
     v: &mut [c_float; 3],
     format: &mut String,
     flags: ImGuiInputTextFlags,
@@ -328,7 +328,7 @@ pub unsafe fn InputFloat3(
 }
 
 pub unsafe fn InputFloat4(
-    label: &str,
+    label: String,
     v: &mut [c_float; 4],
     format: &mut String,
     flags: ImGuiInputTextFlags,
@@ -337,7 +337,7 @@ pub unsafe fn InputFloat4(
 }
 
 pub unsafe fn InputInt(
-    label: &str,
+    label: String,
     v: &mut c_int,
     step: c_int,
     step_fast: c_int,
@@ -368,7 +368,7 @@ pub unsafe fn InputInt(
     );
 }
 
-pub unsafe fn InputInt2(label: &str, v: &mut [c_int; 2], flags: ImGuiInputTextFlags) -> bool {
+pub unsafe fn InputInt2(label: String, v: &mut [c_int; 2], flags: ImGuiInputTextFlags) -> bool {
     let mut v_float: [c_float; 2] = [c_float::from(v[0]), c_float::from(v[1])];
     let mut format = String::from("{}");
     return InputScalarN(
@@ -383,7 +383,7 @@ pub unsafe fn InputInt2(label: &str, v: &mut [c_int; 2], flags: ImGuiInputTextFl
     );
 }
 
-pub unsafe fn InputInt3(label: &str, v: [c_int; 3], flags: ImGuiInputTextFlags) -> bool {
+pub unsafe fn InputInt3(label: String, v: [c_int; 3], flags: ImGuiInputTextFlags) -> bool {
     let mut v_float: [c_float; 3] = [
         c_float::from(v[0]),
         c_float::from(v[1]),
@@ -402,7 +402,7 @@ pub unsafe fn InputInt3(label: &str, v: [c_int; 3], flags: ImGuiInputTextFlags) 
     );
 }
 
-pub unsafe fn InputInt4(label: &str, v: [c_int; 4], flags: ImGuiInputTextFlags) -> bool {
+pub unsafe fn InputInt4(label: String, v: [c_int; 4], flags: ImGuiInputTextFlags) -> bool {
     let mut v_float: [c_float; 4] = [
         c_float::from(v[0]),
         c_float::from(v[1]),
@@ -423,7 +423,7 @@ pub unsafe fn InputInt4(label: &str, v: [c_int; 4], flags: ImGuiInputTextFlags) 
 }
 
 pub unsafe fn InputDouble(
-    label: &str,
+    label: String,
     v: &mut c_double,
     step: c_double,
     step_fast: c_double,
@@ -450,7 +450,7 @@ pub unsafe fn InputDouble(
 }
 
 pub unsafe fn InputText(
-    label: &str,
+    label: String,
     buf: &mut String,
     buf_size: size_t,
     flags: ImGuiInputTextFlags,

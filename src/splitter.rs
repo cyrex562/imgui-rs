@@ -24,7 +24,7 @@ pub unsafe fn SplitterBehavior(bb: &mut ImRect, id: ImGuiID, axis: ImGuiAxis, si
 
     let mut item_flags_backup: ImGuiItemFlags =  g.CurrentItemFlags;
     g.CurrentItemFlags |= ImGuiItemFlags_NoNav | ImGuiItemFlags_NoNavDefaultFocus;
-    let mut item_add: bool =  ItemAdd(bb, id, null(), 0);
+    let mut item_add: bool =  ItemAdd(bb, id, None, 0);
     g.CurrentItemFlags = item_flags_backup;
     if !item_add { return  false; }
 

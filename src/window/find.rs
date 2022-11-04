@@ -59,14 +59,14 @@ pub unsafe fn FindHoveredWindows() {
     let mut moving_window_viewport: *mut ImGuiViewport = if !(g.MovingWindow.is_null()) {
         g.Movingwindow.Viewport
     } else {
-        null_mut()
+        None
     };
     if g.MovingWindow {
         g.Movingwindow.Viewport = g.MouseViewport;
     }
 
-    let mut hovered_window: *mut ImGuiWindow = null_mut();
-    let mut hovered_window_ignoring_moving_window: *mut ImGuiWindow = null_mut();
+    let mut hovered_window: *mut ImGuiWindow = None;
+    let mut hovered_window_ignoring_moving_window: *mut ImGuiWindow = None;
     if g.MovingWindow && !(g.Movingwindow.Flags & ImGuiWindowFlags_NoMouseInputs) {
         hovered_window = g.MovingWindow;
     }
@@ -125,11 +125,11 @@ pub unsafe fn FindHoveredWindows() {
             }
         }
 
-        if hovered_window == null_mut() {
+        if hovered_window == None {
             hovered_window = window;
         }
         IM_MSVC_WARNING_SUPPRESS(28182); // [Static Analyzer] Dereferencing NULL pointer.
-        if hovered_window_ignoring_moving_window == null_mut()
+        if hovered_window_ignoring_moving_window == None
             && (g.MovingWindow.is_null()
                 || window.RootWindowDockTree != g.Movingwindow.RootWindowDockTree)
         {
@@ -187,14 +187,14 @@ pub fn GetWindowForTitleAndMenuHeight(window: *mut ImGuiWindow) -> *mut ImGuiWin
 pub unsafe fn FindBlockingModal(window: *mut ImGuiWindow) -> *mut ImGuiWindow {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.OpenPopupStack.len() <= 0 {
-        return null_mut();
+        return None;
     }
 
     // Find a modal that has common parent with specified window. Specified window should be positioned behind that modal.
     // for (let i: c_int = g.OpenPopupStack.Size - 1; i >= 0; i--)
     for i in g.OpenPopupStack.len() - 1..0 {
         let mut popup_window: *mut ImGuiWindow = g.OpenPopupStack.Data[i].Window;
-        if popup_window == null_mut() || flag_clear(popup_window.Flags, ImGuiWindowFlags_Modal) {
+        if popup_window == None || flag_clear(popup_window.Flags, ImGuiWindowFlags_Modal) {
             continue;
         }
         if !popup_window.Active && !popup_window.WasActive {
@@ -205,16 +205,16 @@ pub unsafe fn FindBlockingModal(window: *mut ImGuiWindow) -> *mut ImGuiWindow {
             // Window is rendered over last modal, no render order change needed.
             break;
         }
-        // for (let mut parent: *mut ImGuiWindow =  popup_window.ParentWindowInBeginStack->RootWindow; parent != null_mut(); parent = parent->ParentWindowInBeginStack->RootWindow)
+        // for (let mut parent: *mut ImGuiWindow =  popup_window.ParentWindowInBeginStack->RootWindow; parent != None; parent = parent->ParentWindowInBeginStack->RootWindow)
         let mut parent: *mut ImGuiWindow = popup_window.ParentWindowInBeginStack.RootWindow;
-        while parent != null_mut() {
+        while parent != None {
             if IsWindowWithinBeginStackOf(window, parent) {
                 return popup_window;
             }
             parent = parent.ParentWindowInBeginStack.RootWindow
         } // Place window above its begin stack parent.
     }
-    return null_mut();
+    return None;
 }
 
 pub unsafe fn FindWindowDisplayIndex(window: *mut ImGuiWindow) -> c_int {
@@ -227,7 +227,7 @@ pub unsafe fn GetCombinedRootWindow(
     popup_hierarchy: bool,
     dock_hierarchy: bool,
 ) -> *mut ImGuiWindow {
-    let mut last_window: *mut ImGuiWindow = null_mut();
+    let mut last_window: *mut ImGuiWindow = None;
     while last_window != window {
         last_window = window;
         window = window.RootWindow;
@@ -252,7 +252,7 @@ pub unsafe fn IsWindowChildOf(
     if window_root == potential_parent {
         return true;
     }
-    while window != null_mut() {
+    while window != None {
         if window == potential_parent {
             return true;
         }
@@ -272,7 +272,7 @@ pub fn IsWindowWithinBeginStackOf(
     if window.RootWindow == potential_parent {
         return true;
     }
-    while window != null_mut() {
+    while window != None {
         if window == potential_parent {
             return true;
         }

@@ -7,7 +7,7 @@
 //-----------------------------------------------------------------------------
 
 use crate::color::{
-    ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_NavHighlight, ImGuiCol_Text, IM_COL32,
+    ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_NavHighlight, ImGuiCol_Text, color_u32_from_rgba,
     IM_COL32_A_MASK, IM_COL32_A_SHIFT, IM_COL32_BLACK, IM_COL32_WHITE,
 };
 use crate::context_hook::{ImGuiContextHookType_RenderPost, ImGuiContextHookType_RenderPre};
@@ -31,7 +31,7 @@ use crate::font_glyph::ImFontGlyph;
 use crate::frame_ops::EndFrame;
 use crate::imgui::GImGui;
 use crate::logging_ops::LogRenderedText;
-use crate::math_ops::{ImAcosX, ImCharIsBlankA, ImClamp, ImLerp, ImMax, ImMin};
+use crate::math_ops::{char_is_blank, ImAcosX, ImCharIsBlankA, ImClamp, ImLerp, ImMax, ImMin};
 use crate::mouse_cursor::{ImGuiMouseCursor, ImGuiMouseCursor_None};
 use crate::nav_highlight_flags::{
     ImGuiNavHighlightFlags, ImGuiNavHighlightFlags_AlwaysDraw, ImGuiNavHighlightFlags_NoRounding,
@@ -63,10 +63,10 @@ use std::mem::swap;
 use std::ptr::{null, null_mut};
 
 // FindRenderedTextEnd: *const c_char(text: *const c_char, text_end: *const c_char)
-pub unsafe fn FindRenderedTextEnd(text: &str) -> usize {
+pub unsafe fn FindRenderedTextEnd(text: String) -> usize {
     // let mut text_display_end: *const c_char = text;
     // if !text_end {
-    //     text_end = null();
+    //     text_end = None;
     // }
     //
     // while text_display_end < text_end && *text_display_end != '\0' as c_char && (text_display_end[0] != '#' || text_display_end[1] != '#') {
@@ -79,9 +79,9 @@ pub unsafe fn FindRenderedTextEnd(text: &str) -> usize {
 // Internal ImGui functions to render text
 // RenderText***() functions calls ImDrawList::AddText() calls ImBitmapFont::RenderText()
 // c_void RenderText(pos: ImVec2, text: *const c_char, text_end: *const c_char, hide_text_after_hash: bool)
-pub unsafe fn RenderText(pos: ImVec2, text: &str, hide_text_after_hash: bool) {
+pub unsafe fn RenderText(pos: ImVec2, text: String, hide_text_after_hash: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window = g.CurrentWindow.unwrap();
 
     // Hide anything after a '##' string
     let mut text_display_end = 0usize;
@@ -96,13 +96,13 @@ pub unsafe fn RenderText(pos: ImVec2, text: &str, hide_text_after_hash: bool) {
 
     if text != text_display_end {
         window.DrawList.AddText2(
-            g.Font,
+            Some(g.Font),
             g.FontSize,
-            &pos,
+            pos,
             GetColorU32(ImGuiCol_Text, 0.0),
-            text,
+            text.clone(),
             0.0,
-            null(),
+            None,
         );
         if g.LogEnabled {
             // LogRenderedText(&pos, text, text_display_end);
@@ -111,22 +111,22 @@ pub unsafe fn RenderText(pos: ImVec2, text: &str, hide_text_after_hash: bool) {
 }
 
 // c_void RenderTextWrapped(pos: ImVec2, text: *const c_char, text_end: *const c_char, c_float wrap_width)
-pub unsafe fn RenderTextWrapped(pos: ImVec2, text: &str) {
+pub unsafe fn RenderTextWrapped(pos: ImVec2, text: String) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window = g.CurrentWindow.unwrap();
 
     // if !text_end {
     //     text_end = text + libc::strlen(text);
     // } // FIXME-OPT
 
     window.DrawList.AddText2(
-        g.Font,
+        Some(g.Font),
         g.FontSize,
-        &pos,
+        pos,
         GetColorU32(ImGuiCol_Text, 0.0),
         text,
         wrap_width,
-        null(),
+        None,
     );
     if g.LogEnabled {
         // LogRenderedText(&pos, text, text_end);
@@ -137,13 +137,13 @@ pub unsafe fn RenderTextWrapped(pos: ImVec2, text: &str) {
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
 // c_void RenderTextClippedEx(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: *const c_char, text_display_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
 pub unsafe fn RenderTextClippedEx(
-    mut draw_list: *mut ImDrawList,
-    pos_min: &ImVec2,
-    pos_max: &ImVec2,
-    text: &str,
-    text_size_if_known: *const ImVec2,
-    align: Option<&ImVec2>,
-    clip_rect: *const ImRect,
+    mut draw_list: ImDrawList,
+    pos_min: ImVec2,
+    pos_max: ImVec2,
+    text: String,
+    text_size_if_known: Option<ImVec2>,
+    align: Option<ImVec2>,
+    clip_rect: Option<ImRect>,
 ) {
     // Perform CPU side clipping for single clipped element to avoid using scissor state
     let mut pos: ImVec2 = pos_min.clone();
@@ -175,53 +175,53 @@ pub unsafe fn RenderTextClippedEx(
         let mut fine_clip_rect =
             ImVec4::from_floats(clip_min.x, clip_min.y, clip_max.x, clip_max.y);
         draw_list.AddText2(
-            null(),
+            None,
             0.0,
-            &pos,
+            pos,
             GetColorU32(ImGuiCol_Text, 0.0),
-            text,
+            text.clone(),
             0.0,
-            &fine_clip_rect,
+            Some(fine_clip_rect),
         );
     } else {
         draw_list.AddText2(
-            null_mut(),
+            None,
             0.0,
-            &pos,
+            pos,
             GetColorU32(ImGuiCol_Text, 0.0),
-            text,
+            text.clone(),
             0.0,
-            null_mut(),
+            None,
         );
     }
 }
 
 // c_void RenderTextClipped(const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
 pub unsafe fn RenderTextClipped(
-    pos_min: &ImVec2,
-    pos_max: &ImVec2,
-    text: &str,
-    text_size_if_known: Option<&ImVec2>,
-    align: Option<&ImVec2>,
-    clip_rect: Option<&ImRect>,
+    pos_min: ImVec2,
+    pos_max: ImVec2,
+    text: String,
+    text_size_if_known: Option<ImVec2>,
+    align: Option<ImVec2>,
+    clip_rect: Option<ImRect>,
 ) {
     // Hide anything after a '##' string
     let mut text_display_end = FindRenderedTextEnd(text);
-    let text_len: c_int = (text_display_end - text);
+    let text_len = text.len();
     if text_len == 0 {
         return;
     }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
     RenderTextClippedEx(
         window.DrawList,
         pos_min,
         pos_max,
-        text,
+        text.clone(),
         text_size_if_known,
         align,
-        clip_rect,
+        clip_rect.unwrap()
     );
     if g.LogEnabled {
         // LogRenderedText(pos_min, text);
@@ -233,24 +233,20 @@ pub unsafe fn RenderTextClipped(
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
 // c_void RenderTextEllipsis(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, c_float clip_max_x, c_float ellipsis_max_x, text: *const c_char, text_end_full: *const c_char, *const text_size_if_known: ImVec2)
 pub unsafe fn RenderTextEllipsis(
-    draw_list: *mut ImDrawList,
-    pos_min: &ImVec2,
-    pos_max: &ImVec2,
+    draw_list: ImDrawList,
+    pos_min: ImVec2,
+    pos_max: ImVec2,
     clip_max_x: c_float,
     ellipsis_max_x: c_float,
-    text: &str,
-    text_size_if_known: *const ImVec2,
+    text: String,
+    text_size_if_known: Option<ImVec2>,
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-                    // if text_end_full == null() {
+                    // if text_end_full == None {
                     //     text_end_full = FindRenderedTextEnd(text);
                     // }
     let text_end_full = FindRenderedTextEnd(text);
-    let text_size: ImVec2 = if text_size_if_known {
-        (*text_size_if_known).clone()
-    } else {
-        CalcTextSize(text, false, 0.0)
-    };
+    let text_size: ImVec2 = text_size_if_known.unwrap_or(CalcTextSize(text.clone(), false, 0.0));
 
     //draw_list.AddLine(ImVec2::new(pos_max.x, pos_min.y - 4), ImVec2::new(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
     //draw_list.AddLine(ImVec2::new(ellipsis_max_x, pos_min.y-2), ImVec2::new(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
@@ -262,17 +258,17 @@ pub unsafe fn RenderTextEllipsis(
         // min   max   ellipsis_max
         //          <-> this is generally some padding value
 
-        let mut font: *const ImFont = draw_list._Data.Font;
+        let mut font = draw_list._Data.Font;
         let font_size: c_float = draw_list._Data.FontSize;
         let mut text_end_ellipsis = 0usize;
 
-        let mut ellipsis_char: ImWchar = font.EllipsisChar;
+        let mut ellipsis_char = font.EllipsisChar;
         let mut ellipsis_char_count: c_int = 1;
         if ellipsis_char == -1 {
             ellipsis_char = font.DotChar;
             ellipsis_char_count = 3;
         }
-        let glyph: *const ImFontGlyph = font.FindGlyph(ellipsis_char);
+        let glyph  = font.FindGlyph(ellipsis_char);
 
         let mut ellipsis_glyph_width: c_float = glyph.X1; // Width of the glyph with no padding on either side
         let mut ellipsis_total_width: c_float = ellipsis_glyph_width; // Full width of entire ellipsis
@@ -295,42 +291,38 @@ pub unsafe fn RenderTextEllipsis(
                 font_size,
                 text_avail_width,
                 0.0,
-                text,
-                &mut text_end_ellipsis,
+                text.clone(),
+                Some(&mut text_end_ellipsis),
             )
             .x;
         if text == text_end_ellipsis && text_end_ellipsis < text_end_full {
             // Always display at least 1 character if there's no room for character + ellipsis
-            text_end_ellipsis = text + ImTextCountUtf8BytesFromChar(text);
+            // text_end_ellipsis = text + ImTextCountUtf8BytesFromChar(text.clone());
             text_size_clipped_x = font
-                .CalcTextSizeA(font_size, f32::MAX, 0.0, text, &mut text_end_ellipsis)
+                .CalcTextSizeA(font_size, f32::MAX, 0.0, text.clone(), Some(&mut text_end_ellipsis))
                 .x;
         }
-        while text_end_ellipsis > text && ImCharIsBlankA(text_end_ellipsis[-1]) {
-            // Trim trailing space before ellipsis (FIXME: Supporting non-ascii blanks would be nice, for this we need a function to backtrack in UTF-8 text)
-            text_end_ellipsis -= 1;
-            text_size_clipped_x -= font
-                .CalcTextSizeA(
-                    font_size,
-                    f32::MAX,
-                    0.0,
-                    text_end_ellipsis,
-                    text_end_ellipsis + 1,
-                    null_mut(),
-                )
-                .x; // Ascii blanks are always 1 byte
-        }
+        // while text_end_ellipsis > text && char_is_blank(text_end_ellipsis[-1])
+        // {
+        //     // Trim trailing space before ellipsis (FIXME: Supporting non-ascii blanks would be nice, for this we need a function to backtrack in UTF-8 text)
+        //     text_end_ellipsis -= 1;
+        //     text_size_clipped_x -= font .CalcTextSizeA(
+        //         font_size,
+        //         f32::MAX,
+        //         0.0,
+        //         text_end_ellipsis,
+        //         text_end_ellipsis + 1).x; // Ascii blanks are always 1 byte
+        // }
 
         // Render text, render ellipsis
         RenderTextClippedEx(
             draw_list,
             pos_min,
-            &ImVec2::from_floats(clip_max_x, pos_max.y),
-            text,
-            text_end_ellipsis,
-            &text_size,
-            &ImVec2::from_floats(0.0, 0.0),
-            null_mut(),
+            ImVec2::from_floats(clip_max_x, pos_max.y),
+            text.clone(),
+            Some(text_size),
+            Some(ImVec2::from_floats(0.0, 0.0)),
+            None
         );
         let mut ellipsis_x: c_float = pos_min.x + text_size_clipped_x;
         if ellipsis_x + ellipsis_total_width <= ellipsis_max_x {
@@ -355,7 +347,7 @@ pub unsafe fn RenderTextEllipsis(
             text_end_full,
             &text_size,
             ImVec2::from_floats(0.0, 0.0),
-            null(),
+            None,
         );
     }
 
@@ -554,7 +546,7 @@ pub unsafe fn Render() {
     for n in 0..g.Viewports.len() {
         let mut viewport: *mut ImGuiViewport = g.Viewports[n];
         viewport.DrawDataBuilder.Clear();
-        if viewport.DrawLists[0] != null_mut() {
+        if viewport.DrawLists[0] != None {
             AddDrawListToDrawData(
                 &mut viewport.DrawDataBuilder.Layers[0],
                 GetBackgroundDrawList(viewport),
@@ -563,7 +555,7 @@ pub unsafe fn Render() {
     }
 
     // Add ImDrawList to render
-    let mut windows_to_render_top_most: [*mut ImGuiWindow; 2] = [null_mut(), null_mut()];
+    let mut windows_to_render_top_most: [*mut ImGuiWindow; 2] = [None, None];
     windows_to_render_top_most[0] = if g.NavWindowingTarget.is_null() == false
         && !flag_set(
             g.NavWindowingTarget.Flags,
@@ -571,12 +563,12 @@ pub unsafe fn Render() {
         ) {
         g.NavWindowingTarget.RootWindowDockTree
     } else {
-        null_mut()
+        None
     };
     windows_to_render_top_most[1] = (if g.NavWindowingTarget {
         g.NavWindowingListWindow
     } else {
-        null_mut()
+        None
     });
     // for (let n: c_int = 0; n != g.Windows.Size; n++)
     for n in 0..g.Windows.len() {
@@ -613,7 +605,7 @@ pub unsafe fn Render() {
             g.MouseCursor,
             IM_COL32_WHITE,
             IM_COL32_BLACK,
-            IM_COL32(0, 0, 0, 48),
+            color_u32_from_rgba(0, 0, 0, 48),
         );
     }
 
@@ -626,7 +618,7 @@ pub unsafe fn Render() {
         viewport.DrawDataBuilder.FlattenIntoSingleLayer();
 
         // Add foreground ImDrawList (for each active viewport)
-        if viewport.DrawLists[1] != null_mut() {
+        if viewport.DrawLists[1] != None {
             AddDrawListToDrawData(
                 &mut viewport.DrawDataBuilder.Layers[0],
                 GetForegroundDrawList(viewport),
@@ -1034,8 +1026,8 @@ pub unsafe fn RenderColorRectWithAlphaCheckerboard(
         flags = ImDrawFlags_RoundCornersDefault_;
     }
     if (((col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) < 0xF0) {
-        col_bg1: u32 = GetColorU32(ImAlphaBlendColors(IM_COL32(204, 204, 204, 255), col), 0.0);
-        col_bg2: u32 = GetColorU32(ImAlphaBlendColors(IM_COL32(128, 128, 128, 255), col), 0.0);
+        col_bg1: u32 = GetColorU32(ImAlphaBlendColors(color_u32_from_rgba(204, 204, 204, 255), col), 0.0);
+        col_bg2: u32 = GetColorU32(ImAlphaBlendColors(color_u32_from_rgba(128, 128, 128, 255), col), 0.0);
         draw_list.AddRectFilled(&p_min, &p_max, col_bg1, rounding, flags);
 
         let mut yi: c_int = 0;

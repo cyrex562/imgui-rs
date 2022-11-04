@@ -33,18 +33,18 @@ pub const IM_COL32_A_MASK: ImGuiCol = 0xFF000000;
 // #endif
 // #endif
 // #define IM_COL32(R,G,B,A)    (((ImU32)(A)<<IM_COL32_A_SHIFT) | ((ImU32)(B)<<IM_COL32_B_SHIFT) | ((ImU32)(G)<<IM_COL32_G_SHIFT) | ((ImU32)(R)<<IM_COL32_R_SHIFT))
-pub fn IM_COL32(r: u32, g: u32, b: u32, a: u32) -> u32 {
+pub fn color_u32_from_rgba(r: u32, g: u32, b: u32, a: u32) -> u32 {
     a << IM_COL32_A_SHIFT | b << IM_COL32_B_SHIFT | g << IM_COL32_G_SHIFT | r << IM_COL32_R_SHIFT
 }
 
 // #define IM_COL32_DISABLE                IM_COL32(0,0,0,1)   // Special sentinel code which cannot be used as a regular color.
-pub const IM_COL32_DISABLE: ImGuiCol = IM_COL32(0, 0, 0, 1);
+pub const IM_COL32_DISABLE: ImGuiCol = color_u32_from_rgba(0, 0, 0, 1);
 // #define IM_COL32_WHITE       IM_COL32(255,255,255,255)  // Opaque white = 0xFFFFFFFF
-pub const IM_COL32_WHITE: ImGuiCol = IM_COL32(255, 255, 255, 255);
+pub const IM_COL32_WHITE: ImGuiCol = color_u32_from_rgba(255, 255, 255, 255);
 // #define IM_COL32_BLACK       IM_COL32(0,0,0,255)        // Opaque black
-pub const IM_COL32_BLACK: ImGuiCol = IM_COL32(0, 0, 0, 255);
+pub const IM_COL32_BLACK: ImGuiCol = color_u32_from_rgba(0, 0, 0, 255);
 // #define IM_COL32_BLACK_TRANS IM_COL32(0,0,0,0)          // Transparent black = 0x00000000
-pub const IM_COL32_BLACK_TRANS: ImGuiCol = IM_COL32(0, 0, 0, 0);
+pub const IM_COL32_BLACK_TRANS: ImGuiCol = color_u32_from_rgba(0, 0, 0, 0);
 
 // Enumeration for PushStyleColor() / PopStyleColor()
 // enum ImGuiCol_

@@ -31,7 +31,7 @@ impl ImPool<T> {
         return if idx != -1 {
             &mut self.Buf[idx]
         } else {
-            null_mut()
+            None
         }
     }
     
@@ -140,7 +140,7 @@ impl ImPool<T> {
     pub fn TryGetMapData(&mut self, n: ImPoolIdx) -> *mut T {
         let idx = self.Map.Data[n].val_i;
         return if idx == -1 {
-            null_mut()
+            None
         } else {
             self.GetByIndex(idx)
         }

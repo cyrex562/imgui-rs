@@ -15,7 +15,7 @@ pub unsafe fn GetViewportDrawList(viewport: Option<&mut ImGuiViewport>, drawlist
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(drawlist_no < IM_ARRAYSIZE(viewport.DrawLists));
     let mut  draw_list: *mut ImDrawList =  viewport.DrawLists[drawlist_no];
-    if draw_list == null_mut()
+    if draw_list == None
     {
         draw_list = IM_NEW(ImDrawList)(&g.DrawListSharedData);
         draw_list._OwnerName = drawlist_name;

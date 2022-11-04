@@ -27,11 +27,11 @@ impl ImGuiDockRequest {
     pub fn new() -> Self {
         Self {
             Type: ImGuiDockRequestType_None,
-            DockTargetWindow: null_mut(),
-            DockPayload: null_mut(),
-            UndockTargetWindow: null_mut(),
-            DockTargetNode: null_mut(),
-            UndockTargetNode: null_mut(),
+            DockTargetWindow: None,
+            DockPayload: None,
+            UndockTargetWindow: None,
+            DockTargetNode: None,
+            UndockTargetNode: None,
             DockSplitDir: ImGuiDir_None,
             DockSplitRatio: 0.5,
             DockSplitOuter: false,

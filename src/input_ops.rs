@@ -638,7 +638,7 @@ pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if e.Type == ImGuiInputEventType_MousePos {
         IMGUI_DEBUG_LOG_IO(
-            "{}: MousePos (%.1f, %.10.0)\n",
+            "{}: MousePos ({}, {})\n",
             prefix,
             e.MousePos.PosX,
             e.MousePos.PosY,
@@ -649,7 +649,7 @@ pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
         // IMGUI_DEBUG_LOG_IO("{}: MouseButton {} {}\n", prefix, e.MouseButton.Button, e.MouseButton.Down ? "Down": "Up"); return; }
         if e.Type == ImGuiInputEventType_MouseWheel {
             IMGUI_DEBUG_LOG_IO(
-                "{}: MouseWheel (%.1f, %.10.0)\n",
+                "{}: MouseWheel ({}, {})\n",
                 prefix,
                 e.MouseWheel.WheelX,
                 e.MouseWheel.WheelY,
@@ -659,7 +659,7 @@ pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
         if e.Type == ImGuiInputEventType_Key {
             // IMGUI_DEBUG_LOG_IO("{}: Key \"{}\" {}\n", prefix, GetKeyName(e.Key.Key), e.Key.Down ? "Down" : "Up"); return; }
             if e.Type == ImGuiInputEventType_Text {
-                IMGUI_DEBUG_LOG_IO("{}: Text: %c (U+{})\n", prefix, e.Text.Char, e.Text.Char);
+                IMGUI_DEBUG_LOG_IO("{}: Text: {} (U+{})\n", prefix, e.Text.Char, e.Text.Char);
                 return;
             }
             if e.Type == ImGuiInputEventType_Focus {

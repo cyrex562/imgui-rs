@@ -35,7 +35,7 @@ pub unsafe fn CreateContext(shared_font_atlas: *mut ImFontAtlas) -> *mut ImGuiCo
     let mut ctx = ImGuiContext::new(shared_font_atlas);
     SetCurrentContext(&mut ctx);
     Initialize();
-    if prev_ctx != null_mut() {
+    if prev_ctx != None {
         SetCurrentContext(prev_ctx);
     } // Restore previous context if any, else keep new one.
     return &mut ctx;
@@ -44,7 +44,7 @@ pub unsafe fn CreateContext(shared_font_atlas: *mut ImFontAtlas) -> *mut ImGuiCo
 // c_void DestroyContext(ctx: *mut ImGuiContext)
 pub unsafe fn DestroyContext(mut ctx: *mut ImGuiContext) {
     let mut prev_ctx = GetCurrentContext();
-    if ctx == null_mut() {
+    if ctx == None {
         //-V1051
         ctx = prev_ctx;
     }
@@ -53,7 +53,7 @@ pub unsafe fn DestroyContext(mut ctx: *mut ImGuiContext) {
     SetCurrentContext(if prev_ctx != ctx {
         prev_ctx
     } else {
-        null_mut()
+        None
     });
     IM_DELETE(ctx);
 }

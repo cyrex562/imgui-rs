@@ -300,7 +300,7 @@ pub unsafe fn Shutdown() {
         g.IO.Fonts.Locked = false;
         IM_DELETE(g.IO.Fonts);
     }
-    g.IO.Fonts = null_mut();
+    g.IO.Fonts = None;
 
     // Cleanup of other data are conditional on actually having initialized Dear ImGui.
     if !g.Initialized {
@@ -308,7 +308,7 @@ pub unsafe fn Shutdown() {
     }
 
     // Save settings (unless we haven't attempted to load them: CreateContext/DestroyContext without a call to NewFrame shouldn't save an empty file)
-    if g.SettingsLoaded && g.IO.IniFilename != null_mut() {
+    if g.SettingsLoaded && g.IO.IniFilename != None {
         SaveIniSettingsToDisk(g.IO.IniFilename);
     }
 
@@ -324,24 +324,24 @@ pub unsafe fn Shutdown() {
     g.Windows.clear_delete();
     g.WindowsFocusOrder.clear();
     g.WindowsTempSortBuffer.clear();
-    g.CurrentWindow = null_mut();
+    g.CurrentWindow = None;
     g.CurrentWindowStack.clear();
     g.WindowsById.Clear();
-    g.NavWindow = null_mut();
+    g.NavWindow = None;
     g.HoveredWindow = null_Mut();
-    g.HoveredWindowUnderMovingWindow = null_mut();
-    g.ActiveIdWindow = null_mut();
-    g.ActiveIdPreviousFrameWindow = null_mut();
-    g.MovingWindow = null_mut();
+    g.HoveredWindowUnderMovingWindow = None;
+    g.ActiveIdWindow = None;
+    g.ActiveIdPreviousFrameWindow = None;
+    g.MovingWindow = None;
     g.ColorStack.clear();
     g.StyleVarStack.clear();
     g.FontStack.clear();
     g.OpenPopupStack.clear();
     g.BeginPopupStack.clear();
 
-    g.CurrentViewport = null_mut();
-    g.MouseViewport = null_mut();
-    g.MouseLastHoveredViewport = null_mut();
+    g.CurrentViewport = None;
+    g.MouseViewport = None;
+    g.MouseLastHoveredViewport = None;
     g.Viewports.clear_delete();
 
     g.TabBars.Clear();
@@ -367,7 +367,7 @@ pub unsafe fn Shutdown() {
             // #endif
             ImFileClose(g.LogFile);
         }
-        g.LogFile = null_mut();
+        g.LogFile = None;
     }
     g.LogBuffer.clear();
     g.DebugLogBuf.clear();

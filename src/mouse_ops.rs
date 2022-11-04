@@ -66,7 +66,7 @@ pub unsafe fn StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut 
         // - part of a floating node hierarchy with more than one visible node (if only one is visible, we'll just move the whole hierarchy)
         // - part of a dockspace node hierarchy (trivia: undocking from a fixed/central node will create a new node and copy windows)
         let mut root_node = DockNodeGetRootNode(node);
-        if root_node.OnlyNodeWithWindows != node || root_node.CentralNode != null_mut() {  // -V1051 PVS-Studio thinks node should be root_node and is wrong about that.
+        if root_node.OnlyNodeWithWindows != node || root_node.CentralNode != None {  // -V1051 PVS-Studio thinks node should be root_node and is wrong about that.
             if undock_floating_node || root_node.IsDockSpace() {
                 can_undock_node = true;
             }
@@ -90,7 +90,7 @@ pub unsafe fn StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut 
 // but if we should more thoroughly test cases where g.ActiveId or g.MovingWindow gets changed and not the other.
 pub unsafe fn UpdateMouseMovingWindowNewFrame() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if g.MovingWindow != null_mut() {
+    if g.MovingWindow != None {
         // We actually want to move the root window. g.MovingWindow == window we clicked on (could be a child window).
         // We track it to preserve Focus and so that generally ActiveIdWindow == MovingWindow and ActiveId == Movingwindow.MoveId for consistency.
         KeepAliveID(g.ActiveId);
@@ -127,7 +127,7 @@ pub unsafe fn UpdateMouseMovingWindowNewFrame() {
                 moving_window.Viewport.Flags &= !mGuiViewportFlags_NoInputs; // FIXME-VIEWPORT: Test engine managed to crash here because Viewport was NULL.
             }
 
-            g.MovingWindow = null_mut();
+            g.MovingWindow = None;
             ClearActiveID();
         }
     } else {
@@ -160,26 +160,26 @@ pub unsafe fn UpdateMouseMovingWindowEndFrame() {
     if g.IO.MouseClicked[0] {
         // Handle the edge case of a popup being closed while clicking in its empty space.
         // If we try to focus it, FocusWindow() > ClosePopupsOverWindow() will accidentally close any parent popups because they are not linked together any more.
-        let mut root_window: *mut ImGuiWindow = if g.HoveredWindow.is_null() == false { g.Hoveredwindow.RootWindow } else { null_mut() };
+        let mut root_window: *mut ImGuiWindow = if g.HoveredWindow.is_null() == false { g.Hoveredwindow.RootWindow } else { None };
         let is_closed_popup: bool = root_window.is_null() == false && flag_set(root_window.Flags, ImGuiWindowFlags_Popup) != 0 && !IsPopupOpen(root_window.PopupId, ImGuiPopupFlags_AnyPopupLevel);
 
-        if root_window != null_mut() && !is_closed_popup {
+        if root_window != None && !is_closed_popup {
             StartMouseMovingWindow(g.HoveredWindow); //-V595
 
             // Cancel moving if clicked outside of title bar
             if g.IO.ConfigWindowsMoveFromTitleBarOnly {
                 if flag_clear(root_window.Flags, ImGuiWindowFlags_NoTitleBar) != 0 || root_window.DockIsActive {
                     if !root_window.TitleBarRect().Contains(g.IO.MouseClickedPos[0].clone()) {
-                        g.MovingWindow = null_mut();
+                        g.MovingWindow = None;
                     }
                 }
             }
 
             // Cancel moving if clicked over an item which was disabled or inhibited by popups (note that we know HoveredId == 0 already)
             if g.HoveredIdDisabled {
-                g.MovingWindow = null_mut();
+                g.MovingWindow = None;
             }
-        } else if root_window == null_mut() && g.NavWindow != null_mut() && GetTopMostPopupModal() == null_mut() {
+        } else if root_window == None && g.NavWindow != None && GetTopMostPopupModal() == None {
             // Clicking on void disable focus
             FocusWindow(null_mut());
         }
@@ -192,7 +192,7 @@ pub unsafe fn UpdateMouseMovingWindowEndFrame() {
         // Find the top-most window between HoveredWindow and the top-most Modal Window.
         // This is where we can trim the popup stack.
         let mut modal: *mut ImGuiWindow = GetTopMostPopupModal();
-        let mut hovered_window_above_modal: bool = g.HoveredWindow.is_null() == false && (modal == null_mut() || IsWindowAbove(g.HoveredWindow, modal));
+        let mut hovered_window_above_modal: bool = g.HoveredWindow.is_null() == false && (modal == None || IsWindowAbove(g.HoveredWindow, modal));
         ClosePopupsOverWindow(if hovered_window_above_modal { g.HoveredWindow } else { modal }, true);
     }
 }
@@ -281,13 +281,13 @@ pub unsafe fn UpdateMouseWheel() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Reset the locked window if we move the mouse or after the timer elapses
-    if g.WheelingWindow != null_mut() {
+    if g.WheelingWindow != None {
         g.WheelingWindowTimer -= g.IO.DeltaTime;
         if IsMousePosValid(null_mut()) && ImLengthSqr(g.IO.MousePos.clone() - g.WheelingWindowRefMousePos.clone()) > g.IO.MouseDragThreshold * g.IO.MouseDragThreshold {
             g.WheelingWindowTimer = 0.0;
         }
         if g.WheelingWindowTimer <= 0.0 {
-            g.WheelingWindow = null_mut();
+            g.WheelingWindow = None;
             g.WheelingWindowTimer = 0.0;
         }
     }
@@ -420,8 +420,8 @@ pub unsafe fn UpdateHoveredWindowAndCaptureFlags() {
     }
 
     if clear_hovered_windows {
-        g.HoveredWindow = null_mut();
-        g.HoveredWindowUnderMovingWindow = null_mut();
+        g.HoveredWindow = None;
+        g.HoveredWindowUnderMovingWindow = None;
     }
 
     // Update io.WantCaptureMouse for the user application (true = dispatch mouse info to Dear ImGui only, false = dispatch mouse to Dear ImGui + underlying app)
@@ -430,8 +430,8 @@ pub unsafe fn UpdateHoveredWindowAndCaptureFlags() {
         io.WantCaptureMouse = (g.WantCaptureMouseNextFrame != 0);
         io.WantCaptureMouseUnlessPopupClose = (g.WantCaptureMouseNextFrame != 0);
     } else {
-        io.WantCaptureMouse = (mouse_avail && (g.HoveredWindow != null_mut() || mouse_any_down)) || has_open_popup;
-        io.WantCaptureMouseUnlessPopupClose = (mouse_avail_unless_popup_close && (g.HoveredWindow != null_mut() || mouse_any_down)) || has_open_modal;
+        io.WantCaptureMouse = (mouse_avail && (g.HoveredWindow != None || mouse_any_down)) || has_open_popup;
+        io.WantCaptureMouseUnlessPopupClose = (mouse_avail_unless_popup_close && (g.HoveredWindow != None || mouse_any_down)) || has_open_modal;
     }
 
     // Update io.WantCaptureKeyboard for the user application (true = dispatch keyboard info to Dear ImGui only, false = dispatch keyboard info to Dear ImGui + underlying app)

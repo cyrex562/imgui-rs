@@ -59,7 +59,7 @@ pub struct ImDrawList {
     // [Internal, used while building lists]
     pub _VtxCurrentIdx: usize,
     // [Internal] generally == VtxBuffer.Size unless we are past 64K vertices, in which case this gets reset to 0.
-    pub _Data: *const ImDrawListSharedData,
+    pub _Data: ImDrawListSharedData,
     // Pointer to shared draw data (you can use GetDrawListSharedData() to get the one from current ImGui context)
     pub _OwnerName: String,
     // Pointer to owner window's name for debugging
@@ -85,7 +85,7 @@ impl ImDrawList {
     // ImDrawList(const ImDrawListSharedData* shared_data) { memset(this, 0, sizeof(*this)); _Data = shared_data; }
     pub fn new(shared_data: &ImDrawListSharedData) -> Self {
         Self {
-            _Data: shared_data,
+            _Data: shared_data.clone(),
             ..Default::default()
         }
     }
@@ -160,7 +160,7 @@ impl ImDrawList {
     pub fn PopTextureID(&mut self) {
         self._TextureIdStack.pop_back();
         self._CmdHeader.TextureId = if self._TextureIdStack.len() == 0 {
-            null_mut()
+            None
         } else {
             self._TextureIdStack[self._TextureIdStack.len() - 1]
         };
@@ -187,7 +187,7 @@ impl ImDrawList {
     //   In future versions we will use textures to provide cheaper and higher-quality circles.
     //   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
     // void  AddLine(const p1: &mut ImVec2, const p2: &mut ImVec2, col: u32, c_float thickness = 1.0);
-    pub unsafe fn AddLine(&mut self, p1: &ImVec2, p2: &ImVec2, col: u32, thickness: c_float) {
+    pub unsafe fn AddLine(&mut self, p1: ImVec2, p2: ImVec2, col: u32, thickness: c_float) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
         }
@@ -197,7 +197,7 @@ impl ImDrawList {
     }
 
     // void  AddRect(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0, c_float thickness = 1.0);   // a: upper-left, b: lower-right (== upper-left + size)
-    pub unsafe fn AddRect(&mut self, p_min: &ImVec2, p_max: &ImVec2, col: u32, rounding: c_float) {
+    pub unsafe fn AddRect(&mut self, p_min: ImVec2, p_max: ImVec2, col: u32, rounding: c_float) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
         }
@@ -436,7 +436,7 @@ impl ImDrawList {
     }
 
     // void  AddText(const pos: &mut ImVec2, col: u32, const char* text_begin, const char* text_end = NULL);
-    pub unsafe fn AddText(&mut self, pos: &ImVec2, col: u32, text_begin: &str) {
+    pub unsafe fn AddText(&mut self, pos: ImVec2, col: u32, text_begin: String) {
         self.AddText(pos, col, text_begin);
     }
 
@@ -444,28 +444,26 @@ impl ImDrawList {
     // text_end = NULL, c_float wrap_width = 0.0, const ImVec4* cpu_fine_clip_rect = NULL);
     pub unsafe fn AddText2(
         &mut self,
-        mut font: Option<&ImFont>,
+        mut font: Option<ImFont>,
         mut font_size: c_float,
-        pos: &ImVec2,
+        pos: ImVec2,
         col: u32,
-        text_begin: &str,
+        text_begin: String,
         mut wrap_width: c_float,
-        cpu_fine_clip_rect: Option<&ImVec4>,
+        cpu_fine_clip_rect: Option<ImVec4>,
     ) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
         }
 
-        if text_end == null_mut() {
-            text_end = text_begin + text_begin.len();
-        }
-        if text_begin == text_end {
+        let text_end = text_begin.len();
+        if text_begin.is_empty() {
             return;
         }
 
         // Pull default font/size from the shared ImDrawListSharedData instance
         if font.is_none() {
-            font.replace(&*self._Data.Font);
+            font.replace(self._Data.Font.clone());
         }
         if font_size == 0.0 {
             font_size = self._Data.FontSize;
@@ -488,16 +486,15 @@ impl ImDrawList {
             &clip_rect,
             text_begin,
             wrap_width,
-            cpu_fine_clip_rect != null_mut(),
+            cpu_fine_clip_rect != None,
         );
     }
 
     // void  AddPolyline(const ImVec2* points, num_points: c_int, col: u32, flags: ImDrawFlags, c_float thickness);
     pub unsafe fn AddPolyline(
         &mut self,
-        points:&[ImVec2],
-        points_count: size_t,
-        col: u32,
+        points:&Vec<ImVec2>,
+        color: u32,
         flags: ImDrawFlags,
         thickness: c_float,
     ) {
@@ -517,12 +514,12 @@ impl ImDrawList {
         if flag_set(self.lags, ImDrawListFlags_AntiAliasedLines) {
             // Anti-aliased stroke
             let AA_SIZE: c_float = self._FringeScale;
-            let col_trans: u32 = col & !IM_COL32_A_MASK;
+            let col_trans: u32 = color & !IM_COL32_A_MASK;
 
             // Thicknesses <1.0 should behave like thickness 1.0
-            let thickness = ImMax(thickness, 1.0);
-            let integer_thickness: c_int = thickness as c_int;
-            let fractional_thickness: c_float = thickness - integer_thickness;
+            let thickness = thickness.max(1.0);
+            let integer_thickness = thickness;
+            let fractional_thickness = thickness - integer_thickness;
 
             // Do we want to draw this line using a texture?
             // - For now, only draw integer-width lines using textures to avoid issues with the way scaling occurs, could be improved.
@@ -535,14 +532,14 @@ impl ImDrawList {
             // We should never hit this, because NewFrame() doesn't set ImDrawListFlags_AntiAliasedLinesUseTex unless ImFontAtlasFlags_NoBakedLines is off
             // IM_ASSERT_PARANOID(!use_texture || !(_Data.Font->ContainerAtlas->Flags & ImFontAtlasFlags_NoBakedLines));
 
-            let idx_count: size_t = if use_texture {
+            let idx_count = if use_texture {
                 count * 6
             } else if thick_line {
                 count * 18
             } else {
                 count * 12
             };
-            let vtx_count: size_t = if use_texture {
+            let vtx_count = if use_texture {
                 points_count * 2
             } else if thick_line {
                 points_count * 4
@@ -676,10 +673,10 @@ impl ImDrawList {
                     for i in 0..points_count {
                         self._VtxWritePtr[0].pos = temp_points[i * 2 + 0];
                         self._VtxWritePtr[0].uv = tex_uv0;
-                        self._VtxWritePtr[0].col = col; // Left-side outer edge
+                        self._VtxWritePtr[0].col = color; // Left-side outer edge
                         self._VtxWritePtr[1].pos = temp_points[i * 2 + 1];
                         self._VtxWritePtr[1].uv = tex_uv1;
-                        self._VtxWritePtr[1].col = col; // Right-side outer edge
+                        self._VtxWritePtr[1].col = color; // Right-side outer edge
                         self._VtxWritePtr += 2;
                     }
                 } else {
@@ -688,7 +685,7 @@ impl ImDrawList {
                     for i in 0..points_count {
                         self._VtxWritePtr[0].pos = points[i];
                         self._VtxWritePtr[0].uv = opaque_uv;
-                        self._VtxWritePtr[0].col = col; // Center of line
+                        self._VtxWritePtr[0].col = color; // Center of line
                         self._VtxWritePtr[1].pos = temp_points[i * 2 + 0];
                         self._VtxWritePtr[1].uv = opaque_uv;
                         self._VtxWritePtr[1].col = col_trans; // Left-side outer edge
@@ -784,10 +781,10 @@ impl ImDrawList {
                     self._VtxWritePtr[0].col = col_trans;
                     self._VtxWritePtr[1].pos = temp_points[i * 4 + 1];
                     self._VtxWritePtr[1].uv = opaque_uv;
-                    self._VtxWritePtr[1].col = col;
+                    self._VtxWritePtr[1].col = color;
                     self._VtxWritePtr[2].pos = temp_points[i * 4 + 2];
                     self._VtxWritePtr[2].uv = opaque_uv;
-                    self._VtxWritePtr[2].col = col;
+                    self._VtxWritePtr[2].col = color;
                     self._VtxWritePtr[3].pos = temp_points[i * 4 + 3];
                     self._VtxWritePtr[3].uv = opaque_uv;
                     self._VtxWritePtr[3].col = col_trans;
@@ -804,8 +801,8 @@ impl ImDrawList {
             // for (let i1: c_int = 0; i1 < count; i1++)
             for i1 in 0..count {
                 let i2: c_int = if (i1 + 1) == points_count { 0 } else { i1 + 1 };
-                p1: &ImVec2 = points[i1];
-                p2: &ImVec2 = points[i2];
+                p1 = points[i1];
+                p2 = points[i2];
 
                 let mut dx: c_float = p2.x - p1.x;
                 let mut dy: c_float = p2.y - p1.y;
@@ -816,19 +813,19 @@ impl ImDrawList {
                 self._VtxWritePtr[0].pos.x = p1.x + dy;
                 self._VtxWritePtr[0].pos.y = p1.y - dx;
                 self._VtxWritePtr[0].uv = opaque_uv;
-                self._VtxWritePtr[0].col = col;
+                self._VtxWritePtr[0].col = color;
                 self._VtxWritePtr[1].pos.x = p2.x + dy;
                 self._VtxWritePtr[1].pos.y = p2.y - dx;
                 self._VtxWritePtr[1].uv = opaque_uv;
-                self._VtxWritePtr[1].col = col;
+                self._VtxWritePtr[1].col = color;
                 self._VtxWritePtr[2].pos.x = p2.x - dy;
                 self._VtxWritePtr[2].pos.y = p2.y + dx;
                 self._VtxWritePtr[2].uv = opaque_uv;
-                self._VtxWritePtr[2].col = col;
+                self._VtxWritePtr[2].col = color;
                 self._VtxWritePtr[3].pos.x = p1.x - dy;
                 self._VtxWritePtr[3].pos.y = p1.y + dx;
                 self._VtxWritePtr[3].uv = opaque_uv;
-                self._VtxWritePtr[3].col = col;
+                self._VtxWritePtr[3].col = color;
                 self._VtxWritePtr += 4;
 
                 self._IdxWritePtr[0] = (self._VtxCurrentIdx);
@@ -1129,7 +1126,7 @@ impl ImDrawList {
 
     // inline    void  PathStroke(col: u32, flags: ImDrawFlags = 0, c_float thickness = 1.0) { AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
     pub unsafe fn PathStroke(&mut self, col: u32, flags: ImDrawFlags, thickness: c_float) {
-        self.AddPolyline(self._Path.as_ptr(), self._Path.len(), col, flags, thickness);
+        self.AddPolyline(&self._Path, col, flags, thickness);
     }
 
     // void  PathArcTo(const center: &mut ImVec2, c_float radius, c_float a_min, c_float a_max, num_segments: c_int = 0);
@@ -1313,8 +1310,8 @@ impl ImDrawList {
         rounding = ImMin(
             rounding,
             ImFabs(b.x - a.x)
-                * (if (flag_set(flags, ImDrawFlags_RoundCornersTop) == ImDrawFlags_RoundCornersTop)
-                    || (flag_set(flags, ImDrawFlags_RoundCornersBottom)
+                * (if ((flags & ImDrawFlags_RoundCornersTop) == ImDrawFlags_RoundCornersTop)
+                    || ((flags & ImDrawFlags_RoundCornersBottom)
                         == ImDrawFlags_RoundCornersBottom)
                 {
                     0.5
@@ -1326,9 +1323,9 @@ impl ImDrawList {
         rounding = ImMin(
             rounding,
             ImFabs(b.y - a.y)
-                * (if (flag_set(flags, ImDrawFlags_RoundCornersLeft)
+                * (if ((flags & ImDrawFlags_RoundCornersLeft)
                     == ImDrawFlags_RoundCornersLeft)
-                    || (flag_set(flags, ImDrawFlags_RoundCornersRight)
+                    || ((flags & ImDrawFlags_RoundCornersRight)
                         == ImDrawFlags_RoundCornersRight)
                 {
                     0.5
@@ -1339,7 +1336,7 @@ impl ImDrawList {
         );
 
         if rounding < 0.5
-            || flag_set(flags, ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
+            || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
         {
             self.PathLineTo(a);
             self.PathLineTo(&ImVec2::from_floats(b.x, a.y));
@@ -1428,8 +1425,8 @@ impl ImDrawList {
     // pub fn CloneOutpost(&mut self) -> *mut ImDrawList {
     //     todo!()
     // }
-    pub fn CloneOutput(&mut self) -> *mut ImDrawList {
-        let dst: *mut ImDrawList = &mut ImDrawList::new(self._Data);
+    pub fn CloneOutput(&mut self) -> ImDrawList {
+        let mut dst = ImDrawList::new(&self._Data);
         dst.CmdBuffer = CmdBuffer;
         dst.IdxBuffer = IdxBuffer;
         dst.VtxBuffer = VtxBuffer;
@@ -1645,8 +1642,8 @@ impl ImDrawList {
         // memset(&_CmdHeader, 0, sizeof(_CmdHeader));
         self._CmdHeader.clear();
         self._VtxCurrentIdx = 0;
-        self._VtxWritePtr = null_mut();
-        self._IdxWritePtr = null_mut();
+        self._VtxWritePtr = None;
+        self._IdxWritePtr = None;
         self._ClipRectStack.clear();
         self._TextureIdStack.clear();
         self._Path.clear();
@@ -1665,8 +1662,8 @@ impl ImDrawList {
         self.VtxBuffer.clear();
         self.Flags = ImDrawListFlags_None;
         self._VtxCurrentIdx = 0;
-        self._VtxWritePtr = null_mut();
-        self._IdxWritePtr = null_mut();
+        self._VtxWritePtr = None;
+        self._IdxWritePtr = None;
         self._ClipRectStack.clear();
         self._TextureIdStack.clear();
         self._Path.clear();
@@ -1685,7 +1682,7 @@ impl ImDrawList {
             return;
         }
         curr_cmd: *mut ImDrawCmd = &mut self.CmdBuffer[CmdBuffer.len() - 1];
-        if curr_cmd.ElemCount == 0 && curr_cmd.UserCallback == null_mut() {
+        if curr_cmd.ElemCount == 0 && curr_cmd.UserCallback == None {
             CmdBuffer.pop_back();
         }
     }
@@ -1697,8 +1694,8 @@ impl ImDrawList {
         let mut prev_cmd: *mut ImDrawCmd = curr_cmd - 1;
         if ImDrawCmd_HeaderCompare(curr_cmd, prev_cmd) == 0
             && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd)
-            && curr_cmd.UserCallback == null_mut()
-            && prev_cmd.UserCallback == null_mut()
+            && curr_cmd.UserCallback == None
+            && prev_cmd.UserCallback == None
         {
             prev_cmd.ElemCount += curr_cmd.ElemCount;
             self.CmdBuffer.pop_back();
@@ -1710,12 +1707,7 @@ impl ImDrawList {
         // If current command is used with different settings we need to add a new command
         // IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
         let mut curr_cmd: *mut ImDrawCmd = &mut self.CmdBuffer[self.CmdBuffer.len() - 1];
-        if curr_cmd.ElemCount != 0
-            && libc::memcmp(
-                &curr_cmd.ClipRect,
-                &self._CmdHeader.ClipRect,
-                mem::size_of::<ImVec4>(),
-            ) != 0
+        if curr_cmd.ElemCount != 0 &&  curr_cmd.ClipRect != self._CmdHeader.ClipRect
         {
             self.AddDrawCmd();
             return;
@@ -1728,7 +1720,7 @@ impl ImDrawList {
             && self.CmdBuffer.len() > 1
             && ImDrawCmd_HeaderCompare(&self._CmdHeader, prev_cmd) == 0
             && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd)
-            && prev_cmd.UserCallback == null_mut()
+            && prev_cmd.UserCallback == None
         {
             self.CmdBuffer.pop_back();
             return;
@@ -1754,7 +1746,7 @@ impl ImDrawList {
             && self.CmdBuffer.len() > 1
             && ImDrawCmd_HeaderCompare(&self._CmdHeader, prev_cmd) == 0
             && ImDrawCmd_AreSequentialIdxOffset(prev_cmd, curr_cmd)
-            && prev_cmd.UserCallback == null_mut()
+            && prev_cmd.UserCallback == None
         {
             self.CmdBuffer.pop_back();
             return;

@@ -134,7 +134,7 @@ pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> b
 
 // While we are in frozen row state, keep displaying items one by one, unclipped
 // FIXME: Could be stored as a table-agnostic state.
-    if data.StepNo == 0 && table != null_mut() && !table.IsUnfrozenRows {
+    if data.StepNo == 0 && table != None && !table.IsUnfrozenRows {
         clipper.DisplayStart = data.ItemsFrozen;
         clipper.DisplayEnd = ImMin(data.ItemsFrozen + 1, clipper.ItemsCount);
         if clipper.DisplayStart < clipper.DisplayEnd {

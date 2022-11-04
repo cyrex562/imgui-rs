@@ -110,7 +110,7 @@ pub unsafe fn DockContextNewFrameUpdateDocking(ctx: *mut ImGuiContext)
     // [DEBUG] Store hovered dock node.
     // We could in theory use DockNodeTreeFindVisibleNodeByPos() on the root host dock node, but using .DockNode is a good shortcut.
     // Note this is mostly a debug thing and isn't actually used for docking target, because docking involve more detailed filtering.
-    g.DebugHoveredDockNode= null_mut();
+    g.DebugHoveredDockNode= None;
     let mut hovered_window: *mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
     if (is_not_null(hovered_window))
     {
@@ -206,7 +206,7 @@ pub unsafe fn DockContextRemoveNode(
     // IM_ASSERT(node.Windows.Size == 0);
 
     if (node.HostWindow){
-        node.Hostwindow.DockNodeAsHost= null_mut();}
+        node.Hostwindow.DockNodeAsHost= None;}
 
     let parent_node:*mut ImGuiDockNode = node.ParentNode;
     let merge: bool = (merge_sibling_into_parent_node && parent_node != null_mut());
@@ -222,7 +222,7 @@ pub unsafe fn DockContextRemoveNode(
         for n in 0 .. parent_node.ChildNodes.len()
         {
             if (parent_node.ChildNodes[n] == node){
-                node.ParentNode.ChildNodes[n]= null_mut();}
+                node.ParentNode.ChildNodes[n]= None;}
             if is_null(parent_node) {
                 break;
             }
@@ -282,7 +282,7 @@ pub unsafe fn DockContextPruneUnusedSettingsNodes(ctx: *mut ImGuiContext)
 
     // Count reference to dock ids from window settings
     // We guard against the possibility of an invalid .ini file (RootID may point to a missing node)
-    // for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != null_mut(); settings = g.SettingsWindows.next_chunk(settings))
+    // for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != None; settings = g.SettingsWindows.next_chunk(settings))
     for settings in g.SettingsWindows.iter_mut()
     {
         let mut dock_id: ImGuiID =  settings.DockId;
@@ -329,7 +329,7 @@ pub unsafe fn DockContextBuildNodesFromSettings(ctx: *mut ImGuiContext, node_set
         if (settings.ID == 0){
             continue;}
         let node:*mut ImGuiDockNode = DockContextAddNode(ctx, settings.ID);
-        node.ParentNode = if settings.ParentNodeId { DockContextFindNodeByID(ctx, settings.ParentNodeId)} else {null_mut()};
+        node.ParentNode = if settings.ParentNodeId { DockContextFindNodeByID(ctx, settings.ParentNodeId)} else {None};
         node.Pos = ImVec2::new(settings.Pos.x, settings.Pos.y);
         node.Size = ImVec2::new(settings.Size.x, settings.Size.y);
         node.SizeRef = ImVec2::new(settings.SizeRef.x, settings.SizeRef.y);
@@ -442,11 +442,11 @@ pub unsafe fn DockContextProcessDock(ctx: *mut ImGuiContext, req: *mut ImGuiDock
     }
     // Decide which Tab will be selected at the end of the operation
     let mut next_selected_id: ImGuiID =  0;
-    let payload_node:*mut ImGuiDockNode= null_mut();
+    let payload_node:*mut ImGuiDockNode= None;
     if (payload_window)
     {
         payload_node = payload_window.DockNodeAsHost;
-        payload_window.DockNodeAsHost= null_mut(); // Important to clear this as the node will have its life as a child which might be merged/deleted later.
+        payload_window.DockNodeAsHost= None; // Important to clear this as the node will have its life as a child which might be merged/deleted later.
         if (payload_node && payload_node.IsLeafNode()){
             next_selected_id = if payload_node.TabBar.NextSelectedTabId { payload_node.TabBar.NextSelectedTabId} else {payload_node.TabBar.SelectedTabId};}
         if (payload_node == null_mut()){
@@ -629,10 +629,10 @@ pub unsafe fn DockContextProcessUndockNode(ctx: *mut ImGuiContext, node:*mut ImG
         // Otherwise extract our node and merge our sibling back into the parent node.
         // IM_ASSERT(node.ParentNode.ChildNodes[0] == node || node.ParentNode.ChildNodes[1] == node);
         let index_in_parent: c_int = if node.ParentNode.ChildNodes[0] == node { 0} else { 1};
-        node.ParentNode.ChildNodes[index_in_parent]= null_mut();
+        node.ParentNode.ChildNodes[index_in_parent]= None;
         DockNodeTreeMerge(ctx, node.ParentNode, node.ParentNode.ChildNodes[index_in_parent ^ 1]);
         node.ParentNode.AuthorityForViewport = ImGuiDataAuthority_Window; // The node that stays in place keeps the viewport, so our newly dragged out node will create a new viewport
-        node.ParentNode= null_mut();
+        node.ParentNode= None;
     }
     // for (let n: c_int = 0; n < node.Windows.len(); n++)
     for n in 0 .. node.Windows.len()
@@ -654,7 +654,7 @@ pub unsafe fn DockContextCalcDropPosForDocking(target: *mut ImGuiWindow, target_
 {
     // In DockNodePreviewDockSetup() for a root central node instead of showing both "inner" and "outer" drop rects
     // (which would be functionally identical) we only show the outer one. Reflect this here.
-    if (target_node && target_node.ParentNode == null_mut() && target_node.IsCentralNode() && split_dir != ImGuiDir_None){
+    if (target_node && target_node.ParentNode == None && target_node.IsCentralNode() && split_dir != ImGuiDir_None){
         split_outer = true;}
     let mut split_data = ImGuiDockPreviewData::default();
     DockNodePreviewDockSetup(target, target_node, payload_window, payload_node, &split_data, false, split_outer);

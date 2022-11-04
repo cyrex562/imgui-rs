@@ -4,7 +4,7 @@
 // Note: The Convert functions are early design which are not consistent with other API.
 //-----------------------------------------------------------------------------
 
-use crate::color::{IM_COL32, IM_COL32_A_SHIFT, IM_COL32_B_SHIFT, IM_COL32_G_SHIFT, IM_COL32_R_SHIFT};
+use crate::color::{color_u32_from_rgba, IM_COL32_A_SHIFT, IM_COL32_B_SHIFT, IM_COL32_G_SHIFT, IM_COL32_R_SHIFT};
 use crate::math_ops::{ImFabs, ImFmod, ImLerp, ImSwap};
 use crate::vec4::ImVec4;
 
@@ -15,7 +15,7 @@ pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32
     let mut r = ImLerp((col_a >> IM_COL32_R_SHIFT) & 0xFF, (col_b >> IM_COL32_R_SHIFT) & 0xFF, t);
     let mut g = ImLerp((col_a >> IM_COL32_G_SHIFT) & 0xFF, (col_b >> IM_COL32_G_SHIFT) & 0xFF, t);
     let mut b = ImLerp((col_a >> IM_COL32_B_SHIFT) & 0xFF, (col_b >> IM_COL32_B_SHIFT) & 0xFF, t);
-    return IM_COL32(r, g, b, 0xFF);
+    return color_u32_from_rgba(r, g, b, 0xFF);
 }
 
 // ImVec4 ColorConvertU32ToFloat4(in: u32)

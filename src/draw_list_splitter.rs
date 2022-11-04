@@ -91,22 +91,22 @@ impl ImDrawListSplitter {
         // Calculate our final buffer sizes. Also fix the incorrect IdxOffset values in each command.
         let mut new_cmd_buffer_count: size_t = 0;
         let mut new_idx_buffer_count: size_t = 0;
-        let mut last_cmd = if self._Count > 0 && draw_list.CmdBuffer.len() > 0 { draw_list.CmdBuffer.last_mut().unwrap()} else { null_mut()};
+        let mut last_cmd = if self._Count > 0 && draw_list.CmdBuffer.len() > 0 { draw_list.CmdBuffer.last_mut().unwrap()} else { None};
         let mut idx_offset: size_t = if last_cmd { last_cmd.IdxOffset + last_cmd.ElemCount } else { 0 };
         // for (let i: c_int = 1; i < _Count; i++)
         for i in 1 ..self._Count
         {
             let mut ch = &mut self._Channels[i];
-            if ch._CmdBuffer.len() > 0 && ch._CmdBuffer.last().unwrap().ElemCount == 0 && ch._CmdBuffer.last().unwrap().UserCallback == null_mut() { // Equivalent of PopUnusedDrawCmd()
+            if ch._CmdBuffer.len() > 0 && ch._CmdBuffer.last().unwrap().ElemCount == 0 && ch._CmdBuffer.last().unwrap().UserCallback == None { // Equivalent of PopUnusedDrawCmd()
                 ch._CmdBuffer.pop_back();
             }
 
-            if ch._CmdBuffer.len() > 0 && last_cmd != null_mut()
+            if ch._CmdBuffer.len() > 0 && last_cmd != None
             {
                 // Do not include ImDrawCmd_AreSequentialIdxOffset() in the compare as we rebuild IdxOffset values ourselves.
                 // Manipulating IdxOffset (e.g. by reordering draw commands like done by RenderDimmedBackgroundBehindWindow()) is not supported within a splitter.
                 let mut next_cmd: *mut ImDrawCmd = &mut ch._CmdBuffer[0];
-                if ImDrawCmd_HeaderCompare(last_cmd, next_cmd) == 0 && last_cmd.UserCallback == null_mut() && next_cmd.UserCallback == null_mut()
+                if ImDrawCmd_HeaderCompare(last_cmd, next_cmd) == 0 && last_cmd.UserCallback == None && next_cmd.UserCallback == None
                 {
                     // Merge previous channel last draw command with current channel first draw command if matching.
                     last_cmd.ElemCount += next_cmd.ElemCount;
@@ -146,7 +146,7 @@ impl ImDrawListSplitter {
         draw_list._IdxWritePtr = idx_write;
 
         // Ensure there's always a non-callback draw command trailing the command-buffer
-        if draw_list.CmdBuffer.len() == 0 || draw_list.CmdBuffer.last().unwrap().UserCallback != null_mut() {
+        if draw_list.CmdBuffer.len() == 0 || draw_list.CmdBuffer.last().unwrap().UserCallback != None {
             draw_list.AddDrawCmd();
         }
 
@@ -182,7 +182,7 @@ impl ImDrawListSplitter {
         draw_list._IdxWritePtr = draw_list.IdxBuffer.as_ptr() + draw_list.IdxBuffer.len();
 
         // If current command is used with different settings we need to add a new command
-        let mut curr_cmd: *mut ImDrawCmd = if (draw_list.CmdBuffer.len() == 0) { null_mut() } else { &mut draw_list.CmdBuffer[draw_list.CmdBuffer.len() - 1] };
+        let mut curr_cmd: *mut ImDrawCmd = if (draw_list.CmdBuffer.len() == 0) { None } else { &mut draw_list.CmdBuffer[draw_list.CmdBuffer.len() - 1] };
         if (curr_cmd == null_mut()) {
             draw_list.AddDrawCmd();
         }

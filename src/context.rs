@@ -57,7 +57,7 @@ use crate::table::ImGuiTable;
 use crate::table_settings::ImGuiTableSettings;
 use crate::table_temp_data::ImGuiTableTempData;
 use crate::text_buffer::ImGuiTextBuffer;
-use crate::type_defs::{ImBitArrayForNamedKeys, ImFileHandle, ImGuiDir, ImGuiID};
+use crate::type_defs::{ImBitArrayForNamedKeys, ImFileHandle, ImGuiDir, ImGuiID, ImTextureID};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use crate::viewport::ImGuiViewport;
@@ -168,7 +168,7 @@ pub struct ImGuiContext {
     pub WindowsHoverPadding: ImVec2,
 
     // ImGuiWindow*            CurrentWindow;                      // Window being drawn into
-    pub CurrentWindow: ImGuiWindow,
+    pub CurrentWindow: Option<ImGuiWindow>,
 
     // ImGuiWindow*            HoveredWindow;                      // Window the mouse is hovering. Will typically catch mouse inputs.
     pub HoveredWindow: Option<ImGuiWindow>,
@@ -895,7 +895,7 @@ impl ImGuiContext {
             PlatformLastFocusedViewportId: 0,
             ViewportFrontMostStampCount: 0,
 
-            NavWindow: null_mut(),
+            NavWindow: None,
             NavId: 0,
             NavFocusScopeId: 0,
             NavActivateId: 0,
@@ -931,9 +931,9 @@ impl ImGuiContext {
             NavTabbingDir: 0,
             NavTabbingCounter: 0,
 
-            NavWindowingTarget: null_mut(),
-            NavWindowingTargetAnim: null_mut(),
-            NavWindowingListWindow: null_mut(),
+            NavWindowingTarget: None,
+            NavWindowingTargetAnim: None,
+            NavWindowingListWindow: None,
             NavWindowingTimer: 0.0,
             NavWindowingHighlightAlpha: 0.0,
             NavWindowingToggleLayer: false,
@@ -957,7 +957,7 @@ impl ImGuiContext {
 
             ClipperTempDataStacked: 0,
 
-            CurrentTable: null_mut(),
+            CurrentTable: None,
             TablesTempDataStacked: 0,
             CurrentTabBar: ImGuiTabBar::default(),
 
@@ -993,7 +993,7 @@ impl ImGuiContext {
             LogType: ImGuiLogType_None,
             LogNextPrefix: String::default(),
             LogNextSuffix: String::default(),
-            LogFile: null_mut(),
+            LogFile: None,
             LogLinePosY: f32::MAX,
             LogLineFirstItem: false,
             LogDepthRef: 0,
@@ -1004,7 +1004,7 @@ impl ImGuiContext {
             DebugItemPickerActive: false,
             DebugItemPickerMouseButton: ImGuiMouseButton_Left,
             DebugItemPickerBreakId: 0,
-            DebugHoveredDockNode: null_mut(),
+            DebugHoveredDockNode: None,
 
             FramerateSecPerFrameIdx: 0,
             FramerateSecPerFrameCount: 0,
@@ -1037,5 +1037,11 @@ impl ImGuiContext {
 
     pub fn CurrentTabBar(&mut self) -> &mut ImGuiTabBar {
         todo!()
+    }
+
+
+    pub fn push_curr_win_draw_list_text_id(&mut self, texture_id: ImTextureID) {
+        let mut curr_win_draw_list = &mut self.CurrentWindow.as_mut().unwrap().DrawList;
+        curr_win_draw_list.PushTextureID(texture_id);
     }
 }

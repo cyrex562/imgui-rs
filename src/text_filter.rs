@@ -23,8 +23,8 @@ impl ImGuiTextRange {
     // ImGuiTextRange()                                { b = e = None; }
     pub fn new() -> Self {
         Self {
-            b: null(),
-            e: null()
+            b: None,
+            e: None
         }
     }
 
@@ -123,14 +123,14 @@ impl ImGuiTextFilter {
             if f.b[0] == '-'
             {
                 // Subtract
-                if ImStristr(text, text_end, f.b + 1, f.e) != null_mut() {
+                if ImStristr(text, text_end, f.b + 1, f.e) != None {
                     return false;
                 }
             }
             else
             {
                 // Grep
-                if ImStristr(text, text_end, f.b, f.e) != null_mut() {
+                if ImStristr(text, text_end, f.b, f.e) != None {
                     return true;
                 }
             }

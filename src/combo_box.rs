@@ -54,7 +54,7 @@ use crate::{button_ops, popup_ops, GImGui, ImHashStr};
 use libc::{c_char, c_float, c_int, strlen};
 use std::ptr::{null, null_mut};
 
-pub unsafe fn BeginCombo(label: &str, preview_value: &mut String, flags: ImGuiComboFlags) -> bool {
+pub unsafe fn BeginCombo(label: String, preview_value: &mut String, flags: ImGuiComboFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
 
@@ -179,7 +179,7 @@ pub unsafe fn BeginCombo(label: &str, preview_value: &mut String, flags: ImGuiCo
     }
 
     // Render preview and label
-    if preview_value != null_mut() && flag_clear(flags, ImGuiComboFlags_NoPreview) {
+    if preview_value != None && flag_clear(flags, ImGuiComboFlags_NoPreview) {
         if g.LogEnabled {
             LogSetNextTextDecoration("{", "}");
         }
@@ -250,13 +250,13 @@ pub unsafe fn BeginComboPopup(
                 popup_ops::CalcMaxPopupHeightFromItemCount(popup_max_height_in_items),
             ),
             (),
-            null_mut(),
+            None,
         );
     }
 
     // This is essentially a specialized version of BeginPopupEx()
     name: [c_char; 16];
-    // ImFormatString(name, name.len(), "##Combo_%02d", g.BeginPopupStack.len()); // Recycle windows based on depth
+    // ImFormatString(name, name.len(), "##Combo_{}", g.BeginPopupStack.len()); // Recycle windows based on depth
 
     // Set position given a custom constraint (peak into expected window size so we can position it)
     // FIXME: This might be easier to express with an hypothetical SetNextWindowPosConstraints() function?
@@ -405,7 +405,7 @@ pub unsafe fn Items_SingleStringGetter(data: &[String], idx: usize, out_text: &m
 
 // Old API, prefer using BeginCombo() nowadays if you can.
 pub unsafe fn Combo(
-    label: &str,
+    label: String,
     current_item: &mut i32,
     items_getter: fn(&[String], usize, &mut String) -> bool,
     data: &[String],
@@ -434,7 +434,7 @@ pub unsafe fn Combo(
                 popup_ops::CalcMaxPopupHeightFromItemCount(popup_max_height_in_items),
             ),
             (),
-            null_mut(),
+            None,
         );
     }
 
@@ -474,7 +474,7 @@ pub unsafe fn Combo(
 
 // Combo box helper allowing to pass an array of strings.
 pub unsafe fn Combo2(
-    label: &str,
+    label: String,
     current_item: &mut i32,
     items: &[String],
     items_count: usize,
@@ -493,7 +493,7 @@ pub unsafe fn Combo2(
 
 // Combo box helper allowing to pass all items in a single string literal holding multiple zero-terminated items "item1\0item2\0"
 pub unsafe fn Combo3(
-    label: &str,
+    label: String,
     current_item: &mut i32,
     items_separated_by_zeros: &[String],
     height_in_items: c_int,

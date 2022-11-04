@@ -139,7 +139,7 @@ pub unsafe fn NewFrame() {
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
     for n in 0..g.Viewports.len() {
         let mut viewport: *mut ImGuiViewport = g.Viewports[n];
-        viewport.DrawData = null_mut();
+        viewport.DrawData = None;
         viewport.DrawDataP.Clear();
     }
 
@@ -270,8 +270,8 @@ pub unsafe fn NewFrame() {
     UpdateMouseMovingWindowNewFrame();
 
     // Background darkening/whitening
-    if GetTopMostPopupModal() != null_mut()
-        || (g.NavWindowingTarget != null_mut() && g.NavWindowingHighlightAlpha > 0.0)
+    if GetTopMostPopupModal() != None
+        || (g.NavWindowingTarget != None && g.NavWindowingHighlightAlpha > 0.0)
     {
         g.DimBgRatio = ImMin(g.DimBgRatio + g.IO.DeltaTime * 6f32, 1.0);
     } else {
@@ -338,7 +338,7 @@ pub unsafe fn NewFrame() {
 
     // Closing the focused window restore focus to the first active root window in descending z-order
     if g.NavWindow.is_null() == false && !g.NavWindow.WasActive {
-        FocusTopMostWindowUnderOne(null_mut(), null_mut());
+        FocusTopMostWindowUnderOne(None, null_mut());
     }
 
     // No window should be open at the beginning of the frame.
@@ -384,7 +384,7 @@ pub unsafe fn EndFrame() {
     ErrorCheckEndFrameSanityChecks();
 
     // Notify Platform/OS when our Input Method Editor cursor has moved (e.g. CJK inputs using Microsoft IME)
-    if g.IO.SetPlatformImeDataFn != null_mut()
+    if g.IO.SetPlatformImeDataFn != None
         && libc::memcmp(
             &g.PlatformImeData,
             &g.PlatformImeDataPrev,
@@ -415,7 +415,7 @@ pub unsafe fn EndFrame() {
     // Update docking
     DockContextEndFrame(g);
 
-    SetCurrentViewport(null_mut(), null_mut());
+    SetCurrentViewport(None, null_mut());
 
     // Drag and Drop: Elapse payload (if delivered, or if source stops being submitted)
     if g.DragDropActive {

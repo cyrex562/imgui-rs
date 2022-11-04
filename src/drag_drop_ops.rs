@@ -126,7 +126,7 @@ pub unsafe fn BeginDragDropSource(flags: ImGuiDragDropFlags) -> bool
     }
     else
     {
-        window= null_mut();
+        window= None;
         source_id = ImHashStr("#SourceExtern", 0, 0);
         source_drag_active = true;
     }
@@ -238,7 +238,7 @@ pub unsafe fn BeginDragDropTargetCustom(bb: &ImRect, id: ImGuiID) -> bool
 
     let mut window = g.CurrentWindow;
     let mut hovered_window: *mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
-    if hovered_window == null_mut() || window.RootWindowDockTree != hovered_window.RootWindowDockTree {
+    if hovered_window == None || window.RootWindowDockTree != hovered_window.RootWindowDockTree {
         return false;
     }
     // IM_ASSERT(id != 0);
@@ -270,7 +270,7 @@ pub unsafe fn BeginDragDropTarget() -> bool
     if (!(g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredRect)){
         return false;}
     let mut hovered_window: *mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
-    if (hovered_window == null_mut() || window.RootWindowDockTree != hovered_window.RootWindowDockTree || window.SkipItems){
+    if (hovered_window == None || window.RootWindowDockTree != hovered_window.RootWindowDockTree || window.SkipItems){
         return false;}
 
     let display_rect: &ImRect = if g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HasDisplayRect { &g.LastItemData.DisplayRect} else { &g.LastItemData.Rect};
@@ -303,8 +303,8 @@ pub unsafe fn AcceptDragDropPayload(payload_type: &str, mut flags: ImGuiDragDrop
     let payload = &mut g.DragDropPayload;
     // IM_ASSERT(g.DragDropActive);                        // Not called between BeginDragDropTarget() and EndDragDropTarget() ?
     // IM_ASSERT(payload.DataFrameCount != -1);            // Forgot to call EndDragDropTarget() ?
-    if payload_type != null_mut() && !payload.IsDataType(payload_type) {
-        return null_mut();}
+    if payload_type != None && !payload.IsDataType(payload_type) {
+        return None;}
 
     // Accept smallest drag target bounding box, this allows us to nest drag targets conveniently without ordering constraints.
     // NB: We currently accept NULL id as target. However, overlapping targets requires a unique ID to function!
@@ -330,7 +330,7 @@ pub unsafe fn AcceptDragDropPayload(payload_type: &str, mut flags: ImGuiDragDrop
     g.DragDropAcceptFrameCount = g.FrameCount;
     payload.Delivery = was_accepted_previously && !IsMouseDown(g.DragDropMouseButton); // For extern drag sources affecting os window focus, it's easier to just test !IsMouseDown() instead of IsMouseReleased()
     if !payload.Delivery && flag_clear(flags, ImGuiDragDropFlags_AcceptBeforeDelivery) {
-        return null_mut();}
+        return None;}
 
     return payload;
 }
@@ -338,7 +338,7 @@ pub unsafe fn AcceptDragDropPayload(payload_type: &str, mut flags: ImGuiDragDrop
 pub unsafe fn GetDragDropPayload() -> *const ImGuiPayload
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return if g.DragDropActive { &g.DragDropPayload} else {null_mut()};
+    return if g.DragDropActive { &g.DragDropPayload} else {None};
 }
 
 // We don't really use/need this now, but added it for the sake of consistency and because we might need it later.

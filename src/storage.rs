@@ -118,7 +118,7 @@ impl ImGuiStorage {
     pub fn GetVoidPtr(&mut self, key: ImGuiID) -> *const c_void {
         let it = self.LowerBound(&mut self.Data, key);
         if it == self.Data.end() || it.key != key {
-            return null();
+            return None;
         }
         return it.val_p;
     }

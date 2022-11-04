@@ -43,7 +43,7 @@ pub unsafe fn BeginTooltipEx(
     }
 
     window_name: [c_char; 16];
-    // ImFormatString(window_name, window_name.len(), "##Tooltip_%02d", g.TooltipOverrideCount);
+    // ImFormatString(window_name, window_name.len(), "##Tooltip_{}", g.TooltipOverrideCount);
     if (tooltip_flags & ImGuiTooltipFlags_OverridePreviousTooltip) {
         let mut window: *mut ImGuiWindow = FindWindowByName(window_name);
         if (is_not_null(window)) {
@@ -51,7 +51,7 @@ pub unsafe fn BeginTooltipEx(
                 // Hide previous tooltip from being displayed. We can't easily "reset" the content of a window so we create a new one.
                 window.Hidden = true;
                 window.HiddenFramesCanSkipItems = 1; // FIXME: This may not be necessary?
-                                                     // ImFormatString(window_name, window_name.len(), "##Tooltip_%02d", + + g.TooltipOverrideCount);
+                                                     // ImFormatString(window_name, window_name.len(), "##Tooltip_{}", + + g.TooltipOverrideCount);
             }
         }
     }

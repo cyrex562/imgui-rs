@@ -28,8 +28,8 @@ pub unsafe fn LogRenderedText(ref_pos: *const ImVec2, text: *const c_char, mut t
 
     let mut prefix: *const c_char = g.LogNextPrefix;
     let mut suffix: *const c_char = g.LogNextSuffix;
-    g.LogNextPrefix = null_mut();
-    g.LogNextSuffix = null_mut();
+    g.LogNextPrefix = None;
+    g.LogNextSuffix = None;
 
     if !text_end {
         text_end = FindRenderedTextEnd(text, text_end);
@@ -132,7 +132,7 @@ pub unsafe fn LogBegin(log_type: ImGuiLogType, auto_open_depth: c_int)
     // IM_ASSERT(g.LogBuffer.empty());
     g.LogEnabled = true;
     g.LogType = log_type;
-    g.LogNextPrefix = g.LogNextSuffix= null_mut();
+    g.LogNextPrefix = g.LogNextSuffix= None;
     g.LogDepthRef = window.DC.TreeDepth;
     g.LogDepthToExpand = if auto_open_depth >= 0 { auto_open_depth} else { g.LogDepthToExpandDefault};
     g.LogLinePosY = f32::MAX;
@@ -228,7 +228,7 @@ pub unsafe fn LogFinish()
 
     g.LogEnabled = false;
     g.LogType = ImGuiLogType_None;
-    g.LogFile= null_mut();
+    g.LogFile= None;
     g.LogBuffer.clear();
 }
 

@@ -88,7 +88,7 @@ pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_b
     // Title bar text (with: horizontal alignment, avoiding collapse/close button, optional "unsaved document" marker)
     // FIXME: Refactor text alignment facilities along with RenderText helpers, this is WAY too much messy code..
     let marker_size_x: c_float = if  flag_set(flags, ImGuiWindowFlags_UnsavedDocument) { button_sz * 0.80 } else { 0.0 };
-    let text_size: ImVec2 = CalcTextSize(name, null_mut(), true, 0.0) + ImVec2::from_floats(marker_size_x, 0.0);
+    let text_size: ImVec2 = CalcTextSize(name, None, true, 0.0) + ImVec2::from_floats(marker_size_x, 0.0);
 
     // As a nice touch we try to ensure that centered title text doesn't get affected by visibility of Close/Collapse button,
     // while uncentered title text will still reach edges correctly.
@@ -121,7 +121,7 @@ pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_b
     }
     //if (g.IO.KeyShift) window.DrawList.AddRect(layout_r.Min, layout_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
     //if (g.IO.KeyCtrl) window.DrawList.AddRect(clip_r.Min, clip_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
-    RenderTextClipped(&layout_r.Min, &layout_r.Max, name, null_mut(), &text_size, &style.WindowTitleAlign, &clip_r);
+    RenderTextClipped(&layout_r.Min, &layout_r.Max, name, None, &text_size, &style.WindowTitleAlign, &clip_r);
 }
 
 
@@ -212,12 +212,12 @@ pub unsafe fn RenderDimmedBackgrounds() {
     }
     let dim_bg_for_modal: bool = (modal_window != null_mut());
     let dim_bg_for_window_list: bool =
-        (g.NavWindowingTargetAnim != null_mut() && g.NavWindowingTargetAnim.Active);
+        (g.NavWindowingTargetAnim != None && g.NavWindowingTargetAnim.Active);
     if !dim_bg_for_modal && !dim_bg_for_window_list {
         return;
     }
 
-    let mut viewports_already_dimmed: [*mut ImGuiViewport; 2] = [null_mut(), null_mut()];
+    let mut viewports_already_dimmed: [*mut ImGuiViewport; 2] = [None, None];
     if dim_bg_for_modal {
         // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
         let mut dim_behind_window: *mut ImGuiWindow =
@@ -233,7 +233,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
             g.NavWindowingTargetAnim,
             GetColorU32(ImGuiCol_NavWindowingDimBg, g.DimBgRatio),
         );
-        if g.NavWindowingListWindow != null_mut()
+        if g.NavWindowingListWindow != None
             && g.NavWindowingListwindow.Viewport
             && g.NavWindowingListwindow.Viewport != g.NavWindowingTargetAnim.Viewport
         {
@@ -246,7 +246,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
         viewports_already_dimmed[1] = if g.NavWindowingListWindow {
             g.NavWindowingListwindow.Viewport
         } else {
-            null_mut()
+            None
         };
 
         // Draw border around CTRL+Tab target window

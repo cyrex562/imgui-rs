@@ -18,7 +18,7 @@ use crate::window_ops::{GetWindowDisplayLayer, IsWindowActiveAndVisible};
 pub unsafe fn GetDrawData() -> *mut ImDrawData {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut viewport: *mut ImGuiViewport = g.Viewports[0];
-    return if viewport.DrawDataP.Valid { &mut viewport.DrawDataP } else { null_mut() };
+    return if viewport.DrawDataP.Valid { &mut viewport.DrawDataP } else { None };
 }
 
 
@@ -28,7 +28,7 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
     if draw_list.CmdBuffer.len() == 0 {
         return;
     }
-    if draw_list.CmdBuffer.len() == 1 && draw_list.CmdBuffer[0].ElemCount == 0 && draw_list.CmdBuffer[0].UserCallback == null_mut() {
+    if draw_list.CmdBuffer.len() == 1 && draw_list.CmdBuffer[0].ElemCount == 0 && draw_list.CmdBuffer[0].UserCallback == None {
         return;
     }
 

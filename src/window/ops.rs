@@ -62,7 +62,7 @@ pub unsafe fn SetCurrentWindow(window: *mut ImGuiWindow) {
     g.CurrentTable = if is_not_null(window) && window.DC.CurrentTableIdx != -1 {
         g.Tables.GetByIndex(window.DC.CurrentTableIdx.clone())
     } else {
-        null_mut()
+        None
     };
     if window {
         g.FontSize = window.CalcFontSize();
@@ -70,9 +70,9 @@ pub unsafe fn SetCurrentWindow(window: *mut ImGuiWindow) {
     }
 }
 
-pub unsafe fn GetCurrentWindow() -> *mut ImGuiWindow {
+pub unsafe fn GetCurrentWindow() -> ImGuiWindow {
     let g = GImGui;
-    g.CurrentWindow
+    g.CurrentWindow.unwrap().clone()
 }
 
 // static inline IsWindowContentHoverable: bool(window: *mut ImGuiWindow, flags: ImGuiHoveredFlags)
@@ -98,7 +98,7 @@ pub unsafe fn IsWindowContentHoverable(window: *mut ImGuiWindow, flags: ImGuiHov
     }
     // Filter by viewport
     if window.Viewport != g.MouseViewport {
-        if g.MovingWindow == null_mut()
+        if g.MovingWindow == None
             || window.RootWindowDockTree != g.MovingWindow.RootWindowDockTree
         {
             return false;
@@ -187,7 +187,7 @@ pub fn GetWindowDisplayLayer(window: *mut ImGuiWindow) -> c_int {
     };
 }
 
-pub unsafe fn SetNextWindowSize(size: &ImVec2, cond: ImGuiCond) {
+pub unsafe fn SetNextWindowSize(size: ImVec2, cond: ImGuiCond) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
                     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSize;
@@ -764,13 +764,13 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
     // Parent window is latched only on the first call to Begin() of the frame, so further append-calls can be done from a different window stack
     let mut parent_window_in_stack: *mut ImGuiWindow =  if window.DockIsActive.clone() && is_not_null(window.DockNode.HostWindow) { window.DockNode.HostWindow } else {
         if g.CurrentWindowStack.empty() {
-            null_mut()
+            None
         } else { g.CurrentWindowStack.last().unwrap().Window }
     };
     let mut parent_window: *mut ImGuiWindow =  if first_begin_of_the_frame {
         if flags.clone() & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_Popup) {
             parent_window_in_stack
-        } else { null_mut() }
+        } else { None }
     } else { window.ParentWindow };
     // IM_ASSERT(parent_window != NULL || flag_clear(flags, ImGuiWindowFlags_ChildWindow));
 
@@ -787,7 +787,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
     window_stack_data.ParentLastItemDataBackup = g.LastItemData.clone();
     window_stack_data.StackSizesOnBegin.SetToCurrentState();
     g.CurrentWindowStack.push(window_stack_data);
-    g.CurrentWindow= null_mut();
+    g.CurrentWindow= None;
     if flags.clone() & ImGuiWindowFlags_ChildMenu {
         g.BeginMenuCount += 1;
     }
@@ -896,7 +896,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
         if (is_not_null(window.Viewport) && window.Viewport.Window == window) || (window.DockIsActive.clone()) {
             window_title_visible_elsewhere = true;
         }
-        else if g.NavWindowingListWindow != null_mut() && flag_clear(window.Flags.clone(), ImGuiWindowFlags_NoNavFocus) {  // Window titles visible when using CTRL+TAB
+        else if g.NavWindowingListWindow != None && flag_clear(window.Flags.clone(), ImGuiWindowFlags_NoNavFocus) {  // Window titles visible when using CTRL+TAB
             window_title_visible_elsewhere = true;
         }
         if window_title_visible_elsewhere && !window_just_created && strcmp(name, window.Name) != 0
@@ -1159,7 +1159,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
             }
 
             let mut modal: *mut ImGuiWindow =  GetTopMostPopupModal();
-            if modal != null_mut() && !IsWindowWithinBeginStackOf(window, modal)
+            if modal != None && !IsWindowWithinBeginStackOf(window, modal)
             {
                 // Avoid focusing a window that is created outside of active modal. This will prevent active modal from being closed.
                 // Since window is not focused it would reappear at the same display position like the last time it was visible.
@@ -1321,7 +1321,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
             {
                 // - We test overlap with the previous child window only (testing all would end up being O(log N) not a good investment here)
                 // - We disable this when the parent window has zero vertices, which is a common pattern leading to laying out multiple overlapping childs
-                let mut previous_child: *mut ImGuiWindow =  if parent_window.DC.ChildWindows.Size >= 2 { parent_window.DC.ChildWindows[parent_window.DC.ChildWindows.Size - 2] } else { null_mut() };
+                let mut previous_child: *mut ImGuiWindow =  if parent_window.DC.ChildWindows.Size >= 2 { parent_window.DC.ChildWindows[parent_window.DC.ChildWindows.Size - 2] } else { None };
                 let mut previous_child_overlapping: bool = if previous_child { previous_child.Rect().Overlaps(window.Rect()) } else { false };
                 let mut parent_is_empty: bool =  parent_window.DrawList.VtxBuffer.len() > 0;
                 if window.DrawList.CmdBuffer.last().unwrap().ElemCount == 0 && parent_is_empty && !previous_child_overlapping {
@@ -1403,7 +1403,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
         window.DC.TreeJumpToParentOnPopMask = 0x00;
         window.DC.ChildWindows.clear();
         window.DC.StateStorage = &mut window.StateStorage;
-        window.DC.CurrentColumns= null_mut();
+        window.DC.CurrentColumns= None;
         window.DC.LayoutType = ImGuiLayoutType_Vertical;
         window.DC.ParentLayoutType = if parent_window { parent_window.DC.LayoutType } else { ImGuiLayoutType_Vertical };
 
@@ -1427,7 +1427,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
         }
 
         // Close requested by platform window
-        if (p_open != null_mut() && window.Viewport.PlatformRequestClose && window.Viewport != GetMainViewport())
+        if (p_open != None && window.Viewport.PlatformRequestClose && window.Viewport != GetMainViewport())
         {
             if (!window.DockIsActive || window.DockTabIsVisible)
             {
@@ -1469,7 +1469,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
 
             // Docking: Any dockable window can act as a target. For dock node hosts we call BeginDockableDragDropTarget() in DockNodeUpdate() instead.
             if (g.DragDropActive && flag_clear(flags, ImGuiWindowFlags_NoDocking)) {
-                if (g.MovingWindow == null_mut() || g.Movingwindow.RootWindowDockTree != window) {
+                if (g.MovingWindow == None || g.Movingwindow.RootWindowDockTree != window) {
                     if ((window == window.RootWindowDockTree) && flag_clear(window.Flags, ImGuiWindowFlags_DockNodeHost)) {
                         BeginDockableDragDropTarget(window);
                     }
@@ -1647,7 +1647,7 @@ pub unsafe fn End()
     }
     g.CurrentWindowStack.last().unwrap().StackSizesOnBegin.CompareWithCurrentState();
     g.CurrentWindowStack.pop_back();
-    SetCurrentWindow(if g.CurrentWindowStack.Size == 0 { null_mut() } else { g.CurrentWindowStack.last().unwrap().Window });
+    SetCurrentWindow(if g.CurrentWindowStack.Size == 0 { None } else { g.CurrentWindowStack.last().unwrap().Window });
     if (g.CurrentWindow) {
         SetCurrentViewport(g.CurrentWindow, g.Currentwindow.Viewport);
     }

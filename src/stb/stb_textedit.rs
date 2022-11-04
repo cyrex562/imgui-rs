@@ -1232,7 +1232,7 @@ pub unsafe fn stb_text_create_undo_record(state: *mut StbUndoState, numchars: us
     if numchars > STB_TEXTEDIT_UNDOCHARCOUNT {
         state.undo_point = 0;
         state.undo_char_point = 0;
-        return null_mut();
+        return None;
     }
 
     // if we don't have enough free characters in the buffer, we have to make room
@@ -1248,8 +1248,8 @@ pub unsafe fn stb_text_create_undo_record(state: *mut StbUndoState, numchars: us
 
 pub unsafe fn stb_text_createundo(state: *mut StbUndoState, pos: usize, insert_len: usize, delete_len: usize) -> *mut STB_TEXTEDIT_CHARTYPE {
     let mut r: *mut StbUndoRecord = stb_text_create_undo_record(state, insert_len);
-    if r == null_mut() {
-        return null_mut();
+    if r == None {
+        return None;
     }
 
     r.stb_where = pos;
@@ -1258,7 +1258,7 @@ pub unsafe fn stb_text_createundo(state: *mut StbUndoState, pos: usize, insert_l
 
     return if insert_len == 0 {
         r.char_storage = -1;
-        null_mut()
+        None
     } else {
         r.char_storage = state.undo_char_point;
         state.undo_char_point += insert_len;
@@ -1270,7 +1270,7 @@ pub unsafe fn stb_text_undo(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_T
     let s: *mut StbUndoState = &mut state.undostate;
     // StbUndoRecord u, *r;
     let mut u: StbUndoRecord = StbUndoRecord::defualt();
-    let mut r: *mut StbUndoRecord = null_mut();
+    let mut r: *mut StbUndoRecord = None;
     if s.undo_point == 0 {
         return;
     }
@@ -1341,8 +1341,8 @@ pub unsafe fn stb_text_undo(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_T
 
 pub unsafe fn stb_text_redo(str_var: &mut STB_TEXTEDIT_STRING, state: &mut STB_TexteditState) {
     let mut s: *mut StbUndoState = &mut state.undostate;
-    let mut u: *mut StbUndoRecord = null_mut();
-    let mut r: *mut StbUndoRecord = null_mut();
+    let mut u: *mut StbUndoRecord = None;
+    let mut r: *mut StbUndoRecord = None;
     if s.redo_point == STB_TEXTEDIT_UNDOSTATECOUNT as c_short {
         return;
     }

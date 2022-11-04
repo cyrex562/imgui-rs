@@ -309,7 +309,7 @@ pub unsafe fn ButtonBehavior(
     return pressed;
 }
 
-pub unsafe fn ButtonEx(label: &str, size_arg: &mut ImVec2, mut flags: ImGuiButtonFlags) -> bool {
+pub unsafe fn ButtonEx(label: String, size_arg: &mut ImVec2, mut flags: ImGuiButtonFlags) -> bool {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems {
         return false;
@@ -384,12 +384,12 @@ pub unsafe fn ButtonEx(label: &str, size_arg: &mut ImVec2, mut flags: ImGuiButto
     return pressed;
 }
 
-pub unsafe fn Button(label: &str, size_arg: &mut ImVec2) -> bool {
+pub unsafe fn Button(label: String, size_arg: &mut ImVec2) -> bool {
     return ButtonEx(label, size_arg, ImGuiButtonFlags_None);
 }
 
 // Small buttons fits within text without additional vertical spacing.
-pub unsafe fn SmallButton(label: &str) -> bool {
+pub unsafe fn SmallButton(label: String) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let backup_padding_y: c_float = g.Style.FramePadding.y;
     g.Style.FramePadding.y = 0.0;

@@ -1,7 +1,7 @@
 use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_ushort, c_void, size_t};
 use std::ptr::null_mut;
 use crate::bit_vector::ImBitVector;
-use crate::color::{IM_COL32, IM_COL32_BLACK_TRANS, IM_COL32_WHITE};
+use crate::color::{color_u32_from_rgba, IM_COL32_BLACK_TRANS, IM_COL32_WHITE};
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
 use crate::font_atlas_custom_rect::ImFontAtlasCustomRect;
@@ -75,7 +75,7 @@ pub unsafe fn ImFontAtlasBuildWithStbTruetype(mut atlas: *mut ImFontAtlas) -> bo
     ImFontAtlasBuildInit(atlas);
 
     // Clear atlas
-    atlas.TexID = null_mut();
+    atlas.TexID = None;
     atlas.TexWidth = 0;
     atlas.TexHeight = 0;
     atlas.TexUvScale = ImVec2::from_floats(0.0, 0.0);
@@ -265,7 +265,7 @@ pub unsafe fn ImFontAtlasBuildWithStbTruetype(mut atlas: *mut ImFontAtlas) -> bo
     // Pack our extra data rectangles first, so it will be on the upper-left corner of our texture (UV will have small values).
     let TEX_HEIGHT_MAX: c_int = 1024 * 32;
     let mut spc: stbtt_pack_context = stbtt_pack_context::default();
-    stbtt_PackBegin(&spc, null_mut(), atlas.TexWidth, TEX_HEIGHT_MAX, 0, atlas.TexGlyphPadding, null_mut());
+    stbtt_PackBegin(&spc, None, atlas.TexWidth, TEX_HEIGHT_MAX, 0, atlas.TexGlyphPadding, null_mut());
     ImFontAtlasBuildPackCustomRects(atlas, spc.pack_info);
 
     // 6. Pack each source font. No rendering yet, we are working with rectangles in an infinitely tall texture at this point.
@@ -325,7 +325,7 @@ pub unsafe fn ImFontAtlasBuildWithStbTruetype(mut atlas: *mut ImFontAtlas) -> bo
                 r += 1;
             }
         }
-        src_tmp.Rects= null_mut();
+        src_tmp.Rects= None;
     }
 
     // End packing
@@ -495,7 +495,7 @@ pub unsafe fn ImFontAtlasBuildRenderDefaultTexData(mut atlas: *mut ImFontAtlas)
         // IM_ASSERT(r.Width == FONT_ATLAS_DEFAULT_TEX_DATA_W * 2 + 1 && r.Height == FONT_ATLAS_DEFAULT_TEX_DATA_H);
         let x_for_white = r.X;
         let x_for_black = r.X + FONT_ATLAS_DEFAULT_TEX_DATA_W + 1;
-        if atlas.TexPixelsAlpha8 != null_mut()
+        if atlas.TexPixelsAlpha8 != None
         {
             ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_white, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_const_char_ptr(), '.', 0xF0);
             ImFontAtlasBuildRender8bppRectFromString(atlas, x_for_black, r.Y, FONT_ATLAS_DEFAULT_TEX_DATA_W, FONT_ATLAS_DEFAULT_TEX_DATA_H, FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_const_char_ptr(), 'X', 0xF0);
@@ -511,7 +511,7 @@ pub unsafe fn ImFontAtlasBuildRenderDefaultTexData(mut atlas: *mut ImFontAtlas)
         // Render 4 white pixels
         // IM_ASSERT(r.Width == 2 && r.Height == 2);
         let offset = r.X + r.Y * w;
-        if atlas.TexPixelsAlpha8 != null_mut()
+        if atlas.TexPixelsAlpha8 != None
         {
             atlas.TexPixelsAlpha8[offset] = atlas.TexPixelsAlpha8[offset + 1] = atlas.TexPixelsAlpha8[offset + w] = atlas.TexPixelsAlpha8[offset + w + 1] = 0xFF;
         }
@@ -543,7 +543,7 @@ pub fn ImFontAtlasBuildRenderLinesTexData(mut atlas: *mut ImFontAtlas)
 
         // Write each slice
         // IM_ASSERT(pad_left + line_width + pad_right == r.Width && y < r.Height); // Make sure we're inside the texture bounds before we start writing pixels
-        if atlas.TexPixelsAlpha8 != null_mut()
+        if atlas.TexPixelsAlpha8 != None
         {
             let mut write_ptr: *mut c_uchar = &mut atlas.TexPixelsAlpha8[r.X + ((r.Y + y) * atlas.TexWidth)];
             // for (let mut i: c_uint =  0; i < pad_left; i++)
@@ -570,7 +570,7 @@ pub fn ImFontAtlasBuildRenderLinesTexData(mut atlas: *mut ImFontAtlas)
             // for (let mut i: c_uint =  0; i < pad_left; i++)
             for i in 0 .. pad_left
             {
-                *(write_ptr + i) = IM_COL32(255, 255, 255, 0);
+                *(write_ptr + i) = color_u32_from_rgba(255, 255, 255, 0);
             }
 
             // for (let mut i: c_uint =  0; i < line_width; i++)
@@ -582,7 +582,7 @@ pub fn ImFontAtlasBuildRenderLinesTexData(mut atlas: *mut ImFontAtlas)
             // for (let mut i: c_uint =  0; i < pad_right; i++)
             for i in 0 .. pad_right
             {
-                *(write_ptr + pad_left + line_width + i) = IM_COL32(255, 255, 255, 0);
+                *(write_ptr + pad_left + line_width + i) = color_u32_from_rgba(255, 255, 255, 0);
             }
         }
 
@@ -631,7 +631,7 @@ pub unsafe fn ImFontAtlasBuildFinish(atlas: *mut ImFontAtlas)
     for i in 0 .. atlas.CustomRects.len()
     {
         let mut r: *mut ImFontAtlasCustomRect = &mut atlas.CustomRects[i];
-        if r.Font == null_mut() || r.GlyphID == 0 {
+        if r.Font == None || r.GlyphID == 0 {
             continue;
         }
 
@@ -641,7 +641,7 @@ pub unsafe fn ImFontAtlasBuildFinish(atlas: *mut ImFontAtlas)
         let mut uv0 = ImVec2::default();
         let mut uv1 = ImVec2::default();
         atlas.CalcCustomRectUV(r, &uv0, &uv1);
-        r.Font.AddGlyph(null_mut(), r.GlyphID, r.GlyphOffset.x, r.GlyphOffset.y, r.GlyphOffset.x + r.Width, r.GlyphOffset.y + r.Height, uv0.x, uv0.y, uv1.x, uv1.y, r.GlyphAdvanceX);
+        r.Font.AddGlyph(None, r.GlyphID, r.GlyphOffset.x, r.GlyphOffset.y, r.GlyphOffset.x + r.Width, r.GlyphOffset.y + r.Height, uv0.x, uv0.y, uv1.x, uv1.y, r.GlyphAdvanceX);
     }
 
     // Build all fonts lookup tables

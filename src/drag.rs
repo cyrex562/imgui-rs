@@ -294,7 +294,7 @@ pub unsafe fn DragBehavior(
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a Drag widget, p_min and p_max are optional.
 // Read code of e.g. DragFloat(), DragInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
 pub unsafe fn DragScalar<T>(
-    label: &str,
+    label: String,
     data_type: ImGuiDataType,
     p_data: &mut c_float,
     v_speed: c_float,
@@ -507,7 +507,7 @@ pub unsafe fn DragScalar<T>(
 }
 
 pub unsafe fn DragScalarN(
-    label: &str,
+    label: String,
     data_type: ImGuiDataType,
     p_data: &mut [c_float],
     components: usize,
@@ -561,7 +561,7 @@ pub unsafe fn DragScalarN(
 }
 
 pub unsafe fn DragFloat(
-    label: &str,
+    label: String,
     v: &mut c_float,
     v_speed: c_float,
     v_min: c_float,
@@ -582,7 +582,7 @@ pub unsafe fn DragFloat(
 }
 
 pub unsafe fn DragFloat2(
-    label: &str,
+    label: String,
     v: &mut [c_float; 2],
     v_speed: c_float,
     v_min: &mut [c_float; 2],
@@ -604,7 +604,7 @@ pub unsafe fn DragFloat2(
 }
 
 pub unsafe fn DragFloat3(
-    label: &str,
+    label: String,
     v: &mut [c_float; 3],
     v_speed: c_float,
     v_min: &mut [c_float; 3],
@@ -626,7 +626,7 @@ pub unsafe fn DragFloat3(
 }
 
 pub unsafe fn DragFloat4(
-    label: &str,
+    label: String,
     v: &mut [c_float; 4],
     v_speed: c_float,
     v_min: &mut [c_float; 4],
@@ -649,7 +649,7 @@ pub unsafe fn DragFloat4(
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
 pub unsafe fn DragFloatRange2(
-    label: &str,
+    label: String,
     v_current_min: &mut c_float,
     v_current_max: &mut c_float,
     v_speed: c_float,
@@ -732,7 +732,7 @@ pub unsafe fn DragFloatRange2(
 
 // NB: v_speed is float to allow adjusting the drag speed with more precision
 pub unsafe fn DragInt(
-    label: &str,
+    label: String,
     v: &mut c_int,
     v_speed: c_float,
     v_min: c_int,
@@ -756,7 +756,7 @@ pub unsafe fn DragInt(
 }
 
 pub unsafe fn DragInt2(
-    label: &str,
+    label: String,
     v: &mut [c_int; 2],
     v_speed: c_float,
     v_min: &[c_int; 2],
@@ -782,7 +782,7 @@ pub unsafe fn DragInt2(
 }
 
 pub unsafe fn DragInt3(
-    label: &str,
+    label: String,
     v: &mut [c_int; 3],
     v_speed: c_float,
     v_min: &[c_int; 3],
@@ -819,7 +819,7 @@ pub unsafe fn DragInt3(
 }
 
 pub unsafe fn DragInt4(
-    label: &str,
+    label: String,
     v: &mut [c_int; 4],
     v_speed: c_float,
     v_min: &[c_int; 4],
@@ -860,7 +860,7 @@ pub unsafe fn DragInt4(
 
 // NB: You likely want to specify the ImGuiSliderFlags_AlwaysClamp when using this.
 pub unsafe fn DragIntRange2(
-    label: &str,
+    label: String,
     v_current_min: &mut c_int,
     v_current_max: &mut c_int,
     v_speed: c_float,

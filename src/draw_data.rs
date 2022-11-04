@@ -43,11 +43,11 @@ impl ImDrawData {
         self.CmdListsCount = 0;
         self.TotalIdxCount = 0;
         self.TotalVtxCount = 0;
-        self.CmdLists = null_mut();
+        self.CmdLists = None;
         self.DisplayPos = ImVec2::default();
         self.DisplaySize = ImVec2::default();
         self.FramebufferScale = ImVec2::default();
-        self.OwnerViewport = null_mut();
+        self.OwnerViewport = None;
     }
 
     // void  DeIndexAllBuffers();                    // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!

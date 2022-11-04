@@ -40,7 +40,7 @@ pub unsafe fn Image(user_texture_id: ImTextureID, size: &ImVec2, uv0: &ImVec2, u
         bb.Max += ImVec2::from_floats(2.0, 2.0);
     }
     ItemSize(&bb.GetSize(), 0.0);
-    if !ItemAdd(&mut bb, 0, null(), 0) { return ; }
+    if !ItemAdd(&mut bb, 0, None, 0) { return ; }
 
     if (border_col.w > 0.0)
     {
@@ -64,7 +64,7 @@ pub unsafe fn ImageButtonEx(id: ImGuiID, texture_id: ImTextureID, size: &ImVec2,
     let padding: ImVec2 = g.Style.FramePadding;
     let mut bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size + padding * 2.0);
     ItemSize(&bb.GetSize(), 0.0);
-    if !ItemAdd(&mut bb, id, null(), 0) { return  false; }
+    if !ItemAdd(&mut bb, id, None, 0) { return  false; }
 
     // hovered: bool, held;
     let mut hovered = false;

@@ -14,7 +14,7 @@ use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window::ops::GetCurrentWindow;
 
-pub unsafe fn RadioButton(label: &str, active: bool) -> bool
+pub unsafe fn RadioButton(label: String, active: bool) -> bool
 {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems { return  false; }
@@ -29,7 +29,7 @@ pub unsafe fn RadioButton(label: &str, active: bool) -> bool
     let mut check_bb: ImRect = ImRect::new(pos, pos + ImVec2::from_floats(square_sz, square_sz));
     let mut total_bb: ImRect = ImRect::new(pos, pos + ImVec2::from_floats(square_sz + (if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x } else { 0.0 }), label_size.y + style.FramePadding.y * 2.0));
     ItemSize(&total_bb.GetSize(), style.FramePadding.y);
-    if !ItemAdd(&mut total_bb, id, null(), 0) { return  false; }
+    if !ItemAdd(&mut total_bb, id, None, 0) { return  false; }
 
     let mut center: ImVec2 = check_bb.GetCenter();
     center.x = IM_ROUND(center.x);
@@ -69,7 +69,7 @@ pub unsafe fn RadioButton(label: &str, active: bool) -> bool
 }
 
 // FIXME: This would work nicely if it was a public template, e.g. 'template<T> RadioButton(const char* label, T* v, T v_button)', but I'm not sure how we would expose it..
-pub unsafe fn RadioButton2(label: &str, v: *mut c_int, v_button: c_int) -> bool
+pub unsafe fn RadioButton2(label: String, v: *mut c_int, v_button: c_int) -> bool
 {
     let pressed: bool = RadioButton(label, *v == v_button);
     if pressed {

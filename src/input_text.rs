@@ -2,7 +2,7 @@ use libc::{c_char, c_float, c_int, memcmp, memcpy, size_t};
 use std::ptr::null_mut;
 use std::env::args;
 use crate::child_ops::{BeginChildEx, BeginChildFrame, EndChild, EndChildFrame};
-use crate::color::{IM_COL32, IM_COL32_A_MASK, ImGuiCol_ChildBg, ImGuiCol_FrameBg, ImGuiCol_Header, ImGuiCol_HeaderActive, ImGuiCol_HeaderHovered, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TextSelectedBg};
+use crate::color::{color_u32_from_rgba, IM_COL32_A_MASK, ImGuiCol_ChildBg, ImGuiCol_FrameBg, ImGuiCol_Header, ImGuiCol_HeaderActive, ImGuiCol_HeaderHovered, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TextSelectedBg};
 use crate::{button_ops, checkbox_ops, drag, GImGui, input_num_ops, layout_ops, radio_button, scrolling_ops, separator, stb, text_ops};
 use crate::activate_flags::ImGuiActivateFlags_TryToPreserveState;
 use crate::axis::ImGuiAxis_Y;
@@ -73,7 +73,7 @@ use crate::window::window_flags::{ImGuiWindowFlags_NoMove, ImGuiWindowFlags_None
 // FIXME: Facilitate using this in variety of other situations.
 pub unsafe fn TempInputText(bb: &mut ImRect,
                             id: ImGuiID,
-                            label: &str,
+                            label: String,
                             buf: &mut String,
                             buf_size: usize,
                             flags: ImGuiInputTextFlags) -> bool
@@ -96,12 +96,12 @@ pub unsafe fn TempInputText(bb: &mut ImRect,
     return value_changed;
 }
 
-pub unsafe fn InputTextMultiline(label: &str, buf: &mut String, buf_size: size_t, size: &mut ImVec2, flags: ImGuiInputTextFlags, callback: Option<ImGuiInputTextCallback>, user_data: Option<&Vec<u8>>) -> bool
+pub unsafe fn InputTextMultiline(label: String, buf: &mut String, buf_size: size_t, size: &mut ImVec2, flags: ImGuiInputTextFlags, callback: Option<ImGuiInputTextCallback>, user_data: Option<&Vec<u8>>) -> bool
 {
     return InputTextEx(label, "", buf, buf_size, size, flags | ImGuiInputTextFlags_Multiline, Some(callback), Some(user_data));
 }
 
-pub unsafe fn InputTextWithHint(label: &str, hint: &str, buf: &mut String, buf_size: size_t, flags: ImGuiInputTextFlags, callback: ImGuiInputTextCallback, user_data: &Vec<u8>) -> bool
+pub unsafe fn InputTextWithHint(label: String, hint: &str, buf: &mut String, buf_size: size_t, flags: ImGuiInputTextFlags, callback: ImGuiInputTextCallback, user_data: &Vec<u8>) -> bool
 {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline() or  InputTextEx() manually if you need multi-line + hint.
     return InputTextEx(label, hint, buf, buf_size, ImVec2::new(0, 0), flags, Some(callback), Some(user_data));
@@ -359,7 +359,7 @@ pub unsafe fn InputTextReconcileUndoStateAfterUserCallback(state: &mut ImGuiInpu
 // - If you want to use InputText() with std::string, see misc/cpp/imgui_stdlib.h
 // (FIXME: Rather confusing and messy function, among the worse part of our codebase, expecting to rewrite a V2 at some point.. Partly because we are
 //  doing UTF8 > U16 > UTF8 conversions on the go to easily interface with stb_textedit. Ideally should stay in UTF-8 all the time. See https://github.com/nothings/stb/issues/188)
-pub unsafe fn InputTextEx(label: &str,
+pub unsafe fn InputTextEx(label: String,
                           hint: &str,
                           buf: &mut String,
                           mut buf_size: usize,
@@ -456,14 +456,14 @@ pub unsafe fn InputTextEx(label: &str,
     let input_requested_by_nav: bool = (g.ActiveId != id) && ((g.NavActivateInputId == id) || (g.NavActivateId == id && g.NavInputSource == ImGuiInputSource_Keyboard));
 
     let user_clicked: bool = hovered && io.MouseClicked[0];
-    let user_scroll_finish: bool = is_multiline && state != null_mut() && g.ActiveId == 0 && g.ActiveIdPreviousFrame == scrolling_ops::GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
-    let user_scroll_active: bool = is_multiline && state != null_mut() && g.ActiveId == scrolling_ops::GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
+    let user_scroll_finish: bool = is_multiline && state != None && g.ActiveId == 0 && g.ActiveIdPreviousFrame == scrolling_ops::GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
+    let user_scroll_active: bool = is_multiline && state != None && g.ActiveId == scrolling_ops::GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
     let mut clear_active_id: bool =  false;
     let mut select_all: bool =  false;
 
     let mut scroll_y: c_float =  if is_multiline { draw_window.Scroll.y} else {f32::MAX};
 
-    let init_changed_specs: bool = (state != null_mut() && state.Stb.single_line != !is_multiline);
+    let init_changed_specs: bool = (state != None && state.Stb.single_line != !is_multiline);
     let init_make_active: bool = (user_clicked || user_scroll_finish || input_requested_by_nav || input_requested_by_tabbing);
     let init_state: bool = (init_make_active || user_scroll_active);
     if ((init_state && g.ActiveId != id) || init_changed_specs)
@@ -548,7 +548,7 @@ pub unsafe fn InputTextEx(label: &str,
     }
 
     // We have an edge case if ActiveId was set through another widget (e.g. widget being swapped), clear id immediately (don't wait until the end of the function)
-    if g.ActiveId == id && state == null_mut(){
+    if g.ActiveId == id && state == None{
         ClearActiveID();}
 
     // Release focus when we click outside
@@ -564,7 +564,7 @@ pub unsafe fn InputTextEx(label: &str,
 
     // When read-only we always use the live data passed to the function
     // FIXME-OPT: Because our selection/cursor code currently needs the wide text we need to convert it when active, which is not ideal :(
-    if is_readonly && state != null_mut() && (render_cursor || render_selection)
+    if is_readonly && state != None && (render_cursor || render_selection)
     {
         let mut  buf_end = 0usize;
         state.TextW.resize(buf_size + 1);
@@ -576,7 +576,7 @@ pub unsafe fn InputTextEx(label: &str,
 
     // Select the buffer to render.
     let buf_display_from_state: bool = (render_cursor || render_selection || g.ActiveId == id) && !is_readonly && state && state.TextAIsValid;
-    let is_displaying_hint: bool = (hint != null_mut() && (if buf_display_from_state { state.TextA.Data} else {buf})[0] == 0);
+    let is_displaying_hint: bool = (hint != None && (if buf_display_from_state { state.TextA.Data} else {buf})[0] == 0);
 
     // Password pushes a temporary font with only a fallback glyph
     if is_password && !is_displaying_hint
@@ -1004,7 +1004,7 @@ pub unsafe fn InputTextEx(label: &str,
     }
 
     // Copy result to user buffer. This can currently only happen when (g.ActiveId == id)
-    if apply_new_text != null_mut()
+    if apply_new_text != None
     {
         // We cannot test for 'backup_current_text_length != apply_new_text_length' here because we have no guarantee that the size
         // of our owned buffer matches the size of the string object held by the user, and by design we allow InputText() to be used
@@ -1224,7 +1224,7 @@ pub unsafe fn InputTextEx(label: &str,
         if is_multiline || (buf_display_end - buf_display) < buf_display_max_length
         {
             col: u32 = GetColorU32(if is_displaying_hint { ImGuiCol_TextDisabled } else { ImGuiCol_Text }, 0.0);
-            draw_window.DrawList.AddText(g.Font, g.FontSize, draw_pos - draw_scroll, col, & buf_display, buf_display_end, 0.0, if is_multiline { null_mut()} else {& clip_rect});
+            draw_window.DrawList.AddText(g.Font, g.FontSize, draw_pos - draw_scroll, col, & buf_display, buf_display_end, 0.0, if is_multiline { None} else {& clip_rect});
         }
 
         // Draw blinking cursor
@@ -1264,7 +1264,7 @@ pub unsafe fn InputTextEx(label: &str,
         // if is_multiline || (buf_display_end - buf_display) < buf_display_max_length
         // {
         //     col: u32 = GetColorU32(if is_displaying_hint { ImGuiCol_TextDisabled } else { ImGuiCol_Text }, 0.0);
-        //     draw_window.DrawList.AddText(g.Font, g.FontSize, draw_pos, col, &buf_display, buf_display_end, 0.0, if is_multiline { null_mut()} else {& clip_rect});
+        //     draw_window.DrawList.AddText(g.Font, g.FontSize, draw_pos, col, &buf_display, buf_display_end, 0.0, if is_multiline { None} else {& clip_rect});
         // }
     }
 
@@ -1336,7 +1336,7 @@ pub unsafe fn DebugNodeInputTextState(state: &mut ImGuiInputTextState)
 //             buf: [c_char;64] = "";
 //             if (undo_rec_type != ' ' && undo_rec->char_storage != -1)
 //                 ImTextStrToUtf8(buf, buf.len(), undo_state.undo_char + undo_rec->char_storage, undo_state.undo_char + undo_rec->char_storage + undo_rec->insert_length);
-//             text_ops::Text("%c [%02d] where %03d, insert %03d, delete %03d, char_storage %03d \"{}\"",
+//             text_ops::Text("%c [{}] where %03d, insert %03d, delete %03d, char_storage %03d \"{}\"",
 //                            undo_rec_type, n, undo_rec-> where, undo_rec->insert_length, undo_rec->delete_length, undo_rec->char_storage, buf);
 //             if (undo_rec_type == ' ')
 //                 EndDisabled();

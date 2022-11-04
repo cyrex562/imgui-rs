@@ -30,7 +30,7 @@ impl ImGuiNavItemData {
 
     // void Clear()        { Window = None; ID = FocusScopeId = 0; InFlags = 0; DistBox = DistCenter = DistAxial = f32::MAX; }
     pub fn Clear(&mut self) {
-        self.Window = null_mut();
+        self.Window = None;
         self.ID = 0;
         self.FocusScopeId = 0;
         self.InFlags = 0;

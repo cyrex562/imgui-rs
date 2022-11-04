@@ -25,7 +25,7 @@ pub unsafe fn ProgressBar(mut fraction: c_float, size_arg: &mut ImVec2, overlay:
     let size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(), g.FontSize + style.FramePadding.y * 2.0);
     let mut bb: ImRect = ImRect::new(pos, pos + size);
     ItemSize(&size, style.FramePadding.y);
-    if !ItemAdd(&mut bb, 0, null(), 0) { return ; }
+    if !ItemAdd(&mut bb, 0, None, 0) { return ; }
 
     // Render
     fraction = ImSaturateFloat(fraction);

@@ -15,7 +15,7 @@ pub unsafe fn GetClipboardText() -> String {
 }
 
 // c_void SetClipboardText(text: *const c_char)
-pub unsafe fn SetClipboardText(text: &String) {
+pub unsafe fn SetClipboardText(text: Stringing) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.IO.SetClipboardTextFn {
         g.IO.SetClipboardTextFn(g.IO.ClipboardUserData, text);

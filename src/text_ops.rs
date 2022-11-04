@@ -23,7 +23,7 @@ use std::ptr::{null, null_mut};
 // CalcTextSize("") should return ImVec2::new(0.0, g.FontSize)
 // CalcTextSize: ImVec2(text: *const c_char, text_end: *const c_char, hide_text_after_double_hash: bool, c_float wrap_width)
 pub unsafe fn CalcTextSize(
-    text: &str,
+    text: String,
     hide_text_after_double_hash: bool,
     wrap_width: c_float,
 ) -> ImVec2 {
@@ -42,7 +42,7 @@ pub unsafe fn CalcTextSize(
     //     return ImVec2::new2(0.0, font_size);
     // }
     let mut text_size: ImVec2 =
-        font.CalcTextSizeA(font_size, f32::MAX, wrap_width, text, null_mut());
+        font.CalcTextSizeA(font_size, f32::MAX, wrap_width, text, None);
 
     // Round
     // FIXME: This has been here since Dec 2015 (7b0bf230) but down the line we want this out.
@@ -65,8 +65,8 @@ pub unsafe fn GetTextLineHeightWithSpacing() -> c_float {
     return g.FontSize + g.Style.ItemSpacing.y;
 }
 
-pub unsafe fn TextEx(mut text: &str, flags: ImGuiTextFlags) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+pub unsafe fn TextEx(mut text: String, flags: ImGuiTextFlags) {
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return;
     }
@@ -78,8 +78,8 @@ pub unsafe fn TextEx(mut text: &str, flags: ImGuiTextFlags) {
     //     text_end = str_to_const_c_char_ptr(""); }
 
     // Calculate length
-    let mut text_begin: &str = text;
-    // if text_end == null_mut() {
+    let mut text_begin = 0usize;
+    // if text_end == None {
     //     text_end = text + strlen(text);
     // } // FIXME-OPT
 
@@ -87,25 +87,25 @@ pub unsafe fn TextEx(mut text: &str, flags: ImGuiTextFlags) {
         window.DC.CursorPos.x,
         window.DC.CursorPos.y + window.DC.CurrLineTextBaseOffset,
     );
-    let wrap_pos_x: c_float = window.DC.TextWrapPos;
-    let wrap_enabled: bool = (wrap_pos_x >= 0.0);
+    let wrap_pos_x = window.DC.TextWrapPos;
+    let wrap_enabled = (wrap_pos_x >= 0.0);
     if text.len() <= 2000 || wrap_enabled {
         // Common case
-        let wrap_width: c_float = if wrap_enabled {
+        let wrap_width = if wrap_enabled {
             CalcWrapWidthForPos(&window.DC.CursorPos, wrap_pos_x)
         } else {
             0.0
         };
-        let text_size: ImVec2 = CalcTextSize(text_begin, false, wrap_width);
+        let text_size: ImVec2 = CalcTextSize(text, false, wrap_width);
 
         let mut bb: ImRect = ImRect::new(text_pos, text_pos + text_size);
         ItemSize(&text_size, 0.0);
-        if !ItemAdd(&mut bb, 0, null(), 0) {
+        if !ItemAdd(&mut bb, 0, None, 0) {
             return;
         }
 
         // Render (we don't hide text after ## in this end-user function)
-        RenderTextWrapped(bb.Min, text_begin);
+        RenderTextWrapped(bb.Min, text);
     } else {
         // Long text!
         // Perform manual coarse clipping to optimize for long multi-line text
@@ -179,23 +179,23 @@ pub unsafe fn TextEx(mut text: &str, flags: ImGuiTextFlags) {
 
         let mut bb: ImRect = ImRect::new(text_pos, text_pos + text_size);
         ItemSize(&text_size, 0.0);
-        ItemAdd(&mut bb, 0, null(), 0);
+        ItemAdd(&mut bb, 0, None, 0);
     }
 }
 
-pub unsafe fn TextUnformatted(text: &str) {
+pub unsafe fn TextUnformatted(text: String) {
     TextEx(text, ImGuiTextFlags_NoWidthForLargeClippedText);
 }
 
-pub unsafe fn Text(fmt: &str) {
+pub unsafe fn Text(fmt: String) {
     // va_list args;
     // va_start(args, fmt);
     TextV(fmt);
     // va_end(args);
 }
 
-pub unsafe fn TextV(fmt: &str) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+pub unsafe fn TextV(fmt: String) {
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return;
     }
@@ -205,14 +205,14 @@ pub unsafe fn TextV(fmt: &str) {
     TextEx(&text, ImGuiTextFlags_NoWidthForLargeClippedText);
 }
 
-pub unsafe fn TextColored(mut col: &mut ImVec4, fmt: &str) {
+pub unsafe fn TextColored(mut col: &ImVec4, fmt: String) {
     // va_list args;
     // va_start(args, fmt);
     TextColoredV(col, fmt);
     // va_end(args);
 }
 
-pub unsafe fn TextColoredV(mut col: &mut ImVec4, fmt: &str) {
+pub unsafe fn TextColoredV(mut col: &ImVec4, fmt: String) {
     PushStyleColor2(ImGuiCol_Text, col);
     if fmt[0] == '%' && fmt[1] == 's' && fmt[2] == 0 {
         TextEx(fmt, ImGuiTextFlags_NoWidthForLargeClippedText);
@@ -224,14 +224,14 @@ pub unsafe fn TextColoredV(mut col: &mut ImVec4, fmt: &str) {
     PopStyleColor(0);
 }
 
-pub unsafe fn TextDisabled(fmt: &str) {
+pub unsafe fn TextDisabled(fmt: String) {
     // va_list args;
     // va_start(args, fmt);
     TextDisabledV(fmt);
     // va_end(args);
 }
 
-pub unsafe fn TextDisabledV(fmt: &str) {
+pub unsafe fn TextDisabledV(fmt: String) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     PushStyleColor(ImGuiCol_Text, g.Style.Colors[ImGuiCol_TextDisabled]);
     if fmt[0] == '%' && fmt[1] == 's' && fmt[2] == 0 {
@@ -244,14 +244,14 @@ pub unsafe fn TextDisabledV(fmt: &str) {
     PopStyleColor(0);
 }
 
-pub unsafe fn TextWrapped(fmt: &str) {
+pub unsafe fn TextWrapped(fmt: String) {
     // va_list args;
     // va_start(args, fmt);
     TextWrappedV(fmt);
     // va_end(args);
 }
 
-pub unsafe fn TextWrappedV(fmt: &str) {
+pub unsafe fn TextWrappedV(fmt: String) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut need_backup: bool = (g.Currentwindow.DC.TextWrapPos < 0.0); // Keep existing wrap position if one is already set
     if need_backup {
@@ -269,7 +269,7 @@ pub unsafe fn TextWrappedV(fmt: &str) {
     }
 }
 
-pub unsafe fn LabelText(label: &str, fmt: &str) {
+pub unsafe fn LabelText(label: String, fmt: String) {
     // va_list args;
     // va_start(args, fmt);
     LabelTextV(label, fmt);
@@ -277,7 +277,7 @@ pub unsafe fn LabelText(label: &str, fmt: &str) {
 }
 
 // Add a label+text combo aligned to other label+value widgets
-pub unsafe fn LabelTextV(label: &str, fmt: &str) {
+pub unsafe fn LabelTextV(label: String, fmt: String) {
     let mut window: *mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems {
         return;
@@ -310,7 +310,7 @@ pub unsafe fn LabelTextV(label: &str, fmt: &str) {
         ),
     );
     ItemSize(&otal_bb.GetSize(), style.FramePadding.y);
-    if !ItemAdd(&mut total_bb, 0, null(), 0) {
+    if !ItemAdd(&mut total_bb, 0, None, 0) {
         return;
     }
 
@@ -321,7 +321,7 @@ pub unsafe fn LabelTextV(label: &str, fmt: &str) {
         value_text_begin.as_str(),
         &value_size,
         Some(&ImVec2::from_floats(0.0, 0.0)),
-        null(),
+        None,
     );
     if (label_size.x > 0.0) {
         RenderText(
@@ -335,7 +335,7 @@ pub unsafe fn LabelTextV(label: &str, fmt: &str) {
     }
 }
 
-pub unsafe fn BulletText(fmt: &str) {
+pub unsafe fn BulletText(fmt: String) {
     // va_list args;
     // va_start(args, fmt);
     BulletTextV(fmt);
@@ -343,8 +343,8 @@ pub unsafe fn BulletText(fmt: &str) {
 }
 
 // Text with a little bullet aligned to the typical tree node.
-pub unsafe fn BulletTextV(fmt: &str) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+pub unsafe fn BulletTextV(fmt: String) {
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return;
     }
@@ -353,10 +353,10 @@ pub unsafe fn BulletTextV(fmt: &str) {
     let setyle = &mut g.Style;
 
     // text_begin: &str, *text_end;
-    // let mut text_begin: *mut c_char = null_mut();
-    // let mut text_end: *mut c_char = null_mut();
+    // let mut text_begin: *mut c_char = None;
+    // let mut text_end: *mut c_char = None;
     let text_begin = ImFormatStringToTempBufferV(fmt);
-    let label_size: ImVec2 = CalcTextSize(text_begin.as_str(), false, 0.0);
+    let label_size: ImVec2 = CalcTextSize(text_begin, false, 0.0);
     let total_size: ImVec2 = ImVec2::from_floats(
         g.FontSize
             + (if label_size.x > 0.0 {
@@ -370,7 +370,7 @@ pub unsafe fn BulletTextV(fmt: &str) {
     pos.y += window.DC.CurrLineTextBaseOffset;
     ItemSize(&total_size, 0.0);
     let mut bb: ImRect = ImRect::new(pos, pos + total_size);
-    if !ItemAdd(&mut bb, 0, null(), 0) {
+    if !ItemAdd(&mut bb, 0, None, 0) {
         return;
     }
 

@@ -7,7 +7,7 @@ use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, Im
 use crate::{GImGui, ImGuiViewport};
 use crate::axis::{ImGuiAxis, ImGuiAxis_X};
 use crate::backend_flags::{ImGuiBackendFlags_HasGamepad, ImGuiBackendFlags_HasSetMousePos};
-use crate::color::IM_COL32;
+use crate::color::color_u32_from_rgba;
 use crate::condition::ImGuiCond_Always;
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
@@ -276,11 +276,11 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
     let mut buf: [c_char;128] = [0;128];
     if (IsMouseHoveringRect(&cand.Min, &cand.Max, false))
     {
-        // ImFormatString(buf, buf.len(), "dbox ({},{}->%.40f32)\ndcen ({},{}->%.40f32)\nd ({},{}->%.40f32)\nnav %c, quadrant %c", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.NavMoveDir], "WENS"[quadrant]);
+        // ImFormatString(buf, buf.len(), "dbox ({},{}->%.40f32)\ndcen ({},{}->%.40f32)\nd ({},{}->%.40f32)\nnav {}, quadrant {}", dbx, dby, dist_box, dcx, dcy, dist_center, dax, day, dist_axial, "WENS"[g.NavMoveDir], "WENS"[quadrant]);
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window.Viewport);
-        draw_list.AddRect(&curr.Min, &curr.Max, IM_COL32(255, 200, 0, 100), 0.0);
-        draw_list.AddRect(&cand.Min, &cand.Max, IM_COL32(255, 255, 0, 200), 0.0);
-        draw_list.AddRectFilled(cand.Max - ImVec2::from_floats(4.0, 4.0), cand.Max + CalcTextSize(buf.as_ptr(), null(), false, 0.0) + ImVec2::from_floats(4.0, 4.0), IM_COL32(40, 0, 0, 150), 0.0, 0);
+        draw_list.AddRect(&curr.Min, &curr.Max, color_u32_from_rgba(255, 200, 0, 100), 0.0);
+        draw_list.AddRect(&cand.Min, &cand.Max, color_u32_from_rgba(255, 255, 0, 200), 0.0);
+        draw_list.AddRectFilled(cand.Max - ImVec2::from_floats(4.0, 4.0), cand.Max + CalcTextSize(buf.as_ptr(), None, false, 0.0) + ImVec2::from_floats(4.0, 4.0), color_u32_from_rgba(40, 0, 0, 150), 0.0, 0);
         draw_list.AddText(&cand.Max, !0, buf.as_ptr());
     }
     else if (g.IO.KeyCtrl) // Hold to preview score in matching quadrant. Press C to rotate.
@@ -289,8 +289,8 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
         {
             // ImFormatString(buf, buf.len(), "{}f/{}f", dist_box, dist_center);
             let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window.Viewport);
-            draw_list.AddRectFilled(&cand.Min, &cand.Max, IM_COL32(255, 0, 0, 200), 0.0, 0);
-            draw_list.AddText(&cand.Min, IM_COL32(255, 255, 255, 255), buf.as_ptr());
+            draw_list.AddRectFilled(&cand.Min, &cand.Max, color_u32_from_rgba(255, 0, 0, 200), 0.0, 0);
+            draw_list.AddText(&cand.Min, color_u32_from_rgba(255, 255, 255, 255), buf.as_ptr());
         }
     }
 // #endif
@@ -698,8 +698,8 @@ pub unsafe fn NavUpdate()
     if (g.NavWindow) {
         NavSaveLastChildNavWindowIntoParent(g.NavWindow);
     }
-    if (is_not_null(g.NavWindow) && g.NavWindow.NavLastChildNavWindow != null_mut() && g.NavLayer == ImGuiNavLayer_Main) {
-        g.NavWindow.NavLastChildNavWindow = null_mut();
+    if (is_not_null(g.NavWindow) && g.NavWindow.NavLastChildNavWindow != None && g.NavLayer == ImGuiNavLayer_Main) {
+        g.NavWindow.NavLastChildNavWindow = None;
     }
 
     // Update CTRL+TAB and Windowing features (hold Square to move/resize/etc.)
@@ -818,7 +818,7 @@ pub unsafe fn NavUpdate()
     {
         io.MousePos = NavCalcPreferredRefPos();io.MousePosPrev = NavCalcPreferredRefPos();
         io.WantSetMousePos = true;
-        //IMGUI_DEBUG_LOG_IO("SetMousePos: (%.1f,%.10.0)\n", io.MousePos.x, io.MousePos.y);
+        //IMGUI_DEBUG_LOG_IO("SetMousePos: ({},{})\n", io.MousePos.x, io.MousePos.y);
     }
 
     // [DEBUG]
@@ -832,15 +832,15 @@ pub unsafe fn NavUpdate()
         for layer in 0 .. 2
             {
             let r: ImRect =  WindowRectRelToAbs(g.NavWindow, &g.NavWindow.NavRectRel[layer]);
-            draw_list.AddRect(&r.Min, &r.Max, IM_COL32(255, 200, 0, 255), 0.0);
+            draw_list.AddRect(&r.Min, &r.Max, color_u32_from_rgba(255, 200, 0, 255), 0.0);
         }
 
-        let col: u32 = if (!g.NavWindow.Hidden) { IM_COL32(255, 0, 255, 255) } else { IM_COL32(255, 0, 0, 255) };
+        let col: u32 = if (!g.NavWindow.Hidden) { color_u32_from_rgba(255, 0, 255, 255) } else { color_u32_from_rgba(255, 0, 0, 255) };
         let mut p: ImVec2 =  NavCalcPreferredRefPos();
         let mut buf: [c_char;32] = [0;32];
         // ImFormatString(buf, 32, "{}", g.NavLayer);
         draw_list.AddCircleFilled(&p, 3.0, col, 0);
-        draw_list.AddText2(null_mut(), 13.0, p + ImVec2::from_floats(8.0, -4.0), col, buf.as_ptr(), null(), 0.0, null());
+        draw_list.AddText2(None, 13.0, p + ImVec2::from_floats(8.0, -4.0), col, buf.as_ptr(), None, 0.0, null());
     }
 // #endif
 }
@@ -940,7 +940,7 @@ pub unsafe fn NavUpdateCreateMoveRequest()
     // When using gamepad, we project the reference nav bounding box into window visible area.
     // This is to allow resuming navigation inside the visible area after doing a large amount of scrolling, since with gamepad every movements are relative
     // (can't focus a visible object like we can with the mouse).
-    if g.NavMoveSubmitted && g.NavInputSource == ImGuiInputSource_Gamepad && g.NavLayer == ImGuiNavLayer_Main && window != null_mut()// && (g.NavMoveFlags & ImGuiNavMoveFlags_Forwarded))
+    if g.NavMoveSubmitted && g.NavInputSource == ImGuiInputSource_Gamepad && g.NavLayer == ImGuiNavLayer_Main && window != None// && (g.NavMoveFlags & ImGuiNavMoveFlags_Forwarded))
     {
         let mut clamp_x: bool =  (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopX | ImGuiNavMoveFlags_WrapX)) == 0;
         let mut clamp_y: bool =  (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopY | ImGuiNavMoveFlags_WrapY)) == 0;
@@ -982,7 +982,7 @@ pub unsafe fn NavUpdateCreateTabbingRequest()
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow =  g.NavWindow;
     // IM_ASSERT(g.NavMoveDir == ImGuiDir_None);
-    if window == null_mut() || g.NavWindowingTarget != null_mut() || flag_set(window.Flags, ImGuiWindowFlags_NoNavInputs) {
+    if window == None || g.NavWindowingTarget != None || flag_set(window.Flags, ImGuiWindowFlags_NoNavInputs) {
         return;
     }
 
@@ -1022,7 +1022,7 @@ pub unsafe fn NavMoveRequestApplyResult()
         &mut g.NavMoveResultLocal
     } else {
     if g.NavMoveResultOther.ID != 0
-    { &g.NavMoveResultOther } else { null_mut() }};
+    { &g.NavMoveResultOther } else { None }};
 
     // Tabbing forward wrap
     if g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing {
@@ -1032,7 +1032,7 @@ pub unsafe fn NavMoveRequestApplyResult()
     }
 
     // In a situation when there is no results but NavId != 0, re-enable the Navigation highlight (because g.NavId is not considered as a possible result)
-    if result == null_mut()
+    if result == None
     {
         if g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing {
             g.NavMoveFlags |= ImGuiNavMoveFlags_DontSetNavHighlight;
@@ -1178,7 +1178,7 @@ pub unsafe fn NavUpdatePageUpPageDown() -> c_float
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window: *mut ImGuiWindow =  g.NavWindow;
-    if flag_set(window.Flags, ImGuiWindowFlags_NoNavInputs) || g.NavWindowingTarget != null_mut() {
+    if flag_set(window.Flags, ImGuiWindowFlags_NoNavInputs) || g.NavWindowingTarget != None {
         return 0.0;
     }
 
@@ -1262,7 +1262,7 @@ pub unsafe fn NavEndFrame()
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Show CTRL+TAB list window
-    if g.NavWindowingTarget != null_mut() {
+    if g.NavWindowingTarget != None {
         NavUpdateWindowingOverlay();
     }
 
@@ -1356,7 +1356,7 @@ pub unsafe fn FindWindowNavFocusable(i_start: c_int, i_stop: c_int, dir: c_int) 
         }
         i += dir;
     }
-    return null_mut();
+    return None;
 }
 
 pub unsafe fn NavUpdateWindowingHighlightWindow(focus_change_dir: c_int)
@@ -1390,21 +1390,21 @@ pub unsafe fn NavUpdateWindowing()
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut io = &mut g.IO;
 
-    let mut apply_focus_window: *mut ImGuiWindow =  null_mut();
+    let mut apply_focus_window: *mut ImGuiWindow =  None;
     let mut apply_toggle_layer: bool =  false;
 
     let mut modal_window: *mut ImGuiWindow =  GetTopMostPopupModal();
     let mut allow_windowing: bool =  (modal_window == null_mut());
     if !allow_windowing {
-        g.NavWindowingTarget = null_mut();
+        g.NavWindowingTarget = None;
     }
 
     // Fade out
-    if is_not_null(g.NavWindowingTargetAnim) && g.NavWindowingTarget == null_mut()
+    if is_not_null(g.NavWindowingTargetAnim) && g.NavWindowingTarget == None
     {
         g.NavWindowingHighlightAlpha = ImMax(g.NavWindowingHighlightAlpha - io.DeltaTime * 10.0, 0.0);
         if g.DimBgRatio <= 0.0 && g.NavWindowingHighlightAlpha <= 0.0 {
-            g.NavWindowingTargetAnim = null_mut();
+            g.NavWindowingTargetAnim = None;
         }
     }
 
@@ -1419,7 +1419,7 @@ pub unsafe fn NavUpdateWindowing()
         } else { FindWindowNavFocusable(g.WindowsFocusOrder.Size - 1, -INT_MAX, -1) };
         if is_not_null(window)
         {
-        g.NavWindowingTarget = null_mut();
+        g.NavWindowingTarget = None;
             g.NavWindowingTargetAnim = window.RootWindow;
             g.NavWindowingTimer = 0.0;
             g.NavWindowingHighlightAlpha = 0.0;
@@ -1455,7 +1455,7 @@ pub unsafe fn NavUpdateWindowing()
             else if !g.NavWindowingToggleLayer {
                 apply_focus_window = g.NavWindowingTarget;
             }
-            g.NavWindowingTarget= null_mut();
+            g.NavWindowingTarget= None;
         }
     }
 
@@ -1529,9 +1529,9 @@ pub unsafe fn NavUpdateWindowing()
     }
 
     // Apply final focus
-    if is_not_null(apply_focus_window) && (g.NavWindow == null_mut() || apply_focus_window != g.NavWindow.RootWindow)
+    if is_not_null(apply_focus_window) && (g.NavWindow == None || apply_focus_window != g.NavWindow.RootWindow)
     {
-        previous_viewport: *mut ImGuiViewport = if is_not_null(g.NavWindow) { g.NavWindow.Viewport } else { null_mut() };
+        previous_viewport: *mut ImGuiViewport = if is_not_null(g.NavWindow) { g.NavWindow.Viewport } else { None };
         ClearActiveID();
         NavRestoreHighlightAfterMove();
         apply_focus_window = NavRestoreLastChildNavWindow(apply_focus_window);
@@ -1559,7 +1559,7 @@ pub unsafe fn NavUpdateWindowing()
         }
     }
     if (apply_focus_window) {
-        g.NavWindowingTarget = null_mut();
+        g.NavWindowingTarget = None;
     }
 
     // Apply menu/layer toggle
@@ -1623,7 +1623,7 @@ pub unsafe fn NavUpdateWindowingOverlay()
         return;
     }
 
-    if g.NavWindowingListWindow == null_mut() {
+    if g.NavWindowingListWindow == None {
         g.NavWindowingListWindow = FindWindowByName(str_to_const_c_char_ptr("###NavWindowingList"));
     }
     let viewport: *const ImGuiViewport = /*g.NavWindow ? g.Navwindow.Viewport :*/ GetMainViewport();

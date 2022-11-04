@@ -14,7 +14,7 @@ use crate::vec2::{ImVec2, ImVec2ih};
 use crate::window::find::{FindWindowByName, GetCombinedRootWindow, IsWindowChildOf};
 use crate::window::focus::FocusWindow;
 use crate::window::ImGuiWindow;
-use crate::window::ops::IsWindowContentHoverable;
+use crate::window::ops::{GetCurrentWindow, IsWindowContentHoverable};
 use crate::window::window_flags::ImGuiWindowFlags_NoNavFocus;
 
 pub unsafe fn IsWindowHovered(flags: ImGuiHoveredFlags) -> bool {
@@ -22,7 +22,7 @@ pub unsafe fn IsWindowHovered(flags: ImGuiHoveredFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut ref_window: *mut ImGuiWindow = g.HoveredWindow;
     let mut cur_window: *mut ImGuiWindow = g.CurrentWindow;
-    if ref_window == null_mut() {
+    if ref_window == None {
         return false;
     }
 
@@ -331,9 +331,9 @@ pub unsafe fn SetNextWindowDockID(id: ImGuiID, cond: ImGuiCond)
 }
 
 // ImDrawList* GetWindowDrawList()
-pub unsafe fn GetWindowDrawList() -> *mut ImDrawList
+pub unsafe fn GetWindowDrawList() -> ImDrawList
 {
-    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    let mut window =  GetCurrentWindow();
     return window.DrawList;
 }
 

@@ -56,7 +56,7 @@ pub unsafe fn Dummy(size: &ImVec2)
 
     let mut bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size);
     ItemSize(size, 0.0);
-    ItemAdd(&mut bb, 0, null(), 0);
+    ItemAdd(&mut bb, 0, None, 0);
 }
 
 pub unsafe fn NewLine()

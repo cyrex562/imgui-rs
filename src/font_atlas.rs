@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::color::IM_COL32;
+use crate::color::color_u32_from_rgba;
 use crate::file_ops::ImFileLoadToMemory;
 use crate::font::ImFont;
 use crate::font_atlas_custom_rect::ImFontAtlasCustomRect;
@@ -21,6 +21,7 @@ use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_ushort, c_void, size_t};
 use std::ptr::{null, null_mut};
+use crate::font_builder_io::ImFontBuilderIO;
 
 // Load and rasterize multiple TTF/OTF fonts into a same texture. The font atlas will build a single texture holding:
 //  - One or more fonts.
@@ -48,9 +49,9 @@ pub struct ImFontAtlas {
     // Build flags (see ImFontAtlasFlags_)
     pub TexID: ImTextureID,
     // User data to refer to the texture once it has been uploaded to user's graphic systems. It is passed back to you during rendering via the ImDrawCmd structure.
-    pub TexDesiredWidth: size_t,
+    pub TexDesiredWidth: usize,
     // Texture width desired by user before Build(). Must be a power-of-two. If have many glyphs your graphics API have texture size restrictions you may want to increase texture width to decrease height.
-    pub TexGlyphPadding: c_int,
+    pub TexGlyphPadding: i32,
     // Padding between glyphs within texture in pixels. Defaults to 1. If your rendering method doesn't rely on bilinear filtering you may set this to 0 (will also need to set AntiAliasedLinesUseTex = false).
     pub Locked: bool, // Marked as Locked by NewFrame() so attempt to modify the atlas will assert.
 
@@ -60,36 +61,36 @@ pub struct ImFontAtlas {
     // Set when texture was built matching current font input
     pub TexPixelsUseColors: bool,
     // Tell whether our texture data is known to use colors (rather than just alpha channel), in order to help backend select a format.
-    pub TexPixelsAlpha8: *mut c_uchar,
+    pub TexPixelsAlpha8: Vec<u8>,
     // char*              TexPixelsAlpha8;    // 1 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight
-    pub TexPixelsRGBA32: *mut c_uint,
+    pub TexPixelsRGBA32: Vec<u8>,
     //  unsigned c_int*               TexPixelsRGBA32;    // 4 component per pixel, each component is unsigned 8-bit. Total size = TexWidth * TexHeight * 4
-    pub TexWidth: size_t,
+    pub TexWidth: usize,
     // Texture width calculated during Build().
-    pub TexHeight: size_t,
+    pub TexHeight: usize,
     // Texture height calculated during Build().
     pub TexUvScale: ImVec2,
     // = (1.0f/TexWidth, 1.0f/TexHeight)
     pub TexUvWhitePixel: ImVec2,
     // Texture coordinates to a white pixel
-    pub Fonts: Vec<*mut ImFont>,
+    pub Fonts: Vec<ImFont>,
     // Hold all the fonts returned by AddFont*. Fonts[0] is the default font upon calling NewFrame(), use PushFont()/PopFont() to change the current font.
     pub CustomRects: Vec<ImFontAtlasCustomRect>,
     // Rectangles for packing custom texture data into the atlas.
     pub ConfigData: Vec<ImFontConfig>,
     // Configuration data
     // ImVec4                      TexUvLines[IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1];  // UVs for baked anti-aliased lines
-    pub TexUvLines: [ImVec4; IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1],
+    pub TexUvLines: Vec<ImVec4>, //[ImVec4; IM_DRAWLIST_TEX_LINES_WIDTH_MAX + 1],
 
     // [Internal] Font builder
-    pub FontBuilderIO: *const ImFontBuilderIO,
+    pub FontBuilderIO: ImFontBuilderIO,
     //    const ImFontBuilderIO*      FontBuilderIO;      // Opaque interface to a font builder (default to stb_truetype, can be changed to use FreeType by defining IMGUI_ENABLE_FREETYPE).
-    pub FontBuilderFlags: c_uint, // unsigned c_int                FontBuilderFlags;   // Shared flags (for all fonts) for custom font builder. THIS IS BUILD IMPLEMENTATION DEPENDENT. Per-font override is also available in ImFontConfig.
+    pub FontBuilderFlags: i32, // unsigned c_int                FontBuilderFlags;   // Shared flags (for all fonts) for custom font builder. THIS IS BUILD IMPLEMENTATION DEPENDENT. Per-font override is also available in ImFontConfig.
 
     // [Internal] Packing data
-    pub PackIdMouseCursors: c_int,
+    pub PackIdMouseCursors: i32,
     // Custom texture rectangle ID for white pixel and mouse cursors
-    pub PackIdLines: c_int, // Custom texture rectangle ID for baked anti-aliased lines
+    pub PackIdLines: i32, // Custom texture rectangle ID for baked anti-aliased lines
 
                             // [Obsolete]
                             //typedef ImFontAtlasCustomRect    CustomRect;         // OBSOLETED in 1.72+
@@ -116,14 +117,14 @@ impl ImFontAtlas {
 
         // Create new font
         if !font_cfg.MergeMode {
-            self.Fonts.push(&mut ImFont::default());
+            self.Fonts.push(ImFont::default());
         } else {
         }
         // IM_ASSERT(!Fonts.empty() && "Cannot use MergeMode for the first font"); // When using MergeMode make sure that a font has already been added before. You can use GetIO().Fonts.AddFontDefault() to add the default imgui font.
 
         self.ConfigData.push(*font_cfg);
         let mut new_font_cfg = self.ConfigData.last_mut().unwrap();
-        if new_font_cfg.DstFont == null_mut() {
+        if new_font_cfg.DstFont == None {
             new_font_cfg.DstFont = *self.Fonts.last_mut().unwrap();
         }
         if !new_font_cfg.FontDataOwnedByAtlas {
@@ -168,7 +169,7 @@ impl ImFontAtlas {
         font_cfg.GlyphOffset.y = 1 * IM_FLOOR(font_cfg.SizePixels / 13.00); // Add +1 offset per 13 units
 
         let mut ttf_compressed_base85: *const c_char = self.GetDefaultCompressedFontDataTTFBase85();
-        let glyph_ranges: *const ImWchar = if font_cfg.GlyphRanges != null_mut() {
+        let glyph_ranges: *const ImWchar = if font_cfg.GlyphRanges != None {
             font_cfg.GlyphRanges
         } else {
             self.GetGlyphRangesDefault()
@@ -196,7 +197,7 @@ impl ImFontAtlas {
             ImFileLoadToMemory(filename, str_to_const_c_char_ptr("rb"), &mut data_size, 0);
         if !data {
             // IM_ASSERT_USER_ERROR(0, "Could not load font file!");
-            return null_mut();
+            return None;
         }
         let font_cfg = if is_not_null(font_cfg_template) {
             *font_cfg_template
@@ -205,7 +206,7 @@ impl ImFontAtlas {
         };
         if font_cfg.Name[0] == '\0' as c_char {
             // Store a short copy of filename into into the font name for convenience
-            let mut p: *const c_char = null();
+            let mut p: *const c_char = None;
             // for (p = filename + strlen(filename); p > filename && p[-1] != '/' && p[-1] != '\\'; p--)
             while p > filename && p[-1] != '/' as c_char && p[-1] != '\\' as c_char {
                 // ImFormatString(font_cfg.Name, IM_ARRAYSIZE(font_cfg.Name), "{}, {}px", p, size_pixels);
@@ -307,7 +308,7 @@ impl ImFontAtlas {
         for i in 0..self.ConfigData.len() {
             if is_not_null(self.ConfigData[i].FontData) && self.ConfigData[i].FontDataOwnedByAtlas {
                 IM_FREE(self.ConfigData[i].FontData);
-                self.ConfigData[i].FontData = null_mut();
+                self.ConfigData[i].FontData = None;
             }
         }
 
@@ -317,7 +318,7 @@ impl ImFontAtlas {
             if self.Fonts[i].ConfigData >= self.ConfigData.as_ptr()
                 && self.Fonts[i].ConfigData < self.ConfigData.Data + self.ConfigData.len()
             {
-                self.Fonts[i].ConfigData = null_mut();
+                self.Fonts[i].ConfigData = None;
                 self.Fonts[i].ConfigDataCount = 0;
             }
         }
@@ -337,8 +338,8 @@ impl ImFontAtlas {
         if self.TexPixelsRGBA32 {
             IM_FREE(self.TexPixelsRGBA32);
         }
-        self.TexPixelsAlpha8 = null_mut();
-        self.TexPixelsRGBA32 = null_mut();
+        self.TexPixelsAlpha8 = None;
+        self.TexPixelsRGBA32 = None;
         self.TexPixelsUseColors = false;
         // Important: we leave TexReady untouched
     }
@@ -377,7 +378,7 @@ impl ImFontAtlas {
         //   using a hot-reloading scheme that messes up static data, store your own instance of ImFontBuilderIO somewhere
         //   and point to it instead of pointing directly to return value of the GetBuilderXXX functions.
         let mut builder_io: *const ImFontBuilderIO = self.FontBuilderIO;
-        if builder_io == null_mut() {
+        if builder_io == None {
             // #ifdef IMGUI_ENABLE_FREETYPE
             builder_io = GetBuilderForFreeType();
             // #elif defined(IMGUI_ENABLE_STB_TRUETYPE)
@@ -400,7 +401,7 @@ impl ImFontAtlas {
         out_bytes_per_pixel: *mut size_t,
     ) {
         // Build atlas on demand
-        if self.TexPixelsAlpha8 == null_mut() {
+        if self.TexPixelsAlpha8 == None {
             self.Build();
         }
 
@@ -427,15 +428,15 @@ impl ImFontAtlas {
         // Convert to RGBA32 format on demand
         // Although it is likely to be the most commonly used format, our font rendering is 1 channel / 8 bpp
         if !self.TexPixelsRGBA32 {
-            let mut pixels: *mut c_uchar = null_mut();
-            self.GetTexDataAsAlpha8(&mut pixels, null_mut(), null_mut(), null_mut());
+            let mut pixels: *mut c_uchar = None;
+            self.GetTexDataAsAlpha8(&mut pixels, None, None, null_mut());
             if pixels {
                 self.TexPixelsRGBA32 = libc::malloc(self.TexWidth * self.TexHeight * 4);
                 let mut src: *mut c_uchar = pixels;
                 let mut dst: *mut c_uint = self.TexPixelsRGBA32;
                 // for (let n: c_int = TexWidth * TexHeight; n > 0; n--)
                 for n in self.TexWidth + self.TexHeight > 0 {
-                    *dst = IM_COL32(255, 255, 255, (*src) as u32);
+                    *dst = color_u32_from_rgba(255, 255, 255, (*src) as u32);
                     dst += 1;
                     src += 1;
                 }

@@ -21,8 +21,8 @@ impl ImSpan<T> {
     // inline ImSpan()                                 { Data = DataEnd = None; }
     pub fn new() -> Self {
         Self {
-            Data: null_mut(),
-            DataEnd: null_mut(),
+            Data: None,
+            DataEnd: None,
         }
     }
     // inline ImSpan(*mut T data, size: c_int)                { Data = data; DataEnd = data + size; }

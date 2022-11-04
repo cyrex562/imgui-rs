@@ -33,7 +33,7 @@ pub unsafe fn SeparatorEx(flags: ImGuiSeparatorFlags)
         let y2: c_float =  window.DC.CursorPos.y + window.DC.CurrLineSize.y;
         let mut bb: ImRect = ImRect::new(ImVec2::from_floats(window.DC.CursorPos.x, y1), ImVec2::from_floats(window.DC.CursorPos.x + thickness_draw, y2));
         ItemSize(&ImVec2::from_floats(thickness_layout, 0.0), 0.0);
-        if !ItemAdd(&mut bb, 0, null(), 0) { return ; }
+        if !ItemAdd(&mut bb, 0, None, 0) { return ; }
 
         // Draw
         window.DrawList.AddLine(&ImVec2::from_floats(bb.Min.x, bb.Min.y), &ImVec2::from_floats(bb.Min.x, bb.Max.y), GetColorU32(ImGuiCol_Separator, 0.0), 0.0);
@@ -60,7 +60,7 @@ pub unsafe fn SeparatorEx(flags: ImGuiSeparatorFlags)
             x2 = table.Columns[table.CurrentColumn].MaxX;
         }
 
-        columns: *mut ImGuiOldColumns = if flags & ImGuiSeparatorFlags_SpanAllColumns { window.DC.CurrentColumns} else { null_mut()};
+        columns: *mut ImGuiOldColumns = if flags & ImGuiSeparatorFlags_SpanAllColumns { window.DC.CurrentColumns} else { None};
         if columns {
             PushColumnsBackground(); }
 
@@ -68,7 +68,7 @@ pub unsafe fn SeparatorEx(flags: ImGuiSeparatorFlags)
         // FIXME: This prevents ->CursorMaxPos based bounding box evaluation from working (e.g. TableEndCell)
         let mut bb: ImRect = ImRect::new(ImVec2::from_floats(x1, window.DC.CursorPos.y), ImVec2::from_floats(x2, window.DC.CursorPos.y + thickness_draw));
         ItemSize(&ImVec2::from_floats(0.0, thickness_layout), 0.0);
-        let item_visible: bool = ItemAdd(&mut bb, 0, null(), 0);
+        let item_visible: bool = ItemAdd(&mut bb, 0, None, 0);
         if item_visible
         {
             // Draw

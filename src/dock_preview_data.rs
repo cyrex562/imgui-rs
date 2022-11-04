@@ -35,7 +35,7 @@ impl ImGuiDockPreviewData {
         out.IsCenterAvailable = false;
         out.IsSidesAvailable = false;
         out.IsSplitDirExplicit = false;
-        out.SplitNode= null_mut(); 
+        out.SplitNode= None;
         out.SplitDir = ImGuiDir_None; 
         out.SplitRatio = 0.0; 
         // for (let n: c_int = 0; n < DropRectsDraw.len(); n++) DropRectsDraw[n] = ImRect(f32::MAX, f32::MAX, -f32::MAX, -f32::MAX);

@@ -43,9 +43,9 @@ use std::ptr::{null, null_mut};
 
 // BeginChildEx: bool(name: *const c_char, ImGuiID id, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags flags)
 pub unsafe fn BeginChildEx(
-    name: &str,
+    name: String,
     id: ImGuiID,
-    size_arg: &ImVec2,
+    size_arg: ImVec2,
     border: bool,
     mut flags: ImGuiWindowFlags,
 ) -> bool {
@@ -83,10 +83,10 @@ pub unsafe fn BeginChildEx(
     let mut temp_window_name: String = String::default();
     if name {
         // TODO:
-        // ImFormatStringToTempBuffer(&mut temp_window_name, null_mut(), "{}/{}_{}", parent_window.Name, name, id);
+        // ImFormatStringToTempBuffer(&mut temp_window_name, None, "{}/{}_{}", parent_window.Name, name, id);
     } else {
         // TODO:
-        // ImFormatStringToTempBuffer(&mut temp_window_name, null_mut(), "{}/{}", parent_window.Name, id);
+        // ImFormatStringToTempBuffer(&mut temp_window_name, None, "{}/{}", parent_window.Name, id);
     }
 
     let backup_border_size: c_float = g.Style.ChildBorderSize;
@@ -121,15 +121,15 @@ pub unsafe fn BeginChildEx(
 
 // BeginChild: bool(str_id: *const c_char, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild(
-    str_id: &str,
-    size_arg: &ImVec2,
+    str_id: String,
+    size_arg: ImVec2,
     border: bool,
     extra_flags: ImGuiWindowFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     return BeginChildEx(
         str_id,
-        window.id_from_str(str_id),
+        window.id_from_str(str_id.clone()),
         size_arg,
         border,
         extra_flags,

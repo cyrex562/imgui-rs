@@ -125,7 +125,7 @@ pub unsafe fn ImStristr(mut haystack: * c_char, haystack_end: * c_char, needle: 
         }
         haystack += 1;
     }
-    return null();
+    return None;
 }
 
 // Trim str by offsetting contents when there's leading data + writing a \0 at the trailing position. We use this in situation where the cost is negligible.
@@ -229,7 +229,7 @@ pub fn ImFormatStringToTempBuffer(out_buf: *mut *mut c_char, out_buf_end: *mut *
 }
 
 // void ImFormatStringToTempBufferV(const char** out_buf, const char** out_buf_end, const char* fmt, va_list args)
-pub fn ImFormatStringToTempBufferV(fmt_str: &str) -> String {
+pub fn ImFormatStringToTempBufferV(fmt_str: String) -> String {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     // int buf_len = ImFormatStringV(g.TempBuffer.Data, g.TempBuffer.Size, fmt, args);
     // *out_buf = g.TempBuffer.Data;
@@ -248,7 +248,7 @@ pub fn ImFormatStringToTempBufferV(fmt_str: &str) -> String {
 // A nearly-branchless UTF-8 decoder, based on work of Christopher Wellons (https://github.com/skeeto/branchless-utf8).
 // We handle UTF-8 decoding error by skipping forward.
 // int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCharFromUtf8(out_char: &mut c, in_text: &str) -> c_int
+pub unsafe fn ImTextCharFromUtf8(out_char: &mut c, in_text: String) -> c_int
 {
     // pub const lengths: [c_char;32] = [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0 ];
     // pub const masks: [c_int;5]  = [ 0x00, 0x7f, 0x1f, 0x0f32, 0x07 ];
@@ -303,7 +303,7 @@ pub unsafe fn ImTextCharFromUtf8(out_char: &mut c, in_text: &str) -> c_int
 }
 
 // int ImTextStrFromUtf8(buf: *mut ImWchar, int buf_size, const char* in_text, const char* in_text_end, const char** in_text_remaining)
-pub unsafe fn ImTextStrFromUtf8(buf: &mut String, buf_size: usize, in_text: &String)
+pub unsafe fn ImTextStrFromUtf8(buf: &mut String, buf_size: usize, in_text: Stringing)
 {
     // // buf_out: *mut ImWchar = buf;
     // let mut buf_out = buf;
@@ -328,7 +328,7 @@ pub unsafe fn ImTextStrFromUtf8(buf: &mut String, buf_size: usize, in_text: &Str
 }
 
 // int ImTextCountCharsFromUtf8(const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCountCharsFromUtf8(mut in_text: &str) -> usize
+pub unsafe fn ImTextCountCharsFromUtf8(mut in_text: String) -> usize
 {
     // // int char_count = 0;
     // let mut char_count: i32 = 0;
@@ -437,7 +437,7 @@ pub unsafe fn ImTextStrToUtf8(out_buf: &mut String, out_buf_size: usize, int_tex
 }
 
 // int ImTextCountUtf8BytesFromStr(const in_text: *mut ImWchar, const in_text_end: *mut ImWchar)
-pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: &String) -> usize
+pub unsafe fn ImTextCountUtf8BytesFromStr(mut in_text: Stringing) -> usize
 {
     // let mut bytes_count = 0;
     // while (in_text_end.is_null() || in_text < in_text_end) && *in_text != 0

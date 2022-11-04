@@ -395,7 +395,7 @@ pub unsafe fn SliderBehavior(
 // Note: p_data, p_min and p_max are _pointers_ to a memory address holding the data. For a slider, they are all required.
 // Read code of e.g. SliderFloat(), SliderInt() etc. or examples in 'Demo->Widgets->Data Types' to understand how to use this function directly.
 pub unsafe fn SliderScalar(
-    label: &str,
+    label: String,
     data_type: ImGuiDataType,
     p_data: &mut c_float,
     p_min: c_float,
@@ -447,7 +447,7 @@ pub unsafe fn SliderScalar(
     }
 
     // Default format string when passing NULL
-    if format == null_mut() {
+    if format == None {
         *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
     } else if data_type == ImGuiDataType_S32 && format != String::from("{}") {
         // (FIXME-LEGACY: Patch old "{}f" format string to use "{}", read function more details.)
@@ -489,8 +489,8 @@ pub unsafe fn SliderScalar(
             data_type,
             p_data,
             format,
-            if is_clamp_input { p_min } else { null_mut() },
-            if is_clamp_input { p_max } else { null_mut() },
+            if is_clamp_input { p_min } else { None },
+            if is_clamp_input { p_max } else { None },
         );
     }
 
@@ -568,9 +568,9 @@ pub unsafe fn SliderScalar(
         &frame_bb.Min,
         &frame_bb.Max,
         value_buf,
-        null_mut(),
+        None,
         ImVec2::new(0.5, 0.5),
-        null(),
+        None,
     );
 
     if label_size.x > 0.0 {
@@ -590,7 +590,7 @@ pub unsafe fn SliderScalar(
 
 // Add multiple sliders on 1 line for compact edition of multiple components
 pub unsafe fn SliderScalarN(
-    label: &str,
+    label: String,
     data_type: ImGuiDataType,
     v: &mut [c_float],
     components: usize,
@@ -642,7 +642,7 @@ pub unsafe fn SliderScalarN(
 }
 
 pub unsafe fn SliderFloat(
-    label: &str,
+    label: String,
     v: &mut c_float,
     v_min: c_float,
     v_max: c_float,
@@ -653,7 +653,7 @@ pub unsafe fn SliderFloat(
 }
 
 pub unsafe fn SliderFloat2(
-    label: &str,
+    label: String,
     v: &mut [c_float; 2],
     v_min: &mut [c_float; 2],
     v_max: &mut [c_float; 2],
@@ -673,7 +673,7 @@ pub unsafe fn SliderFloat2(
 }
 
 pub unsafe fn SliderFloat3(
-    label: &str,
+    label: String,
     v: &mut [c_float; 3],
     v_min: &mut [c_float; 3],
     v_max: &mut [c_float; 3],
@@ -684,7 +684,7 @@ pub unsafe fn SliderFloat3(
 }
 
 pub unsafe fn SliderFloat4(
-    label: &str,
+    label: String,
     v: &mut [c_float; 4],
     v_min: &mut [c_float; 4],
     v_max: &mut [c_float; 4],
@@ -704,7 +704,7 @@ pub unsafe fn SliderFloat4(
 }
 
 pub unsafe fn SliderAngle(
-    label: &str,
+    label: String,
     v_rad: &mut c_float,
     v_degrees_min: c_float,
     v_degrees_max: c_float,
@@ -728,7 +728,7 @@ pub unsafe fn SliderAngle(
 }
 
 pub unsafe fn SliderInt(
-    label: &str,
+    label: String,
     v: &mut c_int,
     v_min: &mut c_int,
     v_max: &mut c_int,
@@ -750,7 +750,7 @@ pub unsafe fn SliderInt(
 }
 
 pub unsafe fn SliderInt2(
-    label: &str,
+    label: String,
     v: &mut [c_int; 2],
     v_min: &mut [c_int; 2],
     v_max: &mut [c_int; 2],
@@ -773,7 +773,7 @@ pub unsafe fn SliderInt2(
 }
 
 pub unsafe fn SliderInt3(
-    label: &str,
+    label: String,
     v: [c_int; 3],
     v_min: c_int,
     v_max: c_int,
@@ -804,7 +804,7 @@ pub unsafe fn SliderInt3(
 }
 
 pub unsafe fn SliderInt4(
-    label: &str,
+    label: String,
     v: [c_int; 4],
     v_min: c_int,
     v_max: c_int,
@@ -842,7 +842,7 @@ pub unsafe fn SliderInt4(
 }
 
 pub unsafe fn VSliderScalar(
-    label: &str,
+    label: String,
     size: &ImVec2,
     data_type: ImGuiDataType,
     p_data: &mut c_float,
@@ -876,7 +876,7 @@ pub unsafe fn VSliderScalar(
     );
 
     ItemSize(&bb.GetSize(), style.FramePadding.y);
-    if !ItemAdd(&mut frame_bb, id, null(), 0) {
+    if !ItemAdd(&mut frame_bb, id, None, 0) {
         return false;
     }
 
@@ -968,9 +968,9 @@ pub unsafe fn VSliderScalar(
         ImVec2::new(frame_bb.Min.x, frame_bb.Min.y + style.FramePadding.y),
         &frame_bb.Max,
         value_buf,
-        null_mut(),
+        None,
         ImVec2::new(0.5, 0.0),
-        null_mut(),
+        None,
     );
     if label_size.x > 0.0 {
         RenderText(
@@ -987,7 +987,7 @@ pub unsafe fn VSliderScalar(
 }
 
 pub unsafe fn VSliderFloat(
-    label: &str,
+    label: String,
     size: &ImVec2,
     v: &mut c_float,
     v_min: c_float,
@@ -1008,7 +1008,7 @@ pub unsafe fn VSliderFloat(
 }
 
 pub unsafe fn VSliderInt(
-    label: &str,
+    label: String,
     size: &ImVec2,
     v: &mut c_int,
     v_min: &mut c_int,

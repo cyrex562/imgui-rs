@@ -21,7 +21,7 @@ pub fn PatchFormatStringFloatToInt(fmt: &str) -> String {
     //         if (fmt_start == fmt && fmt_end[0] == 0)
     //             return "{}";
     // let tmp_format: &str;
-    //         ImFormatStringToTempBuffer(&tmp_format, null_mut(), "%.*s%{}{}", (fmt_start - fmt), fmt, fmt_end); // Honor leading and trailing decorations, but lose alignment/precision.
+    //         ImFormatStringToTempBuffer(&tmp_format, None, "%.*s%{}{}", (fmt_start - fmt), fmt, fmt_end); // Honor leading and trailing decorations, but lose alignment/precision.
     //         return tmp_format;
     // // #else
     //         // IM_ASSERT(0 && "DragInt(): Invalid format string!"); // Old versions used a default parameter of "{}f", please replace with e.g. "{}"

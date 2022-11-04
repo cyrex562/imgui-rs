@@ -17,8 +17,8 @@ pub unsafe fn ImFileOpen(filename: * c_char, mode: * c_char) -> ImFileHandle {
     // We need a fopen() wrapper because MSVC/Windows fopen doesn't handle UTF-8 filenames.
     // Previously we used ImTextCountCharsFromUtf8/ImTextStrFromUtf8 here but we now need to support ImWchar16 and ImWchar32!
     if cfg!(windows) {
-        let filename_wsize = Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, filename, -1, null_mut(), 0);
-        let mode_wsize = Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, mode, -1, null_mut(), 0);
+        let filename_wsize = Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, filename, -1, None, 0);
+        let mode_wsize = Win32::Globalization::MultiByteToWideChar(Win32::Globalization::CP_UTF8, 0, mode, -1, None, 0);
         // ImVector<ImWchar> buf;
         let mut buf: Vec<ImWchar> = vec![];
         buf.resize((filename_wsize + mode_wsize) as usize, 0);
@@ -76,25 +76,25 @@ pub unsafe fn ImFileLoadToMemory(filename: * c_char, mode: * c_char, out_file_si
     // f: ImFileHandle;
     let mut f: ImFileHandle = ImFileOpen(filename, mode);
     if f.is_null() {
-        return null_mut();
+        return None;
     }
 
     let file_size = ImFileGetSize(f);
     if file_size == -1 {
         ImFileClose(f);
-        return null_mut();
+        return None;
     }
 
     // void* file_data = IM_ALLOC(file_size + padding_bytes);
     let mut file_data = libc::malloc((file_size + padding_bytes) as size_t);
     if file_data.is_null() {
         ImFileClose(f);
-        return null_mut();
+        return None;
     }
     if ImFileRead(file_data, 1, file_size, f) != file_size {
         ImFileClose(null_mut());
         libc::free(file_data);
-        return null_mut();
+        return None;
     }
     if padding_bytes > 0 {
         libc::memset(((file_data) + file_size), 0, padding_bytes as size_t);
