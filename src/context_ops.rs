@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use std::borrow::BorrowMut;
 use crate::context::ImGuiContext;
 use crate::context_hook::{
     ImGuiContextHook, ImGuiContextHookType, ImGuiContextHookType_PendingRemoval_,
@@ -15,34 +16,35 @@ use std::ptr::null_mut;
 // Internal state access - if you want to share Dear ImGui state between modules (e.g. DLL) or allocate it yourself
 // Note that we still point to some static data and members (such as GFontAtlas), so the state instance you end up using will point to the static data within its module
 // GetCurrentContext: *mut ImGuiContext()
-pub unsafe fn GetCurrentContext() -> *mut ImGuiContext {
-    return GImGui;
+pub unsafe fn GetCurrentContext() -> &mut Option<ImGuiContext> {
+    return &mut GImGui;
 }
 
 // c_void SetCurrentContext(ctx: *mut ImGuiContext)
-pub fn SetCurrentContext(ctx: *mut ImGuiContext) {
+pub unsafe fn SetCurrentContext(ctx: Option<ImGuiContext>) {
     // #ifdef IMGUI_SET_CURRENT_CONTEXT_FUNC
     IMGUI_SET_CURRENT_CONTEXT_FUNC(ctx); // For custom thread-based hackery you may want to have control over this.
                                          // #else
                                          //     GImGui = ctx;
                                          // #endif
+    GImGui = ctx.clone();
 }
 
 // CreateContext: *mut ImGuiContext(shared_font_atlas: *mut ImFontAtlas)
-pub unsafe fn CreateContext(shared_font_atlas: *mut ImFontAtlas) -> *mut ImGuiContext {
+pub unsafe fn CreateContext(shared_font_atlas: Option<ImFontAtlas>) -> ImGuiContext {
     // prev_ctx: *mut ImGuiContext = GetCurrentContext();
     let mut prev_ctx = GetCurrentContext();
     let mut ctx = ImGuiContext::new(shared_font_atlas);
     SetCurrentContext(&mut ctx);
     Initialize();
     if prev_ctx != None {
-        SetCurrentContext(prev_ctx);
+        SetCurrentContext(prev_ctx.unwrap().borrow_mut());
     } // Restore previous context if any, else keep new one.
-    return &mut ctx;
+    return ctx;
 }
 
 // c_void DestroyContext(ctx: *mut ImGuiContext)
-pub unsafe fn DestroyContext(mut ctx: *mut ImGuiContext) {
+pub unsafe fn DestroyContext(mut ctx: &mut ImGuiContext) {
     let mut prev_ctx = GetCurrentContext();
     if ctx == None {
         //-V1051
@@ -50,8 +52,8 @@ pub unsafe fn DestroyContext(mut ctx: *mut ImGuiContext) {
     }
     SetCurrentContext(ctx);
     Shutdown();
-    SetCurrentContext(if prev_ctx != ctx {
-        prev_ctx
+    SetCurrentContext(if prev_ctx.unwrap() != ctx {
+        prev_ctx.unwrap().borrow_mut()
     } else {
         None
     });

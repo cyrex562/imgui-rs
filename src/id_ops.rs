@@ -107,7 +107,7 @@ pub unsafe fn KeepAliveID(id: ImGuiID) {
 
 // pub unsafe fn PushID(str_id: &str) {
 //     let g = GImGui; // ImGuiContext& g = *GImGui;
-//     let mut window = g.CurrentWindow;
+//     let mut window  = &g.CurrentWindow;
 //     let mut id: ImGuiID = window.id_from_str(str_id);
 //     window.IDStack.push(id);
 // }
@@ -161,18 +161,18 @@ pub unsafe fn PopID() {
 
 pub unsafe fn id_from_str(str_id: &str) -> ImGuiID {
     let g = GImGui; // ImGuiContext& g = *GImGui
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     return window.id_from_str(str_id);
 }
 
 // pub unsafe fn GetID2(str_id_begin: &str) -> ImGuiID {
 //     let g = GImGui; // ImGuiContext& g = *GImGui
-//     let mut window: &mut ImGuiWindow = g.CurrentWindow;
+//     let mut window  = &g.CurrentWindow;
 //     return window.id_from_str(str_id_begin);
 // }
 
 pub unsafe fn id_from_void_ptr(ptr_id: *const c_void) -> ImGuiID {
     let g = GImGui; // ImGuiContext& g = *GImGui
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     return window.GetID2(ptr_id);
 }

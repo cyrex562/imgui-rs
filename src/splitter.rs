@@ -20,7 +20,7 @@ use crate::window::ImGuiWindow;
 pub unsafe fn SplitterBehavior(bb: &mut ImRect, id: ImGuiID, axis: ImGuiAxis, size1: &mut c_float, size2: &mut c_float,min_size1: c_float,min_size2: c_float,hover_extend: c_float,hover_visibility_delay: c_float, bg_col: u32) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
 
     let mut item_flags_backup: ImGuiItemFlags =  g.CurrentItemFlags;
     g.CurrentItemFlags |= ImGuiItemFlags_NoNav | ImGuiItemFlags_NoNavDefaultFocus;

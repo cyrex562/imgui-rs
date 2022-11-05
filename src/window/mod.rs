@@ -310,7 +310,7 @@ impl ImGuiWindow {
     //~ImGuiWindow();
 
     // ImGuiID     GetID(*const c_char str, *const c_char str_end = NULL);
-    pub unsafe fn id_from_str(&self, begin: String) -> ImGuiID {
+    pub unsafe fn id_from_str(&self, begin: &String) -> ImGuiID {
         let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
         let mut id: ImGuiID = ImHashStr(begin, begin.len(), seed as u32);
         let g = GImGui; // ImGuiContext& g = *GImGui;

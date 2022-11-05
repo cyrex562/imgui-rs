@@ -48,7 +48,7 @@ use crate::window::window_flags::{ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindow
 // This is called after LastItemData is set.
 pub unsafe fn NavProcessItem() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let mut id: ImGuiID = g.LastItemData.ID;
     let nav_bb: ImRect = g.LastItemData.NavRect;
     let mut item_flags: ImGuiItemFlags = g.LastItemData.InFlags;
@@ -205,7 +205,7 @@ pub unsafe fn NavClampRectToVisibleAreaForMoveDir(move_dir: ImGuiDir, r: &mut Im
 pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if (g.NavLayer != window.DC.NavLayerCurrent) {
         return false;
     }
@@ -347,7 +347,7 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
 pub unsafe fn NavApplyItemToResult(result: *mut ImGuiNavItemData)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     result.Window = window;
     result.ID = g.LastItemData.ID;
     result.FocusScopeId = window.DC.NavFocusScopeIdCurrent;

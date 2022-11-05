@@ -104,7 +104,7 @@ impl ImGuiTextFilter {
 
 
     // IMGUI_API bool      PassFilter(const char* text, const char* text_end = NULL) const;
-    pub unsafe fn PassFilter(&mut self, mut text: *const c_char, text_end: *const c_char) -> bool {
+    pub unsafe fn PassFilter(&mut self, mut text: &String, text_end: *const c_char) -> bool {
         if self.Filters.empty() {
             return true;
         }

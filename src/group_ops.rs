@@ -14,7 +14,7 @@ use crate::vec2::ImVec2;
 // FIXME-OPT: Could we safely early out on ->SkipItems?
 pub unsafe fn BeginGroup() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
 
     g.GroupStack.resize_with(g.GroupStack.Size + 1, ImGuiGroupData::default());
     let mut group_data = g.GroupStack.last_mut().unwrap();
@@ -42,7 +42,7 @@ pub unsafe fn BeginGroup() {
 pub unsafe fn EndGroup()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     // IM_ASSERT(g.GroupStack.Size > 0); // Mismatched BeginGroup()/EndGroup() calls
 
     ImGuiGroupData& group_data = g.GroupStack.last().unwrap();

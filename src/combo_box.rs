@@ -54,7 +54,7 @@ use crate::{button_ops, popup_ops, GImGui, ImHashStr};
 use libc::{c_char, c_float, c_int, strlen};
 use std::ptr::{null, null_mut};
 
-pub unsafe fn BeginCombo(label: String, preview_value: &mut String, flags: ImGuiComboFlags) -> bool {
+pub unsafe fn BeginCombo(label: &String, preview_value: &mut String, flags: ImGuiComboFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = GetCurrentWindow();
 
@@ -185,7 +185,7 @@ pub unsafe fn BeginCombo(label: String, preview_value: &mut String, flags: ImGui
         }
         RenderTextClipped(
             bb.Min + style.FramePadding,
-            &ImVec2::from_floats(value_x2, bb.Max.y),
+            ImVec2::from_floats(value_x2, bb.Max.y),
             preview_value,
             None,
             None,
@@ -312,7 +312,7 @@ pub unsafe fn EndCombo() {
 // (Experimental, see GitHub issues: #1658, #4168)
 pub unsafe fn BeginComboPreview() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
     preview_data: *mut ImGuiComboPreviewData = &mut g.ComboPreviewData;
 
     if window.SkipItems || !window.ClipRect.Overlaps(g.LastItemData.Rect) {
@@ -343,7 +343,7 @@ pub unsafe fn BeginComboPreview() -> bool {
 
 pub unsafe fn EndComboPreview() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
     let preview_data: *mut ImGuiComboPreviewData = &mut g.ComboPreviewData;
 
     // FIXME: Using CursorMaxPos approximation instead of correct AABB which we will store in ImDrawCmd in the future

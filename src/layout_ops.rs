@@ -19,7 +19,7 @@ use crate::window::ops::GetCurrentWindow;
 //      spacing_w >= 0           : enforce spacing amount
 pub unsafe fn SameLine(offset_from_start_x: c_float, spacing_w: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems {
         return;
     }

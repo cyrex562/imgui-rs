@@ -55,7 +55,7 @@ impl ImGuiListClipper {
     // IMGUI_API void  Begin(int items_count, float items_height = -1.0);
     pub unsafe fn Begin(&mut self, items_count: usize, items_height: f32) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        let mut window = g.CurrentWindow;
+        let mut window  = &g.CurrentWindow;
         // IMGUI_DEBUG_LOG_CLIPPER("Clipper: Begin({},{}) in '{}'\n", items_count, items_height, window.Name);
 
         let table = g.CurrentTable;
@@ -178,7 +178,7 @@ pub unsafe fn ImGuiListClipper_SeekCursorAndSetupPrevLine(pos_y: c_float, line_h
     // FIXME: It is problematic that we have to do that here, because custom/equivalent end-user code would stumble on the same issue.
     // The clipper should probably have a final step to display the last item in a regular manner, maybe with an opt-out flag for data sets which may have costly seek?
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let off_y = pos_y - window.DC.CursorPos.y;
     window.DC.CursorPos.y = pos_y;
     window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, pos_y - g.Style.ItemSpacing.y);

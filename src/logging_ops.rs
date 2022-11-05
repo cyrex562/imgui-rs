@@ -9,11 +9,13 @@ use crate::file_ops::ImFileOpen;
 use crate::id_ops::{PopID, PushID};
 use crate::{GImGui, ImFileClose};
 use crate::a_imgui_cpp::{GImGui, ImStreolRange};
+use crate::button_ops::Button;
 use crate::input_ops::{PopAllowKeyboardFocus, PushAllowKeyboardFocus};
 use crate::item_ops::SetNextItemWidth;
 use crate::layout_ops::SameLine;
 use crate::log_type::{ImGuiLogType, ImGuiLogType_Buffer, ImGuiLogType_Clipboard, ImGuiLogType_File, ImGuiLogType_None, ImGuiLogType_TTY};
 use crate::render_ops::FindRenderedTextEnd;
+use crate::slider_ops::SliderInt;
 use crate::string_ops::ImStreolRange;
 use crate::type_defs::ImFileHandle;
 use crate::vec2::ImVec2;
@@ -21,18 +23,18 @@ use crate::vec2::ImVec2;
 // Internal version that takes a position to decide on newline placement and pad items according to their depth.
 // We split text into individual lines to add current tree level padding
 // FIXME: This code is a little complicated perhaps, considering simplifying the whole system.
-// c_void LogRenderedText(*const ref_pos: ImVec2, text: *const c_char, text_end: *const c_char)
-pub unsafe fn LogRenderedText(ref_pos: *const ImVec2, text: *const c_char, mut text_end: *const c_char) {
+// c_void LogRenderedText(*const ref_pos: ImVec2, text: &String, text_end: *const c_char)
+pub unsafe fn LogRenderedText(ref_pos: &ImVec2, text: &String) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
 
-    let mut prefix: *const c_char = g.LogNextPrefix;
-    let mut suffix: *const c_char = g.LogNextSuffix;
+    let mut prefix = &g.LogNextPrefix;
+    let mut suffix = &g.LogNextSuffix;
     g.LogNextPrefix = None;
     g.LogNextSuffix = None;
 
     if !text_end {
-        text_end = FindRenderedTextEnd(text, text_end);
+        text_end = FindRenderedTextEnd(text);
     }
 
     let log_new_line = ref_pos.is_null() == false && (ref_pos.y > g.LogLinePosY + g.Style.FramePadding.y + 1);
@@ -45,7 +47,7 @@ pub unsafe fn LogRenderedText(ref_pos: *const ImVec2, text: *const c_char, mut t
     }
 
     if prefix {
-        LogRenderedText(ref_pos, prefix, prefix + libc::strlen(prefix)); // Calculate end ourself to ensure "##" are included here.
+        LogRenderedText(ref_pos, prefix); // Calculate end ourself to ensure "##" are included here.
     }
 // Re-adjust padding if we have popped out of our starting depth
     if g.LogDepthRef > window.DC.TreeDepth {
@@ -79,7 +81,7 @@ pub unsafe fn LogRenderedText(ref_pos: *const ImVec2, text: *const c_char, mut t
     }
 
     if suffix {
-        LogRenderedText(ref_pos, suffix, suffix + libc::strlen(suffix));
+        LogRenderedText(ref_pos, suffix);
     }
 }
 
@@ -126,7 +128,7 @@ pub unsafe fn LogRenderedText(ref_pos: *const ImVec2, text: *const c_char, mut t
 pub unsafe fn LogBegin(log_type: ImGuiLogType, auto_open_depth: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     // IM_ASSERT(g.LogEnabled == false);
     // IM_ASSERT(g.LogFile == NULL);
     // IM_ASSERT(g.LogBuffer.empty());
@@ -240,15 +242,16 @@ pub unsafe fn LogButtons()
 
     PushID("LogButtons");
 // #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
-    let log_to_tty: bool = Button("Log To TTY"); SameLine();
+    let log_to_tty = Button(String::from("Log To TTY"), &mut Default::default());
+    SameLine(0.0, 0.0);
 // #else
     let log_to_tty: bool = false;
 // #endif
-    let log_to_file: bool = Button("Log To File"); SameLine();
-    let log_to_clipboard: bool = Button("Log To Clipboard"); SameLine();
+    let log_to_file: bool = Button(String::from("Log To File"), &mut Default::default()); SameLine(0.0, 0.0);
+    let log_to_clipboard: bool = Button(String::from("Log To Clipboard"), &mut Default::default()); SameLine(0.0, 0.0);
     PushAllowKeyboardFocus(false);
     SetNextItemWidth(80f32);
-    SliderInt("Default Depth", &g.LogDepthToExpandDefault, 0, 9, null_mut());
+    SliderInt(String::from("Default Depth"), g.LogDepthToExpandDefault, 0, 9, None, 0);
     PopAllowKeyboardFocus();
     PopID();
 

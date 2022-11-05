@@ -1828,7 +1828,7 @@ pub unsafe fn DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode) {
         let merged_flags = child_0.MergedFlags | child_1.MergedFlags; // Merged flags for BOTH childs
         let no_resize_axis_flag = if axis == ImGuiAxis_X { ImGuiDockNodeFlags_NoResizeX } else { ImGuiDockNodeFlags_NoResizeY };
         if (merged_flags & ImGuiDockNodeFlags_NoResize) || (merged_flags & no_resize_axis_flag) {
-            let mut window = g.CurrentWindow;
+            let mut window  = &g.CurrentWindow;
             window.DrawList.AddRectFilled(&bb.Min, &bb.Max, GetColorU32(ImGuiCol_Separator, 0.0), g.Style.FrameRounding, 0);
         } else {
             //bb.Min[axis] += 1; // Display a little inward so highlight doesn't connect with nearby tabs on the neighbor node.

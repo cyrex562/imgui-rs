@@ -26,7 +26,7 @@ pub struct ImGuiNextWindowData {
     pub CollapsedVal: bool,
     pub SizeConstraintRect: ImRect,
     pub SizeCallback: ImGuiSizeCallback,
-    pub SizeCallbackUserData: *mut c_void,
+    pub SizeCallbackUserData: Option<Vec<u8>>,
     pub BgAlphaVal: c_float,
     // Override background alpha
     pub ViewportId: ImGuiID,

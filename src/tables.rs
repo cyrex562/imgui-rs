@@ -2038,7 +2038,7 @@ pub unsafe fn TableBeginCell(table: *mut ImGuiTable, column_n: c_int)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.LogEnabled && !column.IsSkipItems
     {
-        LogRenderedText(&window.DC.CursorPos, str_to_const_c_char_ptr("|"), null());
+        LogRenderedText(&window.DC.CursorPos, str_to_const_c_char_ptr("|"));
         g.LogLinePosY = f32::MAX;
     }
 }
@@ -2264,7 +2264,7 @@ pub unsafe fn TableUpdateColumnsWeightFromWidth(table: *mut ImGuiTable)
 pub unsafe fn TablePushBackgroundChannel()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
      let table: *mut ImGuiTable = g.CurrentTable;
 
     // Optimization: avoid SetCurrentChannel() + PushClipRect()
@@ -2276,7 +2276,7 @@ pub unsafe fn TablePushBackgroundChannel()
 pub unsafe fn TablePopBackgroundChannel()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
      let table: *mut ImGuiTable = g.CurrentTable;
     let column: *mut ImGuiTableColumn = &mut table.Columns[table.CurrentColumn];
 
@@ -2988,7 +2988,7 @@ pub unsafe fn TableHeadersRow()
 pub unsafe fn TableHeader(mut label: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems { return ; }
 
      let table: *mut ImGuiTable = g.CurrentTable;
@@ -3179,7 +3179,7 @@ pub unsafe fn TableBeginContextMenuPopup(table: *mut ImGuiTable) -> bool
 pub unsafe fn TableDrawContextMenu(table: *mut ImGuiTable)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems { return ; }
 
     let mut want_separator: bool =  false;
@@ -3919,7 +3919,7 @@ pub unsafe fn GetColumnWidthEx(columns: *mut ImGuiOldColumns, mut column_index: 
 pub unsafe fn GetColumnWidth(mut column_index: c_int) -> c_float
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     columns: *mut ImGuiOldColumns = window.DC.CurrentColumns;
     if columns == None{
         return GetContentRegionAvail().x;}

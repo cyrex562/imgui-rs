@@ -89,7 +89,7 @@ pub unsafe fn SeparatorEx(flags: ImGuiSeparatorFlags)
 pub unsafe fn Separator()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems { return ; }
 
     // Those flags should eventually be overridable by the user

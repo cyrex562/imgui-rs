@@ -53,7 +53,7 @@ pub unsafe fn ClearDragDrop()
 pub unsafe fn BeginDragDropSource(flags: ImGuiDragDropFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
 
     // FIXME-DRAGDROP: While in the common-most "drag from non-zero active id" case we can tell the mouse button,
     // in both SourceExtern and id==0 cases we may requires something else (explicit flags or some heuristic).
@@ -236,7 +236,7 @@ pub unsafe fn BeginDragDropTargetCustom(bb: &ImRect, id: ImGuiID) -> bool
         return false;
     }
 
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let mut hovered_window: &mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
     if hovered_window == None || window.RootWindowDockTree != hovered_window.RootWindowDockTree {
         return false;
@@ -266,7 +266,7 @@ pub unsafe fn BeginDragDropTarget() -> bool
     if (!g.DragDropActive){
         return false;}
 
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if (!(g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredRect)){
         return false;}
     let mut hovered_window: &mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
@@ -299,7 +299,7 @@ pub unsafe fn IsDragDropPayloadBeingAccepted() -> bool
 pub unsafe fn AcceptDragDropPayload(payload_type: &str, mut flags: ImGuiDragDropFlags) -> *const ImGuiPayload
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let payload = &mut g.DragDropPayload;
     // IM_ASSERT(g.DragDropActive);                        // Not called between BeginDragDropTarget() and EndDragDropTarget() ?
     // IM_ASSERT(payload.DataFrameCount != -1);            // Forgot to call EndDragDropTarget() ?

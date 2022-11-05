@@ -21,9 +21,9 @@ use std::ptr::{null, null_mut};
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
 // CalcTextSize("") should return ImVec2::new(0.0, g.FontSize)
-// CalcTextSize: ImVec2(text: *const c_char, text_end: *const c_char, hide_text_after_double_hash: bool, c_float wrap_width)
+// CalcTextSize: ImVec2(text: &String, text_end: *const c_char, hide_text_after_double_hash: bool, c_float wrap_width)
 pub unsafe fn CalcTextSize(
-    text: String,
+    text: &String,
     hide_text_after_double_hash: bool,
     wrap_width: c_float,
 ) -> ImVec2 {

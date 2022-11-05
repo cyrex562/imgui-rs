@@ -2064,7 +2064,7 @@ pub unsafe fn TreeNodeUpdateNextOpen(id: ImGuiID, flags: ImGuiTreeNodeFlags) -> 
 
     // We only write to the tree storage if the user clicks (or explicitly use the SetNextItemOpen function)
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     ImGuiStorage * storage = window.DC.StateStorage;
 
     is_open: bool;
@@ -2470,7 +2470,7 @@ pub unsafe fn TreePush(ptr_id: *const c_void) {
 
 pub unsafe fn TreePushOverrideID(id: ImGuiID) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     Indent(0.0);
     window.DC.TreeDepth += 1;
     PushOverrideID(id);
@@ -2478,7 +2478,7 @@ pub unsafe fn TreePushOverrideID(id: ImGuiID) {
 
 pub unsafe fn TreePop() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     Unindent(0.0);
 
     window.DC.TreeDepth -= 1;
@@ -2933,7 +2933,7 @@ pub unsafe fn ListBoxHeader(label: String, items_count: c_int, height_in_items: 
 
 pub unsafe fn EndListBox() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     // IM_ASSERT((window.Flags & ImGuiWindowFlags_ChildWindow) && "Mismatched BeginListBox/EndListBox calls. Did you test the return value of BeginListBox?");
     IM_UNUSED(window);
 
@@ -3602,7 +3602,7 @@ pub unsafe fn EndMainMenuBar() {
 
 pub unsafe fn IsRootOfOpenMenuSet() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if (g.OpenPopupStack.len() <= g.BeginPopupStack.len())
         || flag_set(window.Flags, ImGuiWindowFlags_ChildMenu)
     {
@@ -3910,7 +3910,7 @@ pub unsafe fn EndMenu() {
     // However, it means that with the current code, a BeginMenu() from outside another menu or a menu-bar won't be closable with the Left direction.
     // FIXME: This doesn't work if the parent BeginMenu() is not on a menu.
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if g.NavMoveDir == ImGuiDir_Left
         && NavMoveRequestButNoResultYet()
         && window.DC.LayoutType == ImGuiLayoutType_Vertical
@@ -4139,7 +4139,7 @@ pub unsafe fn GetTabBarRefFromTabBar(tab_bar: &ImGuiTabBar) -> ImGuiPtrOrIndex {
 
 pub unsafe fn BeginTabBar(str_id: &str, flags: ImGuiTabBarFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems {
         return false;
     }
@@ -4168,7 +4168,7 @@ pub unsafe fn BeginTabBarEx(
     dock_node: *mut ImGuiDockNode,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems {
         return false;
     }
@@ -4264,7 +4264,7 @@ pub unsafe fn BeginTabBarEx(
 
 pub unsafe fn EndTabBar() {
     let g = &mut GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems {
         return;
     }
@@ -4641,7 +4641,7 @@ pub unsafe fn TabBarLayout(tab_bar: &mut ImGuiTabBar) {
     tab_bar.ScrollingRectMaxX = tab_bar.BarRect.Max.x - sections[2].Width - sections[1].Spacing;
 
     // Actual layout in host window (we don't do it in BeginTabBar() so as not to waste an extra frame)
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     window.DC.CursorPos = tab_bar.BarRect.Min;
     ItemSize(
         ImVec2::new(tab_bar.WidthAllTabs, tab_bar.BarRect.GetHeight()),
@@ -4948,7 +4948,7 @@ pub unsafe fn TabBarProcessReorder(tab_bar: &mut ImGuiTabBar) -> bool {
 
 pub unsafe fn TabBarScrollingButtons(tab_bar: &mut ImGuiTabBar) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
 
     let mut arrow_button_size =
         ImVec2::from_floats(g.FontSize - 2.0, g.FontSize + g.Style.FramePadding.y * 2.0);
@@ -5032,7 +5032,7 @@ pub unsafe fn TabBarScrollingButtons(tab_bar: &mut ImGuiTabBar) {
 
 pub unsafe fn TabBarTabListPopupButton(tab_bar: &mut ImGuiTabBar) -> *mut ImGuiTabItem {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
 
     // We use g.Style.FramePadding.y to match the square ArrowButton size
     let tab_list_popup_button_width: c_float = g.FontSize + g.Style.FramePadding.y;
@@ -5095,7 +5095,7 @@ pub unsafe fn TabBarTabListPopupButton(tab_bar: &mut ImGuiTabBar) -> *mut ImGuiT
 
 pub unsafe fn BeginTabItem(label: String, p_open: *mut bool, flags: ImGuiTabItemFlags) -> bool {
     let mut g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems {
         return false;
     }
@@ -5117,7 +5117,7 @@ pub unsafe fn BeginTabItem(label: String, p_open: *mut bool, flags: ImGuiTabItem
 
 pub unsafe fn EndTabItem() {
     let mut g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems {
         return;
     }
@@ -5136,7 +5136,7 @@ pub unsafe fn EndTabItem() {
 
 pub unsafe fn TabItemButton(label: String, flags: ImGuiTabItemFlags) -> bool {
     let mut g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems {
         return false;
     }
@@ -5169,7 +5169,7 @@ pub unsafe fn TabItemEx(
         TabBarLayout(tab_bar);
         g.NextItemData = backup_next_item_data.clone();
     }
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems {
         return false;
     }

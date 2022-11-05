@@ -1597,7 +1597,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
 pub unsafe fn End()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
 
     // Error checking: verify that user hasn't called End() too many times!
     if (g.CurrentWindowStack.Size <= 1 && g.WithinFrameScopeWithImplicitWindow)

@@ -4,7 +4,7 @@ use crate::string_ops::str_to_const_c_char_ptr;
 use crate::GImGui;
 use libc::c_char;
 
-// GetClipboardText: *const c_char()
+// GetClipboardtext: &String()
 pub unsafe fn GetClipboardText() -> String {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return if g.IO.GetClipboardTextFn {
@@ -14,7 +14,7 @@ pub unsafe fn GetClipboardText() -> String {
     };
 }
 
-// c_void SetClipboardText(text: *const c_char)
+// c_void SetClipboardText(text: &String)
 pub unsafe fn SetClipboardText(text: Stringing) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.IO.SetClipboardTextFn {

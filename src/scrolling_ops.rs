@@ -74,7 +74,7 @@ pub unsafe fn CalcNextScrollFromScrollTargetAndClamp(window: &mut ImGuiWindow) -
 pub unsafe fn ScrollToItem(flags: ImGuiScrollFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     ScrollToRectEx(window, &mut g.LastItemData.NavRect, flags);
 }
 
@@ -257,7 +257,7 @@ pub unsafe fn SetScrollFromPosY2(local_y: c_float,center_y_ratio: c_float)
 pub unsafe fn SetScrollHereX(center_x_ratio: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let spacing_x: c_float =  ImMax(window.WindowPadding.x, g.Style.ItemSpacing.x);
     let target_pos_x: c_float =  ImLerp(g.LastItemData.Rect.Min.x - spacing_x, g.LastItemData.Rect.Max.x + spacing_x, center_x_ratio);
     SetScrollFromPosX(window, target_pos_x - window.Pos.x, center_x_ratio); // Convert from absolute to local pos
@@ -270,7 +270,7 @@ pub unsafe fn SetScrollHereX(center_x_ratio: c_float)
 pub unsafe fn SetScrollHereY(center_y_ratio: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let spacing_y: c_float =  ImMax(window.WindowPadding.y, g.Style.ItemSpacing.y);
     let target_pos_y: c_float =  ImLerp(window.DC.CursorPosPrevLine.y - spacing_y, window.DC.CursorPosPrevLine.y + window.DC.PrevLineSize.y + spacing_y, center_y_ratio);
     SetScrollFromPosY(window, target_pos_y - window.Pos.y, center_y_ratio); // Convert from absolute to local pos
@@ -303,7 +303,7 @@ pub unsafe fn GetWindowScrollbarRect(window: &mut ImGuiWindow, axis: ImGuiAxis) 
 pub unsafe fn Scrollbar(axis: ImGuiAxis)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let mut id: ImGuiID =  GetWindowScrollbarID(window, axis);
 
     // Calculate scrollbar bounding box
@@ -341,7 +341,7 @@ pub unsafe fn Scrollbar(axis: ImGuiAxis)
 pub unsafe fn ScrollbarEx(bb_frame: &mut ImRect, id: ImGuiID, axis: ImGuiAxis, p_scroll_v: *mut i64, size_avail_v: i64, size_contents_v: i64, flags: ImDrawFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems { return  false; }
 
     KeepAliveID(id);

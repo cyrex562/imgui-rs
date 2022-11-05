@@ -118,7 +118,7 @@ pub fn ImGuiListClipper_SortAndFuseRanges(ranges: &mut Vec<ImGuiListClipperRange
 // static ImGuiListClipper_StepInternal: bool(ImGuiListClipper* clipper)
 pub unsafe fn ImGuiListClipper_StepInternal(clipper: *mut ImGuiListClipper) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let mut data: *mut ImGuiListClipperData = clipper.TempData;
 // IM_ASSERT(data != NULL && "Called ImGuiListClipper::Step() too many times, or before ImGuiListClipper::Begin() ?");
 

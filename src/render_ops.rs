@@ -62,8 +62,8 @@ use libc::{c_char, c_float, c_int};
 use std::mem::swap;
 use std::ptr::{null, null_mut};
 
-// FindRenderedTextEnd: *const c_char(text: *const c_char, text_end: *const c_char)
-pub unsafe fn FindRenderedTextEnd(text: String) -> usize {
+// FindRenderedTextEnd: *const c_char(text: &String, text_end: *const c_char)
+pub unsafe fn FindRenderedTextEnd(text: &String) -> usize {
     // let mut text_display_end: *const c_char = text;
     // if !text_end {
     //     text_end = None;
@@ -78,8 +78,8 @@ pub unsafe fn FindRenderedTextEnd(text: String) -> usize {
 
 // Internal ImGui functions to render text
 // RenderText***() functions calls ImDrawList::AddText() calls ImBitmapFont::RenderText()
-// c_void RenderText(pos: ImVec2, text: *const c_char, text_end: *const c_char, hide_text_after_hash: bool)
-pub unsafe fn RenderText(pos: ImVec2, text: String, hide_text_after_hash: bool) {
+// c_void RenderText(pos: ImVec2, text: &String, text_end: *const c_char, hide_text_after_hash: bool)
+pub unsafe fn RenderText(pos: ImVec2, text: &String, hide_text_after_hash: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow.unwrap();
 
@@ -110,7 +110,7 @@ pub unsafe fn RenderText(pos: ImVec2, text: String, hide_text_after_hash: bool) 
     }
 }
 
-// c_void RenderTextWrapped(pos: ImVec2, text: *const c_char, text_end: *const c_char, c_float wrap_width)
+// c_void RenderTextWrapped(pos: ImVec2, text: &String, text_end: *const c_char, c_float wrap_width)
 pub unsafe fn RenderTextWrapped(pos: ImVec2, text: String) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.CurrentWindow.unwrap();
@@ -135,12 +135,12 @@ pub unsafe fn RenderTextWrapped(pos: ImVec2, text: String) {
 
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
-// c_void RenderTextClippedEx(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: *const c_char, text_display_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
+// c_void RenderTextClippedEx(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: &String, text_display_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
 pub unsafe fn RenderTextClippedEx(
     mut draw_list: ImDrawList,
     pos_min: ImVec2,
     pos_max: ImVec2,
-    text: String,
+    text: &String,
     text_size_if_known: Option<ImVec2>,
     align: Option<ImVec2>,
     clip_rect: Option<ImRect>,
@@ -196,11 +196,11 @@ pub unsafe fn RenderTextClippedEx(
     }
 }
 
-// c_void RenderTextClipped(const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: *const c_char, text_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
+// c_void RenderTextClipped(const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: &String, text_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
 pub unsafe fn RenderTextClipped(
     pos_min: ImVec2,
     pos_max: ImVec2,
-    text: String,
+    text: &String,
     text_size_if_known: Option<ImVec2>,
     align: Option<ImVec2>,
     clip_rect: Option<ImRect>,
@@ -231,7 +231,7 @@ pub unsafe fn RenderTextClipped(
 // Another overly complex function until we reorganize everything into a nice all-in-one helper.
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
-// c_void RenderTextEllipsis(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, c_float clip_max_x, c_float ellipsis_max_x, text: *const c_char, text_end_full: *const c_char, *const text_size_if_known: ImVec2)
+// c_void RenderTextEllipsis(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, c_float clip_max_x, c_float ellipsis_max_x, text: &String, text_end_full: *const c_char, *const text_size_if_known: ImVec2)
 pub unsafe fn RenderTextEllipsis(
     draw_list: ImDrawList,
     pos_min: ImVec2,
@@ -329,9 +329,9 @@ pub unsafe fn RenderTextEllipsis(
             // for (let i: c_int = 0; i < ellipsis_char_count; i+ +)
             for i in 0..ellipsis_char_count {
                 font.RenderChar(
-                    draw_list,
+                    &mut draw_list,
                     font_size,
-                    ImVec2::from_floats(ellipsis_x, pos_min.y),
+                    &ImVec2::from_floats(ellipsis_x, pos_min.y),
                     GetColorU32(ImGuiCol_Text, 0.0),
                     ellipsis_char,
                 );
@@ -343,8 +343,8 @@ pub unsafe fn RenderTextEllipsis(
             draw_list,
             pos_min,
             ImVec2::from_floats(clip_max_x, pos_max.y),
-            text,
-            text_end_full,
+            &text,
+
             &text_size,
             ImVec2::from_floats(0.0, 0.0),
             None,
@@ -352,7 +352,7 @@ pub unsafe fn RenderTextEllipsis(
     }
 
     if g.LogEnabled {
-        LogRenderedText(pos_min, text, text_end_full);
+        LogRenderedText(pos_min, text);
     }
 }
 
@@ -366,7 +366,7 @@ pub unsafe fn RenderFrame(
     rounding: c_float,
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     window
         .DrawList
         .AddRectFilled(&p_min, &p_max, fill_col, rounding, ImDrawFlags_None);
@@ -387,7 +387,7 @@ pub unsafe fn RenderFrame(
 // c_void RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, c_float rounding)
 pub unsafe fn RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let border_size: c_float = g.Style.FrameBorderSize;
     if border_size > 0.0 {
         window.DrawList.AddRect(
@@ -411,7 +411,7 @@ pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighli
     if g.NavDisableHighlight && flag_clear(flags, ImGuiNavHighlightFlags_AlwaysDraw) == 0 {
         return;
     }
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.DC.NavHideHighlightOneFrame {
         return;
     }

@@ -26,7 +26,7 @@ use libc::c_float;
 // c_void ErrorCheckUsingSetCursorPosToExtendParentBoundaries()
 pub unsafe fn ErrorCheckUsingSetCursorPosToExtendParentBoundaries() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     // IM_ASSERT(window.DC.IsSetPos);
     window.DC.IsSetPos = false;
     // #ifdef IMGUI_DISABLE_OBSOLETE_FUNCTIONS

@@ -160,7 +160,7 @@ pub unsafe fn ErrorCheckEndFrameRecover(
     //-V1044
     {
         ErrorCheckEndWindowRecover(log_callback, user_data);
-        let mut window = g.CurrentWindow;
+        let mut window  = &g.CurrentWindow;
         if g.CurrentWindowStack.Size == 1 {
             // IM_ASSERT(window.IsFallbackWindow);
             break;
@@ -189,7 +189,7 @@ pub unsafe fn ErrorCheckEndWindowRecover(
         EndTable();
     }
 
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let stack_sizes = &g.CurrentWindowStack.last().unwrap().StackSizesOnBegin;
     // IM_ASSERT(window != NULL);
     while (g.CurrentTabBar != null_mut())

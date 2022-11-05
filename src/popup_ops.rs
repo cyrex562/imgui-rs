@@ -139,7 +139,7 @@ pub unsafe fn OpenPopup2(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
 // One open popup per level of the popup hierarchy (NB: when assigning we reset the Window member of ImGuiPopupRef to NULL)
 pub unsafe fn OpenPopupEx(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut parent_window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut parent_window = &g.CurrentWindow;
     let current_stack_size: usize = g.BeginPopupStack.len();
 
     if (popup_flags & ImGuiPopupFlags_NoOpenOverExistingPopup) {
@@ -388,7 +388,7 @@ pub unsafe fn BeginPopupModal(
     mut flags: ImGuiWindowFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let mut id: ImGuiID = window.id_from_str(name, null());
     if !IsPopupOpen(id, ImGuiPopupFlags_None) {
         g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
@@ -430,7 +430,7 @@ pub unsafe fn BeginPopupModal(
 
 pub unsafe fn EndPopup() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     // IM_ASSERT(window.Flags & ImGuiWindowFlags_Popup);  // Mismatched BeginPopup()/EndPopup() calls
     // IM_ASSERT(g.BeginPopupStack.Size > 0);
 
@@ -452,7 +452,7 @@ pub unsafe fn EndPopup() {
 // - This is essentially the same as BeginPopupContextItem() but without the trailing BeginPopup()
 pub unsafe fn OpenPopupOnItemClick(str_id: &str, popup_flags: ImGuiPopupFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) {
         let mut id: ImGuiID = if str_id {
@@ -483,7 +483,7 @@ pub unsafe fn OpenPopupOnItemClick(str_id: &str, popup_flags: ImGuiPopupFlags) {
 //   The main difference being that this is tweaked to avoid computing the ID twice.
 pub unsafe fn BeginPopupContextItem(str_id: *const c_char, popup_flags: ImGuiPopupFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if (window.SkipItems) {
         return false;
     }
@@ -510,7 +510,7 @@ pub unsafe fn BeginPopupContextWindow(
     popup_flags: ImGuiPopupFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if !str_id {
         str_id = str_to_const_c_char_ptr("window_context");
     }
@@ -534,7 +534,7 @@ pub unsafe fn BeginPopupContextVoid(
     popup_flags: ImGuiPopupFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if (!str_id) {
         str_id = str_to_const_c_char_ptr("void_context");
     }

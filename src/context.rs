@@ -485,13 +485,13 @@ pub struct ImGuiContext {
 
     // Navigation: Windowing (CTRL+TAB for list, or Menu button + keys or directional pads to move/resize)
     // ImGuiWindow*            NavWindowingTarget;                 // Target window when doing CTRL+Tab (or Pad Menu + FocusPrev/Next), this window is temporarily displayed top-most!
-    pub NavWindowingTarget: *mut ImGuiWindow,
+    pub NavWindowingTarget: Option<ImGuiWindow>,
 
     // ImGuiWindow*            NavWindowingTargetAnim;             // Record of last valid NavWindowingTarget until DimBgRatio and NavWindowingHighlightAlpha becomes 0.0, so the fade-out can stay on it.
-    pub NavWindowingTargetAnim: *mut ImGuiWindow,
+    pub NavWindowingTargetAnim: Option<ImGuiWindow>,
 
     // ImGuiWindow*            NavWindowingListWindow;             // Internal window actually listing the CTRL+Tab contents
-    pub NavWindowingListwindow: &mut ImGuiWindow,
+    pub NavWindowingListWindow: Option<ImGuiWindow>,
 
     // float                   NavWindowingTimer;
     pub NavWindowingTimer: c_float,
@@ -579,7 +579,7 @@ pub struct ImGuiContext {
     // Tables
 
     // ImGuiTable*                     CurrentTable;
-    pub CurrentTable: *mut ImGuiTable,
+    pub CurrentTable: Option<ImGuiTable>,
 
     // int                             TablesTempDataStacked;      // Temporary table data size (because we leave previous instances undestructed, we generally don't use TablesTempData.Size)
     pub TablesTempDataStacked: usize,
@@ -744,16 +744,16 @@ pub struct ImGuiContext {
     pub LogType: ImGuiLogType,
 
     // ImFileHandle            LogFile;                            // If != NULL log to stdout/ file
-    pub LogFile: ImFileHandle,
+    pub LogFile: Option<ImFileHandle>,
 
     // ImGuiTextBuffer         LogBuffer;                          // Accumulation buffer when log to clipboard. This is pointer so our GImGui static constructor doesn't call heap allocators.
     pub LogBuffer: ImGuiTextBuffer,
 
     // const char*             LogNextPrefix;
-    pub LogNextPrefix: String,
+    pub LogNextPrefix: Option<String>,
 
     // const char*             LogNextSuffix;
-    pub LogNextSuffix: String,
+    pub LogNextSuffix: Option<String>,
 
     // float                   LogLinePosY;
     pub LogLinePosY: c_float,
@@ -822,7 +822,7 @@ pub struct ImGuiContext {
 }
 
 impl ImGuiContext {
-    pub unsafe fn new(shared_font_atlas: Option<&mut ImFontAtlas>) -> Self {
+    pub unsafe fn new(shared_font_atlas: Option<ImFontAtlas>) -> Self {
         let mut out = Self {
             Initialized: false,
             ConfigFlagsCurrFrame: ImGuiConfigFlags_None,
@@ -991,8 +991,8 @@ impl ImGuiContext {
 
             LogEnabled: false,
             LogType: ImGuiLogType_None,
-            LogNextPrefix: String::default(),
-            LogNextSuffix: String::default(),
+            LogNextPrefix: None,
+            LogNextSuffix: None,
             LogFile: None,
             LogLinePosY: f32::MAX,
             LogLineFirstItem: false,

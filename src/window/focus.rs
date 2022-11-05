@@ -136,14 +136,14 @@ pub unsafe fn FocusTopMostWindowUnderOne(
 
 pub unsafe fn PushFocusScope(id: ImGuiID) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     g.FocusScopeStack.push(window.DC.NavFocusScopeIdCurrent);
     window.DC.NavFocusScopeIdCurrent = id;
 }
 
 pub unsafe fn PopFocusScope() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     // IM_ASSERT(g.FocusScopeStack.Size > 0); // Too many PopFocusScope() ?
     window.DC.NavFocusScopeIdCurrent = g.FocusScopeStack.last().unwrap().clone();
     g.FocusScopeStack.pop_back();
@@ -152,7 +152,7 @@ pub unsafe fn PopFocusScope() {
 // Note: this will likely be called ActivateItem() once we rework our Focus/Activation system!
 pub unsafe fn SetKeyboardFocusHere(offset: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     // IM_ASSERT(offset >= -1);    // -1 is allowed but not below
     IMGUI_DEBUG_LOG_ACTIVEID(
         "SetKeyboardFocusHere({}) in window \"{}\"\n",
@@ -196,7 +196,7 @@ pub unsafe fn SetKeyboardFocusHere(offset: c_int) {
 
 pub unsafe fn SetItemDefaultFocus() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if !window.Appearing {
         return;
     }

@@ -121,7 +121,7 @@ pub struct ImGuiIO {
     // (default to use native Win32 clipboard on Windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
     pub GetClipboardTextFn: fn(user_data: *mut c_void) -> *const c_char,
     // void        (*SetClipboardTextFn)(void* user_data, const char* text);
-    pub SetClipboardTextFn: fn(user_dat: *mut c_void, text: *const c_char),
+    pub SetClipboardTextFn: fn(user_dat: *mut c_void, text: &String),
     pub ClipboardUserData: *mut c_void,
 
     // Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)

@@ -3765,7 +3765,7 @@ pub unsafe fn EditTableSizingFlags(*mut p_flags: ImGuiTableFlags)
     for (idx = 0; idx < policies.len(); idx++)
         if (policies[idx].Value == (*p_flags & ImGuiTableFlags_SizingMask_))
             break;
-    let mut  preview_text: *const c_char = if idx < policies.len() { policies[idx].Name + (idx > 0 ? strlen("ImGuiTableFlags") : 0)} else { ""};
+    let mut  preview_text: &String = if idx < policies.len() { policies[idx].Name + (idx > 0 ? strlen("ImGuiTableFlags") : 0)} else { ""};
     if (BeginCombo("Sizing Policy", preview_text))
     {
         for (let n: c_int = 0; n < policies.len(); n++)

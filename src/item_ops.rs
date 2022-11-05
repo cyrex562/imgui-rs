@@ -63,7 +63,7 @@ pub unsafe fn IsItemFocused() -> bool {
 
     // Special handling for the dummy item after Begin() which represent the title bar or tab.
     // When the window is collapsed (SkipItems==true) that last item will never be overwritten so we need to detect the case.
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if g.LastItemData.ID == window.ID && window.WriteAccessed {
         return false;
     }
@@ -77,7 +77,7 @@ pub unsafe fn IsItemFocused() -> bool {
 // IsItemHovered: bool(flags: ImGuiHoveredFlags)
 pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if g.NavDisableMouseHover
         && !g.NavDisableHighlight
         && flag_clear(flags, ImGuiHoveredFlags_NoNavOverride)
@@ -175,7 +175,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
         return false;
     }
 
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if g.HoveredWindow != window {
         return false;
     }
@@ -240,7 +240,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
 // IsClippedEx: bool(const ImRect& bb, ImGuiID id)
 pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImGuiID) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if !bb.Overlaps(&ImRect::from_vec4(&window.ClipRect)) {
         if id == 0 || (id != g.ActiveId && id != g.NavId) {
             if !g.LogEnabled {
@@ -274,7 +274,7 @@ pub unsafe fn CalcWrapWidthForPos(pos: &ImVec2, mut wrap_pos_x: c_float) -> c_fl
     }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if wrap_pos_x == 0.0 {
         // We could decide to setup a default wrapping max point for auto-resizing windows,
         // or have auto-wrap (with unspecified wrapping pos) behave as a ContentSize extending function?
@@ -435,7 +435,7 @@ pub unsafe fn ItemAdd(
     extra_flags: ImGuiItemFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
 
     // Set item data
     // (DisplayRect is left untouched, made valid when ImGuiItemStatusFlags_HasDisplayRect is set)
@@ -512,7 +512,7 @@ pub unsafe fn ItemAdd(
 // See comments in ItemAdd() about how/why the size provided to ItemSize() vs ItemAdd() may often different.
 pub unsafe fn ItemSize(size: &ImVec2, text_baseline_y: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     if window.SkipItems {
         return;
     }
@@ -599,7 +599,7 @@ pub unsafe fn SetNextItemWidth(item_width: c_float) {
 // FIXME: Remove the == 0.0 behavior?
 pub unsafe fn PushItemWidth(item_width: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     window.DC.ItemWidthStack.push(window.DC.ItemWidth); // Backup current width
     window.DC.ItemWidth = (if item_width == 0.0 {
         window.ItemWidthDefault
@@ -611,7 +611,7 @@ pub unsafe fn PushItemWidth(item_width: c_float) {
 
 pub unsafe fn PushMultiItemsWidths(components: usize, w_full: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let style = &mut g.Style;
     w_item_one: c_float = ImMax(
         1.0,
@@ -645,7 +645,7 @@ pub unsafe fn PopItemWidth() {
 // The SetNextItemWidth() data is generally cleared/consumed by ItemAdd() or NextItemData.ClearFlags()CalcItemWidth: c_float()
 pub unsafe fn CalcItemWidth() -> c_float {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     let mut w: c_float = 0.0;
     if g.NextItemData.Flags & ImGuiNextItemDataFlags_HasWidth {
         w = g.NextItemData.Width;
@@ -665,9 +665,9 @@ pub unsafe fn CalcItemWidth() -> c_float {
 // Note that only CalcItemWidth() is publicly exposed.
 // The 4.0 here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
 // CalcItemSize: ImVec2(size: ImVec2,default_w: c_float,default_h: c_float)
-pub unsafe fn CalcItemSize(size: &mut ImVec2, default_w: c_float, default_h: c_float) -> ImVec2 {
+pub unsafe fn CalcItemSize(mut size: ImVec2, default_w: c_float, default_h: c_float) -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
 
     let mut region_max = ImVec2::default();
     if size.x < 0.0 || size.y < 0.0 {

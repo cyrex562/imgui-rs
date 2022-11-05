@@ -18,7 +18,7 @@ use crate::{button_ops, GImGui};
 use libc::{c_float, c_int, c_uint};
 use std::ptr::null;
 
-pub unsafe fn Checkbox(label: String, v: &mut bool) -> bool {
+pub unsafe fn Checkbox(label: &String, v: &mut bool) -> bool {
     let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
@@ -132,7 +132,7 @@ pub unsafe fn Checkbox(label: String, v: &mut bool) -> bool {
 }
 
 // template<typename T>
-pub unsafe fn CheckboxFlagsT<T>(label: String, flags: *mut T, flags_value: T) -> bool {
+pub unsafe fn CheckboxFlagsT<T>(label: &String, flags: &mut T, flags_value: &T) -> bool {
     // let mut all_on: bool =  (*flags.clone() & flags_value) == flags_value;
     let mut all_on = (flags[0] & flags_value) == flags_value;
     // let mut any_on: bool =  (*flags.clone() & flags_value) != 0;
@@ -157,18 +157,18 @@ pub unsafe fn CheckboxFlagsT<T>(label: String, flags: *mut T, flags_value: T) ->
     return pressed;
 }
 
-pub unsafe fn CheckboxFlags(label: String, flags: &mut c_int, flags_value: c_int) -> bool {
+pub unsafe fn CheckboxFlags(label: &String, flags: &mut [c_int], flags_value: &[c_int]) -> bool {
     return CheckboxFlagsT(label, flags, flags_value);
 }
 
-pub unsafe fn CheckboxFlags2(label: String, flags: *mut c_uint, flags_value: c_uint) -> bool {
+pub unsafe fn CheckboxFlags2(label: &String, flags: &mut [c_uint], flags_value: &[c_uint]) -> bool {
     return CheckboxFlagsT(label, flags, flags_value);
 }
 
-pub unsafe fn CheckboxFlags3(label: String, flags: *mut i64, flags_value: i64) -> bool {
+pub unsafe fn CheckboxFlags3(label: &String, flags: &mut [i64], flags_value: &[i64]) -> bool {
     return CheckboxFlagsT(label, flags, flags_value);
 }
 
-pub unsafe fn CheckboxFlags4(label: String, flags: *mut u64, flags_value: u64) -> bool {
+pub unsafe fn CheckboxFlags4(label: &String, flags: &mut [u64], flags_value: &[u64]) -> bool {
     return CheckboxFlagsT(label, flags, flags_value);
 }

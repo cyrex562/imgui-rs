@@ -729,10 +729,10 @@ pub unsafe fn SliderAngle(
 
 pub unsafe fn SliderInt(
     label: String,
-    v: &mut c_int,
-    v_min: &mut c_int,
-    v_max: &mut c_int,
-    format: &mut String,
+    v: c_int,
+    v_min: c_int,
+    v_max: c_int,
+    format: Option<&String>,
     flags: ImGuiSliderFlags,
 ) -> bool {
     let mut v_float = *v as c_float;

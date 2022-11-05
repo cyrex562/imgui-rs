@@ -1,3 +1,4 @@
+use std::borrow::BorrowMut;
 use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
 use crate::color::{ImGuiCol_ChildBg, ImGuiCol_FrameBg};
 use crate::condition::ImGuiCond_None;
@@ -50,7 +51,7 @@ pub unsafe fn BeginChildEx(
     mut flags: ImGuiWindowFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut parent_window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut parent_window = &g.CurrentWindow;
 
     flags |= ImGuiWindowFlags_NoTitleBar
         | ImGuiWindowFlags_NoResize
@@ -77,7 +78,7 @@ pub unsafe fn BeginChildEx(
     if size.y <= 0.0 {
         size.y = ImMax(content_avail.y + size.y, 4.0);
     }
-    SetNextWindowSize(&size, ImGuiCond_None);
+    SetNextWindowSize(size, ImGuiCond_None);
 
     // Build up name. If you need to append to a same child from multiple location in the ID stack, use BeginChild(ImGuiID id) with a stable value.
     let mut temp_window_name: String = String::default();
@@ -96,7 +97,7 @@ pub unsafe fn BeginChildEx(
     let mut ret: bool = Begin(temp_window_name.as_str(), None);
     g.Style.ChildBorderSize = backup_border_size;
 
-    let mut child_window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut child_window = &mut g.CurrentWindow;
     child_window.ChildId = id;
     child_window.AutoFitChildAxises = auto_fit_axises;
 
@@ -111,9 +112,9 @@ pub unsafe fn BeginChildEx(
         && flag_clear(flags, ImGuiWindowFlags_NavFlattened)
         && (child_window.DC.NavLayersActiveMask != 0 || child_window.DC.NavHasScroll)
     {
-        FocusWindow(child_window);
-        NavInitWindow(child_window, false);
-        SetActiveID(id + 1, child_window); // Steal ActiveId with another arbitrary id so that key-press won't activate child item
+        FocusWindow(child_window.unwrap().borrow_mut());
+        NavInitWindow(child_window.unwrap().borrow_mut(), false);
+        SetActiveID(id + 1, child_window.unwrap().borrow_mut()); // Steal ActiveId with another arbitrary id so that key-press won't activate child item
         g.ActiveIdSource = ImGuiInputSource_Nav;
     }
     return ret;
@@ -129,7 +130,7 @@ pub unsafe fn BeginChild(
     let mut window = GetCurrentWindow();
     return BeginChildEx(
         str_id,
-        window.id_from_str(str_id.clone()),
+        window.id_from_str(&str_id.clone()),
         size_arg,
         border,
         extra_flags,
@@ -139,18 +140,18 @@ pub unsafe fn BeginChild(
 // BeginChild: bool(ImGuiID id, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild2(
     id: ImGuiID,
-    size_arg: &ImVec2,
+    size_arg: ImVec2,
     border: bool,
     extra_flags: ImGuiWindowFlags,
 ) -> bool {
     // IM_ASSERT(id != 0);
-    return BeginChildEx("", id, size_arg, border, extra_flags);
+    return BeginChildEx(String::from(""), id, size_arg, border, extra_flags);
 }
 
 // c_void EndChild()
 pub unsafe fn EndChild() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
 
     // IM_ASSERT(g.WithinEndChild == false);
     // IM_ASSERT(window.Flags & ImGuiWindowFlags_ChildWindow);   // Mismatched BeginChild()/EndChild() calls
@@ -169,7 +170,7 @@ pub unsafe fn EndChild() {
         }
         End(0);
 
-        let mut parent_window: &mut ImGuiWindow = g.CurrentWindow;
+        let mut parent_window = &g.CurrentWindow;
         let mut bb: ImRect =
             ImRect::from_vec2(&parent_window.DC.CursorPos, parent_window.DC.CursorPos + sz);
         ItemSize(&sz, 0.0);
@@ -204,7 +205,7 @@ pub unsafe fn EndChild() {
 
 // Helper to create a child window / scrolling region that looks like a normal widget frame.
 // BeginChildFrame: bool(ImGuiID id, const size: &mut ImVec2, ImGuiWindowFlags extra_flags)
-pub unsafe fn BeginChildFrame(id: ImGuiID, size: &ImVec2, extra_flags: ImGuiWindowFlagss) -> bool {
+pub unsafe fn BeginChildFrame(id: ImGuiID, size: ImVec2, extra_flags: ImGuiWindowFlagss) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.Style;
     PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_FrameBg]);

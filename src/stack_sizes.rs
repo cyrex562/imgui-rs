@@ -24,7 +24,7 @@ impl ImGuiStackSizes {
     // c_void SetToCurrentState();
     pub unsafe fn SetToCurrentState(&mut self) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        let mut window = g.CurrentWindow;
+        let mut window  = &g.CurrentWindow;
         self.SizeOfIDStack = window.IDStack.Size;
         self.SizeOfColorStack = g.ColorStack.Size;
         self.SizeOfStyleVarStack = g.StyleVarStack.Size;
@@ -40,7 +40,7 @@ impl ImGuiStackSizes {
     pub unsafe fn CompareWithCurrentState(&mut self) {
 
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        let mut window = g.CurrentWindow;
+        let mut window  = &g.CurrentWindow;
         // IM_UNUSED(window);
 
         // Window stacks

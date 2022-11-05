@@ -35,7 +35,7 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
 
 // Logging
     if g.LogEnabled {
-        LogRenderedText(None, "|".into(), null_mut());
+        LogRenderedText(None, "|".into());
     }
 
 // Position cursor at the bottom of our row so it can be used for e.g. clipping calculation. However it is

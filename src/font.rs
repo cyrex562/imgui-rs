@@ -146,7 +146,7 @@ impl ImFont {
         size: c_float,
         max_width: c_float,
         wrap_width: c_float,
-        text: String,
+        text: &String,
         remaining: Option<&mut usize>,
     ) -> ImVec2 {
         // if !text_end {
@@ -528,7 +528,7 @@ impl ImFont {
                 }
             }
 
-            let glyph: *const ImFontGlyph = FindGlyph(c);
+            let glyph = FindGlyph(c);
             if glyph == None {
                 continue;
             }

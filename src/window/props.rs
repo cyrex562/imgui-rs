@@ -106,20 +106,20 @@ pub fn IsWindowNavFocusable(window: &mut ImGuiWindow) -> bool {
 
 pub unsafe fn GetWindowWidth() -> c_float {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     return window.Size.x;
 }
 
 
 pub unsafe fn GetWindowHeight() -> c_float {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     return window.Size.y;
 }
 
 pub unsafe fn GetWindowPos() -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     return window.Pos;
 }
 
@@ -270,12 +270,12 @@ pub unsafe fn SetNextWindowPos(pos: &ImVec2, cond: ImGuiCond, pivot: &ImVec2) {
     g.NextWindowData.PosUndock = true;
 }
 
-pub unsafe fn SetNextWindowSizeConstraints(size_min: &ImVec2, size_max: &ImVec2, custom_callback: ImGuiSizeCallback, custom_callback_user_data: *mut c_void) {
+pub unsafe fn SetNextWindowSizeConstraints(size_min: &ImVec2, size_max: &ImVec2, custom_callback: ImGuiSizeCallback, custom_callback_user_data: Option<&Vec<u8>>) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSizeConstraint;
     g.NextWindowData.SizeConstraintRect = ImRect::from_vec2(size_min, size_max);
     g.NextWindowData.SizeCallback = custom_callback;
-    g.NextWindowData.SizeCallbackUserData = custom_callback_user_data;
+    g.NextWindowData.SizeCallbackUserData = Some(custom_callback_user_data.unwrap().clone());
 }
 
 

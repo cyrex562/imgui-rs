@@ -21,8 +21,8 @@ impl ImFontGlyphRangesBuilder {
 
     // inline c_void     AddChar(ImWchar c)      { SetBit(c); }                      // Add character
 
-    // c_void  AddText(text: *const c_char, text_end: *const c_char = null_mut());     // Add string (each character of the UTF-8 string are added)
-    pub unsafe fn AddText(&mut self, mut text: *const c_char, text_end: *const c_char) {
+    // c_void  AddText(text: &String, text_end: *const c_char = null_mut());     // Add string (each character of the UTF-8 string are added)
+    pub unsafe fn AddText(&mut self, mut text: &String, text_end: *const c_char) {
         while if text_end { (text < text_end) } else { *text } {
             let mut c: c_uint = 0;
             let c_len: c_int = ImTextCharFromUtf8(&mut c, text, text_end);

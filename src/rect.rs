@@ -221,7 +221,7 @@ impl ImRect {
 // IsRectVisible: bool(size: &ImVec2)
 pub unsafe fn IsRectVisible(size: &ImVec2) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     return window.ClipRect.Overlaps(ImRect::from_vec2(
         &window.DC.CursorPos,
         window.DC.CursorPos + size,
@@ -231,7 +231,7 @@ pub unsafe fn IsRectVisible(size: &ImVec2) -> bool {
 // IsRectVisible: bool(rect_min: &ImVec2, rect_max: &ImVec2)
 pub unsafe fn IsRectVisible2(rect_min: &ImVec2, rect_max: &ImVec2) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window  = &g.CurrentWindow;
     return window
         .ClipRect
         .Overlaps(ImRect::from_vec2(rect_min, rect_max));

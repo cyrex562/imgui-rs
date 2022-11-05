@@ -1,3 +1,4 @@
+use std::borrow::BorrowMut;
 use crate::button_flags::{
     ImGuiButtonFlags, ImGuiButtonFlags_AlignTextBaseLine, ImGuiButtonFlags_AllowItemOverlap,
     ImGuiButtonFlags_FlattenChildren, ImGuiButtonFlags_MouseButtonDefault_,
@@ -72,11 +73,11 @@ pub unsafe fn ButtonBehavior(
         && g.HoveredWindow.is_null() == false
         && g.Hoveredwindow.RootWindowDockTree == window.RootWindowDockTree;
     if flatten_hovered_children {
-        g.HoveredWindow = window;
+        g.HoveredWindow = Some(window.clone());
     }
 
     // #ifdef IMGUI_ENABLE_TEST_ENGINE
-    if (id != 0 && g.LastItemData.ID != id) {
+    if id != 0 && g.LastItemData.ID != id {
         IMGUI_TEST_ENGINE_ITEM_ADD(bb, id);
     }
     // #endif
@@ -171,7 +172,7 @@ pub unsafe fn ButtonBehavior(
                         SetFocusID(id, &mut window);
                     }
                     g.ActiveIdMouseButton = mouse_button_clicked;
-                    FocusWindow(window);
+                    FocusWindow(&mut window);
                 }
             }
             if (flags & ImGuiButtonFlags_PressedOnRelease) {
@@ -194,7 +195,7 @@ pub unsafe fn ButtonBehavior(
                         pressed = true;
                     }
                     if (flag_clear(flags, ImGuiButtonFlags_NoNavFocus)) {
-                        SetFocusID(id, window);
+                        SetFocusID(id, &mut window);
                     }
                     ClearActiveID();
                 }
@@ -245,10 +246,10 @@ pub unsafe fn ButtonBehavior(
         if nav_activated_by_code || nav_activated_by_inputs {
             // Set active id so it can be queried by user via IsItemActive(), equivalent of holding the mouse button.
             pressed = true;
-            SetActiveID(id, window);
+            SetActiveID(id, &mut window);
             g.ActiveIdSource = ImGuiInputSource_Nav;
             if flag_c {
-                SetFocusID(id, window);
+                SetFocusID(id, &mut window);
                 lear(flags, ImGuiButtonFlags_NoNavFocus);
             }
         }
@@ -309,7 +310,7 @@ pub unsafe fn ButtonBehavior(
     return pressed;
 }
 
-pub unsafe fn ButtonEx(label: String, size_arg: &mut ImVec2, mut flags: ImGuiButtonFlags) -> bool {
+pub unsafe fn ButtonEx(label: &String, size_arg: Option<ImVec2>, mut flags: ImGuiButtonFlags) -> bool {
     let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
@@ -317,8 +318,8 @@ pub unsafe fn ButtonEx(label: String, size_arg: &mut ImVec2, mut flags: ImGuiBut
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let setyle = &mut g.Style;
-    let mut id: ImGuiID = window.id_from_str(label);
-    let label_size: ImVec2 = CalcTextSize(label, true, 0.0);
+    let mut id: ImGuiID = window.id_from_str(&label);
+    let label_size: ImVec2 = CalcTextSize(&label, true, 0.0);
 
     let mut pos: ImVec2 = window.DC.CursorPos;
     if flag_set(flags, ImGuiButtonFlags_AlignTextBaseLine)
@@ -327,8 +328,8 @@ pub unsafe fn ButtonEx(label: String, size_arg: &mut ImVec2, mut flags: ImGuiBut
         // Try to vertically align buttons that are smaller/have no padding so that text baseline matches (bit hacky, since it shouldn't be a flag)
         pos.y += window.DC.CurrLineTextBaseOffset - style.FramePadding.y;
     }
-    let size: ImVec2 = CalcItemSize(
-        size_arg,
+    let size = CalcItemSize(
+        size_arg.unwrap(),
         label_size.x + style.FramePadding.x * 2.0,
         label_size.y + style.FramePadding.y * 2.0,
     );
@@ -370,32 +371,32 @@ pub unsafe fn ButtonEx(label: String, size_arg: &mut ImVec2, mut flags: ImGuiBut
     RenderTextClipped(
         bb.Min + style.FramePadding,
         bb.Max - style.FramePadding,
-        label,
-        Some(&label_size),
+        &label,
+        Some(label_size.clone()),
         style.ButtonTextAlign,
-        Some(&bb),
+        Some(bb.clone()),
     );
 
     // Automatically close popups
     //if (pressed && flag_clear(flags, ImGuiButtonFlags_DontClosePopups) && (window.Flags & ImGuiWindowFlags_Popup))
     //    CloseCurrentPopup();
 
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, &label, g.LastItemData.StatusFlags);
     return pressed;
 }
 
-pub unsafe fn Button(label: String, size_arg: &mut ImVec2) -> bool {
+pub unsafe fn Button(label: &String, size_arg: Option<ImVec2>) -> bool {
     return ButtonEx(label, size_arg, ImGuiButtonFlags_None);
 }
 
 // Small buttons fits within text without additional vertical spacing.
-pub unsafe fn SmallButton(label: String) -> bool {
+pub unsafe fn SmallButton(label: &String) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let backup_padding_y: c_float = g.Style.FramePadding.y;
     g.Style.FramePadding.y = 0.0;
     let mut pressed: bool = ButtonEx(
         label,
-        &mut ImVec2::from_floats(0.0, 0.0),
+        Some(ImVec2::from_floats(0.0, 0.0)),
         ImGuiButtonFlags_AlignTextBaseLine,
     );
     g.Style.FramePadding.y = backup_padding_y;
@@ -405,8 +406,8 @@ pub unsafe fn SmallButton(label: String) -> bool {
 // Tip: use PushID()/PopID() to push indices or pointers in the ID stack.
 // Then you can keep 'str_id' empty or the same for all your buttons (instead of creating a string based on a non-string id)
 pub unsafe fn InvisibleButton(
-    str_id: &str,
-    size_arg: &mut ImVec2,
+    str_id: &String,
+    size_arg: ImVec2,
     flags: ImGuiButtonFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -436,7 +437,7 @@ pub unsafe fn InvisibleButton(
 }
 
 pub unsafe fn ArrowButtonEx(
-    str_id: &str,
+    str_id: &String,
     dir: ImGuiDir,
     size: ImVec2,
     mut flags: ImGuiButtonFlags,
@@ -488,7 +489,7 @@ pub unsafe fn ArrowButtonEx(
     RenderNavHighlight(&bb, id, 0);
     RenderFrame(bb.Min, bb.Max, bg_col, true, g.Style.FrameRounding);
     RenderArrow(
-        window.DrawList,
+        &mut window.DrawList,
         bb.Min
             + ImVec2::from_floats(
                 ImMax(0.0, (size.x - g.FontSize) * 0.5),
@@ -503,7 +504,7 @@ pub unsafe fn ArrowButtonEx(
     return pressed;
 }
 
-pub unsafe fn ArrowButton(str_id: &str, dir: ImGuiDir) -> bool {
+pub unsafe fn ArrowButton(str_id: &String, dir: ImGuiDir) -> bool {
     let sz: c_float = GetFrameHeight();
     return ArrowButtonEx(
         str_id,
@@ -516,7 +517,7 @@ pub unsafe fn ArrowButton(str_id: &str, dir: ImGuiDir) -> bool {
 // Button to close a window
 pub unsafe fn CloseButton(id: ImGuiID, pos: &ImVec2) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
 
     // Tweak 1: Shrink hit-testing area if button covers an abnormally large proportion of the visible region. That's in order to facilitate moving the window away. (#3825)
     // This may better be applied as a general hit-rect reduction mechanism for all widgets to ensure the area to move window is always accessible?
@@ -581,7 +582,7 @@ pub unsafe fn CloseButton(id: ImGuiID, pos: &ImVec2) -> bool {
 // The Collapse button also functions as a Dock Menu button.
 pub unsafe fn CollapseButton(id: ImGuiID, pos: &ImVec2, dock_node: *mut ImGuiDockNode) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: &mut ImGuiWindow = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
 
     let mut bb: ImRect = ImRect::new(
         pos,
@@ -640,7 +641,7 @@ pub unsafe fn CollapseButton(id: ImGuiID, pos: &ImVec2, dock_node: *mut ImGuiDoc
 
     // Switch to moving the window after mouse is moved beyond the initial drag threshold
     if IsItemActive() && IsMouseDragging(0, 0.0) {
-        StartMouseMovingWindowOrNode(window, dock_node, true);
+        StartMouseMovingWindowOrNode(window.unwrap().borrow_mut(), dock_node, true);
     }
 
     return pressed;
