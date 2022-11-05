@@ -303,7 +303,7 @@ pub unsafe fn DragScalar<T>(
     format: &mut String,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -517,7 +517,7 @@ pub unsafe fn DragScalarN(
     format: &str,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -659,7 +659,7 @@ pub unsafe fn DragFloatRange2(
     format_max: &str,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -870,7 +870,7 @@ pub unsafe fn DragIntRange2(
     format_max: &str,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }

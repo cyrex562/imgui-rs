@@ -16,15 +16,15 @@ use imgui_rs::window::ImGuiWindow;
 use libc::{c_char, c_int, c_void};
 use std::ptr::null;
 
-// c_void SetActiveID(ImGuiID id, window: *mut ImGuiWindow)
-pub unsafe fn SetActiveID(id: ImGuiID, window: *mut ImGuiWindow) {
+// c_void SetActiveID(ImGuiID id, window: &mut ImGuiWindow)
+pub unsafe fn SetActiveID(id: ImGuiID, window: &mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // While most behaved code would make an effort to not steal active id during window move/drag operations,
     // we at least need to be resilient to it. Cancelling the move is rather aggressive and users of 'master' branch
     // may prefer the weird ill-defined half working situation ('docking' did assert), so may need to rework that.
-    if g.MovingWindow != None && g.ActiveId == g.Movingwindow.MoveId {
-        IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() cancel MovingWindow\n");
+    if g.MovingWindow.is_some() && g.ActiveId == g.Movingwindow.unwrap().MoveId {
+        // IMGUI_DEBUG_LOG_ACTIVEID("SetActiveID() cancel MovingWindow\n");
         g.MovingWindow = None;
     }
 
@@ -114,21 +114,21 @@ pub unsafe fn KeepAliveID(id: ImGuiID) {
 
 pub unsafe fn push_str_id(str_id_begin: &str) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
     let mut id: ImGuiID = window.id_from_str(str_id_begin);
     window.IDStack.push(id);
 }
 
 pub unsafe fn push_void_ptr_id(ptr_id: *const c_void) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
     let mut id: ImGuiID = window.GetID2(ptr_id);
     window.IDStack.push(id);
 }
 
 pub unsafe fn push_int_id(int_id: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
     let mut id: ImGuiID = window.GetID3(int_id);
     window.IDStack.push(id);
 }
@@ -136,9 +136,9 @@ pub unsafe fn push_int_id(int_id: c_int) {
 // Push a given id value ignoring the ID stack as a seed.
 pub unsafe fn PushOverrideID(id: ImGuiID) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow;
+    let mut window = &g.CurrentWindow;
     if g.DebugHookIdInfo == id {
-        DebugHookIdInfo(id, ImGuiDataType_ID, None, null_mut());
+        DebugHookIdInfo(id, ImGuiDataType_ID, None);
     }
     window.IDStack.push(id);
 }
@@ -149,30 +149,30 @@ pub unsafe fn PushOverrideID(id: ImGuiID) {
 pub unsafe fn GetIDWithSeed(arg: &str, seed: ImGuiID) -> ImGuiID {
     let mut id: ImGuiID = ImHashStr(arg, arg.len(), seed as u32);
     let g = GImGui; // ImGuiContext& g = *GImGui; if (g.DebugHookIdInfo == id)
-    DebugHookIdInfo(id, ImGuiDataType_String, str, str_end);
+    DebugHookIdInfo(id, ImGuiDataType_String, str);
     return id;
 }
 
 pub unsafe fn PopID() {
-    let mut window: *mut ImGuiWindow = GimGui.CurrentWindow;
+    let mut window: &mut ImGuiWindow = GimGui.CurrentWindow;
     // IM_ASSERT(window.IDStack.Size > 1); // Too many PopID(), or could be popping in a wrong/different window?
     window.IDStack.pop_back();
 }
 
 pub unsafe fn id_from_str(str_id: &str) -> ImGuiID {
     let g = GImGui; // ImGuiContext& g = *GImGui
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     return window.id_from_str(str_id);
 }
 
 // pub unsafe fn GetID2(str_id_begin: &str) -> ImGuiID {
 //     let g = GImGui; // ImGuiContext& g = *GImGui
-//     let mut window: *mut ImGuiWindow = g.CurrentWindow;
+//     let mut window: &mut ImGuiWindow = g.CurrentWindow;
 //     return window.id_from_str(str_id_begin);
 // }
 
 pub unsafe fn id_from_void_ptr(ptr_id: *const c_void) -> ImGuiID {
     let g = GImGui; // ImGuiContext& g = *GImGui
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     return window.GetID2(ptr_id);
 }

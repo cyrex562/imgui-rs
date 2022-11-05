@@ -12,7 +12,7 @@ use libc::c_float;
 use std::ptr::null;
 
 pub unsafe fn Bullet() {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return;
     }
@@ -38,7 +38,7 @@ pub unsafe fn Bullet() {
     // Render and stay on same line
     text_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
     RenderBullet(
-        window.DrawList,
+        &window.DrawList,
         bb.Min + ImVec2::from_floats(style.FramePadding.x + g.FontSize * 0.5, line_height * 0.5),
         text_col,
     );

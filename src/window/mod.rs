@@ -33,7 +33,7 @@ use crate::window_flags::ImGuiWindowFlags;
 use crate::window_ops::WindowRectAbsToRel;
 use crate::window_temp_data::ImGuiWindowTempData;
 use libc::{c_char, c_float, c_int, c_short, c_void};
-use rect::WindowRectAbsToRel;
+use rect::window_rect_abs_to_rel;
 use std::mem;
 use std::ptr::null_mut;
 
@@ -209,10 +209,10 @@ pub struct ImGuiWindow {
     pub DrawList: ImDrawList,
     // == &DrawListInst (for backward compatibility reason with code using imgui_internal.h we keep this a pointer)
     pub DrawListInst: *mut ImDrawList,
-    pub ParentWindow: *mut ImGuiWindow,
+    pub Parentwindow: &mut ImGuiWindow,
     // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise NULL.
     pub ParentWindowInBeginStack: *mut ImGuiWindow,
-    pub RootWindow: *mut ImGuiWindow,
+    pub Rootwindow: &mut ImGuiWindow,
     // Point to ourself or first ancestor that is not a child window. Doesn't cross through popups/dock nodes.
     pub RootWindowPopupTree: *mut ImGuiWindow,
     // Point to ourself or first ancestor that is not a child window. Cross through popups parent<>child.
@@ -222,7 +222,7 @@ pub struct ImGuiWindow {
     // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
     pub RootWindowForNav: *mut ImGuiWindow, // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
 
-    pub NavLastChildNavWindow: *mut ImGuiWindow,
+    pub NavLastChildNavwindow: &mut ImGuiWindow,
     // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept g.Windows sorted by last focused including child window.)
     // ImGuiID                 NavLastIds[ImGuiNavLayer_COUNT];    // Last known NavId for this window, per layer (0/1)
     pub NavLastIds: [ImGuiID; ImGuiNavLayer_COUNT as usize],
@@ -315,7 +315,7 @@ impl ImGuiWindow {
         let mut id: ImGuiID = ImHashStr(begin, begin.len(), seed as u32);
         let g = GImGui; // ImGuiContext& g = *GImGui;
         if g.DebugHookIdInfo == id {
-            DebugHookIdInfo(id, ImGuiDataType_String, begin, end);
+            DebugHookIdInfo(id, ImGuiDataType_String, begin);
         }
         return id;
     }
@@ -326,7 +326,7 @@ impl ImGuiWindow {
         let mut id: ImGuiID = ImHashData(&ptr, mem::size_of::<*mut c_void>(), seed as u32);
         let g = GImGui; // ImGuiContext& g = *GImGui;
         if g.DebugHookIdInfo == id {
-            DebugHookIdInfo(id, ImGuiDataType_Pointer, ptr, null_mut());
+            DebugHookIdInfo(id, ImGuiDataType_Pointer, ptr);
         }
         return id;
     }
@@ -348,7 +348,7 @@ impl ImGuiWindow {
     // ImGuiID ImGuiWindow::GetIDFromRectangle(const ImRect& r_abs)
     pub unsafe fn GetIDFromRectangle(&self, r_abs: &ImRect) -> ImGuiID {
         let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
-        let r_rel: ImRect = WindowRectAbsToRel(this, r_abs);
+        let r_rel: ImRect = window_rect_abs_to_rel(this, r_abs);
         let mut id: ImGuiID = ImHashData(&r_rel, libc::sizeof(r_rel), seed as u32);
         return id;
     }

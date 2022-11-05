@@ -113,7 +113,7 @@ pub unsafe fn FindViewportByPlatformHandle(platform_handle: *mut c_void) -> *mut
     return None;
 }
 
-pub unsafe fn SetCurrentViewport(current_window: *mut ImGuiWindow, viewport: *mut ImGuiViewport)
+pub unsafe fn SetCurrentViewport(current_window: &mut ImGuiWindow, viewport: *mut ImGuiViewport)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // current_window;
@@ -134,7 +134,7 @@ pub unsafe fn SetCurrentViewport(current_window: *mut ImGuiWindow, viewport: *mu
     }
 }
 
-pub unsafe fn SetWindowViewport(window: *mut ImGuiWindow, viewport: *mut ImGuiViewport)
+pub unsafe fn SetWindowViewport(window: &mut ImGuiWindow, viewport: *mut ImGuiViewport)
 {
     // Abandon viewport
     if (window.ViewportOwned && window.Viewport.Window == window){
@@ -145,7 +145,7 @@ pub unsafe fn SetWindowViewport(window: *mut ImGuiWindow, viewport: *mut ImGuiVi
     window.ViewportOwned = (viewport.Window == window);
 }
 
-pub unsafe fn GetWindowAlwaysWantOwnViewport(window: *mut ImGuiWindow) -> bool
+pub unsafe fn GetWindowAlwaysWantOwnViewport(window: &mut ImGuiWindow) -> bool
 {
     // Tooltips and menus are not automatically forced into their own viewport when the NoMerge flag is set, however the multiplication of viewports makes them more likely to protrude and create their own.
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -158,7 +158,7 @@ pub unsafe fn GetWindowAlwaysWantOwnViewport(window: *mut ImGuiWindow) -> bool
     return false;
 }
 
-pub unsafe fn UpdateTryMergeWindowIntoHostViewport(window: *mut ImGuiWindow, viewport: *mut ImGuiViewport) -> bool
+pub unsafe fn UpdateTryMergeWindowIntoHostViewport(window: &mut ImGuiWindow, viewport: *mut ImGuiViewport) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (window.Viewport == viewport){
@@ -199,7 +199,7 @@ pub unsafe fn UpdateTryMergeWindowIntoHostViewport(window: *mut ImGuiWindow, vie
 }
 
 // FIXME: handle 0 to N host viewports
-pub unsafe fn UpdateTryMergeWindowIntoHostViewports(window: *mut ImGuiWindow) -> bool
+pub unsafe fn UpdateTryMergeWindowIntoHostViewports(window: &mut ImGuiWindow) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return UpdateTryMergeWindowIntoHostViewport(window, g.Viewports[0]);
@@ -467,7 +467,7 @@ pub unsafe fn UpdateViewportsEndFrame()
 }
 
 // FIXME: We should ideally refactor the system to call this every frame (we currently don't)
-pub unsafe fn AddUpdateViewport(window: *mut ImGuiWindow, id: ImGuiID, pos: &ImVec2, size: &ImVec2, flags: ImGuiVIewportFlags) -> *mut ImGuiViewport
+pub unsafe fn AddUpdateViewport(window: &mut ImGuiWindow, id: ImGuiID, pos: &ImVec2, size: &ImVec2, flags: ImGuiVIewportFlags) -> *mut ImGuiViewport
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(id != 0);
@@ -537,7 +537,7 @@ pub unsafe fn DestroyViewport(viewport: *mut ImGuiViewport)
     // for (let window_n: c_int = 0; window_n < g.Windows.len(); window_n++)
     for window_n in 0 .. g.Windows.len()
     {
-        let mut window: *mut ImGuiWindow =  g.Windows[window_n];
+        let mut window: &mut ImGuiWindow =  g.Windows[window_n];
         if (window.Viewport != viewport){
             continue;}
         window.Viewport= None;
@@ -556,7 +556,7 @@ pub unsafe fn DestroyViewport(viewport: *mut ImGuiViewport)
 }
 
 // FIXME-VIEWPORT: This is all super messy and ought to be clarified or rewritten.
-pub unsafe fn WindowSelectViewport(window: *mut ImGuiWindow)
+pub unsafe fn WindowSelectViewport(window: &mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let flags: ImGuiWindowFlags = window.Flags;
@@ -691,7 +691,7 @@ pub unsafe fn WindowSelectViewport(window: *mut ImGuiWindow)
     //    window.Flags |= ImGuiWindowFlags_NoTitleBar;
 }
 
-pub unsafe fn WindowSyncOwnedViewport(window: *mut ImGuiWindow, parent_window_in_stack: *mut ImGuiWindow)
+pub unsafe fn WindowSyncOwnedViewport(window: &mut ImGuiWindow, parent_window_in_stack: *mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 

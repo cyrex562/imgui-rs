@@ -177,7 +177,7 @@ pub struct ImGuiContext {
     pub HoveredWindowUnderMovingWindow: Option<ImGuiWindow>,
 
     // ImGuiWindow*            MovingWindow;                       // Track the window we clicked on (in order to preserve focus). The actual window that is moved is generally Movingwindow.RootWindowDockTree.
-    pub MovingWindow: ImGuiWindow,
+    pub MovingWindow: Option<ImGuiWindow>,
 
     // ImGuiWindow*            WheelingWindow;                     // Track the window we started mouse-wheeling on. Until a timer elapse or mouse has moved, generally keep scrolling the same window even if during the course of scrolling the mouse ends up hovering a child window.
     pub WheelingWindow: ImGuiWindow,
@@ -491,7 +491,7 @@ pub struct ImGuiContext {
     pub NavWindowingTargetAnim: *mut ImGuiWindow,
 
     // ImGuiWindow*            NavWindowingListWindow;             // Internal window actually listing the CTRL+Tab contents
-    pub NavWindowingListWindow: *mut ImGuiWindow,
+    pub NavWindowingListwindow: &mut ImGuiWindow,
 
     // float                   NavWindowingTimer;
     pub NavWindowingTimer: c_float,

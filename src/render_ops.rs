@@ -572,7 +572,7 @@ pub unsafe fn Render() {
     });
     // for (let n: c_int = 0; n != g.Windows.Size; n++)
     for n in 0..g.Windows.len() {
-        let mut window: *mut ImGuiWindow = g.Windows[n];
+        let mut window: &mut ImGuiWindow = g.Windows[n];
         IM_MSVC_WARNING_SUPPRESS(6011); // Static Analysis false positive "warning C6011: Dereferencing NULL pointer 'window'"
         if IsWindowActiveAndVisible(window)
             && flag_set(window.Flags, ImGuiWindowFlags_ChildWindow) == 0
@@ -675,7 +675,7 @@ pub unsafe fn RenderArrow(
     draw_list.AddTriangleFilled(center + a, center + b, center + c, col);
 }
 
-pub unsafe fn RenderBullet(mut draw_list: *mut ImDrawList, pos: ImVec2, col: u32) {
+pub unsafe fn RenderBullet(mut draw_list: &ImDrawList, pos: ImVec2, col: u32) {
     draw_list.AddCircleFilled(&pos, draw_list._Data.FontSize * 0.20, col, 8);
 }
 

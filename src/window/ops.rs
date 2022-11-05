@@ -55,8 +55,8 @@ use crate::window::window_settings::ImGuiWindowSettings;
 use crate::window::window_stack_data::ImGuiWindowStackData;
 use crate::window_settings::ImGuiWindowSettings;
 
-// static c_void SetCurrentWindow(window: *mut ImGuiWindow)
-pub unsafe fn SetCurrentWindow(window: *mut ImGuiWindow) {
+// static c_void SetCurrentWindow(window: &mut ImGuiWindow)
+pub unsafe fn SetCurrentWindow(window: &mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.CurrentWindow = window;
     g.CurrentTable = if is_not_null(window) && window.DC.CurrentTableIdx != -1 {
@@ -75,13 +75,13 @@ pub unsafe fn GetCurrentWindow() -> ImGuiWindow {
     g.CurrentWindow.unwrap().clone()
 }
 
-// static inline IsWindowContentHoverable: bool(window: *mut ImGuiWindow, flags: ImGuiHoveredFlags)
-pub unsafe fn IsWindowContentHoverable(window: *mut ImGuiWindow, flags: ImGuiHoveredFlags) -> bool {
+// static inline IsWindowContentHoverable: bool(window: &mut ImGuiWindow, flags: ImGuiHoveredFlags)
+pub unsafe fn IsWindowContentHoverable(window: &mut ImGuiWindow, flags: ImGuiHoveredFlags) -> bool {
     // An active popup disable hovering on other windows (apart from its own children)
     // FIXME-OPT: This could be cached/stored within the window.
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.NavWindow {
-        if focused_root_window: *mut ImGuiWindow = g.NavWindow.RootWindowDockTree {
+        if focused_root_window: &mut ImGuiWindow = g.NavWindow.RootWindowDockTree {
             if focused_root_window.WasActive && focused_root_window != window.RootWindowDockTree {
                 // For the purpose of those flags we differentiate "standard popup" from "modal popup"
                 // NB: The order of those two tests is important because Modal windows are also Popups.
@@ -110,8 +110,8 @@ pub unsafe fn IsWindowContentHoverable(window: *mut ImGuiWindow, flags: ImGuiHov
 
 // This is called during NewFrame()->UpdateViewportsNewFrame() only.
 // Need to keep in sync with SetWindowPos()
-// static c_void TranslateWindow(window: *mut ImGuiWindow, const delta: &mut ImVec2)
-pub fn TranslateWindow(window: *mut ImGuiWindow, delta: &ImVec2) {
+// static c_void TranslateWindow(window: &mut ImGuiWindow, const delta: &mut ImVec2)
+pub fn TranslateWindow(window: &mut ImGuiWindow, delta: &ImVec2) {
     window.Pos += delta;
     window.ClipRect.Translate(delta);
     window.OuterRectClipped.Translate(delta);
@@ -122,8 +122,8 @@ pub fn TranslateWindow(window: *mut ImGuiWindow, delta: &ImVec2) {
     window.DC.IdealMaxPos += delta;
 }
 
-// static c_void ScaleWindow(window: *mut ImGuiWindow, c_float scale)
-pub fn ScaleWindow(window: *mut ImGuiWindow, scale: c_float) {
+// static c_void ScaleWindow(window: &mut ImGuiWindow, c_float scale)
+pub fn ScaleWindow(window: &mut ImGuiWindow, scale: c_float) {
     let origin: ImVec2 = window.Viewport.Pos.clone();
     window.Pos = ImFloor((window.Pos.clone() - origin) * scale + origin.clone());
     window.Size = ImFloor(window.Size.clone() * scale.clone());
@@ -131,8 +131,8 @@ pub fn ScaleWindow(window: *mut ImGuiWindow, scale: c_float) {
     window.ContentSize = ImFloor(window.ContentSize.clone() * scale.clone());
 }
 
-// static IsWindowActiveAndVisible: bool(window: *mut ImGuiWindow)
-pub fn IsWindowActiveAndVisible(window: *mut ImGuiWindow) -> bool {
+// static IsWindowActiveAndVisible: bool(window: &mut ImGuiWindow)
+pub fn IsWindowActiveAndVisible(window: &mut ImGuiWindow) -> bool {
     return (window.Active.clone()) && (!window.Hidden.clone());
 }
 
@@ -158,10 +158,10 @@ pub fn ChildWindowComparer(lhs: *const c_void, rhs: *const c_void) -> c_int {
     return (a.BeginOrderWithinParent.clone() - b.BeginOrderWithinParent.clone()) as c_int;
 }
 
-// static c_void AddWindowToSortBuffer(Vec<ImGuiWindow*>* out_sorted_windows, window: *mut ImGuiWindow)
+// static c_void AddWindowToSortBuffer(Vec<ImGuiWindow*>* out_sorted_windows, window: &mut ImGuiWindow)
 pub fn AddWindowToSortBuffer(
     mut out_sorted_windows: *mut Vec<*mut ImGuiWindow>,
-    window: *mut ImGuiWindow,
+    window: &mut ImGuiWindow,
 ) {
     out_sorted_windows.push(window);
     if window.Active {
@@ -178,8 +178,8 @@ pub fn AddWindowToSortBuffer(
     }
 }
 
-// static inline GetWindowDisplayLayer: c_int(window: *mut ImGuiWindow)
-pub fn GetWindowDisplayLayer(window: *mut ImGuiWindow) -> c_int {
+// static inline GetWindowDisplayLayer: c_int(window: &mut ImGuiWindow)
+pub fn GetWindowDisplayLayer(window: &mut ImGuiWindow) -> c_int {
     return if flag_set(window.Flags.clone(), ImGuiWindowFlags_Tooltip) {
         1
     } else {
@@ -199,7 +199,7 @@ pub unsafe fn SetNextWindowSize(size: ImVec2, cond: ImGuiCond) {
     };
 }
 
-pub fn SetWindowConditionAllowFlags(window: *mut ImGuiWindow, flags: ImGuiCond, enabled: bool) {
+pub fn SetWindowConditionAllowFlags(window: &mut ImGuiWindow, flags: ImGuiCond, enabled: bool) {
     window.SetWindowPosAllowFlags = if enabled {
         (window.SetWindowPosAllowFlags.clone() | flags)
     } else {
@@ -223,7 +223,7 @@ pub fn SetWindowConditionAllowFlags(window: *mut ImGuiWindow, flags: ImGuiCond, 
 }
 
 
-pub fn ApplyWindowSettings(window: *mut ImGuiWindow, settings: *mut ImGuiWindowSettings)
+pub fn ApplyWindowSettings(window: &mut ImGuiWindow, settings: *mut ImGuiWindowSettings)
 {
     let main_viewport: *const ImGuiViewport = GetMainViewport();
     window.ViewportPos = main_viewport.Pos;
@@ -243,7 +243,7 @@ pub fn ApplyWindowSettings(window: *mut ImGuiWindow, settings: *mut ImGuiWindowS
 }
 
 
-pub unsafe fn UpdateWindowInFocusOrderList(window: *mut ImGuiWindow, just_created: bool, new_flags: ImGuiWindowFlags)
+pub unsafe fn UpdateWindowInFocusOrderList(window: &mut ImGuiWindow, just_created: bool, new_flags: ImGuiWindowFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let new_is_explicit_child: bool = (new_flags & ImGuiWindowFlags_ChildWindow) != 0;
@@ -275,7 +275,7 @@ pub unsafe fn CreateNewWindow(name: *const c_char, flags: ImGuiWindowFlags) -> *
     //IMGUI_DEBUG_LOG("CreateNewWindow '{}', flags = 0x{}\n", name, flags);
 
     // Create window the first time
-    let mut window: *mut ImGuiWindow =  IM_NEW(ImGuiWindow)(&g, name);
+    let mut window: &mut ImGuiWindow =  IM_NEW(ImGuiWindow)(&g, name);
     window.Flags = flags;
     g.WindowsById.SetVoidPtr(window.ID.clone(), window);
 
@@ -326,7 +326,7 @@ pub unsafe fn CreateNewWindow(name: *const c_char, flags: ImGuiWindowFlags) -> *
 }
 
 
-pub unsafe fn CalcWindowSizeAfterConstraint(window: *mut ImGuiWindow, size_desired: &ImVec2) -> ImVec2
+pub unsafe fn CalcWindowSizeAfterConstraint(window: &mut ImGuiWindow, size_desired: &ImVec2) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut new_size: ImVec2 = size_desired.clone();
@@ -362,7 +362,7 @@ pub unsafe fn CalcWindowSizeAfterConstraint(window: *mut ImGuiWindow, size_desir
 }
 
 
-pub unsafe fn CalcWindowAutoFitSize(window: *mut ImGuiWindow, size_contents: &ImVec2) -> ImVec2 {
+pub unsafe fn CalcWindowAutoFitSize(window: &mut ImGuiWindow, size_contents: &ImVec2) -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.Style;
     let decoration_up_height: c_float = window.TitleBarHeight() + window.MenuBarHeight();
@@ -409,7 +409,7 @@ pub unsafe fn CalcWindowAutoFitSize(window: *mut ImGuiWindow, size_contents: &Im
 
 
 
-pub unsafe fn CalcWindowNextAutoFitSize(window: *mut ImGuiWindow) -> ImVec2
+pub unsafe fn CalcWindowNextAutoFitSize(window: &mut ImGuiWindow) -> ImVec2
 {
     let mut size_contents_current: ImVec2 = ImVec2::default();
     let mut size_contents_ideal: ImVec2 = ImVec2::default();
@@ -420,7 +420,7 @@ pub unsafe fn CalcWindowNextAutoFitSize(window: *mut ImGuiWindow) -> ImVec2
 }
 
 
-pub fn GetWindowBgColorIdx(window: *mut ImGuiWindow) -> ImGuiCol {
+pub fn GetWindowBgColorIdx(window: &mut ImGuiWindow) -> ImGuiCol {
     if flag_set(window.Flags.clone(), ImGuiWindowFlags_Tooltip | ImGuiWindowFlags_Popup) {
         return ImGuiCol_PopupBg;
     }
@@ -431,7 +431,7 @@ pub fn GetWindowBgColorIdx(window: *mut ImGuiWindow) -> ImGuiCol {
 }
 
 
-pub unsafe fn CalcResizePosSizeFromAnyCorner(window: *mut ImGuiWindow, corner_target: &ImVec2, corner_norm: &ImVec2, out_pos: *mut ImVec2, out_size: *mut ImVec2) {
+pub unsafe fn CalcResizePosSizeFromAnyCorner(window: &mut ImGuiWindow, corner_target: &ImVec2, corner_norm: &ImVec2, out_pos: *mut ImVec2, out_size: *mut ImVec2) {
     let pos_min: ImVec2 = ImLerpVec22(corner_target, &window.Pos, corner_norm);                // Expected window upper-left
     let pos_max: ImVec2 = ImLerpVec22(window.Pos + window.Size, corner_target, corner_norm); // Expected window lower-right
     let size_expected: ImVec2 = pos_max - pos_min;
@@ -447,7 +447,7 @@ pub unsafe fn CalcResizePosSizeFromAnyCorner(window: *mut ImGuiWindow, corner_ta
 }
 
 
-pub fn GetResizeBorderRect(window: *mut ImGuiWindow, border_n: c_int, perp_padding: c_float, thickness: c_float) -> ImRect {
+pub fn GetResizeBorderRect(window: &mut ImGuiWindow, border_n: c_int, perp_padding: c_float, thickness: c_float) -> ImRect {
     let mut rect: ImRect = window.Rect();
     if thickness == 0.0 {
         rect.Max -= ImVec2::from_floats(1.0, 1.0);
@@ -465,7 +465,7 @@ pub fn GetResizeBorderRect(window: *mut ImGuiWindow, border_n: c_int, perp_paddi
 }
 
 // 0..3: corners (Lower-right, Lower-left, Unused, Unused)
-pub unsafe fn GetWindowResizeCornerID(window: *mut ImGuiWindow, n: c_int) -> ImGuiID {
+pub unsafe fn GetWindowResizeCornerID(window: &mut ImGuiWindow, n: c_int) -> ImGuiID {
     // IM_ASSERT(n >= 0 && n < 4);
     let mut id: ImGuiID = if window.DockIsActive {
         window.DockNode.Hostwindow.ID } else {
@@ -477,7 +477,7 @@ pub unsafe fn GetWindowResizeCornerID(window: *mut ImGuiWindow, n: c_int) -> ImG
 
 
 // Borders (Left, Right, Up, Down)
-pub unsafe fn GetWindowResizeBorderID(window: *mut ImGuiWindow, dir: ImGuiDir) -> ImGuiID {
+pub unsafe fn GetWindowResizeBorderID(window: &mut ImGuiWindow, dir: ImGuiDir) -> ImGuiID {
     // IM_ASSERT(dir >= 0 && dir < 4);
     let n: c_int = dir + 4;
     let mut id: ImGuiID = if window.DockIsActive { window.DockNode.Hostwindow.ID } else { window.ID.clone() };
@@ -490,7 +490,7 @@ pub unsafe fn GetWindowResizeBorderID(window: *mut ImGuiWindow, dir: ImGuiDir) -
 
 // Handle resize for: Resize Grips, Borders, Gamepad
 // Return true when using auto-fit (double click on resize grip)
-pub unsafe fn UpdateWindowManualResize(window: *mut ImGuiWindow, size_auto_fit: &ImVec2, border_held:  *mut c_int, resize_grip_count: c_int, mut resize_grip_col: [u32;4], visibility_rect: &ImRect) -> bool
+pub unsafe fn UpdateWindowManualResize(window: &mut ImGuiWindow, size_auto_fit: &ImVec2, border_held:  *mut c_int, resize_grip_count: c_int, mut resize_grip_col: [u32;4], visibility_rect: &ImRect) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     flags: ImGuiWindowFlags = window.Flags.clone();
@@ -675,7 +675,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
     // IM_ASSERT(g.FrameCountEnded != g.FrameCount);   // Called Render() or EndFrame() and haven't called NewFrame() again yet
 
     // Find or create
-    let mut window: *mut ImGuiWindow =  FindWindowByName(name);
+    let mut window: &mut ImGuiWindow =  FindWindowByName(name);
     let window_just_created: bool = (window == null_mut());
     if window_just_created {
         window = CreateNewWindow(name, flags);
@@ -767,7 +767,7 @@ pub unsafe fn Begin(name: &str, p_open: Option<&mut bool>) -> bool
             None
         } else { g.CurrentWindowStack.last().unwrap().Window }
     };
-    let mut parent_window: *mut ImGuiWindow =  if first_begin_of_the_frame {
+    let mut parent_window: &mut ImGuiWindow =  if first_begin_of_the_frame {
         if flags.clone() & (ImGuiWindowFlags_ChildWindow | ImGuiWindowFlags_Popup) {
             parent_window_in_stack
         } else { None }
@@ -1630,7 +1630,7 @@ pub unsafe fn End()
 
     // Docking: report contents sizes to parent to allow for auto-resize
     if is_not_null(window.DockNode) && window.DockTabIsVisible {
-        let mut host_window: *mut ImGuiWindow = window.DockNode.HostWindow;
+        let mut host_window: &mut ImGuiWindow = window.DockNode.HostWindow;
         if is_not_null(host_window)
         {         // FIXME-DOCK
             host_window.DC.CursorMaxPos = window.DC.CursorMaxPos + window.WindowPadding - host_window.WindowPadding;
@@ -1654,7 +1654,7 @@ pub unsafe fn End()
 }
 
 
-pub unsafe fn BringWindowToFocusFront(window: *mut ImGuiWindow)
+pub unsafe fn BringWindowToFocusFront(window: &mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(window == window.RootWindow);
@@ -1678,9 +1678,9 @@ pub unsafe fn BringWindowToFocusFront(window: *mut ImGuiWindow)
 }
 
 
-pub unsafe fn BringWindowToDisplayFront(window: *mut ImGuiWindow) {
+pub unsafe fn BringWindowToDisplayFront(window: &mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut current_front_window: *mut ImGuiWindow = *g.Windows.last_mut().unwrap();
+    let mut current_front_window: &mut ImGuiWindow = *g.Windows.last_mut().unwrap();
     if current_front_window == window || current_front_window.RootWindowDockTree == window { // Cheap early out (could be better)
         return;
     }
@@ -1694,7 +1694,7 @@ pub unsafe fn BringWindowToDisplayFront(window: *mut ImGuiWindow) {
     }
 }
 
-pub unsafe fn BringWindowToDisplayBack(window: *mut ImGuiWindow) {
+pub unsafe fn BringWindowToDisplayBack(window: &mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.Windows[0] == window {
         return;
@@ -1709,7 +1709,7 @@ pub unsafe fn BringWindowToDisplayBack(window: *mut ImGuiWindow) {
     }
 }
 
-pub unsafe fn BringWindowToDisplayBehind(mut window: *mut ImGuiWindow, mut behind_window: *mut ImGuiWindow) {
+pub unsafe fn BringWindowToDisplayBehind(mut window: &mut ImGuiWindow, mut behind_window: &mut ImGuiWindow) {
     // IM_ASSERT(window != NULL && behind_window != NULL);
     let g = GImGui; // ImGuiContext& g = *GImGui;
     window = window.RootWindow;

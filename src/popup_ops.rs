@@ -139,7 +139,7 @@ pub unsafe fn OpenPopup2(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
 // One open popup per level of the popup hierarchy (NB: when assigning we reset the Window member of ImGuiPopupRef to NULL)
 pub unsafe fn OpenPopupEx(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut parent_window: &mut ImGuiWindow = g.CurrentWindow;
     let current_stack_size: usize = g.BeginPopupStack.len();
 
     if (popup_flags & ImGuiPopupFlags_NoOpenOverExistingPopup) {
@@ -189,7 +189,7 @@ pub unsafe fn OpenPopupEx(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
 // When popups are stacked, clicking on a lower level popups puts focus back to it and close popups above it.
 // This function closes any popups that are over 'ref_window'.
 pub unsafe fn ClosePopupsOverWindow(
-    ref_window: *mut ImGuiWindow,
+    ref_window: &mut ImGuiWindow,
     restore_focus_to_window_under_popup: bool,
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -220,7 +220,7 @@ pub unsafe fn ClosePopupsOverWindow(
             let mut ref_window_is_descendent_of_popup: bool = false;
             // for (let n: c_int = popup_count_to_keep; n < g.OpenPopupStack.len(); n++)
             for n in popup_count_to_keep..g.OpenPopupStack.len() {
-                let mut popup_window: *mut ImGuiWindow = g.OpenPopupStack[n].Window;
+                let mut popup_window: &mut ImGuiWindow = g.OpenPopupStack[n].Window;
                 if is_not_null(popup_window) {
                     //if (popup_window.RootWindowDockTree == ref_window.RootWindowDockTree) // FIXME-MERGE
                     if IsWindowWithinBeginStackOf(ref_window, popup_window) {
@@ -249,7 +249,7 @@ pub unsafe fn ClosePopupsExceptModals() {
     let mut popup_count_to_keep: usize = 0;
     // for (popup_count_to_keep = g.OpenPopupStack.len(); popup_count_to_keep > 0; popup_count_to_keep--)
     for popup_count_to_keep in g.OpenPopupStack.len()..0 {
-        let mut window: *mut ImGuiWindow = g.OpenPopupStack[popup_count_to_keep - 1].Window;
+        let mut window: &mut ImGuiWindow = g.OpenPopupStack[popup_count_to_keep - 1].Window;
         if !is_not_null(window) || flag_set(window.Flags, ImGuiWindowFlags_Modal) {
             break;
         }
@@ -266,13 +266,13 @@ pub unsafe fn ClosePopupToLevel(remaining: usize, restore_focus_to_window_under_
                     // IM_ASSERT(remaining >= 0 && remaining < g.OpenPopupStack.Size);
 
     // Trim open popup stack
-    let mut popup_window: *mut ImGuiWindow = g.OpenPopupStack[remaining].Window;
-    let mut popup_backup_nav_window: *mut ImGuiWindow = g.OpenPopupStack[remaining].BackupNavWindow;
+    let mut popup_window: &mut ImGuiWindow = g.OpenPopupStack[remaining].Window;
+    let mut popup_backup_nav_window: &mut ImGuiWindow = g.OpenPopupStack[remaining].BackupNavWindow;
     g.OpenPopupStack
         .resize_with(remaining, ImGuiPopupData::default());
 
     if restore_focus_to_window_under_popup {
-        let mut focus_window: *mut ImGuiWindow = if is_not_null(popup_window)
+        let mut focus_window: &mut ImGuiWindow = if is_not_null(popup_window)
             && flag_set(popup_window.Flags, ImGuiWindowFlags_ChildMenu)
         {
             popup_window.ParentWindow
@@ -304,8 +304,8 @@ pub unsafe fn CloseCurrentPopup() {
 
     // Closing a menu closes its top-most parent popup (unless a modal)
     while (popup_idx > 0) {
-        let mut popup_window: *mut ImGuiWindow = g.OpenPopupStack[popup_idx].Window;
-        let mut parent_popup_window: *mut ImGuiWindow = g.OpenPopupStack[popup_idx - 1].Window;
+        let mut popup_window: &mut ImGuiWindow = g.OpenPopupStack[popup_idx].Window;
+        let mut parent_popup_window: &mut ImGuiWindow = g.OpenPopupStack[popup_idx - 1].Window;
         let mut close_parent: bool = false;
         if (is_not_null(popup_window) && flag_set(popup_window.Flags, ImGuiWindowFlags_ChildMenu)) {
             if (is_not_null(parent_popup_window)
@@ -329,7 +329,7 @@ pub unsafe fn CloseCurrentPopup() {
     // A common pattern is to close a popup when selecting a menu item/selectable that will open another window.
     // To improve this usage pattern, we avoid nav highlight for a single frame in the parent window.
     // Similarly, we could avoid mouse hover highlight in this window but it is less visually problematic.
-    let mut window: *mut ImGuiWindow = g.NavWindow;
+    let mut window: &mut ImGuiWindow = g.NavWindow;
     if is_not_null(window) {
         window.DC.NavHideHighlightOneFrame = true;
     }
@@ -695,7 +695,7 @@ pub unsafe fn FindBestWindowPosForPopupEx(
 }
 
 // Note that this is used for popups, which can overlap the non work-area of individual viewports.
-pub unsafe fn GetPopupAllowedExtentRect(window: *mut ImGuiWindow) -> ImRect {
+pub unsafe fn GetPopupAllowedExtentRect(window: &mut ImGuiWindow) -> ImRect {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut r_screen: ImRect = ImRect::default();
     if window.ViewportAllowPlatformMonitorExtend >= 0 {
@@ -723,14 +723,14 @@ pub unsafe fn GetPopupAllowedExtentRect(window: *mut ImGuiWindow) -> ImRect {
     return r_screen;
 }
 
-pub unsafe fn FindBestWindowPosForPopup(window: *mut ImGuiWindow) -> ImVec2 {
+pub unsafe fn FindBestWindowPosForPopup(window: &mut ImGuiWindow) -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     let mut r_outer: ImRect = GetPopupAllowedExtentRect(window);
     if window.Flags & ImGuiWindowFlags_ChildMenu {
         // Child menus typically request _any_ position within the parent menu item, and then we move the new menu outside the parent bounds.
         // This is how we end up with child menus appearing (most-commonly) on the right of the parent menu.
-        let mut parent_window: *mut ImGuiWindow = window.ParentWindow;
+        let mut parent_window: &mut ImGuiWindow = window.ParentWindow;
         let horizontal_overlap: c_float = g.Style.ItemInnerSpacing.x; // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
         let mut r_avoid: ImRect = ImRect::default();
         if parent_window.DC.MenuBarAppending {

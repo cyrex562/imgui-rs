@@ -300,7 +300,7 @@ pub unsafe fn NewFrame() {
         };
     // for (let i: c_int = 0; i != g.Windows.Size; i++)
     for i in 0..g.Windows.len() {
-        let mut window: *mut ImGuiWindow = g.Windows[i];
+        let mut window: &mut ImGuiWindow = g.Windows[i];
         window.WasActive = window.Active;
         window.BeginCount = 0;
         window.Active = false;
@@ -454,7 +454,7 @@ pub unsafe fn EndFrame() {
     g.WindowsTempSortBuffer.reserve(g.Windows.len());
     // for (let i: c_int = 0; i != g.Windows.Size; i++)
     for i in 0..g.Windows.len() {
-        let mut window: *mut ImGuiWindow = g.Windows[i];
+        let mut window: &mut ImGuiWindow = g.Windows[i];
         if window.Active && flag_set(window.Flags, ImGuiWindowFlags_ChildWindow) {
             // if a child is active its parent will add it
             continue;

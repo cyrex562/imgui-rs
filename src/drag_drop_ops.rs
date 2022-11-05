@@ -157,7 +157,7 @@ pub unsafe fn BeginDragDropSource(flags: ImGuiDragDropFlags) -> bool
             BeginTooltip();
             if (g.DragDropAcceptIdPrev && (g.DragDropAcceptFlags & ImGuiDragDropFlags_AcceptNoPreviewTooltip))
             {
-                let mut tooltip_window: *mut ImGuiWindow =  g.CurrentWindow;
+                let mut tooltip_window: &mut ImGuiWindow =  g.CurrentWindow;
                 tooltip_window.Hidden = true;
                 tooltip_window.SkipItems = true;
                 tooltip_window.HiddenFramesCanSkipItems = 1;
@@ -237,7 +237,7 @@ pub unsafe fn BeginDragDropTargetCustom(bb: &ImRect, id: ImGuiID) -> bool
     }
 
     let mut window = g.CurrentWindow;
-    let mut hovered_window: *mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
+    let mut hovered_window: &mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
     if hovered_window == None || window.RootWindowDockTree != hovered_window.RootWindowDockTree {
         return false;
     }
@@ -269,7 +269,7 @@ pub unsafe fn BeginDragDropTarget() -> bool
     let mut window = g.CurrentWindow;
     if (!(g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredRect)){
         return false;}
-    let mut hovered_window: *mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
+    let mut hovered_window: &mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
     if (hovered_window == None || window.RootWindowDockTree != hovered_window.RootWindowDockTree || window.SkipItems){
         return false;}
 

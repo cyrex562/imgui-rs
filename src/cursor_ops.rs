@@ -43,7 +43,7 @@ pub unsafe fn ErrorCheckUsingSetCursorPosToExtendParentBoundaries() {
 
 // GetCursorScreenPos: ImVec2()
 pub unsafe fn GetCursorScreenPos() -> ImVec2 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
     return window.DC.CursorPos;
 }
 
@@ -51,7 +51,7 @@ pub unsafe fn GetCursorScreenPos() -> ImVec2 {
 // I believe this was is a judicious choice but it's probably being relied upon (it has been the case since 1.31 and 1.50)
 // It would be sane if we requested user to use SetCursorPos() + Dummy(ImVec2::new(0,0)) to extend CursorMaxPos...
 pub unsafe fn SetCursorScreenPos(pos: &ImVec2) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     window.DC.CursorPos = pos.clone();
     //window.DC.CursorMaxPos = ImMax(window.DC.CursorMaxPos, window.DC.CursorPos);
     window.DC.IsSetPos = true;
@@ -61,25 +61,25 @@ pub unsafe fn SetCursorScreenPos(pos: &ImVec2) {
 // Conversion happens as we pass the value to user, but it makes our naming convention confusing because GetCursorPos() == (DC.CursorPos - window.Pos). May want to rename 'DC.CursorPos'.
 // GetCursorPos: ImVec2()
 pub unsafe fn GetCursorPos() -> ImVec2 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
     return window.DC.CursorPos - window.Pos + window.Scroll;
 }
 
 // GetCursorPosX: c_float()
 pub unsafe fn GetCursorPosX() -> c_float {
-    let mut window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
     return window.DC.CursorPos.x - window.Pos.x + window.Scroll.x;
 }
 
 // GetCursorPosY: c_float()
 pub unsafe fn GetCursorPosY() -> c_float {
-    let mut window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
     return window.DC.CursorPos.y - window.Pos.y + window.Scroll.y;
 }
 
 // c_void SetCursorPos(local_pos: &ImVec2)
 pub unsafe fn SetCursorPos(local_pos: &ImVec2) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     window.DC.CursorPos = window.Pos - window.Scroll + local_pos;
     //window.DC.CursorMaxPos = ImMax(window.DC.CursorMaxPos, window.DC.CursorPos);
     window.DC.IsSetPos = true;
@@ -87,14 +87,14 @@ pub unsafe fn SetCursorPos(local_pos: &ImVec2) {
 
 // c_void SetCursorPosX(x: c_float)
 pub unsafe fn SetCursorPosX(x: c_float) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     window.DC.CursorPos.x = window.Pos.x - window.Scroll.x + x;
     //window.DC.CursorMaxPos.x = ImMax(window.DC.CursorMaxPos.x, window.DC.CursorPos.x);
     window.DC.IsSetPos = true;
 }
 
 pub unsafe fn SetCursorPosY(y: c_float) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     window.DC.CursorPos.y = window.Pos.y - window.Scroll.y + y;
     //window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, window.DC.CursorPos.y);
     window.DC.IsSetPos = true;
@@ -102,14 +102,14 @@ pub unsafe fn SetCursorPosY(y: c_float) {
 
 // GetCursorStartPos: ImVec2()
 pub unsafe fn GetCursorStartPos() -> ImVec2 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
     return window.DC.CursorStartPos - window.Pos;
 }
 
 // c_void Indent(indent_w: c_float)
 pub unsafe fn Indent(indent_w: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     window.DC.Indent.x += if indent_w != 0.0 {
         indent_w
     } else {
@@ -120,7 +120,7 @@ pub unsafe fn Indent(indent_w: c_float) {
 
 pub unsafe fn Unindent(indent_w: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     window.DC.Indent.x -= if (indent_w != 0.0) {
         indent_w
     } else {

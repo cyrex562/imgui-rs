@@ -26,8 +26,8 @@ use crate::window::props::SetWindowPos;
 use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoScrollWithMouse, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup};
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoScrollWithMouse, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup};
 
-// c_void StartMouseMovingWindow(window: *mut ImGuiWindow)
-pub unsafe fn StartMouseMovingWindow(window: *mut ImGuiWindow) {
+// c_void StartMouseMovingWindow(window: &mut ImGuiWindow)
+pub unsafe fn StartMouseMovingWindow(window: &mut ImGuiWindow) {
     // Set ActiveId even if the _NoMove flag is set. Without it, dragging away from a window with _NoMove would activate hover on other windows.
     // We _also_ call this when clicking in a window empty space when io.ConfigWindowsMoveFromTitleBarOnly is set, but clear g.MovingWindow afterward.
     // This is because we want ActiveId to be set even when the window is not permitted to move.
@@ -57,8 +57,8 @@ pub unsafe fn StartMouseMovingWindow(window: *mut ImGuiWindow) {
 // We use 'undock_floating_node == false' when dragging from title bar to allow moving groups of floating nodes without undocking them.
 // - undock_floating_node == true: when dragging from a floating node within a hierarchy, always undock the node.
 // - undock_floating_node == false: when dragging from a floating node within a hierarchy, move root window.
-// c_void StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node:*mut ImGuiDockNode, undock_floating_node: bool)
-pub unsafe fn StartMouseMovingWindowOrNode(window: *mut ImGuiWindow, node: *mut ImGuiDockNode, undock_floating_node: bool) {
+// c_void StartMouseMovingWindowOrNode(window: &mut ImGuiWindow, node:*mut ImGuiDockNode, undock_floating_node: bool)
+pub unsafe fn StartMouseMovingWindowOrNode(window: &mut ImGuiWindow, node: *mut ImGuiDockNode, undock_floating_node: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut can_undock_node: bool = false;
     if node.is_null() == false && node.VisibleWindow.is_null() == false && (node.Visiblewindow.Flags & ImGuiWindowFlags_NoMove) == 0 {
@@ -95,7 +95,7 @@ pub unsafe fn UpdateMouseMovingWindowNewFrame() {
         // We track it to preserve Focus and so that generally ActiveIdWindow == MovingWindow and ActiveId == Movingwindow.MoveId for consistency.
         KeepAliveID(g.ActiveId);
         // IM_ASSERT(g.MovingWindow && g.Movingwindow.RootWindowDockTree);
-        let mut moving_window: *mut ImGuiWindow = g.MovingWindow.RootWindowDockTree;
+        let mut moving_window: &mut ImGuiWindow = g.MovingWindow.RootWindowDockTree;
 
         // When a window stop being submitted while being dragged, it may will its viewport until next Begin()
         let window_disappared: bool = ((!moving_window.WasActive && !moving_window.Active) || moving_window.Viewport == null_mut());
@@ -160,7 +160,7 @@ pub unsafe fn UpdateMouseMovingWindowEndFrame() {
     if g.IO.MouseClicked[0] {
         // Handle the edge case of a popup being closed while clicking in its empty space.
         // If we try to focus it, FocusWindow() > ClosePopupsOverWindow() will accidentally close any parent popups because they are not linked together any more.
-        let mut root_window: *mut ImGuiWindow = if g.HoveredWindow.is_null() == false { g.Hoveredwindow.RootWindow } else { None };
+        let mut root_window: &mut ImGuiWindow = if g.HoveredWindow.is_null() == false { g.Hoveredwindow.RootWindow } else { None };
         let is_closed_popup: bool = root_window.is_null() == false && flag_set(root_window.Flags, ImGuiWindowFlags_Popup) != 0 && !IsPopupOpen(root_window.PopupId, ImGuiPopupFlags_AnyPopupLevel);
 
         if root_window != None && !is_closed_popup {
@@ -265,8 +265,8 @@ pub unsafe fn UpdateMouseInputs() {
     }
 }
 
-// static c_void StartLockWheelingWindow(window: *mut ImGuiWindow)
-pub unsafe fn StartLockWheelingWindow(window: *mut ImGuiWindow) {
+// static c_void StartLockWheelingWindow(window: &mut ImGuiWindow)
+pub unsafe fn StartLockWheelingWindow(window: &mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.WheelingWindow == window {
         return;
@@ -302,7 +302,7 @@ pub unsafe fn UpdateMouseWheel() {
         return;
     }
 
-    let mut window: *mut ImGuiWindow = if g.WheelingWindow { g.WheelingWindow } else { g.HoveredWindow };
+    let mut window: &mut ImGuiWindow = if g.WheelingWindow { g.WheelingWindow } else { g.HoveredWindow };
     if !window.is_null() || window.Collapsed {
         return;
     }
@@ -380,7 +380,7 @@ pub unsafe fn UpdateHoveredWindowAndCaptureFlags() {
     // IM_ASSERT(g.HoveredWindow == NULL || g.HoveredWindow == g.MovingWindow || g.Hoveredwindow.Viewport == g.MouseViewport);
 
     // Modal windows prevents mouse from hovering behind them.
-    let mut modal_window: *mut ImGuiWindow = GetTopMostPopupModal();
+    let mut modal_window: &mut ImGuiWindow = GetTopMostPopupModal();
     if modal_window && g.HoveredWindow && !IsWindowWithinBeginStackOf(g.Hoveredwindow.RootWindow, modal_window) {// FIXME-MERGE: RootWindowDockTree ?
         clear_hovered_windows = true;
     }

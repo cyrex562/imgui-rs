@@ -41,7 +41,7 @@ use crate::window::focus::FocusWindow;
 use crate::window::ImGuiWindow;
 use crate::window::ops::{Begin, End};
 use crate::window::props::{IsWindowNavFocusable, SetNextWindowPos, SetNextWindowSizeConstraints, SetWindowPos};
-use crate::window::rect::{WindowRectAbsToRel, WindowRectRelToAbs};
+use crate::window::rect::{window_rect_abs_to_rel, WindowRectRelToAbs};
 use crate::window::window_flags::{ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_NoInputs, ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup};
 
 // We get there when either NavId == id, or when g.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
@@ -59,7 +59,7 @@ pub unsafe fn NavProcessItem() {
         let candidate_for_nav_default_focus: bool = (item_flags & ImGuiItemFlags_NoNavDefaultFocus) == 0;
         if candidate_for_nav_default_focus || g.NavInitResultId == 0 {
             g.NavInitResultId = id;
-            g.NavInitResultRectRel = WindowRectAbsToRel(window, &nav_bb);
+            g.NavInitResultRectRel = window_rect_abs_to_rel(window, &nav_bb);
         }
         if candidate_for_nav_default_focus {
             g.NavInitRequest = false; // Found a match, clear request
@@ -104,7 +104,7 @@ pub unsafe fn NavProcessItem() {
         g.NavLayer = window.DC.NavLayerCurrent;
         g.NavFocusScopeId = window.DC.NavFocusScopeIdCurrent;
         g.NavIdIsAlive = true;
-        window.NavRectRel[window.DC.NavLayerCurrent] = WindowRectAbsToRel(window, &nav_bb);    // Store item bounding box (relative to window position)
+        window.NavRectRel[window.DC.NavLayerCurrent] = window_rect_abs_to_rel(window, &nav_bb);    // Store item bounding box (relative to window position)
     }
 }
 
@@ -114,13 +114,13 @@ pub unsafe fn NavProcessItem() {
 // In our terminology those should be interchangeable, yet right now this is super confusing.
 // Those two functions are merely a legacy artifact, so at minimum naming should be clarified.
 
-pub unsafe fn SetNavWindow(window: *mut ImGuiWindow)
+pub unsafe fn SetNavWindow(window: &mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.NavWindow != window
     {
         // IMGUI_DEBUG_LOG_FOCUS("[focus] SetNavWindow(\"{}\")\n", window ? window.Name : "<NULL>");
-        g.NavWindow = window;
+        g.NavWindow = Some(window.clone());
     }
     g.NavInitRequest = false;g.NavMoveSubmitted = false;g.NavMoveScoringItems = false;
     NavUpdateAnyRequestFlag();
@@ -138,7 +138,7 @@ pub unsafe fn SetNavID(id: ImGuiID, nav_layer: ImGuiNavLayer, focus_scope_id: Im
     g.NavWindow.NavRectRel[nav_layer] = rect_rel;
 }
 
-pub unsafe fn SetFocusID(id: ImGuiID, window: *mut ImGuiWindow)
+pub unsafe fn SetFocusID(id: ImGuiID, window: &mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(id != 0);
@@ -155,7 +155,7 @@ pub unsafe fn SetFocusID(id: ImGuiID, window: *mut ImGuiWindow)
     g.NavFocusScopeId = window.DC.NavFocusScopeIdCurrent;
     window.NavLastIds[nav_layer] = id;
     if (g.LastItemData.ID == id) {
-        window.NavRectRel[nav_layer] = WindowRectAbsToRel(window, &g.LastItemData.NavRect);
+        window.NavRectRel[nav_layer] = window_rect_abs_to_rel(window, &g.LastItemData.NavRect);
     }
 
     if (g.ActiveIdSource == ImGuiInputSource_Nav) {
@@ -280,7 +280,7 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window.Viewport);
         draw_list.AddRect(&curr.Min, &curr.Max, color_u32_from_rgba(255, 200, 0, 100), 0.0);
         draw_list.AddRect(&cand.Min, &cand.Max, color_u32_from_rgba(255, 255, 0, 200), 0.0);
-        draw_list.AddRectFilled(cand.Max - ImVec2::from_floats(4.0, 4.0), cand.Max + CalcTextSize(buf.as_ptr(), None, false, 0.0) + ImVec2::from_floats(4.0, 4.0), color_u32_from_rgba(40, 0, 0, 150), 0.0, 0);
+        draw_list.AddRectFilled(cand.Max - ImVec2::from_floats(4.0, 4.0), cand.Max + CalcTextSize(buf.as_ptr(),  false, 0.0) + ImVec2::from_floats(4.0, 4.0), color_u32_from_rgba(40, 0, 0, 150), 0.0, 0);
         draw_list.AddText(&cand.Max, !0, buf.as_ptr());
     }
     else if (g.IO.KeyCtrl) // Hold to preview score in matching quadrant. Press C to rotate.
@@ -352,7 +352,7 @@ pub unsafe fn NavApplyItemToResult(result: *mut ImGuiNavItemData)
     result.ID = g.LastItemData.ID;
     result.FocusScopeId = window.DC.NavFocusScopeIdCurrent;
     result.InFlags = g.LastItemData.InFlags;
-    result.RectRel = WindowRectAbsToRel(window, &g.LastItemData.NavRect);
+    result.RectRel = window_rect_abs_to_rel(window, &g.LastItemData.NavRect);
 }
 
 // Handle "scoring" of an item for a tabbing/focusing request initiated by NavUpdateCreateTabbingRequest().
@@ -470,7 +470,7 @@ pub unsafe fn NavMoveRequestForward(move_dir: ImGuiDir, clip_dir: ImGuiDir, move
 
 // Navigation wrap-around logic is delayed to the end of the frame because this operation is only valid after entire
 // popup is assembled and in case of appended popups it is not clear which EndPopup() call is final.
-pub unsafe fn NavMoveRequestTryWrapping(window: *mut ImGuiWindow, wrap_flags: ImGuiNavMoveFlags)
+pub unsafe fn NavMoveRequestTryWrapping(window: &mut ImGuiWindow, wrap_flags: ImGuiNavMoveFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(wrap_flags != 0); // Call with _WrapX, _WrapY, _LoopX, _LoopY
@@ -482,7 +482,7 @@ pub unsafe fn NavMoveRequestTryWrapping(window: *mut ImGuiWindow, wrap_flags: Im
 
 // FIXME: This could be replaced by updating a frame number in each window when (window == NavWindow) and (NavLayer == 0).
 // This way we could find the last focused window among our children. It would be much less confusing this way?
-pub unsafe fn NavSaveLastChildNavWindowIntoParent(nav_window: *mut ImGuiWindow)
+pub unsafe fn NavSaveLastChildNavWindowIntoParent(nav_window: &mut ImGuiWindow)
 {
     let mut parent: *mut ImGuiWindow =  nav_window;
     while (is_not_null(parent) && parent.RootWindow != parent && flag_clear(parent.Flags, (ImGuiWindowFlags_Popup | ImGuiWindowFlags_ChildMenu))) {
@@ -495,7 +495,7 @@ pub unsafe fn NavSaveLastChildNavWindowIntoParent(nav_window: *mut ImGuiWindow)
 
 // Restore the last focused child.
 // Call when we are expected to land on the Main Layer (0) after FocusWindow()
-pub unsafe fn NavRestoreLastChildNavWindow(window: *mut ImGuiWindow) -> *mut ImGuiWindow
+pub unsafe fn NavRestoreLastChildNavWindow(window: &mut ImGuiWindow) -> *mut ImGuiWindow
 {
     if window.NavLastChildNavWindow && window.NavLastChildNavwindow.WasActive {
         return window.NavLastChildNavWindow;
@@ -515,12 +515,12 @@ pub unsafe fn NavRestoreLayer(layer: ImGuiNavLayer)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (layer == ImGuiNavLayer_Main)
     {
-        let mut prev_nav_window: *mut ImGuiWindow =  g.NavWindow;
+        let mut prev_nav_window: &mut ImGuiWindow =  g.NavWindow;
         g.NavWindow = NavRestoreLastChildNavWindow(g.NavWindow);    // FIXME-NAV: Should clear ongoing nav requests?
         if (prev_nav_window) {}
             // IMGUI_DEBUG_LOG_FOCUS("[focus] NavRestoreLayer: from \"{}\" to SetNavWindow(\"{}\")\n", prev_nav_window.Name, g.NavWindow.Name);
     }
-    let mut window: *mut ImGuiWindow =  g.NavWindow;
+    let mut window: &mut ImGuiWindow =  g.NavWindow;
     if (window.NavLastIds[layer] != 0)
     {
         SetNavID(window.NavLastIds[layer], layer, 0, window.NavRectRel[layer]);
@@ -548,7 +548,7 @@ pub unsafe fn NavUpdateAnyRequestFlag()
 }
 
 // This needs to be called before we submit any widget (aka in or before Begin)
-pub unsafe fn NavInitWindow(window: *mut ImGuiWindow, force_reinit: bool)
+pub unsafe fn NavInitWindow(window: &mut ImGuiWindow, force_reinit: bool)
 {
     // FIXME: ChildWindow test here is wrong for docking
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -584,7 +584,7 @@ pub unsafe fn NavInitWindow(window: *mut ImGuiWindow, force_reinit: bool)
 pub unsafe fn NavCalcPreferredRefPos() -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow =  g.NavWindow;
+    let mut window: &mut ImGuiWindow =  g.NavWindow;
     if g.NavDisableHighlight || !g.NavDisableMouseHover || !is_not_null(window)
     {
         // Mouse (we need a fallback in case the mouse becomes invalid after being used)
@@ -773,7 +773,7 @@ pub unsafe fn NavUpdate()
     if (is_not_null(g.NavWindow) && flag_clear(g.NavWindow.Flags, ImGuiWindowFlags_NoNavInputs) && is_null(g.NavWindowingTarget))
     {
         // *Fallback* manual-scroll with Nav directional keys when window has no navigable item
-        let mut window: *mut ImGuiWindow =  g.NavWindow;
+        let mut window: &mut ImGuiWindow =  g.NavWindow;
         let scroll_speed: c_float =  IM_ROUND(window.CalcFontSize() * 100 * io.DeltaTime); // We need round the scrolling speed because sub-pixel scroll isn't reliably supported.
         const move_dir: ImGuiDir = g.NavMoveDir;
         if (window.DC.NavLayersActiveMask == 0x00 && window.DC.NavHasScroll && move_dir != ImGuiDir_None)
@@ -840,7 +840,7 @@ pub unsafe fn NavUpdate()
         let mut buf: [c_char;32] = [0;32];
         // ImFormatString(buf, 32, "{}", g.NavLayer);
         draw_list.AddCircleFilled(&p, 3.0, col, 0);
-        draw_list.AddText2(None, 13.0, p + ImVec2::from_floats(8.0, -4.0), col, buf.as_ptr(), None, 0.0, null());
+        draw_list.AddText2(None, 13.0, p + ImVec2::from_floats(8.0, -4.0), col, buf.as_ptr(),  0.0, None);
     }
 // #endif
 }
@@ -867,7 +867,7 @@ pub unsafe fn NavUpdateCreateMoveRequest()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let io = &mut g.IO;
-    let mut window: *mut ImGuiWindow =  g.NavWindow;
+    let mut window: &mut ImGuiWindow =  g.NavWindow;
     let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
     let nav_keyboard_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard) != 0;
 
@@ -944,7 +944,7 @@ pub unsafe fn NavUpdateCreateMoveRequest()
     {
         let mut clamp_x: bool =  (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopX | ImGuiNavMoveFlags_WrapX)) == 0;
         let mut clamp_y: bool =  (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopY | ImGuiNavMoveFlags_WrapY)) == 0;
-        let mut inner_rect_rel: ImRect =  WindowRectAbsToRel(window, ImRect(window.InnerRect.Min - ImVec2::from_floats(1.0, 1.0), window.InnerRect.Max + ImVec2::from_floats(1.0, 1.0)));
+        let mut inner_rect_rel: ImRect =  window_rect_abs_to_rel(window, ImRect(window.InnerRect.Min - ImVec2::from_floats(1.0, 1.0), window.InnerRect.Max + ImVec2::from_floats(1.0, 1.0)));
         if (clamp_x || clamp_y) && !inner_rect_rel.Contains(window.NavRectRel[g.NavLayer])
         {
             //IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: clamp NavRectRel for gamepad move\n");
@@ -980,7 +980,7 @@ pub unsafe fn NavUpdateCreateMoveRequest()
 pub unsafe fn NavUpdateCreateTabbingRequest()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow =  g.NavWindow;
+    let mut window: &mut ImGuiWindow =  g.NavWindow;
     // IM_ASSERT(g.NavMoveDir == ImGuiDir_None);
     if window == None || g.NavWindowingTarget != None || flag_set(window.Flags, ImGuiWindowFlags_NoNavInputs) {
         return;
@@ -1146,12 +1146,12 @@ pub unsafe fn NavUpdateCancelRequest()
     else if is_not_null(g.NavWindow) && g.NavWindow != g.NavWindow.RootWindow && flag_clear(g.NavWindow.Flags, ImGuiWindowFlags_Popup) && is_not_null(g.NavWindow.ParentWindow)
     {
         // Exit child window
-        let mut child_window: *mut ImGuiWindow =  g.NavWindow;
-        let mut parent_window: *mut ImGuiWindow =  g.NavWindow.ParentWindow;
+        let mut child_window: &mut ImGuiWindow =  g.NavWindow;
+        let mut parent_window: &mut ImGuiWindow =  g.NavWindow.ParentWindow;
         // IM_ASSERT(child_window.ChildId != 0);
         let child_rect: ImRect =  child_window.Rect();
         FocusWindow(parent_window);
-        SetNavID(child_window.ChildId, ImGuiNavLayer_Main, 0, &WindowRectAbsToRel(parent_window, &child_rect));
+        SetNavID(child_window.ChildId, ImGuiNavLayer_Main, 0, &window_rect_abs_to_rel(parent_window, &child_rect));
         NavRestoreHighlightAfterMove();
     }
     else if g.OpenPopupStack.len() > 0 && !(g.OpenPopupStack.last().unwrap().window.Flags & ImGuiWindowFlags_Modal)
@@ -1177,7 +1177,7 @@ pub unsafe fn NavUpdateCancelRequest()
 pub unsafe fn NavUpdatePageUpPageDown() -> c_float
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow =  g.NavWindow;
+    let mut window: &mut ImGuiWindow =  g.NavWindow;
     if flag_set(window.Flags, ImGuiWindowFlags_NoNavInputs) || g.NavWindowingTarget != None {
         return 0.0;
     }
@@ -1278,7 +1278,7 @@ pub unsafe fn NavEndFrame()
 pub unsafe fn NavUpdateCreateWrappingRequest()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow =  g.NavWindow;
+    let mut window: &mut ImGuiWindow =  g.NavWindow;
 
     let mut do_forward: bool =  false;
     let mut bb_rel: ImRect =  window.NavRectRel[g.NavLayer];
@@ -1335,7 +1335,7 @@ pub unsafe fn NavUpdateCreateWrappingRequest()
     NavMoveRequestForward(g.NavMoveDir, clip_dir, move_flags, g.NavMoveScrollFlags);
 }
 
-pub unsafe fn FindWindowFocusIndex(window: *mut ImGuiWindow) -> c_int
+pub unsafe fn FindWindowFocusIndex(window: &mut ImGuiWindow) -> c_int
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let order: c_int = window.FocusOrder as c_int;
@@ -1390,10 +1390,10 @@ pub unsafe fn NavUpdateWindowing()
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut io = &mut g.IO;
 
-    let mut apply_focus_window: *mut ImGuiWindow =  None;
+    let mut apply_focus_window: &mut ImGuiWindow =  None;
     let mut apply_toggle_layer: bool =  false;
 
-    let mut modal_window: *mut ImGuiWindow =  GetTopMostPopupModal();
+    let mut modal_window: &mut ImGuiWindow =  GetTopMostPopupModal();
     let mut allow_windowing: bool =  (modal_window == null_mut());
     if !allow_windowing {
         g.NavWindowingTarget = None;
@@ -1414,7 +1414,7 @@ pub unsafe fn NavUpdateWindowing()
     let start_windowing_with_gamepad: bool = allow_windowing && nav_gamepad_active && is_null(g.NavWindowingTarget) && IsKeyPressed(ImGuiKey_NavGamepadMenu, false);
     let start_windowing_with_keyboard: bool = allow_windowing && is_null(g.NavWindowingTarget) && io.KeyCtrl && IsKeyPressed(ImGuiKey_Tab, false); // Note: enabled even without NavEnableKeyboard!
     if start_windowing_with_gamepad || start_windowing_with_keyboard {
-        let mut window: *mut ImGuiWindow = if is_not_null(g.NavWindow) {
+        let mut window: &mut ImGuiWindow = if is_not_null(g.NavWindow) {
             g.NavWindow
         } else { FindWindowNavFocusable(g.WindowsFocusOrder.Size - 1, -INT_MAX, -1) };
         if is_not_null(window)
@@ -1521,7 +1521,7 @@ pub unsafe fn NavUpdateWindowing()
             let accum_floored: ImVec2 = ImFloor(g.NavWindowingAccumDeltaPos);
             if accum_floored.x != 0.0 || accum_floored.y != 0.0
             {
-                let mut moving_window: *mut ImGuiWindow =  g.NavWindowingTarget.RootWindowDockTree;
+                let mut moving_window: &mut ImGuiWindow =  g.NavWindowingTarget.RootWindowDockTree;
                 SetWindowPos(moving_window, moving_window.Pos + accum_floored, ImGuiCond_Always);
                 g.NavWindowingAccumDeltaPos -= accum_floored;
             }
@@ -1568,7 +1568,7 @@ pub unsafe fn NavUpdateWindowing()
         ClearActiveID();
 
         // Move to parent menu if necessary
-        let mut new_nav_window: *mut ImGuiWindow =  g.NavWindow;
+        let mut new_nav_window: &mut ImGuiWindow =  g.NavWindow;
         while is_not_null(new_nav_window.ParentWindow)
             && (new_nav_window.DC.NavLayersActiveMask & (1 << ImGuiNavLayer_Menu)) == 0
             && flag_set(new_nav_window.Flags, ImGuiWindowFlags_ChildWindow) != 0
@@ -1577,7 +1577,7 @@ pub unsafe fn NavUpdateWindowing()
         }
         if new_nav_window != g.NavWindow
         {
-            let mut old_nav_window: *mut ImGuiWindow =  g.NavWindow;
+            let mut old_nav_window: &mut ImGuiWindow =  g.NavWindow;
             FocusWindow(new_nav_window);
             new_nav_window.NavLastChildNavWindow = old_nav_window;
         }
@@ -1598,7 +1598,7 @@ pub unsafe fn NavUpdateWindowing()
 }
 
 // Window has already passed the IsWindowNavFocusable()
-pub unsafe fn GetFallbackWindowNameForWindowingList(window: *mut ImGuiWindow) ->  *const c_char
+pub unsafe fn GetFallbackWindowNameForWindowingList(window: &mut ImGuiWindow) -> String
 {
     // if flag_set(window.Flags, ImGuiWindowFlags_Popup) {
     //     return "(Popup)";
@@ -1634,13 +1634,13 @@ pub unsafe fn NavUpdateWindowingOverlay()
     // for (let n: c_int = g.WindowsFocusOrder.Size - 1; n >= 0; n--)
     for n in g.WindowsFocusOrder.len() - 1 .. 0
     {
-        let mut window: *mut ImGuiWindow =  g.WindowsFocusOrder[n];
+        let mut window: &mut ImGuiWindow =  g.WindowsFocusOrder[n];
         // IM_ASSERT(window != NULL); // Fix static analyzers
         if !IsWindowNavFocusable(window) {
             continue;
         }
-        let mut  label: *const c_char = window.Name;
-        if label == FindRenderedTextEnd(label, null()) {
+        let mut  label = window.Name.clone();
+        if label == FindRenderedTextEnd(label) {
             label = GetFallbackWindowNameForWindowingList(window);
         }
         Selectable(label, g.NavWindowingTarget == window);

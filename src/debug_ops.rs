@@ -93,7 +93,7 @@ use crate::window::window_settings::ImGuiWindowSettings;
 
 // [DEBUG] Stack tool: hooks called by GetID() family functions
 // c_void DebugHookIdInfo(ImGuiID id, data_type: ImGuiDataType, data_id: *const c_void, data_id_end: *const c_void)
-pub unsafe fn DebugHookIdInfo(id: ImGuiID, data_type: ImGuiDataType, data_id: *const c_void, data_id_ned: *const c_void) {
+pub unsafe fn DebugHookIdInfo(id: ImGuiID, data_type: ImGuiDataType, data_id: &Vec<u8>) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = &mut g.CurrentWindow;
     let mut tool: *mut ImGuiStackTool = &mut g.DebugStackTool;
@@ -957,7 +957,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
         // for (let n: c_int = 0; n < g.Windows.len(); n++)
         for window in g.Windows.iter_mut()
         {
-            // let mut window: *mut ImGuiWindow =  g.Windows[n];
+            // let mut window: &mut ImGuiWindow =  g.Windows[n];
             if !window.WasActive {
                 continue;
             }
@@ -1627,7 +1627,7 @@ pub unsafe fn DebugNodeWindowsListByBeginStackParent(windows: &mut Vec<ImGuiWInd
     // for (let i: c_int = 0; i < windows_size; i++)
     for win in windows
     {
-        // let mut window: *mut ImGuiWindow =  windows[i];
+        // let mut window: &mut ImGuiWindow =  windows[i];
         if win.ParentWindowInBeginStack != parent_in_begin_stack {
             continue;
         }

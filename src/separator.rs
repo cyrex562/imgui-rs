@@ -18,7 +18,7 @@ use crate::window::ops::GetCurrentWindow;
 // Horizontal/vertical separating line
 pub unsafe fn SeparatorEx(flags: ImGuiSeparatorFlags)
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems { return ; }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -89,7 +89,7 @@ pub unsafe fn SeparatorEx(flags: ImGuiSeparatorFlags)
 pub unsafe fn Separator()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     if window.SkipItems { return ; }
 
     // Those flags should eventually be overridable by the user

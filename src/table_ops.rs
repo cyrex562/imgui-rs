@@ -24,7 +24,7 @@ use crate::window_ops::SetWindowClipRectBeforeSetChannel;
 // c_void TableEndRow(table: *mut ImGuiTable)
 pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-// window: *mut ImGuiWindow = g.CurrentWindow;
+// window: &mut ImGuiWindow = g.CurrentWindow;
     let window = g.CurrentWindow;
     // IM_ASSERT(window == table.InnerWindow);
 // IM_ASSERT(table.IsInsideRow);

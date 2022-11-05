@@ -50,7 +50,7 @@ pub unsafe fn BeginChildEx(
     mut flags: ImGuiWindowFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut parent_window: &mut ImGuiWindow = g.CurrentWindow;
 
     flags |= ImGuiWindowFlags_NoTitleBar
         | ImGuiWindowFlags_NoResize
@@ -96,7 +96,7 @@ pub unsafe fn BeginChildEx(
     let mut ret: bool = Begin(temp_window_name.as_str(), None);
     g.Style.ChildBorderSize = backup_border_size;
 
-    let mut child_window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut child_window: &mut ImGuiWindow = g.CurrentWindow;
     child_window.ChildId = id;
     child_window.AutoFitChildAxises = auto_fit_axises;
 
@@ -169,7 +169,7 @@ pub unsafe fn EndChild() {
         }
         End(0);
 
-        let mut parent_window: *mut ImGuiWindow = g.CurrentWindow;
+        let mut parent_window: &mut ImGuiWindow = g.CurrentWindow;
         let mut bb: ImRect =
             ImRect::from_vec2(&parent_window.DC.CursorPos, parent_window.DC.CursorPos + sz);
         ItemSize(&sz, 0.0);

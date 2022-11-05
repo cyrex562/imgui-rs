@@ -20,8 +20,8 @@ use crate::window::window_flags::ImGuiWindowFlags_NoNavFocus;
 pub unsafe fn IsWindowHovered(flags: ImGuiHoveredFlags) -> bool {
     // IM_ASSERT((flags & (ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenDisabled)) == 0);   // Flags not supported by this function
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut ref_window: *mut ImGuiWindow = g.HoveredWindow;
-    let mut cur_window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut ref_window: &mut ImGuiWindow = g.HoveredWindow;
+    let mut cur_window: &mut ImGuiWindow = g.CurrentWindow;
     if ref_window == None {
         return false;
     }
@@ -59,8 +59,8 @@ pub unsafe fn IsWindowHovered(flags: ImGuiHoveredFlags) -> bool {
 
 pub unsafe fn IsWindowFocused(flags: ImGuiFocusedFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut ref_window: *mut ImGuiWindow = g.NavWindow;
-    let mut cur_window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut ref_window: &mut ImGuiWindow = g.NavWindow;
+    let mut cur_window: &mut ImGuiWindow = g.CurrentWindow;
 
     if (ref_window == null_mut()) {
         return false;
@@ -99,21 +99,21 @@ pub unsafe fn IsWindowDocked() -> bool {
 // Can we focus this window with CTRL+TAB (or PadMenu + PadFocusPrev/PadFocusNext)
 // Note that NoNavFocus makes the window not reachable with CTRL+TAB but it can still be focused with mouse or programmatically.
 // If you want a window to never be focused, you may use the e.g. NoInputs flag.
-pub fn IsWindowNavFocusable(window: *mut ImGuiWindow) -> bool {
+pub fn IsWindowNavFocusable(window: &mut ImGuiWindow) -> bool {
     return window.WasActive && window == window.RootWindow && flag_clear(window.Flags, ImGuiWindowFlags_NoNavFocus);
 }
 
 
 pub unsafe fn GetWindowWidth() -> c_float {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     return window.Size.x;
 }
 
 
 pub unsafe fn GetWindowHeight() -> c_float {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     return window.Size.y;
 }
 
@@ -123,7 +123,7 @@ pub unsafe fn GetWindowPos() -> ImVec2 {
     return window.Pos;
 }
 
-pub unsafe fn SetWindowPos(window: *mut ImGuiWindow, pos: &ImVec2, cond: ImGuiCond) {
+pub unsafe fn SetWindowPos(window: &mut ImGuiWindow, pos: &ImVec2, cond: ImGuiCond) {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if cond != ImGuiCond_None && flag_clear(window.SetWindowPosAllowFlags, cond) {
         return;
@@ -150,24 +150,24 @@ pub unsafe fn SetWindowPos(window: *mut ImGuiWindow, pos: &ImVec2, cond: ImGuiCo
 
 
 pub unsafe fn SetWindowPos2(pos: &ImVec2, cond: ImGuiCond) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
     SetWindowPos(window, pos, cond);
 }
 
 pub unsafe fn SetWindowPos3(name: *const c_char, pos: &ImVec2, cond: ImGuiCond) {
-    let mut window: *mut ImGuiWindow = FindWindowByName(name);
+    let mut window: &mut ImGuiWindow = FindWindowByName(name);
     if is_not_null(window) {
         SetWindowPos(window, pos, cond);
     }
 }
 
 pub unsafe fn GetWindowSize() -> ImVec2 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
     return window.Size;
 }
 
 
-pub unsafe fn SetWindowSize(window: *mut ImGuiWindow, size: &ImVec2, cond: ImGuiCond) {
+pub unsafe fn SetWindowSize(window: &mut ImGuiWindow, size: &ImVec2, cond: ImGuiCond) {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if cond != ImGuiCond_None && flag_clear(window.SetWindowSizeAllowFlags, cond) {
         return;
@@ -200,13 +200,13 @@ pub unsafe fn SetWindowSize2(size: &ImVec2, cond: ImGuiCond) {
 }
 
 pub unsafe fn SetWindowSize3(name: *const c_char, size: &ImVec2, cond: ImGuiCond) {
-    let mut window: *mut ImGuiWindow = FindWindowByName(name);
+    let mut window: &mut ImGuiWindow = FindWindowByName(name);
     if is_not_null(window) {
         SetWindowSize(window, size, cond);
     }
 }
 
-pub unsafe fn SetWindowCollapsed(window: *mut ImGuiWindow, collapsed: bool, cond: ImGuiCond) {
+pub unsafe fn SetWindowCollapsed(window: &mut ImGuiWindow, collapsed: bool, cond: ImGuiCond) {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if cond != ImGuiCond_None && flag_clear(window.SetWindowCollapsedAllowFlags, cond) {
         return;
@@ -217,7 +217,7 @@ pub unsafe fn SetWindowCollapsed(window: *mut ImGuiWindow, collapsed: bool, cond
     window.Collapsed = collapsed;
 }
 
-pub unsafe fn SetWindowHitTestHole(window: *mut ImGuiWindow, pos: &ImVec2, size: &ImVec2) {
+pub unsafe fn SetWindowHitTestHole(window: &mut ImGuiWindow, pos: &ImVec2, size: &ImVec2) {
     // IM_ASSERT(window.HitTestHoleSize.x == 0);     // We don't support multiple holes/hit test filters
     window.HitTestHoleSize = ImVec2ih(size);
     window.HitTestHoleOffset = ImVec2ih(pos - window.Pos);
@@ -228,17 +228,17 @@ pub unsafe fn SetWindowCollapsed2(collapsed: bool, cond: ImGuiCond) {
 }
 
 pub unsafe fn IsWindowCollapsed() -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
     return window.Collapsed;
 }
 
 pub unsafe fn IsWindowAppearing() -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
     return window.Appearing;
 }
 
 pub unsafe fn SetWindowCollapsed3(name: *const c_char, collapsed: bool, cond: ImGuiCond) {
-    let mut window: *mut ImGuiWindow = FindWindowByName(name);
+    let mut window: &mut ImGuiWindow = FindWindowByName(name);
     if is_not_null(window) {
         SetWindowCollapsed(window, collapsed, cond);
     }
@@ -251,7 +251,7 @@ pub unsafe fn SetWindowFocus() {
 
 pub unsafe fn SetWindowFocus2(name: *const c_char) {
     if name {
-        let mut window: *mut ImGuiWindow = FindWindowByName(name);
+        let mut window: &mut ImGuiWindow = FindWindowByName(name);
         if is_not_null(window) {
             FocusWindow(window);
         }
@@ -378,7 +378,7 @@ pub unsafe fn SetWindowFontScale(scale: c_float)
 {
     // IM_ASSERT(scale > 0.0);
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    let mut window: &mut ImGuiWindow =  GetCurrentWindow();
     window.FontWindowScale = scale;
     g.FontSize = window.CalcFontSize();
     g.DrawListSharedData.FontSize = window.CalcFontSize();

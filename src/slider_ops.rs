@@ -403,7 +403,7 @@ pub unsafe fn SliderScalar(
     format: &mut String,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -599,7 +599,7 @@ pub unsafe fn SliderScalarN(
     format: &str,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -851,7 +851,7 @@ pub unsafe fn VSliderScalar(
     format: &mut String,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }

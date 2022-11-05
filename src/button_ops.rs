@@ -55,7 +55,7 @@ pub unsafe fn ButtonBehavior(
     mut flags: ImGuiButtonFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
 
     // Default only reacts to left mouse button
     if flag_clear(flags, ImGuiButtonFlags_MouseButtonMask_) {
@@ -67,7 +67,7 @@ pub unsafe fn ButtonBehavior(
         flags |= ImGuiButtonFlags_PressedOnDefault_;
     }
 
-    backup_hovered_window: *mut ImGuiWindow = g.HoveredWindow;
+    let mut backup_hovered_window = &g.HoveredWindow;
     let flatten_hovered_children: bool = flag_set(flags, ImGuiButtonFlags_FlattenChildren)
         && g.HoveredWindow.is_null() == false
         && g.Hoveredwindow.RootWindowDockTree == window.RootWindowDockTree;
@@ -112,13 +112,13 @@ pub unsafe fn ButtonBehavior(
             {
                 pressed = true;
                 g.DragDropHoldJustPressedId = id;
-                FocusWindow(window);
+                FocusWindow(&mut window);
             }
         }
     }
 
     if flatten_hovered_children {
-        g.HoveredWindow = backup_hovered_window;
+        g.HoveredWindow.replace(backup_hovered_window.unwrap().clone());
     }
 
     // AllowOverlap mode (rarely used) requires previous frame HoveredId to be null or to match. This allows using patterns where a later submitted widget overlaps a previous one.
@@ -150,12 +150,12 @@ pub unsafe fn ButtonBehavior(
                     & (ImGuiButtonFlags_PressedOnClickRelease
                         | ImGuiButtonFlags_PressedOnClickReleaseAnywhere))
                 {
-                    SetActiveID(id, window);
+                    SetActiveID(id, &mut window);
                     g.ActiveIdMouseButton = mouse_button_clicked;
                     if (flag_clear(flags, ImGuiButtonFlags_NoNavFocus)) {
-                        SetFocusID(id, window);
+                        SetFocusID(id, &mut window);
                     }
-                    FocusWindow(window);
+                    FocusWindow(&mut window);
                 }
                 if (flag_set(flags, ImGuiButtonFlags_PressedOnClick)
                     || (flag_set(flags, ImGuiButtonFlags_PressedOnDoubleClick)
@@ -165,10 +165,10 @@ pub unsafe fn ButtonBehavior(
                     if flags & ImGuiButtonFlags_NoHoldingActiveId {
                         ClearActiveID();
                     } else {
-                        SetActiveID(id, window);
+                        SetActiveID(id, &mut window);
                     } // Hold on ID
                     if (flag_clear(flags, ImGuiButtonFlags_NoNavFocus)) {
-                        SetFocusID(id, window);
+                        SetFocusID(id, &mut window);
                     }
                     g.ActiveIdMouseButton = mouse_button_clicked;
                     FocusWindow(window);
@@ -310,7 +310,7 @@ pub unsafe fn ButtonBehavior(
 }
 
 pub unsafe fn ButtonEx(label: String, size_arg: &mut ImVec2, mut flags: ImGuiButtonFlags) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -410,7 +410,7 @@ pub unsafe fn InvisibleButton(
     flags: ImGuiButtonFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -442,7 +442,7 @@ pub unsafe fn ArrowButtonEx(
     mut flags: ImGuiButtonFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -516,7 +516,7 @@ pub unsafe fn ArrowButton(str_id: &str, dir: ImGuiDir) -> bool {
 // Button to close a window
 pub unsafe fn CloseButton(id: ImGuiID, pos: &ImVec2) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
 
     // Tweak 1: Shrink hit-testing area if button covers an abnormally large proportion of the visible region. That's in order to facilitate moving the window away. (#3825)
     // This may better be applied as a general hit-rect reduction mechanism for all widgets to ensure the area to move window is always accessible?
@@ -581,7 +581,7 @@ pub unsafe fn CloseButton(id: ImGuiID, pos: &ImVec2) -> bool {
 // The Collapse button also functions as a Dock Menu button.
 pub unsafe fn CollapseButton(id: ImGuiID, pos: &ImVec2, dock_node: *mut ImGuiDockNode) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
 
     let mut bb: ImRect = ImRect::new(
         pos,

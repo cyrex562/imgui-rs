@@ -15,14 +15,14 @@ pub unsafe fn PopButtonRepeat()
 
 pub unsafe fn PushTextWrapPos(wrap_pos_x: c_float)
 {
-    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    let mut window: &mut ImGuiWindow =  GetCurrentWindow();
     window.DC.TextWrapPosStack.push(window.DC.TextWrapPos);
     window.DC.TextWrapPos = wrap_pos_x;
 }
 
 pub unsafe fn PopTextWrapPos()
 {
-    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    let mut window: &mut ImGuiWindow =  GetCurrentWindow();
     window.DC.TextWrapPos = window.DC.TextWrapPosStack.last().unwrap().clone();
     window.DC.TextWrapPosStack.pop_back();
 }

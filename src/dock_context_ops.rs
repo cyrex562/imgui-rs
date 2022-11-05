@@ -111,7 +111,7 @@ pub unsafe fn DockContextNewFrameUpdateDocking(ctx: *mut ImGuiContext)
     // We could in theory use DockNodeTreeFindVisibleNodeByPos() on the root host dock node, but using .DockNode is a good shortcut.
     // Note this is mostly a debug thing and isn't actually used for docking target, because docking involve more detailed filtering.
     g.DebugHoveredDockNode= None;
-    let mut hovered_window: *mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
+    let mut hovered_window: &mut ImGuiWindow =  g.HoveredWindowUnderMovingWindow;
     if (is_not_null(hovered_window))
     {
         if (hovered_window.DockNodeAsHost){
@@ -357,7 +357,7 @@ pub unsafe fn DockContextBuildAddWindowsToNodes(ctx: *mut ImGuiContext, root_id:
     // for (let n: c_int = 0; n < g.Windows.len(); n++)
     for n in 0 .. g.Windows.len()
     {
-        let mut window: *mut ImGuiWindow =  g.Windows[n];
+        let mut window: &mut ImGuiWindow =  g.Windows[n];
         if (window.DockId == 0 || window.LastFrameActive < g.FrameCount - 1){
             continue;}
         if (window.DockNode != null_mut()){
@@ -397,7 +397,7 @@ pub unsafe fn DockContextQueueDock(ctx: *mut ImGuiContext, target: *mut ImGuiWin
     ctx.DockContext.Requests.push(req);
 }
 
-pub unsafe fn DockContextQueueUndockWindow(ctx: *mut ImGuiContext, window: *mut ImGuiWindow)
+pub unsafe fn DockContextQueueUndockWindow(ctx: *mut ImGuiContext, window: &mut ImGuiWindow)
 {
     let mut req: ImGuiDockRequest = Default::default();
     req.Type = ImGuiDockRequestType_Undock;
@@ -431,8 +431,8 @@ pub unsafe fn DockContextProcessDock(ctx: *mut ImGuiContext, req: *mut ImGuiDock
     let g =  ctx;
     IM_UNUSED(g);
 
-    let mut payload_window: *mut ImGuiWindow =  req.DockPayload;     // Optional
-    let mut target_window: *mut ImGuiWindow =  req.DockTargetWindow;
+    let mut payload_window: &mut ImGuiWindow =  req.DockPayload;     // Optional
+    let mut target_window: &mut ImGuiWindow =  req.DockTargetWindow;
     let node:*mut ImGuiDockNode = req.DockTargetNode;
     if (payload_window){
         // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessDock node 0x{} target '{}' dock window '{}', split_dir {}\n", node ? node.ID : 0, target_window ? target_window.Name : "NULL", payload_window.Name, req.DockSplitDir);
@@ -589,7 +589,7 @@ pub unsafe fn FixLargeWindowsWhenUndocking(size: &ImVec2, ref_viewport: *mut ImG
 
 pub unsafe fn DockContextProcessUndockWindow(
     ctx: *mut ImGuiContext, 
-    window: *mut ImGuiWindow, 
+    window: &mut ImGuiWindow,
     clear_persistent_docking_re0f32: bool)
 {
     let g =  ctx;
@@ -637,7 +637,7 @@ pub unsafe fn DockContextProcessUndockNode(ctx: *mut ImGuiContext, node:*mut ImG
     // for (let n: c_int = 0; n < node.Windows.len(); n++)
     for n in 0 .. node.Windows.len()
     {
-        let mut window: *mut ImGuiWindow =  node.Windows[n];
+        let mut window: &mut ImGuiWindow =  node.Windows[n];
         window.Flags &= !ImGuiWindowFlags_ChildWindow;
         if (window.ParentWindow){
             window.Parentwindow.DC.ChildWindows.find_erase(window);}
@@ -650,7 +650,7 @@ pub unsafe fn DockContextProcessUndockNode(ctx: *mut ImGuiContext, node:*mut ImG
 }
 
 // This is mostly used for automation.
-pub unsafe fn DockContextCalcDropPosForDocking(target: *mut ImGuiWindow, target_node:*mut ImGuiDockNode, payload_window: *mut ImGuiWindow, payload_node:*mut ImGuiDockNode, split_dir: ImGuiDir, split_outer: bool, out_pos: *mut ImVec2) -> bool
+pub unsafe fn DockContextCalcDropPosForDocking(target: *mut ImGuiWindow, target_node:*mut ImGuiDockNode, payload_window: &mut ImGuiWindow, payload_node:*mut ImGuiDockNode, split_dir: ImGuiDir, split_outer: bool, out_pos: *mut ImVec2) -> bool
 {
     // In DockNodePreviewDockSetup() for a root central node instead of showing both "inner" and "outer" drop rects
     // (which would be functionally identical) we only show the outer one. Reflect this here.

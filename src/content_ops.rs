@@ -7,7 +7,7 @@ use crate::GImGui;
 
 pub unsafe fn GetContentRegionAvail() -> ImVec2 {
     let g = GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     return GetContentRegionMaxAbs() - window.DC.CursorPos;
 }
 
@@ -39,12 +39,12 @@ pub unsafe fn GetContentRegionMax() -> ImVec2 {
 // In window space (not screen space!)
 pub unsafe fn GetWindowContentRegionMin() -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     return window.ContentRegionRect.Min - window.Pos;
 }
 
 pub unsafe fn GetWindowContentRegionMax() -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     return window.ContentRegionRect.Max - window.Pos;
 }

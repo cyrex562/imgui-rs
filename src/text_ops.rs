@@ -278,7 +278,7 @@ pub unsafe fn LabelText(label: String, fmt: String) {
 
 // Add a label+text combo aligned to other label+value widgets
 pub unsafe fn LabelTextV(label: String, fmt: String) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return;
     }

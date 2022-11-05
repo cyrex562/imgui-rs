@@ -7,7 +7,7 @@ use crate::scroll_flags::{
     ImGuiScrollFlags_KeepVisibleEdgeY, ImGuiScrollFlags_None,
 };
 use crate::utils::{flag_set, is_not_null};
-use crate::window::rect::WindowRectAbsToRel;
+use crate::window::rect::window_rect_abs_to_rel;
 use crate::window::window_flags::{
     ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoBringToFrontOnFocus,
     ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs,
@@ -17,9 +17,10 @@ use crate::GImGui;
 use libc::c_int;
 use std::ptr::null_mut;
 use ClearActiveID;
+use crate::nav_ops::SetNavWindow;
 
 // Moving window to front of display and set focus (which happens to be back of our sorted list)
-pub unsafe fn FocusWindow(window: *mut ImGuiWindow) {
+pub unsafe fn FocusWindow(window: &mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     if g.NavWindow != window {
@@ -42,12 +43,12 @@ pub unsafe fn FocusWindow(window: *mut ImGuiWindow) {
 
     // Move the root window to the top of the pile
     // IM_ASSERT(window == NULL || window.RootWindowDockTree != NULL);
-    let mut focus_front_window: *mut ImGuiWindow = if is_not_null(window) {
+    let mut focus_front_window: &mut ImGuiWindow = if is_not_null(window) {
         window.RootWindow
     } else {
         None
     };
-    let mut display_front_window: *mut ImGuiWindow = if is_not_null(window) {
+    let mut display_front_window: &mut ImGuiWindow = if is_not_null(window) {
         window.RootWindowDockTree
     } else {
         None
@@ -97,8 +98,8 @@ pub unsafe fn FocusWindow(window: *mut ImGuiWindow) {
 }
 
 pub unsafe fn FocusTopMostWindowUnderOne(
-    mut under_this_window: *mut ImGuiWindow,
-    ignore_window: *mut ImGuiWindow,
+    mut under_this_window: &mut ImGuiWindow,
+    ignore_window: &mut ImGuiWindow,
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut start_idx: c_int = g.WindowsFocusOrder.Size - 1;
@@ -114,7 +115,7 @@ pub unsafe fn FocusTopMostWindowUnderOne(
     // for (let i: c_int = start_idx; i >= 0; i--)
     for i in start_idx..0 {
         // We may later decide to test for different NoXXXInputs based on the active navigation input (mouse vs nav) but that may feel more confusing to the user.
-        let mut window: *mut ImGuiWindow = g.WindowsFocusOrder[i];
+        let mut window: &mut ImGuiWindow = g.WindowsFocusOrder[i];
         // IM_ASSERT(window == window.RootWindow);
         if window != ignore_window && window.WasActive {
             if (window.Flags & (ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs))
@@ -124,7 +125,7 @@ pub unsafe fn FocusTopMostWindowUnderOne(
                 // If A and B are docked into window and B disappear, at the NewFrame() call site window.NavLastChildNavWindow will still point to B.
                 // We might leverage the tab order implicitly stored in window.DockNodeAsHost.TabBar (essentially the 'most_recently_selected_tab' code in tab bar will do that but on next update)
                 // to tell which is the "previous" window. Or we may leverage 'LastFrameFocused/LastFrameJustFocused' and have this function handle child window itself?
-                let mut focus_window: *mut ImGuiWindow = NavRestoreLastChildNavWindow(window);
+                let mut focus_window: &mut ImGuiWindow = NavRestoreLastChildNavWindow(window);
                 FocusWindow(focus_window);
                 return;
             }
@@ -208,7 +209,7 @@ pub unsafe fn SetItemDefaultFocus() {
 
     g.NavInitRequest = false;
     g.NavInitResultId = g.LastItemData.ID;
-    g.NavInitResultRectRel = WindowRectAbsToRel(window, &g.LastItemData.Rect);
+    g.NavInitResultRectRel = window_rect_abs_to_rel(window, &g.LastItemData.Rect);
     NavUpdateAnyRequestFlag();
 
     // Scroll could be done in NavInitRequestApplyResult() via a opt-in flag (we however don't want regular init requests to scroll)

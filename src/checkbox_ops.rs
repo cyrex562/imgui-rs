@@ -19,7 +19,7 @@ use libc::{c_float, c_int, c_uint};
 use std::ptr::null;
 
 pub unsafe fn Checkbox(label: String, v: &mut bool) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }

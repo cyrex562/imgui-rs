@@ -66,7 +66,7 @@ pub unsafe fn MarkIniSettingsDirty()
         g.SettingsDirtyTimer = g.IO.IniSavingRate;}
 }
 
-pub unsafe fn MarkIniSettingsDirty2(window: *mut ImGuiWindow)
+pub unsafe fn MarkIniSettingsDirty2(window: &mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (flag_clear(window.Flags, ImGuiWindowFlags_NoSavedSettings)){
@@ -311,7 +311,7 @@ pub unsafe fn WindowSettingsHandler_ApplyAll(ctx: *mut ImGuiContext, ImGuiSettin
     for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != None; settings = g.SettingsWindows.next_chunk(settings))
         if (settings.WantApply)
         {
-            if (let mut window: *mut ImGuiWindow =  FindWindowByID(settings.ID))
+            if (let mut window: &mut ImGuiWindow =  FindWindowByID(settings.ID))
                 ApplyWindowSettings(window, settings);
             settings.WantApply = false;
         }
@@ -324,7 +324,7 @@ pub unsafe fn WindowSettingsHandler_WriteAll(ctx: *mut ImGuiContext, ImGuiSettin
     let g =  ctx;
     for (let i: c_int = 0; i != g.Windows.len(); i++)
     {
-        let mut window: *mut ImGuiWindow =  g.Windows[i];
+        let mut window: &mut ImGuiWindow =  g.Windows[i];
         if window.Flags & ImGuiWindowFlags_NoSavedSettings{
             continue;}
 

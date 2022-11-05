@@ -10,7 +10,7 @@ use crate::window::ImGuiWindow;
 pub struct ImGuiTabItem {
     pub ID: ImGuiID,
     pub Flags: ImGuiTabItemFlags,
-    pub Window: *mut ImGuiWindow,
+    pub window: &mut ImGuiWindow,
     // When TabItem is part of a DockNode's TabBar, we hold on to a window.
     pub LastFrameVisible: c_int,
     pub LastFrameSelected: c_int,

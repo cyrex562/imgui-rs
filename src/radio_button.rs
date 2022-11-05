@@ -16,7 +16,7 @@ use crate::window::ops::GetCurrentWindow;
 
 pub unsafe fn RadioButton(label: String, active: bool) -> bool
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems { return  false; }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;

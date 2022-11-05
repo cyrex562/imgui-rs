@@ -7,7 +7,7 @@ use crate::stack_sizes::ImGuiStackSizes;
 // Data saved for each window pushed into the stack
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiWindowStackData {
-    pub Window: *mut ImGuiWindow,
+    pub window: &mut ImGuiWindow,
     pub ParentLastItemDataBackup: ImGuiLastItemData,
     pub StackSizesOnBegin: ImGuiStackSizes,      // Store size of various stacks for asserting
 }

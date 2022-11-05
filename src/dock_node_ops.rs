@@ -53,7 +53,7 @@ use crate::window::window_dock_style_color::{ImGuiWindowDockStyleCol_COUNT, ImGu
 use crate::window::window_dock_style_colors::GWindowDockStyleColors;
 use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_NoNavFocus, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoScrollWithMouse, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_UnsavedDocument};
 
-pub fn DockNodeGetTabOrder(window: *mut ImGuiWindow) -> c_int {
+pub fn DockNodeGetTabOrder(window: &mut ImGuiWindow) -> c_int {
     let tab_bar = window.DockNode.TabBar;
     if tab_bar == None {
         return -1;
@@ -62,12 +62,12 @@ pub fn DockNodeGetTabOrder(window: *mut ImGuiWindow) -> c_int {
     return if tab { tab_bar.GetTabOrder(tab) } else { -1 };
 }
 
-pub unsafe fn DockNodeHideWindowDuringHostWindowCreation(window: *mut ImGuiWindow) {
+pub unsafe fn DockNodeHideWindowDuringHostWindowCreation(window: &mut ImGuiWindow) {
     window.Hidden = true;
     window.HiddenFramesCanSkipItems = if window.Active { 1 } else { 2 };
 }
 
-pub unsafe fn DockNodeAddWindow(node: *mut ImGuiDockNode, window: *mut ImGuiWindow, add_to_tab_bar: bool) {
+pub unsafe fn DockNodeAddWindow(node: *mut ImGuiDockNode, window: &mut ImGuiWindow, add_to_tab_bar: bool) {
     let g = GImGui; // ImGuiContext& g = *GImGui; (void)g;
     if window.DockNode {
         // Can overwrite an existing window.DockNode (e.g. pointing to a disabled DockSpace node)
@@ -129,7 +129,7 @@ pub unsafe fn DockNodeAddWindow(node: *mut ImGuiDockNode, window: *mut ImGuiWind
     }
 }
 
-pub unsafe fn DockNodeRemoveWindow(node: *mut ImGuiDockNode, window: *mut ImGuiWindow, save_dock_id: ImGuiID) {
+pub unsafe fn DockNodeRemoveWindow(node: *mut ImGuiDockNode, window: &mut ImGuiWindow, save_dock_id: ImGuiID) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(window.DockNode == node);
     //IM_ASSERT(window.RootWindowDockTree == node->HostWindow);
@@ -180,7 +180,7 @@ pub unsafe fn DockNodeRemoveWindow(node: *mut ImGuiDockNode, window: *mut ImGuiW
     }
 
     if node.Windows.len() == 1 && !node.IsCentralNode() && is_not_null(node.HostWindow) {
-        let mut remaining_window: *mut ImGuiWindow = node.Windows[0];
+        let mut remaining_window: &mut ImGuiWindow = node.Windows[0];
         if node.Hostwindow.ViewportOwned && node.IsRootNode() {
             // Transfer viewport back to the remaining loose window
             IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Node {} transfer Viewport {}=>{} for Window '{}'\n", node.ID, node.Hostwindow.Viewport.ID, remaining_window.ID, remaining_window.Name);
@@ -226,7 +226,7 @@ pub unsafe fn DockNodeMoveWindows(dst_node: *mut ImGuiDockNode, src_node: *mut I
     }
 
     // Tab order is not important here, it is preserved by sorting in DockNodeUpdateTabBar().
-    // for (window: *mut ImGuiWindow : src_node.Windows)
+    // for (window: &mut ImGuiWindow : src_node.Windows)
     for window in src_node.Windows {
         window.DockNode = None;
         window.DockIsActive = false;
@@ -331,7 +331,7 @@ pub unsafe fn DockNodeUpdateFlagsAndCollapse(node: *mut ImGuiDockNode) {
     node.LocalFlagsInWindows = ImGuiDockNodeFlags_None;
     // for (let window_n: c_int = 0; window_n < node.Windows.len(); window_n++)
     for mut window_n in 0..node.Windows.len() {
-        let mut window: *mut ImGuiWindow = node.Windows[window_n];
+        let mut window: &mut ImGuiWindow = node.Windows[window_n];
         // IM_ASSERT(window.DockNode == node);
 
         let mut node_was_active: bool = (node.LastFrameActive + 1 == g.FrameCount);
@@ -409,7 +409,7 @@ pub unsafe fn DockNodeUpdateVisibleFlag(node: *mut ImGuiDockNode) {
     node.IsVisible = is_visible;
 }
 
-pub unsafe fn DockNodeStartMouseMovingWindow(node: *mut ImGuiDockNode, window: *mut ImGuiWindow) {
+pub unsafe fn DockNodeStartMouseMovingWindow(node: *mut ImGuiDockNode, window: &mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(node->WantMouseMove == true);
     StartMouseMovingWindow(window);
@@ -455,7 +455,7 @@ pub unsafe fn DockNodeUpdateForRootNode(node: *mut ImGuiDockNode) {
     }
 }
 
-pub unsafe fn DockNodeSetupHostWindow(node: *mut ImGuiDockNode, host_window: *mut ImGuiWindow) {
+pub unsafe fn DockNodeSetupHostWindow(node: *mut ImGuiDockNode, host_window: &mut ImGuiWindow) {
     // Remove ourselves from any previous different host window
     // This can happen if a user mistakenly does (see #4295 for details):
     //  - N+0: DockBuilderAddNode(id, 0)    // missing ImGuiDockNodeFlags_DockSpace
@@ -500,7 +500,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode) {
     if want_to_hide_host_window {
         if node.Windows.len() == 1 {
             // Floating window pos/size is authoritative
-            let mut single_window: *mut ImGuiWindow = node.Windows[0];
+            let mut single_window: &mut ImGuiWindow = node.Windows[0];
             node.Pos = single_window.Pos;
             node.Size = single_window.SizeFull;
             node.AuthorityForPos = ImGuiDataAuthority_Window;
@@ -547,7 +547,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode) {
     // In reality it isn't very important as user quickly ends up with size data in .ini file.
     if node.IsVisible && node.HostWindow == None && node.IsFloatingNode() && node.IsLeafNode() {
         // IM_ASSERT(node.Windows.Size > 0);
-        let mut ref_window: *mut ImGuiWindow = None;
+        let mut ref_window: &mut ImGuiWindow = None;
         if node.SelectedTabId != 0 {// Note that we prune single-window-node settings on .ini loading, so this is generally 0 for them!
             ref_window = DockNodeFindWindowByID(node, node.SelectedTabId);
         }
@@ -568,7 +568,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode) {
     // for (let window_n: c_int = 0; window_n < node.Windows.len(); window_n++)
     for window_n in 0..node.Windows.len() {
         // FIXME-DOCK: Setting DockIsActive here means that for single active window in a leaf node, DockIsActive will be cleared until the next Begin() call.
-        let mut window: *mut ImGuiWindow = node.Windows[window_n];
+        let mut window: &mut ImGuiWindow = node.Windows[window_n];
         node.HasCloseButton |= window.HasCloseButton;
         window.DockIsActive = (node.Windows.len() > 1);
     }
@@ -577,7 +577,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode) {
     }
 
     // Bind or create host window
-    let mut host_window: *mut ImGuiWindow = None;
+    let mut host_window: &mut ImGuiWindow = None;
     let mut beginned_into_host_window: bool = false;
     if node.IsDockSpace() {
         // [Explicit root dockspace node]
@@ -586,7 +586,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode) {
     } else {
         // [Automatic root or child nodes]
         if node.IsRootNode() && node.IsVisible {
-            let mut ref_window: *mut ImGuiWindow = if (node.Windows.len() > 0) { node.Windows[0] } else { None };
+            let mut ref_window: &mut ImGuiWindow = if (node.Windows.len() > 0) { node.Windows[0] } else { None };
 
             // Sync Pos
             if node.AuthorityForPos == ImGuiDataAuthority_Window && is_not_null(ref_window) {
@@ -847,7 +847,7 @@ pub unsafe fn DockNodeEndAmendTabBar() {
     End();
 }
 
-pub unsafe fn IsDockNodeTitleBarHighlighted(node: *mut ImGuiDockNode, root_node: *mut ImGuiDockNode, host_window: *mut ImGuiWindow) -> bool {
+pub unsafe fn IsDockNodeTitleBarHighlighted(node: *mut ImGuiDockNode, root_node: *mut ImGuiDockNode, host_window: &mut ImGuiWindow) -> bool {
     // CTRL+Tab highlight (only highlighting leaf node, not whole hierarchy)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.NavWindowingTarget {
@@ -870,7 +870,7 @@ pub unsafe fn IsDockNodeTitleBarHighlighted(node: *mut ImGuiDockNode, root_node:
 }
 
 // Submit the tab bar corresponding to a dock node and various housekeeping details.
-pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut ImGuiWindow) {
+pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: &mut ImGuiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.Style;
 
@@ -954,7 +954,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
     let tabs_count_old = tab_bar.Tabs.len();
     // for (let window_n: c_int = 0; window_n < node.Windows.len(); window_n++)
     for n in 0..node.Windows.len() {
-        let mut window: *mut ImGuiWindow = node.Windows[window_n];
+        let mut window: &mut ImGuiWindow = node.Windows[window_n];
         if TabBarFindTabByID(tab_bar, window.TabId) == None {
             TabBarAddTab(tab_bar, ImGuiTabItemFlags_Unsorted, window);
         }
@@ -1035,7 +1035,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: *mut I
     node.VisibleWindow = None;
     // for (let window_n: c_int = 0; window_n < node.Windows.len(); window_n++)
     for window_n in 0..node.Windows.len() {
-        let mut window: *mut ImGuiWindow = node.Windows[window_n];
+        let mut window: &mut ImGuiWindow = node.Windows[window_n];
         if ((closed_all || closed_one) == (window.TabId != INVALID_IMGUI_ID)) && window.HasCloseButton && flag_clear(window.Flags, ImGuiWindowFlags_UnsavedDocument) {
             continue;
         }
@@ -1185,7 +1185,7 @@ pub unsafe fn DockNodeRemoveTabBar(node: *mut ImGuiDockNode) {
     node.TabBar = None;
 }
 
-pub unsafe fn DockNodeIsDropAllowedOne(payload: *mut ImGuiWindow, host_window: *mut ImGuiWindow) -> bool {
+pub unsafe fn DockNodeIsDropAllowedOne(payload: *mut ImGuiWindow, host_window: &mut ImGuiWindow) -> bool {
     if host_window.DockNodeAsHost.is_null() == false && host_window.DockNodeAsHost.IsDockSpace() && payload.BeginOrderWithinContext < host_window.BeginOrderWithinContext {
         return false;
     }
@@ -1221,7 +1221,7 @@ pub unsafe fn DockNodeIsDropAllowedOne(payload: *mut ImGuiWindow, host_window: *
     return true;
 }
 
-pub unsafe fn DockNodeIsDropAllowed(host_window: *mut ImGuiWindow, root_payload: *mut ImGuiWindow) -> bool {
+pub unsafe fn DockNodeIsDropAllowed(host_window: &mut ImGuiWindow, root_payload: *mut ImGuiWindow) -> bool {
     if root_payload.DockNodeAsHost.is_null() == false && root_payload.DockNodeAsHost.IsSplitNode() { // FIXME-DOCK: Missing filtering
         return true;
     }
@@ -1349,9 +1349,9 @@ pub unsafe fn DockNodeCalcDropRectsAndTestMousePos(parent: &mut ImRect, dir: ImG
 // host_node may be NULL if the window doesn't have a DockNode already.
 // FIXME-DOCK: This is misnamed since it's also doing the filtering.
 pub unsafe fn DockNodePreviewDockSetup(
-    host_window: *mut ImGuiWindow,
+    host_window: &mut ImGuiWindow,
     host_node: *mut ImGuiDockNode,
-    payload_window: *mut ImGuiWindow,
+    payload_window: &mut ImGuiWindow,
     mut payload_node: *mut ImGuiDockNode,
     data: *mut ImGuiDockPreviewData,
     is_explicit_target: bool,
@@ -1457,7 +1457,7 @@ pub unsafe fn DockNodePreviewDockSetup(
 }
 
 pub unsafe fn DockNodePreviewDockRender(
-    host_window: *mut ImGuiWindow,
+    host_window: &mut ImGuiWindow,
     host_node: *mut ImGuiDockNode,
     root_payload: *mut ImGuiWindow,
     data: *const ImGuiDockPreviewData) {
@@ -1525,7 +1525,7 @@ pub unsafe fn DockNodePreviewDockRender(
         // for (let payload_n: c_int = 0; payload_n < payload_count; payload_n++)
         for payload_n in 0..payload_count {
             // DockNode's TabBar may have non-window Tabs manually appended by user
-            let mut payload_window: *mut ImGuiWindow = if tab_bar_with_payload { tab_bar_with_payload.Tabs[payload_n].Window } else { root_payload };
+            let mut payload_window: &mut ImGuiWindow = if tab_bar_with_payload { tab_bar_with_payload.Tabs[payload_n].Window } else { root_payload };
             if tab_bar_with_payload && payload_window == None {
                 continue;
             }

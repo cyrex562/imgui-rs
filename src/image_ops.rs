@@ -32,7 +32,7 @@ use crate::window::ops::GetCurrentWindow;
 
 pub unsafe fn Image(user_texture_id: ImTextureID, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, tint_col: &ImVec4, border_col: &ImVec4)
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems { return ; }
 
     let mut bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size);
@@ -58,7 +58,7 @@ pub unsafe fn Image(user_texture_id: ImTextureID, size: &ImVec2, uv0: &ImVec2, u
 pub unsafe fn ImageButtonEx(id: ImGuiID, texture_id: ImTextureID, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, bg_col: &ImVec4, tint_col: &ImVec4) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems { return  false; }
 
     let padding: ImVec2 = g.Style.FramePadding;
@@ -86,7 +86,7 @@ pub unsafe fn ImageButtonEx(id: ImGuiID, texture_id: ImTextureID, size: &ImVec2,
 pub unsafe fn ImageButton(str_id: &str, user_texture_id: ImTextureID, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, bg_col: &ImVec4, tint_col: &ImVec4) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     if window.SkipItems { return  false; }
 
     return ImageButtonEx(window.GetID(str_id), user_texture_id, size, uv0, uv1, bg_col, tint_col);
@@ -100,7 +100,7 @@ pub unsafe fn ImageButton(str_id: &str, user_texture_id: ImTextureID, size: &ImV
 pub unsafe fn ImageButton2(user_texture_id: ImTextureID, size: &ImVec2, uv0: &ImVec2, uv1: &ImVec2, frame_padding: c_int, bg_col: &ImVec4, tint_col: &ImVec4) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     if window.SkipItems { return  false; }
 
     // Default to using texture ID as ID. User can still push string/integer prefixes.

@@ -397,7 +397,7 @@ use crate::window::ops::{
 use crate::window::props::{
     GetFontTexUvWhitePixel, SetNextWindowPos, SetNextWindowSizeConstraints, SetNextWindowViewport,
 };
-use crate::window::rect::{PopClipRect, PushClipRect, WindowRectAbsToRel};
+use crate::window::rect::{PopClipRect, PushClipRect, window_rect_abs_to_rel};
 use crate::window::window_flags::{
     ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_ChildMenu,
     ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_NoDocking,
@@ -733,7 +733,7 @@ pub unsafe fn ColorEdit4(
         }
     }
 
-    picker_active_window: *mut ImGuiWindow = None;
+    picker_active_window: &mut ImGuiWindow = None;
     if flag_clear(flags, ImGuiColorEditFlags_NoSmallPreview) {
         let button_offset_x: c_float = if flag_set(flags, ImGuiColorEditFlags_NoInputs)
             || (style.ColorButtonPosition == ImGuiDir_Left)
@@ -933,7 +933,7 @@ pub unsafe fn ColorPicker4(
     ref_col: c_float,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -1558,7 +1558,7 @@ pub unsafe fn ColorButton(
     mut flags: ImGuiColorEditFlags,
     size_arg: Option<&ImVec2>,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -1986,7 +1986,7 @@ pub unsafe fn TreeNode2(ptr_id: String, fmt: String) -> bool {
 }
 
 pub unsafe fn TreeNode3(label: String) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -2002,7 +2002,7 @@ pub unsafe fn TreeNodeV2(ptr_id: String, fmt: String) -> bool {
 }
 
 pub unsafe fn TreeNodeEx(label: String, flags: ImGuiTreeNodeFlags) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -2106,7 +2106,7 @@ pub unsafe fn TreeNodeUpdateNextOpen(id: ImGuiID, flags: ImGuiTreeNodeFlags) -> 
 }
 
 pub unsafe fn TreeNodeBehavior(id: ImGuiID, flags: ImGuiTreeNodeFlags, label: String) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -2455,14 +2455,14 @@ pub unsafe fn TreeNodeBehavior(id: ImGuiID, flags: ImGuiTreeNodeFlags, label: St
 }
 
 pub unsafe fn TreePush2(str_id: &str) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     Indent(0.0);
     window.DC.TreeDepth += 1;
     PushID(str_id);
 }
 
 pub unsafe fn TreePush(ptr_id: *const c_void) {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     Indent(0.0);
     window.DC.TreeDepth += 1;
     PushID(ptr_id);
@@ -2522,7 +2522,7 @@ pub unsafe fn SetNextItemOpen(is_open: bool, cond: ImGuiCond) {
 // CollapsingHeader returns true when opened but do not indent nor push into the ID stack (because of the ImGuiTreeNodeFlags_NoTreePushOnOpen flag).
 // This is basically the same as calling TreeNodeEx(label, ImGuiTreeNodeFlags_CollapsingHeader). You can remove the _NoTreePushOnOpen flag if you want behavior closer to normal TreeNode().
 pub unsafe fn CollapsingHeader(label: String, flags: ImGuiTreeNodeFlags) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -2543,7 +2543,7 @@ pub unsafe fn CollapsingHeader2(
     p_visible: *mut bool,
     mut flags: ImGuiTreeNodeFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -2757,7 +2757,7 @@ pub unsafe fn Selectable(
                 id,
                 window.DC.NavLayerCurrent,
                 window.DC.NavFocusScopeIdCurrent,
-                &WindowRectAbsToRel(window, &bb),
+                &window_rect_abs_to_rel(window, &bb),
             ); // (bb == NavRect)
             g.NavDisableHighlight = true;
         }
@@ -2861,7 +2861,7 @@ pub unsafe fn Selectable2(
 // Tip: If your vertical size is calculated from an item count (e.g. 10 * item_height) consider adding a fractional part to facilitate seeing scrolling boundaries (e.g. 10.25 * item_height).
 pub unsafe fn BeginListBox(label: String, size_arg: &mut ImVec2) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -3045,7 +3045,7 @@ pub unsafe fn PlotEx(
     mut frame_size: ImVec2,
 ) -> usize {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if (window.SkipItems) {
         return -1;
     }
@@ -3403,7 +3403,7 @@ pub unsafe fn Value4(prefix: &str, v: c_float, float_format: &str) {
 // Ideally we also want this to be responsible for claiming space out of the main window scrolling rectangle, in which case ImGuiWindowFlags_MenuBar will become unnecessary.
 // Then later the same system could be used for multiple menu-bars, scrollbars, side-bars.
 pub unsafe fn BeginMenuBar() -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -3445,7 +3445,7 @@ pub unsafe fn BeginMenuBar() -> bool {
 }
 
 pub unsafe fn EndMenuBar() {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return;
     }
@@ -3511,7 +3511,7 @@ pub unsafe fn BeginViewportSideBar(
 ) -> bool {
     // IM_ASSERT(dir != ImGuiDir_None);
 
-    let mut bar_window: *mut ImGuiWindow = FindWindowByName(name);
+    let mut bar_window: &mut ImGuiWindow = FindWindowByName(name);
     let mut viewport: *mut ImGuiViewport = (if viewport_p {
         viewport_p
     } else {
@@ -3627,7 +3627,7 @@ pub unsafe fn IsRootOfOpenMenuSet() -> bool {
 }
 
 pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -3670,7 +3670,7 @@ pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
 
     // Odd hack to allow hovering across menus of a same menu-set (otherwise we wouldn't be able to hover parent without always being a Child window)
     let menuset_is_open: bool = IsRootOfOpenMenuSet();
-    let mut backed_nav_window: *mut ImGuiWindow = g.NavWindow;
+    let mut backed_nav_window: &mut ImGuiWindow = g.NavWindow;
     if menuset_is_open {
         g.NavWindow = window;
     }
@@ -3934,7 +3934,7 @@ pub unsafe fn MenuItemEx(
     selected: bool,
     enabled: bool,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -3945,7 +3945,7 @@ pub unsafe fn MenuItemEx(
     let label_size: ImVec2 = CalcTextSize(label, true, 0.0);
 
     let menuset_is_open: bool = IsRootOfOpenMenuSet();
-    let mut backed_nav_window: *mut ImGuiWindow = g.NavWindow;
+    let mut backed_nav_window: &mut ImGuiWindow = g.NavWindow;
     if menuset_is_open {
         g.NavWindow = window;
     }
@@ -4657,7 +4657,7 @@ pub unsafe fn TabBarLayout(tab_bar: &mut ImGuiTabBar) {
 pub unsafe fn TabBarCalcTabID(
     tab_bar: &mut ImGuiTabBar,
     label: String,
-    docked_window: *mut ImGuiWindow,
+    docked_window: &mut ImGuiWindow,
 ) -> u32 {
     if docked_window != None {
         IM_UNUSED(tab_bar);
@@ -4666,7 +4666,7 @@ pub unsafe fn TabBarCalcTabID(
         KeepAliveID(id);
         return id as u32;
     } else {
-        let mut window: *mut ImGuiWindow = GimGui.CurrentWindow;
+        let mut window: &mut ImGuiWindow = GimGui.CurrentWindow;
         return window.GetID(label);
     }
 }
@@ -4712,7 +4712,7 @@ pub unsafe fn TabBarFindMostRecentlySelectedTabForActiveWindow(
 pub unsafe fn TabBarAddTab(
     tab_bar: &mut ImGuiTabBar,
     mut tab_flags: ImGuiTabItemFlags,
-    window: *mut ImGuiWindow,
+    window: &mut ImGuiWindow,
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
                     // IM_ASSERT(TabBarFindTabByID(tab_bar, window.TabId) == NULL);
@@ -5160,7 +5160,7 @@ pub unsafe fn TabItemEx(
     label: String,
     mut p_open: Option<&mut bool>,
     mut flags: ImGuiTabItemFlags,
-    docked_window: *mut ImGuiWindow,
+    docked_window: &mut ImGuiWindow,
 ) -> bool {
     // Layout whole tab bar if not already done
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -5554,7 +5554,7 @@ pub unsafe fn SetTabItemClosed(label: String) {
             tab.WantClose = true;
         } // Will be processed by next call to TabBarLayout()
     } else {
-        let mut window: *mut ImGuiWindow = FindWindowByName(label);
+        let mut window: &mut ImGuiWindow = FindWindowByName(label);
         if window.is_null() == false {
             if window.DockIsActive {
                 let node: *mut ImGuiDockNode = window.DockNode;

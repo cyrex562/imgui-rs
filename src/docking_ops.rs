@@ -35,7 +35,7 @@ use crate::window::window_flags::{ImGuiWindowFlags_AlwaysUseWindowPadding, ImGui
 use crate::window::window_settings::ImGuiWindowSettings;
 
 // [Internal] Called via SetNextWindowDockID()
-pub unsafe fn SetWindowDock(window: *mut ImGuiWindow, dock_id: ImGuiID, cond: ImGuiCond)
+pub unsafe fn SetWindowDock(window: &mut ImGuiWindow, dock_id: ImGuiID, cond: ImGuiCond)
 {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if cond && (window.SetWindowDockAllowFlags & cond) == 0 { return ; }
@@ -75,7 +75,7 @@ DockSpace: ImGuiID(id: ImGuiID, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *co
 {
     ctx: *mut ImGuiContext = GImGui;
     let g =  ctx;
-    let mut window: *mut ImGuiWindow =  GetCurrentWindow();
+    let mut window: &mut ImGuiWindow =  GetCurrentWindow();
     if !(g.IO.ConfigFlags & ImGuiConfigFlags_DockingEnable) { return  0; }
 
     // Early out if parent window is hidden/collapsed
@@ -143,7 +143,7 @@ DockSpace: ImGuiID(id: ImGuiID, size_arg: &ImVec2, ImGuiDockNodeFlags flags, *co
     Begin(title, None, window_flags);
     PopStyleVar();
 
-    let mut host_window: *mut ImGuiWindow =  g.CurrentWindow;
+    let mut host_window: &mut ImGuiWindow =  g.CurrentWindow;
     DockNodeSetupHostWindow(node, host_window);
     host_window.ChildId = window.GetID(title);
     node.OnlyNodeWithWindows= None;
@@ -229,7 +229,7 @@ pub unsafe fn DockBuilderDockWindow(window_name: *const c_char, node_id: ImGuiID
 {
     // We don't preserve relative order of multiple docked windows (by clearing DockOrder back to -1)
     let mut window_id: ImGuiID =  ImHashStr(window_name);
-    if (let mut window: *mut ImGuiWindow =  FindWindowByID(window_id))
+    if (let mut window: &mut ImGuiWindow =  FindWindowByID(window_id))
     {
         // Apply to created window
         SetWindowDock(window, node_id, ImGuiCond_Always);
@@ -407,7 +407,7 @@ pub unsafe fn DockBuilderRemoveNodeDockedWindows(root_id: ImGuiID, clear_setting
     // Clear references in windows
     for (let n: c_int = 0; n < g.Windows.len(); n++)
     {
-        let mut window: *mut ImGuiWindow =  g.Windows[n];
+        let mut window: &mut ImGuiWindow =  g.Windows[n];
         let mut want_removal: bool =  (root_id == 0) || (window.DockNode && DockNodeGetRootNode(window.DockNode).ID == root_id) || (window.DockNodeAsHost && window.DockNodeAsHost.ID == root_id);
         if (want_removal)
         {
@@ -504,9 +504,9 @@ pub unsafe fn DockBuilderCopyNode(src_node_id: ImGuiID, dst_node_id: ImGuiID, Ve
 
 pub unsafe fn DockBuilderCopyWindowSettings(src_name: *const c_char, dst_name: *const c_char)
 {
-    let mut src_window: *mut ImGuiWindow =  FindWindowByName(src_name);
+    let mut src_window: &mut ImGuiWindow =  FindWindowByName(src_name);
     if src_window == None { return ; }
-    if (let mut dst_window: *mut ImGuiWindow =  FindWindowByName(dst_name))
+    if (let mut dst_window: &mut ImGuiWindow =  FindWindowByName(dst_name))
     {
         dst_window.Pos = src_window.Pos;
         dst_window.Size = src_window.Size;
@@ -558,7 +558,7 @@ pub unsafe fn DockBuilderCopyDockSpace(src_dockspace_id: ImGuiID, dst_dockspace_
 
         // Search in the remapping tables
         let mut src_dock_id: ImGuiID =  0;
-        if (let mut src_window: *mut ImGuiWindow =  FindWindowByID(src_window_id))
+        if (let mut src_window: &mut ImGuiWindow =  FindWindowByID(src_window_id))
             src_dock_id = src_window.DockId;
         else if (src_window_settings: *mut ImGuiWindowSettings = FindWindowSettings(src_window_id))
             src_dock_id = src_window_settings->DockId;
@@ -595,7 +595,7 @@ pub unsafe fn DockBuilderCopyDockSpace(src_dockspace_id: ImGuiID, dst_dockspace_
             node:*mut ImGuiDockNode = DockBuilderGetNode(src_dock_id);
             for (let window_n: c_int = 0; window_n < node.Windows.len(); window_n++)
             {
-                let mut window: *mut ImGuiWindow =  node.Windows[window_n];
+                let mut window: &mut ImGuiWindow =  node.Windows[window_n];
                 if src_windows.contains(window.ID){
                     continue;}
 
@@ -624,7 +624,7 @@ pub unsafe fn DockBuilderFinish(root_id: ImGuiID)
 // - BeginDockableDragDropTarget()
 //-----------------------------------------------------------------------------
 
-pub unsafe fn GetWindowAlwaysWantOwnTabBar(window: *mut ImGuiWindow) -> bool
+pub unsafe fn GetWindowAlwaysWantOwnTabBar(window: &mut ImGuiWindow) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (g.IO.ConfigDockingAlwaysTabBar || window.WindowClass.DockingAlwaysTabBar)
@@ -634,7 +634,7 @@ pub unsafe fn GetWindowAlwaysWantOwnTabBar(window: *mut ImGuiWindow) -> bool
     return false;
 }
 
-static DockContextBindNodeToWindow:*mut ImGuiDockNode(ctx: *mut ImGuiContext, window: *mut ImGuiWindow)
+static DockContextBindNodeToWindow:*mut ImGuiDockNode(ctx: *mut ImGuiContext, window: &mut ImGuiWindow)
 {
     let g =  ctx;
     node:*mut ImGuiDockNode = DockContextFindNodeByID(ctx, window.DockId);
@@ -677,7 +677,7 @@ static DockContextBindNodeToWindow:*mut ImGuiDockNode(ctx: *mut ImGuiContext, wi
     return node;
 }
 
-pub unsafe fn BeginDocked(window: *mut ImGuiWindow,p_open: *mut bool)
+pub unsafe fn BeginDocked(window: &mut ImGuiWindow,p_open: *mut bool)
 {
     ctx: *mut ImGuiContext = GImGui;
     let g =  ctx;
@@ -798,11 +798,11 @@ pub unsafe fn BeginDocked(window: *mut ImGuiWindow,p_open: *mut bool)
         *p_open = false;
 
     // Update ChildId to allow returning from Child to Parent with Escape
-    let mut parent_window: *mut ImGuiWindow =  window.DockNode.HostWindow;
+    let mut parent_window: &mut ImGuiWindow =  window.DockNode.HostWindow;
     window.ChildId = parent_window.id_from_str(window.Name);
 }
 
-pub unsafe fn BeginDockableDragDropSource(window: *mut ImGuiWindow)
+pub unsafe fn BeginDockableDragDropSource(window: &mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(g.ActiveId == window.MoveId);
@@ -824,7 +824,7 @@ pub unsafe fn BeginDockableDragDropSource(window: *mut ImGuiWindow)
     }
 }
 
-pub unsafe fn BeginDockableDragDropTarget(window: *mut ImGuiWindow)
+pub unsafe fn BeginDockableDragDropTarget(window: &mut ImGuiWindow)
 {
     ctx: *mut ImGuiContext = GImGui;
     let g =  ctx;
@@ -844,7 +844,7 @@ pub unsafe fn BeginDockableDragDropTarget(window: *mut ImGuiWindow)
         return;
     }
 
-    let mut payload_window: *mut ImGuiWindow =  *(ImGuiWindow**)payload.Data;
+    let mut payload_window: &mut ImGuiWindow =  *(ImGuiWindow**)payload.Data;
     if (AcceptDragDropPayload(IMGUI_PAYLOAD_TYPE_WINDOW, ImGuiDragDropFlags_AcceptBeforeDelivery | ImGuiDragDropFlags_AcceptNoDrawDefaultRect))
     {
         // Select target node
@@ -923,7 +923,7 @@ pub unsafe fn DockSettingsRenameNodeReferences(old_node_id: ImGuiID, new_node_id
     IMGUI_DEBUG_LOG_DOCKING("[docking] DockSettingsRenameNodeReferences: from 0x{} -> to 0x{}\n", old_node_id, new_node_id);
     for (let window_n: c_int = 0; window_n < g.Windows.len(); window_n++)
     {
-        let mut window: *mut ImGuiWindow =  g.Windows[window_n];
+        let mut window: &mut ImGuiWindow =  g.Windows[window_n];
         if window.DockId == old_node_id && window.DockNode == None{
             window.DockId = new_node_id;}
     }

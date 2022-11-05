@@ -636,7 +636,7 @@ pub unsafe fn PushMultiItemsWidths(components: usize, w_full: c_float) {
 }
 
 pub unsafe fn PopItemWidth() {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     window.DC.ItemWidth = window.DC.ItemWidthStack.last().unwrap().clone();
     window.DC.ItemWidthStack.pop_back();
 }

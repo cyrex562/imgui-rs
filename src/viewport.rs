@@ -33,7 +33,7 @@ pub struct ImGuiViewport {
     pub LastAlpha: c_float,
     pub PlatformMonitor: c_short,
     pub PlatformWindowCreated: bool,
-    pub Window: *mut ImGuiWindow,
+    pub window: &mut ImGuiWindow,
     // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
 // c_int                 DrawListsLastFrame[2];  // Last frame number the background (0) and foreground (1) draw lists were used
     pub DrawListsLastFrame: [c_int; 2],

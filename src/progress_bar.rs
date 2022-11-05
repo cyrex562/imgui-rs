@@ -15,7 +15,7 @@ use crate::window::ops::GetCurrentWindow;
 // size_arg (for each axis) < 0.0: align to end, 0.0: auto, > 0.0: specified size
 pub unsafe fn ProgressBar(mut fraction: c_float, size_arg: &mut ImVec2, overlay: &mut str)
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems { return ; }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;

@@ -127,7 +127,7 @@ pub unsafe fn InputScalar(
     format: &mut String,
     mut flags: ImGuiInputTextFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }
@@ -243,7 +243,7 @@ pub unsafe fn InputScalarN(
     format: &mut String,
     flags: ImGuiInputTextFlags,
 ) -> bool {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems {
         return false;
     }

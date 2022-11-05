@@ -8,7 +8,7 @@ use crate::window::ImGuiWindow;
 use crate::type_defs::ImGuiID;
 
 pub struct ImGuiNavItemData {
-    pub Window: *mut ImGuiWindow,
+    pub window: &mut ImGuiWindow,
     // Init,Move    // Best candidate window (result->Itemwindow.RootWindowForNav == request.Window)
     pub ID: ImGuiID,
     // Init,Move    // Best candidate item ID

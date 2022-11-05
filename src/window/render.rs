@@ -30,7 +30,7 @@ use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow
 
 // Render title text, collapse button, close button
 // When inside a dock node, this is handled in DockNodeCalcTabBarLayout() instead.
-pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_bar_rect: *mut ImRect, name: *const c_char, p_open: *mut bool)
+pub unsafe fn RenderWindowTitleBarContents(window: &mut ImGuiWindow, mut title_bar_rect: *mut ImRect, name: *const c_char, p_open: *mut bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.Style;
@@ -125,7 +125,7 @@ pub unsafe fn RenderWindowTitleBarContents(window: *mut ImGuiWindow, mut title_b
 }
 
 
-pub fn UpdateWindowParentAndRootLinks(window: *mut ImGuiWindow, flags: ImGuiWindowFlags, parent_window: *mut ImGuiWindow)
+pub fn UpdateWindowParentAndRootLinks(window: &mut ImGuiWindow, flags: ImGuiWindowFlags, parent_window: &mut ImGuiWindow)
 {
     window.ParentWindow = parent_window;
     window.RootWindow = window.RootWindowPopupTree = window.RootWindowDockTree = window.RootWindowForTitleBarHighlight = window.RootWindowForNav = window;
@@ -147,8 +147,8 @@ pub fn UpdateWindowParentAndRootLinks(window: *mut ImGuiWindow, flags: ImGuiWind
     }
 }
 
-// static c_void RenderDimmedBackgroundBehindWindow(window: *mut ImGuiWindow, col: u32)
-pub unsafe fn RenderDimmedBackgroundBehindWindow(window: *mut ImGuiWindow, col: u32) {
+// static c_void RenderDimmedBackgroundBehindWindow(window: &mut ImGuiWindow, col: u32)
+pub unsafe fn RenderDimmedBackgroundBehindWindow(window: &mut ImGuiWindow, col: u32) {
     if (col & IM_COL32_A_MASK) == 0 {
         return;
     }
@@ -206,7 +206,7 @@ pub unsafe fn RenderDimmedBackgroundBehindWindow(window: *mut ImGuiWindow, col: 
 
 pub unsafe fn RenderDimmedBackgrounds() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut modal_window: *mut ImGuiWindow = GetTopMostAndVisiblePopupModal();
+    let mut modal_window: &mut ImGuiWindow = GetTopMostAndVisiblePopupModal();
     if g.DimBgRatio <= 0.0 && g.NavWindowingHighlightAlpha <= 0.0 {
         return;
     }
@@ -220,7 +220,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
     let mut viewports_already_dimmed: [*mut ImGuiViewport; 2] = [None, None];
     if dim_bg_for_modal {
         // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
-        let mut dim_behind_window: *mut ImGuiWindow =
+        let mut dim_behind_window: &mut ImGuiWindow =
             FindBottomMostVisibleWindowWithinBeginStack(modal_window);
         RenderDimmedBackgroundBehindWindow(
             dim_behind_window,
@@ -250,7 +250,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
         };
 
         // Draw border around CTRL+Tab target window
-        let mut window: *mut ImGuiWindow = g.NavWindowingTargetAnim;
+        let mut window: &mut ImGuiWindow = g.NavWindowingTargetAnim;
         ImGuiViewport * viewport = window.Viewport;
         let distance: c_float = g.FontSize;
         let mut bb: ImRect = window.Rect();
@@ -303,7 +303,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
 }
 
 
-pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
+pub unsafe fn RenderWindowOuterBorders(window: &mut ImGuiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let rounding: c_float =  window.WindowRounding;
@@ -331,7 +331,7 @@ pub unsafe fn RenderWindowOuterBorders(window: *mut ImGuiWindow)
 
 // Draw background and borders
 // Draw and handle scrollbars
-pub unsafe fn RenderWindowDecorations(window: *mut ImGuiWindow, title_bar_rect: &ImRect, title_bar_is_highlight: bool, handle_borders_and_resize_grips: bool, resize_grip_count: c_int, resize_grip_col: [u32;4],resize_grip_draw_size: c_float)
+pub unsafe fn RenderWindowDecorations(window: &mut ImGuiWindow, title_bar_rect: &ImRect, title_bar_is_highlight: bool, handle_borders_and_resize_grips: bool, resize_grip_count: c_int, resize_grip_col: [u32;4],resize_grip_draw_size: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.Style;

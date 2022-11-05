@@ -31,8 +31,8 @@ use crate::vec2::ImVec2;
 use crate::window::ImGuiWindow;
 use crate::window::window_flags::{ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_NoTitleBar};
 
-// static CalcNextScrollFromScrollTargetAndClamp: ImVec2(window: *mut ImGuiWindow)
-pub unsafe fn CalcNextScrollFromScrollTargetAndClamp(window: *mut ImGuiWindow) -> ImVec2
+// static CalcNextScrollFromScrollTargetAndClamp: ImVec2(window: &mut ImGuiWindow)
+pub unsafe fn CalcNextScrollFromScrollTargetAndClamp(window: &mut ImGuiWindow) -> ImVec2
 {
     let mut scroll: ImVec2 = window.Scroll;
     if window.ScrollTarget.x < f32::MAX
@@ -78,13 +78,13 @@ pub unsafe fn ScrollToItem(flags: ImGuiScrollFlags)
     ScrollToRectEx(window, &mut g.LastItemData.NavRect, flags);
 }
 
-pub unsafe fn ScrollToRect(window: *mut ImGuiWindow, item_rect: &mut ImRect, flags: ImGuiScrollFlags)
+pub unsafe fn ScrollToRect(window: &mut ImGuiWindow, item_rect: &mut ImRect, flags: ImGuiScrollFlags)
 {
     ScrollToRectEx(window, item_rect, flags);
 }
 
 // Scroll to keep newly navigated item fully into view
-pub unsafe fn ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &mut ImRect, mut flags: ImGuiScrollFlags) -> ImVec2
+pub unsafe fn ScrollToRectEx(window: &mut ImGuiWindow, item_rect: &mut ImRect, mut flags: ImGuiScrollFlags) -> ImVec2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window_rect: ImRect = ImRect::new(window.InnerRect.Min - ImVec2::from_floats(1.0, 1.0), window.InnerRect.Max + ImVec2::from_floats(1.0, 1.0));
@@ -162,39 +162,39 @@ pub unsafe fn ScrollToRectEx(window: *mut ImGuiWindow, item_rect: &mut ImRect, m
 // GetScrollX: c_float()
 pub unsafe fn GetScrollX() -> c_float
 {
-    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
+    let mut window: &mut ImGuiWindow =  GimGui.CurrentWindow;
     return window.Scroll.x;
 }
 
 // GetScrollY: c_float()
 pub unsafe fn GetScrollY() -> c_float
 {
-    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
+    let mut window: &mut ImGuiWindow =  GimGui.CurrentWindow;
     return window.Scroll.y;
 }
 
 // GetScrollMaxX: c_float()
 pub unsafe fn GetScrollMax() -> c_float
 {
-    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
+    let mut window: &mut ImGuiWindow =  GimGui.CurrentWindow;
     return window.ScrollMax.x;
 }
 
 // GetScrollMaxY: c_float()
 pub unsafe fn GetScrollMaxY() -> c_float
 {
-    let mut window: *mut ImGuiWindow =  GimGui.CurrentWindow;
+    let mut window: &mut ImGuiWindow =  GimGui.CurrentWindow;
     return window.ScrollMax.y;
 }
 
-pub unsafe fn SetScrollX(window: *mut ImGuiWindow,scroll_x: c_float)
+pub unsafe fn SetScrollX(window: &mut ImGuiWindow,scroll_x: c_float)
 {
     window.ScrollTarget.x = scroll_x;
     window.ScrollTargetCenterRatio.x = 0.0;
     window.ScrollTargetEdgeSnapDist.x = 0.0;
 }
 
-pub unsafe fn SetScrollY(window: *mut ImGuiWindow,scroll_y: c_float)
+pub unsafe fn SetScrollY(window: &mut ImGuiWindow,scroll_y: c_float)
 {
     window.ScrollTarget.y = scroll_y;
     window.ScrollTargetCenterRatio.y = 0.0;
@@ -223,7 +223,7 @@ pub unsafe fn SetScrollY2(scroll_y: c_float)
 //  - SetScrollFromPosY(0.0) == SetScrollY(0.0 + scroll.y) == has no effect!
 //  - SetScrollFromPosY(-scroll.y) == SetScrollY(-scroll.y + scroll.y) == SetScrollY(0.0) == reset scroll. Of course writing SetScrollY(0.0) directly then makes more sense
 // We store a target position so centering and clamping can occur on the next frame when we are guaranteed to have a known window size
-pub unsafe fn SetScrollFromPosX(window: *mut ImGuiWindow,local_x: c_float,center_x_ratio: c_float)
+pub unsafe fn SetScrollFromPosX(window: &mut ImGuiWindow,local_x: c_float,center_x_ratio: c_float)
 {
     // IM_ASSERT(center_x_ratio >= 0.0 && center_x_ratio <= 1.0);
     window.ScrollTarget.x = IM_FLOOR(local_x + window.Scroll.x); // Convert local position to scroll offset
@@ -231,7 +231,7 @@ pub unsafe fn SetScrollFromPosX(window: *mut ImGuiWindow,local_x: c_float,center
     window.ScrollTargetEdgeSnapDist.x = 0.0;
 }
 
-pub unsafe fn SetScrollFromPosY(window: *mut ImGuiWindow, mut local_y: c_float,center_y_ratio: c_float)
+pub unsafe fn SetScrollFromPosY(window: &mut ImGuiWindow, mut local_y: c_float,center_y_ratio: c_float)
 {
     // IM_ASSERT(center_y_ratio >= 0.0 && center_y_ratio <= 1.0);
     let decoration_up_height: c_float =  window.TitleBarHeight() + window.MenuBarHeight(); // FIXME: Would be nice to have a more standardized access to our scrollable/client rect;
@@ -279,13 +279,13 @@ pub unsafe fn SetScrollHereY(center_y_ratio: c_float)
     window.ScrollTargetEdgeSnapDist.y = ImMax(0.0, window.WindowPadding.y - spacing_y);
 }
 
-pub unsafe fn GetWindowScrollbarID(window: *mut ImGuiWindow, axis: ImGuiAxis) -> ImGuiID
+pub unsafe fn GetWindowScrollbarID(window: &mut ImGuiWindow, axis: ImGuiAxis) -> ImGuiID
 {
     return window.id_from_str(if axis == ImGuiAxis_X { "#SCROLLX" } else { "#SCROLLY" });
 }
 
 // Return scrollbar rectangle, must only be called for corresponding axis if window.ScrollbarX/Y is set.
-pub unsafe fn GetWindowScrollbarRect(window: *mut ImGuiWindow, axis: ImGuiAxis) -> ImRect
+pub unsafe fn GetWindowScrollbarRect(window: &mut ImGuiWindow, axis: ImGuiAxis) -> ImRect
 {
     let outer_rect: ImRect =  window.Rect();
     let inner_rect: ImRect =  window.InnerRect;
@@ -303,7 +303,7 @@ pub unsafe fn GetWindowScrollbarRect(window: *mut ImGuiWindow, axis: ImGuiAxis) 
 pub unsafe fn Scrollbar(axis: ImGuiAxis)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     let mut id: ImGuiID =  GetWindowScrollbarID(window, axis);
 
     // Calculate scrollbar bounding box
@@ -341,7 +341,7 @@ pub unsafe fn Scrollbar(axis: ImGuiAxis)
 pub unsafe fn ScrollbarEx(bb_frame: &mut ImRect, id: ImGuiID, axis: ImGuiAxis, p_scroll_v: *mut i64, size_avail_v: i64, size_contents_v: i64, flags: ImDrawFlags) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     if window.SkipItems { return  false; }
 
     KeepAliveID(id);

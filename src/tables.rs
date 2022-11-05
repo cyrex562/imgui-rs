@@ -332,7 +332,7 @@ pub const TABLE_RESIZE_SEPARATOR_HALF_THICKNESS: c_float =  4.0;    // Extend ou
 pub const TABLE_RESIZE_SEPARATOR_FEEDBACK_TIMER: c_float =  0.06;   // Delay/timer before making the hover feedback (color+cursor) visible because tables/columns tends to be more cramped.
 
 // Helper
-pub fn TableFixFlags(mut flags: ImGuiTableFlags, outer_window: *mut ImGuiWindow) -> ImGuiTableFlags
+pub fn TableFixFlags(mut flags: ImGuiTableFlags, outer_window: &mut ImGuiWindow) -> ImGuiTableFlags
 {
     // Adjust flags: set default sizing policy
     if (flag_clear(flags, ImGuiTableFlags_SizingMask_)) {
@@ -493,7 +493,7 @@ pub unsafe fn  BeginTableEx(name: &str, id: ImGuiID, columns_count: usize, mut f
     PushOverrideID(instance_id);
 
     // Backup a copy of host window members we will modify
-    inner_window: *mut ImGuiWindow = table.InnerWindow;
+    inner_window: &mut ImGuiWindow = table.InnerWindow;
     table.HostIndentX = inner_window.DC.Indent.x;
     table.HostClipRect = inner_window.ClipRect;
     table.HostSkipItems = inner_window.SkipItems;
@@ -1284,7 +1284,7 @@ pub unsafe fn TableUpdateLayout(table: *mut ImGuiTable)
         TableSortSpecsBuild(table);}
 
     // Initial state
-    inner_window: *mut ImGuiWindow = table.InnerWindow;
+    inner_window: &mut ImGuiWindow = table.InnerWindow;
     if table.Flags & ImGuiTableFlags_NoClip {
         table.DrawSplitter.SetCurrentChannel(inner_window.DrawList, TABLE_DRAW_CHANNEL_NOCLIP);
     }
@@ -1381,8 +1381,8 @@ pub unsafe fn  EndTable()
     }
 
     let flags: ImGuiTableFlags = table.Flags;
-    let mut inner_window: *mut ImGuiWindow = table.InnerWindow;
-    let mut outer_window: *mut ImGuiWindow = table.OuterWindow;
+    let mut inner_window: &mut ImGuiWindow = table.InnerWindow;
+    let mut outer_window: &mut ImGuiWindow = table.OuterWindow;
    let mut temp_data: *mut ImGuiTableTempData = table.TempData;
     // IM_ASSERT(inner_window == g.CurrentWindow);
     // IM_ASSERT(outer_window == inner_window || outer_window == inner_window.ParentWindow);
@@ -1882,7 +1882,7 @@ pub unsafe fn TableNextRow(row_flags: ImGuiTableRowFlags,row_min_height: c_float
 // [Internal] Called by TableNextRow()
 pub unsafe fn TableBeginRow(table: *mut ImGuiTable)
 {
-    let mut window: *mut ImGuiWindow = table.InnerWindow;
+    let mut window: &mut ImGuiWindow = table.InnerWindow;
     // IM_ASSERT(!table.IsInsideRow);
 
     // New row
@@ -1987,7 +1987,7 @@ pub unsafe fn TableNextColumn() -> bool
 pub unsafe fn TableBeginCell(table: *mut ImGuiTable, column_n: c_int)
 {
     let mut column: *mut ImGuiTableColumn = &mut table.Columns[column_n];
-    let mut window: *mut ImGuiWindow = table.InnerWindow;
+    let mut window: &mut ImGuiWindow = table.InnerWindow;
     table.CurrentColumn = column_n;
 
     // Start position is roughly ~~ CellRect.Min + CellPadding + Indent
@@ -2264,7 +2264,7 @@ pub unsafe fn TableUpdateColumnsWeightFromWidth(table: *mut ImGuiTable)
 pub unsafe fn TablePushBackgroundChannel()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
      let table: *mut ImGuiTable = g.CurrentTable;
 
     // Optimization: avoid SetCurrentChannel() + PushClipRect()
@@ -2276,7 +2276,7 @@ pub unsafe fn TablePushBackgroundChannel()
 pub unsafe fn TablePopBackgroundChannel()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
      let table: *mut ImGuiTable = g.CurrentTable;
     let column: *mut ImGuiTableColumn = &mut table.Columns[table.CurrentColumn];
 
@@ -2566,7 +2566,7 @@ pub unsafe fn TableMergeDrawChannels(table: *mut ImGuiTable)
 // FIXME-TABLE: This is a mess, need to redesign how we render borders (as some are also done in TableEndRow)
 pub unsafe fn TableDrawBorders(table: *mut ImGuiTable)
 {
-    inner_window: *mut ImGuiWindow = table.InnerWindow;
+    inner_window: &mut ImGuiWindow = table.InnerWindow;
     if !table.Outerwindow.ClipRect.Overlaps(table.OuterRect) { return ; }
 
     inner_drawlist: *mut ImDrawList = inner_window.DrawList;
@@ -2988,7 +2988,7 @@ pub unsafe fn TableHeadersRow()
 pub unsafe fn TableHeader(mut label: *const c_char)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     if window.SkipItems { return ; }
 
      let table: *mut ImGuiTable = g.CurrentTable;
@@ -3179,7 +3179,7 @@ pub unsafe fn TableBeginContextMenuPopup(table: *mut ImGuiTable) -> bool
 pub unsafe fn TableDrawContextMenu(table: *mut ImGuiTable)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     if window.SkipItems { return ; }
 
     let mut want_separator: bool =  false;
@@ -3843,13 +3843,13 @@ pub unsafe fn DebugNodeTable(table: *mut ImGuiTable)
 
 pub unsafe fn GetColumnIndex() -> c_int
 {
-    let window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let window: &mut ImGuiWindow = GetCurrentWindowRead();
     return if window.DC.CurrentColumns { window.DC.CurrentColumns.Current }else {0};
 }
 
 pub unsafe fn GetColumnsCount() -> c_int
 {
-    let window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let window: &mut ImGuiWindow = GetCurrentWindowRead();
     return if window.DC.CurrentColumns { window.DC.CurrentColumns.Count } else {1};
 }
 
@@ -3870,7 +3870,7 @@ pub unsafe fn staticGetDraggedColumnOffset(columns: *mut ImGuiOldColumns, column
     // Active (dragged) column always follow mouse. The reason we need this is that dragging a column to the right edge of an auto-resizing
     // window creates a feedback loop because we store normalized positions. So while dragging we enforce absolute positioning.
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let window: *mut ImGuiWindow = g.CurrentWindow;
+    let window: &mut ImGuiWindow = g.CurrentWindow;
     // IM_ASSERT(column_index > 0); // We are not supposed to drag column 0.
     // IM_ASSERT(g.ActiveId == columns.ID + ImGuiID(column_index));
 
@@ -3884,7 +3884,7 @@ pub unsafe fn staticGetDraggedColumnOffset(columns: *mut ImGuiOldColumns, column
 }
 
 pub unsafe fn GetColumnOffset(mut column_index: c_int) -> c_float {
-    let window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let window: &mut ImGuiWindow = GetCurrentWindowRead();
     let columns: *mut ImGuiOldColumns = window.DC.CurrentColumns;
     if columns == None {
         return 0.0;
@@ -3919,7 +3919,7 @@ pub unsafe fn GetColumnWidthEx(columns: *mut ImGuiOldColumns, mut column_index: 
 pub unsafe fn GetColumnWidth(mut column_index: c_int) -> c_float
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     columns: *mut ImGuiOldColumns = window.DC.CurrentColumns;
     if columns == None{
         return GetContentRegionAvail().x;}
@@ -3933,7 +3933,7 @@ pub unsafe fn GetColumnWidth(mut column_index: c_int) -> c_float
 pub unsafe fn SetColumnOffset(mut column_index: c_int,mut offset: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let window: *mut ImGuiWindow = g.CurrentWindow;
+    let window: &mut ImGuiWindow = g.CurrentWindow;
     let columns: *mut ImGuiOldColumns = window.DC.CurrentColumns;
     // IM_ASSERT(columns != NULL);
 
@@ -3957,7 +3957,7 @@ pub unsafe fn SetColumnOffset(mut column_index: c_int,mut offset: c_float)
 
 pub unsafe fn SetColumnWidth(mut column_index: c_int,width: c_float)
 {
-    let window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let window: &mut ImGuiWindow = GetCurrentWindowRead();
     let columns: *mut ImGuiOldColumns = window.DC.CurrentColumns;
     // IM_ASSERT(columns != NULL);
 
@@ -3969,7 +3969,7 @@ pub unsafe fn SetColumnWidth(mut column_index: c_int,width: c_float)
 
 pub unsafe fn PushColumnClipRect(mut column_index: c_int)
 {
-    let window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let window: &mut ImGuiWindow = GetCurrentWindowRead();
     let columns: *mut ImGuiOldColumns = window.DC.CurrentColumns;
     if (column_index < 0) {
         column_index = columns.Current;
@@ -3982,7 +3982,7 @@ pub unsafe fn PushColumnClipRect(mut column_index: c_int)
 // Get into the columns background draw command (which is generally the same draw command as before we called BeginColumns)
 pub unsafe fn PushColumnsBackground()
 {
-    let window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let window: &mut ImGuiWindow = GetCurrentWindowRead();
     let columns: *mut ImGuiOldColumns = window.DC.CurrentColumns;
     if columns.Count == 1 { return ; }
 
@@ -3994,7 +3994,7 @@ pub unsafe fn PushColumnsBackground()
 
 pub unsafe fn PopColumnsBackground()
 {
-    let window: *mut ImGuiWindow = GetCurrentWindowRead();
+    let window: &mut ImGuiWindow = GetCurrentWindowRead();
     let columns: *mut ImGuiOldColumns = window.DC.CurrentColumns;
     if columns.Count == 1 { return ; }
 
@@ -4003,7 +4003,7 @@ pub unsafe fn PopColumnsBackground()
     columns.Splitter.SetCurrentChannel(&mut *window.DrawList, columns.Current + 1);
 }
 
-pub unsafe fn FindOrCreateColumns(window: *mut ImGuiWindow, id: ImGuiID) -> *mut ImGuiOldColumns
+pub unsafe fn FindOrCreateColumns(window: &mut ImGuiWindow, id: ImGuiID) -> *mut ImGuiOldColumns
 {
     // We have few columns per window so for now we don't need bother much with turning this into a faster lookup.
     // for (let n: c_int = 0; n < window.ColumnsStorage.Size; n++)
@@ -4022,7 +4022,7 @@ pub unsafe fn FindOrCreateColumns(window: *mut ImGuiWindow, id: ImGuiID) -> *mut
 
 pub unsafe fn GetColumnsID(str_id: *const c_char, columns_count: c_int) -> ImGuiID
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
 
     // Differentiate column ID with an arbitrary prefix for cases where users name their columns set the same as another widget.
     // In addition, when an identifier isn't explicitly provided we include the number of columns in the hash to make it uniquer.
@@ -4036,7 +4036,7 @@ pub unsafe fn GetColumnsID(str_id: *const c_char, columns_count: c_int) -> ImGui
 pub unsafe fn BeginColumns(str_id: *const c_char, columns_count: c_int, flags: ImGuiOldColumnFlags)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let window: *mut ImGuiWindow = GetCurrentWindow();
+    let window: &mut ImGuiWindow = GetCurrentWindow();
 
     // IM_ASSERT(columns_count >= 1);
     // IM_ASSERT(window.DC.CurrentColumns == NULL);   // Nested columns are currently not supported
@@ -4115,7 +4115,7 @@ pub unsafe fn BeginColumns(str_id: *const c_char, columns_count: c_int, flags: I
 
 pub unsafe fn NextColumn()
 {
-    let window: *mut ImGuiWindow = GetCurrentWindow();
+    let window: &mut ImGuiWindow = GetCurrentWindow();
     if window.SkipItems || window.DC.CurrentColumns == None { return ; }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -4173,7 +4173,7 @@ pub unsafe fn NextColumn()
 pub unsafe fn EndColumns()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let window: *mut ImGuiWindow = GetCurrentWindow();
+    let window: &mut ImGuiWindow = GetCurrentWindow();
     let columns: *mut ImGuiOldColumns = window.DC.CurrentColumns;
     // IM_ASSERT(columns != NULL);
 
@@ -4260,7 +4260,7 @@ pub unsafe fn EndColumns()
 
 pub unsafe fn Columns(columns_count: c_int, id: *const c_char, border: bool)
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     // IM_ASSERT(columns_count >= 1);
 
     flags: ImGuiOldColumnFlags = (if border {0} else { ImGuiOldColumnFlags_NoBorder });

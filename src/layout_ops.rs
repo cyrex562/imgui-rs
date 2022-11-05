@@ -44,14 +44,14 @@ pub unsafe fn SameLine(offset_from_start_x: c_float, spacing_w: c_float) {
 
 pub unsafe fn Spacing()
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems { return ; }
     ItemSize(&ImVec2::from_ints(0, 0), 0.0);
 }
 
 pub unsafe fn Dummy(size: &ImVec2)
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems { return ; }
 
     let mut bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size);
@@ -61,7 +61,7 @@ pub unsafe fn Dummy(size: &ImVec2)
 
 pub unsafe fn NewLine()
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems { return ; }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -79,7 +79,7 @@ pub unsafe fn NewLine()
 
 pub unsafe fn AlignTextToFramePadding()
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems { return ; }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;

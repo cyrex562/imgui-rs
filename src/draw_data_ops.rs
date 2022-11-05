@@ -60,8 +60,8 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
     out_list.push(draw_list);
 }
 
-// static c_void AddWindowToDrawData(window: *mut ImGuiWindow, layer: c_int)
-pub unsafe fn AddWindowToDrawData(window: *mut ImGuiWindow, layer: c_int)
+// static c_void AddWindowToDrawData(window: &mut ImGuiWindow, layer: c_int)
+pub unsafe fn AddWindowToDrawData(window: &mut ImGuiWindow, layer: c_int)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut viewport: *mut ImGuiViewport =  window.Viewport;
@@ -81,8 +81,8 @@ pub unsafe fn AddWindowToDrawData(window: *mut ImGuiWindow, layer: c_int)
 }
 
 // Layer is locked for the root window, however child windows may use a different viewport (e.g. extruding menu)
-// pub unsafe fn AddRootWindowToDrawData(window: *mut ImGuiWindow)
-pub unsafe fn AddRootWindowToDrawData(window: *mut ImGuiWindow)
+// pub unsafe fn AddRootWindowToDrawData(window: &mut ImGuiWindow)
+pub unsafe fn AddRootWindowToDrawData(window: &mut ImGuiWindow)
 {
     AddWindowToDrawData(window, GetWindowDisplayLayer(window));
 }

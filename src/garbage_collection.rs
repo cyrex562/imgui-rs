@@ -16,8 +16,8 @@ pub unsafe fn GcCompatTransientMiscBuffers()
 // Not freed:
 // - ImGuiWindow, ImGuiWindowSettings, Name, StateStorage, ColumnsStorage (may hold useful data)
 // This should have no noticeable visual effect. When the window reappear however, expect new allocation/buffer growth/copy cost.
-// c_void GcCompactTransientWindowBuffers(window: *mut ImGuiWindow)
-pub unsafe fn GcCompactTransientWindowBuffers(window: *mut ImGuiWindow)
+// c_void GcCompactTransientWindowBuffers(window: &mut ImGuiWindow)
+pub unsafe fn GcCompactTransientWindowBuffers(window: &mut ImGuiWindow)
 {
     window.MemoryCompacted = true;
     window.MemoryDrawListIdxCapacity = window.DrawList.IdxBuffer.Capacity;
@@ -29,8 +29,8 @@ pub unsafe fn GcCompactTransientWindowBuffers(window: *mut ImGuiWindow)
     window.DC.TextWrapPosStack.clear();
 }
 
-// c_void GcAwakeTransientWindowBuffers(window: *mut ImGuiWindow)
-pub fn GcAwakeTransientWindowBuffers(window: *mut ImGuiWindow)
+// c_void GcAwakeTransientWindowBuffers(window: &mut ImGuiWindow)
+pub fn GcAwakeTransientWindowBuffers(window: &mut ImGuiWindow)
 {
     // We stored capacity of the ImDrawList buffer to reduce growth-caused allocation/copy when awakening.
     // The other buffers tends to amortize much faster.

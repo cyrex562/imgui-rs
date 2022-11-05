@@ -66,7 +66,7 @@ use crate::window::focus::FocusWindow;
 use crate::window::ImGuiWindow;
 use crate::window::ops::{BeginDisabled, EndDisabled, GetCurrentWindow};
 use crate::window::props::{GetFontTexUvWhitePixel, SetNextWindowPos};
-use crate::window::rect::WindowRectAbsToRel;
+use crate::window::rect::window_rect_abs_to_rel;
 use crate::window::window_flags::{ImGuiWindowFlags_NoMove, ImGuiWindowFlags_None, ImGuiWindowFlags_Popup};
 
 // Create text input in place of another active widget (e.g. used when doing a CTRL+Click on drag/slider widgets)
@@ -368,7 +368,7 @@ pub unsafe fn InputTextEx(label: String,
                           callback: Option<ImGuiInputTextCallback>,
                           callback_user_data: Option<&Vec<u8>>) -> bool
 {
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
     if window.SkipItems { return  false; }
 
     // IM_ASSERT(buf != NULL && buf_size >= 0);
@@ -399,7 +399,7 @@ pub unsafe fn InputTextEx(label: String,
     let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + frame_size);
     let mut total_bb: ImRect = ImRect::new(frame_bb.Min, frame_bb.Min + total_size);
 
-    draw_window: *mut ImGuiWindow = window;
+    draw_window: &mut ImGuiWindow = window;
     let mut inner_size: ImVec2 = frame_size;
     let mut item_status_flags: ImGuiItemStatusFlags =  0;
     let mut item_data_backup = ImGuiLastItemData::default();

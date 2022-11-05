@@ -56,7 +56,7 @@ use std::ptr::{null, null_mut};
 
 pub unsafe fn BeginCombo(label: String, preview_value: &mut String, flags: ImGuiComboFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = GetCurrentWindow();
+    let mut window = GetCurrentWindow();
 
     let backup_next_window_data_flags: ImGuiNextWindowDataFlags = g.NextWindowData.Flags;
     g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
@@ -261,7 +261,7 @@ pub unsafe fn BeginComboPopup(
     // Set position given a custom constraint (peak into expected window size so we can position it)
     // FIXME: This might be easier to express with an hypothetical SetNextWindowPosConstraints() function?
     // FIXME: This might be moved to Begin() or at least around the same spot where Tooltips and other Popups are calling FindBestWindowPosForPopupEx()?
-    if popup_window: *mut ImGuiWindow = FindWindowByName(name) {
+    if popup_window: &mut ImGuiWindow = FindWindowByName(name) {
         if popup_window.WasActive {
             // Always override 'AutoPosLastDirection' to not leave a chance for a past value to affect us.
             let size_expected: ImVec2 = CalcWindowNextAutoFitSize(popup_window);
@@ -312,7 +312,7 @@ pub unsafe fn EndCombo() {
 // (Experimental, see GitHub issues: #1658, #4168)
 pub unsafe fn BeginComboPreview() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window: *mut ImGuiWindow = g.CurrentWindow;
+    let mut window: &mut ImGuiWindow = g.CurrentWindow;
     preview_data: *mut ImGuiComboPreviewData = &mut g.ComboPreviewData;
 
     if window.SkipItems || !window.ClipRect.Overlaps(g.LastItemData.Rect) {
