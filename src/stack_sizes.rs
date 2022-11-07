@@ -23,7 +23,7 @@ impl ImGuiStackSizes {
     pub unsafe fn SetToCurrentState(&mut self) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         let mut window = g.current_window_mut().unwrap();
-        self.SizeOfIDStack = window.IDStack.Size;
+        self.SizeOfIDStack = window.id_stack.Size;
         self.SizeOfColorStack = g.ColorStack.Size;
         self.SizeOfStyleVarStack = g.styleVarStack.Size;
         self.SizeOfFontStack = g.FontStack.Size;
@@ -42,7 +42,7 @@ impl ImGuiStackSizes {
 
         // Window stacks
         // NOT checking: DC.ItemWidth, DC.TextWrapPos (per window) to allow user to conveniently push once and not pop (they are cleared on Begin)
-        // IM_ASSERT(SizeOfIDStack         == window.IDStack.Size     && "PushID/PopID or TreeNode/TreePop Mismatch!");
+        // IM_ASSERT(SizeOfIDStack         == window.id_stack.Size     && "PushID/PopID or TreeNode/TreePop Mismatch!");
 
         // Global stacks
         // For color, style and font stacks there is an incentive to use Push/Begin/Pop/.../End patterns, so we relax our checks a little to allow them.

@@ -2491,7 +2491,7 @@ pub unsafe fn TreePop() {
     if g.NavMoveDir == ImGuiDir_Left && g.NavWindow == window && NavMoveRequestButNoResultYet() {
         if g.NavIdIsAlive && (window.dc.TreeJumpToParentOnPopMask & tree_depth_mask) {
             SetNavID(
-                window.IDStack.last().unwrap().clone(),
+                window.id_stack.last().unwrap().clone(),
                 g.NavLayer,
                 0,
                 ImRect::default(),
@@ -2501,7 +2501,7 @@ pub unsafe fn TreePop() {
     }
     window.dc.TreeJumpToParentOnPopMask &= tree_depth_mask - 1;
 
-    // IM_ASSERT(window.IDStack.Size > 1); // There should always be 1 element in the IDStack (pushed during window creation). If this triggers you called TreePop/PopID too much.
+    // IM_ASSERT(window.id_stack.Size > 1); // There should always be 1 element in the IDStack (pushed during window creation). If this triggers you called TreePop/PopID too much.
     pop_win_id_from_stack(g);
 }
 
@@ -3614,7 +3614,7 @@ pub unsafe fn IsRootOfOpenMenuSet() -> bool {
         return false;
     }
 
-    // Initially we used 'upper_popup->OpenParentId == window.IDStack.back()' to differentiate multiple menu sets from each others
+    // Initially we used 'upper_popup->OpenParentId == window.id_stack.back()' to differentiate multiple menu sets from each others
     // (e.g. inside menu bar vs loose menu items) based on parent ID.
     // This would however prevent the use of e.g. PuhsID() user code submitting menus.
     // Previously this worked between popup and a first child menu because the first child menu always had the _ChildWindow flag,

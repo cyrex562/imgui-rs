@@ -208,7 +208,7 @@ pub unsafe fn ErrorCheckEndWindowRecover(
         // if (log_callback) { log_callback(user_data, "Recovered from missing EndGroup() in '{}'", window.Name); }
         EndGroup();
     }
-    while window.IDStack.Size > 1 {
+    while window.id_stack.Size > 1 {
         // if (log_callback) { log_callback(user_data, "Recovered from missing PopID() in '{}'", window.Name); }
         pop_win_id_from_stack(g);
     }

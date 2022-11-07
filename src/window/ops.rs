@@ -779,8 +779,8 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
     // IM_ASSERT(parent_window != NULL || flag_clear(flags, ImGuiWindowFlags_ChildWindow));
 
     // We allow window memory to be compacted so recreate the base stack when needed.
-    if window.IDStack.Size == 0 {
-        window.IDStack.push(window.ID.clone());
+    if window.id_stack.Size == 0 {
+        window.id_stack.push(window.ID.clone());
     }
 
     // Add to stack
@@ -880,7 +880,7 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
         window.Active = true;
         window.HasCloseButton = (p_open != null_mut());
         window.ClipRect = ImVec4(-f32::MAX, -f32::MAX, f32::MAX, f32::MAX);
-        window.IDStack.resize(1,0);
+        window.id_stack.resize(1,0);
         window.DrawList._ResetForNewFrame();
         window.dc.CurrentTableIdx = -1;
         if flag_set(flags.clone(), ImGuiWindowFlags_DockNodeHost)
@@ -1183,11 +1183,11 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
 // #ifdef IMGUI_ENABLE_TEST_ENGINE
         if g.TestEngineHookItems
         {
-            // IM_ASSERT(window.IDStack.Size == 1);
-            window.IDStack.Size = 0; // As window.IDStack[0] == window.ID here, make sure TestEngine doesn't erroneously see window as parent of itself.
+            // IM_ASSERT(window.id_stack.Size == 1);
+            window.id_stack.Size = 0; // As window.id_stack[0] == window.ID here, make sure TestEngine doesn't erroneously see window as parent of itself.
             IMGUI_TEST_ENGINE_ITEM_ADD(window.Rect(), window.ID);
             IMGUI_TEST_ENGINE_ITEM_INFO(window.ID, window.Name, if g.HoveredWindow == window { ImGuiItemStatusFlags_HoveredRect }else { 0 });
-            window.IDStack.Size = 1;
+            window.id_stack.Size = 1;
         }
 // #endif
 

@@ -113,7 +113,7 @@ pub fn push_str_id(g: &mut ImguiContext, str_id: &String) {
 pub fn push_int_id(g: &mut ImguiContext, int_id: c_int) {
     let mut window = g.current_window_mut().unwrap();
     let mut id: ImguiHandle = window.id_by_int(g, int_id);
-    window.IDStack.push(id);
+    window.id_stack.push(id);
 }
 
 // Push a given id value ignoring the ID stack as a seed.
@@ -122,7 +122,7 @@ pub fn PushOverrideID(g: &mut ImguiContext, id: ImguiHandle) {
     if g.DebugHookIdInfo == id {
         DebugHookIdInfo(g, id, IM_GUI_DATA_TYPE_ID, None);
     }
-    window.IDStack.push(id);
+    window.id_stack.push(id);
 }
 
 // Helper to avoid a common series of PushOverrideID -> GetID() -> PopID() call
@@ -137,7 +137,7 @@ pub fn GetIDWithSeed(arg: &str, seed: ImguiHandle) -> ImguiHandle {
 
 pub fn pop_win_id_from_stack(g: &mut ImguiContext) {
     let mut window = g.current_window_mut().unwrap();
-    // IM_ASSERT(window.IDStack.Size > 1); // Too many PopID(), or could be popping in a wrong/different window?
+    // IM_ASSERT(window.id_stack.Size > 1); // Too many PopID(), or could be popping in a wrong/different window?
     window.id_stack.pop_back();
 }
 

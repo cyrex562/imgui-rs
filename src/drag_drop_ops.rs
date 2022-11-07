@@ -119,7 +119,7 @@ pub unsafe fn BeginDragDropSource(flags: ImGuiDragDropFlags) -> bool {
         if (g.ActiveId != source_id) {
             return false;
         }
-        source_parent_id = window.IDStack.last().unwrap().clone();
+        source_parent_id = window.id_stack.last().unwrap().clone();
         source_drag_active = IsMouseDragging(mouse_button, 0.0);
 
         // Disable navigation and key inputs while dragging + cancel existing request if any

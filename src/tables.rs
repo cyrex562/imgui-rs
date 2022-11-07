@@ -1513,7 +1513,7 @@ pub unsafe fn  EndTable()
     }
 
     // Pop from id stack
-    // IM_ASSERT_USER_ERROR(inner_window.IDStack.back() == table.ID + table.InstanceCurrent, "Mismatching PushID/PopID!");
+    // IM_ASSERT_USER_ERROR(inner_window.id_stack.back() == table.ID + table.InstanceCurrent, "Mismatching PushID/PopID!");
     // IM_ASSERT_USER_ERROR(outer_window.DC.ItemWidthStack.Size >= temp_Data.HostBackupItemWidthStackSize, "Too many PopItemWidth!");
     pop_win_id_from_stack(g);
 

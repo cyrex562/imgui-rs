@@ -35,7 +35,9 @@ impl ImVec2 {
         let elem_len = mem::size_of::<f32>();
         let x_bytes = self.x.to_le_bytes();
         let y_bytes = self.y.to_le_bytes();
-        out.copy_from_slice()
+        out.extend_from_slice(&x_bytes);
+        out.extend_from_slice(&y_bytes);
+        out
     }
 }
 

@@ -91,7 +91,7 @@ use crate::window::window_settings::ImGuiWindowSettings;
 
 // [DEBUG] Stack tool: hooks called by GetID() family functions
 // c_void DebugHookIdInfo(ImguiHandle id, data_type: ImGuiDataType, data_id: *const c_void, data_id_end: *const c_void)
-pub fn DebugHookIdInfo(g: &mut ImguiContext, id: ImguiHandle, data_type: ImGuiDataType, data_id: &[u8]) {
+pub fn DebugHookIdInfo(g: &mut ImguiContext, id: ImguiHandle, data_type: ImGuiDataType, data_id: Option<&[u8]>) {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = &mut g.CurrentWindow;
     let mut tool = &mut g.DebugStackTool;
@@ -100,11 +100,11 @@ pub fn DebugHookIdInfo(g: &mut ImguiContext, id: ImguiHandle, data_type: ImGuiDa
     // This assume that the ID was computed with the current ID stack, which tends to be the case for our widget.
     if tool.StackLevel == -1 {
         tool.StackLevel += 1;
-        tool.Results.resize(window.IDStack.len() + 1, ImGuiStackLevelInfo::default());
-        // for (let n: c_int = 0; n < window.IDStack.Size + 1; n++)
-        for n in 0..window.IDStack.len() + 1 {
-            tool.Results[n].ID = if n < window.IDStack.len() {
-                window.IDStack[n]
+        tool.Results.resize(window.id_stack.len() + 1, ImGuiStackLevelInfo::default());
+        // for (let n: c_int = 0; n < window.id_stack.Size + 1; n++)
+        for n in 0..window.id_stack.len() + 1 {
+            tool.Results[n].ID = if n < window.id_stack.len() {
+                window.id_stack[n]
             } else { id };
         }
         return;
@@ -112,7 +112,7 @@ pub fn DebugHookIdInfo(g: &mut ImguiContext, id: ImguiHandle, data_type: ImGuiDa
 
     // Step 1+: query for individual level
     // IM_ASSERT(tool.StackLevel >= 0);
-    if tool.StackLevel != window.IDStack.len() as c_int {
+    if tool.StackLevel != window.id_stack.len() as c_int {
         return;
     }
     let mut info: *mut ImGuiStackLevelInfo = &mut tool.Results[tool.StackLevel];
