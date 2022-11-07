@@ -1,5 +1,6 @@
+use crate::context::ImguiContext;
 use crate::rect::ImRect;
-use crate::type_defs::ImGuiID;
+use crate::type_defs::ImguiHandle;
 use crate::utils::{flag_clear, is_not_null};
 use crate::vec2::ImVec2;
 use crate::window::ops::GetWindowDisplayLayer;
@@ -7,17 +8,17 @@ use crate::window::window_flags::{
     ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_Modal,
     ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoResize,
 };
-use crate::window::{ops, ImGuiWindow};
-use crate::{GImGui, ImGuiViewport, ImHashStr};
+use crate::window::{ops, ImguiWindow};
+use crate::{hash_string, GImGui, ImguiViewport};
 use libc::{c_char, c_float, c_int};
 use std::ptr::null_mut;
 
 // static FindFrontMostVisibleChildwindow: &mut ImGuiWindow(window: &mut ImGuiWindow)
-pub fn FindFrontMostVisibleChildWindow(window: &mut ImGuiWindow) -> *mut ImGuiWindow {
-    // for (let n: c_int = window.DC.ChildWindows.Size - 1; n >= 0; n--)
-    for n in window.DC.ChildWindows.len() - 1..0 {
-        if ops::IsWindowActiveAndVisible(window.DC.ChildWindows[n]) {
-            return FindFrontMostVisibleChildWindow(window.DC.ChildWindows[n]);
+pub fn FindFrontMostVisibleChildWindow(window: &mut ImguiWindow) -> *mut ImguiWindow {
+    // for (let n: c_int = window.dc.ChildWindows.Size - 1; n >= 0; n--)
+    for n in window.dc.ChildWindows.len() - 1..0 {
+        if ops::IsWindowActiveAndVisible(window.dc.ChildWindows[n]) {
+            return FindFrontMostVisibleChildWindow(window.dc.ChildWindows[n]);
         }
     }
     return window;
@@ -25,13 +26,13 @@ pub fn FindFrontMostVisibleChildWindow(window: &mut ImGuiWindow) -> *mut ImGuiWi
 
 // FindBottomMostVisibleWindowWithinBeginStack: *mut ImGuiWindow(parent_window: &mut ImGuiWindow)
 pub unsafe fn FindBottomMostVisibleWindowWithBeginStack(
-    parent_window: &mut ImGuiWindow,
-) -> *mut ImGuiWindow {
+    parent_window: &mut ImguiWindow,
+) -> *mut ImguiWindow {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut bottom_most_visible_window: &mut ImGuiWindow = parent_window;
+    let mut bottom_most_visible_window: &mut ImguiWindow = parent_window;
     // for (let i: c_int = FindWindowDisplayIndex(parent_window); i >= 0; i--)
     for i in FindWindowDisplayIndex(parent_window)..0 {
-        let mut window: &mut ImGuiWindow = g.Windows[i];
+        let mut window: &mut ImguiWindow = g.Windows[i];
         if window.Flags & ImGuiWindowFlags_ChildWindow {
             continue;
         }
@@ -56,7 +57,7 @@ pub unsafe fn FindHoveredWindows() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Special handling for the window being moved: Ignore the mouse viewport check (because it may reset/lose its viewport during the undocking frame)
-    let mut moving_window_viewport: *mut ImGuiViewport = if !(g.MovingWindow.is_null()) {
+    let mut moving_window_viewport: *mut ImguiViewport = if !(g.MovingWindow.is_null()) {
         g.Movingwindow.Viewport
     } else {
         None
@@ -65,13 +66,13 @@ pub unsafe fn FindHoveredWindows() {
         g.Movingwindow.Viewport = g.MouseViewport;
     }
 
-    let mut hovered_window: &mut ImGuiWindow = None;
-    let mut hovered_window_ignoring_moving_window: &mut ImGuiWindow = None;
+    let mut hovered_window: &mut ImguiWindow = None;
+    let mut hovered_window_ignoring_moving_window: &mut ImguiWindow = None;
     if g.MovingWindow && !(g.Movingwindow.Flags & ImGuiWindowFlags_NoMouseInputs) {
         hovered_window = g.MovingWindow;
     }
 
-    let padding_regular: ImVec2 = g.Style.TouchExtraPadding.clone();
+    let padding_regular: ImVec2 = g.style.TouchExtraPadding.clone();
     let padding_for_resize: ImVec2 = if g.IO.ConfigWindowsResizeFromEdges {
         g.WindowsHoverPadding.clone()
     } else {
@@ -79,7 +80,7 @@ pub unsafe fn FindHoveredWindows() {
     };
     // for (let i: c_int = g.Windows.Size - 1; i >= 0; i--)
     for i in g.Windows.len() - 1..0 {
-        let mut window: &mut ImGuiWindow = g.Windows[i];
+        let mut window: &mut ImguiWindow = g.Windows[i];
         IM_MSVC_WARNING_SUPPRESS(28182); // [Static Analyzer] Dereferencing NULL pointer.
         if !window.Active || window.Hidden {
             continue;
@@ -111,8 +112,8 @@ pub unsafe fn FindHoveredWindows() {
         // FIXME: Consider generalizing hit-testing override (with more generic data, callback, etc.) (#1512)
         if window.HitTestHoleSize.x != 0 {
             let hole_pos = ImVec2::from_floats(
-                window.Pos.x + window.HitTestHoleOffset.x,
-                window.Pos.y + window.HitTestHoleOffset.y,
+                window.position.x + window.HitTestHoleOffset.x,
+                window.position.y + window.HitTestHoleOffset.y,
             );
             let hole_size = ImVec2::from_floats(
                 window.HitTestHoleSize.x as c_float,
@@ -148,17 +149,23 @@ pub unsafe fn FindHoveredWindows() {
     }
 }
 
-pub unsafe fn FindWindowByID(id: ImGuiID) -> *mut ImGuiWindow {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.WindowsById.GetVoidPtr(id) as *mut ImGuiWindow;
+pub fn FindWindowByID(g: &mut ImguiContext, id: ImguiHandle) -> Option<&mut ImguiWindow> {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    // return g.WindowsById.GetVoidPtr(id) as *mut ImGuiWindow;
+    for win in g.Windows.iter_mut() {
+        if win.ID == id {
+            return Some(win);
+        }
+    }
+    None
 }
 
-pub unsafe fn FindWindowByName(name: &str) -> *mut ImGuiWindow {
-    let mut id: ImGuiID = ImHashStr(name, 0, 0);
-    return FindWindowByID(id);
+pub fn FindWindowByName(g: &mut ImguiContext, name: &String) -> Option<&mut ImguiWindow> {
+    let mut id: ImguiHandle = hash_string(name, 0);
+    return FindWindowByID(g, id);
 }
 
-pub fn GetWindowForTitleDisplay(window: &mut ImGuiWindow) -> *mut ImGuiWindow {
+pub fn GetWindowForTitleDisplay(window: &mut ImguiWindow) -> *mut ImguiWindow {
     return if window.DockNodeAsHost {
         window.DockNodeAsHost.VisibleWindow
     } else {
@@ -166,7 +173,7 @@ pub fn GetWindowForTitleDisplay(window: &mut ImGuiWindow) -> *mut ImGuiWindow {
     };
 }
 
-pub fn GetWindowForTitleAndMenuHeight(window: &mut ImGuiWindow) -> *mut ImGuiWindow {
+pub fn GetWindowForTitleAndMenuHeight(window: &mut ImguiWindow) -> *mut ImguiWindow {
     return if is_not_null(window.DockNodeAsHost) && is_not_null(window.DockNodeAsHost.VisibleWindow)
     {
         window.DockNodeAsHost.VisibleWindow
@@ -184,7 +191,7 @@ pub fn GetWindowForTitleAndMenuHeight(window: &mut ImGuiWindow) -> *mut ImGuiWin
 //      - Window        //                  .. returns Modal2
 //          - Window    //                  .. returns Modal2
 //          - Modal2    //                  .. returns Modal2
-pub unsafe fn FindBlockingModal(window: &mut ImGuiWindow) -> *mut ImGuiWindow {
+pub unsafe fn FindBlockingModal(window: &mut ImguiWindow) -> *mut ImguiWindow {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.OpenPopupStack.len() <= 0 {
         return None;
@@ -193,7 +200,7 @@ pub unsafe fn FindBlockingModal(window: &mut ImGuiWindow) -> *mut ImGuiWindow {
     // Find a modal that has common parent with specified window. Specified window should be positioned behind that modal.
     // for (let i: c_int = g.OpenPopupStack.Size - 1; i >= 0; i--)
     for i in g.OpenPopupStack.len() - 1..0 {
-        let mut popup_window: &mut ImGuiWindow = g.OpenPopupStack.Data[i].Window;
+        let mut popup_window: &mut ImguiWindow = g.OpenPopupStack.Data[i].Window;
         if popup_window == None || flag_clear(popup_window.Flags, ImGuiWindowFlags_Modal) {
             continue;
         }
@@ -206,7 +213,7 @@ pub unsafe fn FindBlockingModal(window: &mut ImGuiWindow) -> *mut ImGuiWindow {
             break;
         }
         // for (let mut parent: *mut ImGuiWindow =  popup_window.ParentWindowInBeginStack->RootWindow; parent != None; parent = parent->ParentWindowInBeginStack->RootWindow)
-        let mut parent: *mut ImGuiWindow = popup_window.ParentWindowInBeginStack.RootWindow;
+        let mut parent: *mut ImguiWindow = popup_window.ParentWindowInBeginStack.RootWindow;
         while parent != None {
             if IsWindowWithinBeginStackOf(window, parent) {
                 return popup_window;
@@ -217,19 +224,19 @@ pub unsafe fn FindBlockingModal(window: &mut ImGuiWindow) -> *mut ImGuiWindow {
     return None;
 }
 
-pub unsafe fn FindWindowDisplayIndex(window: &mut ImGuiWindow) -> c_int {
+pub unsafe fn FindWindowDisplayIndex(window: &mut ImguiWindow) -> c_int {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.Windows.index_from_ptr(g.Windows.find(window));
 }
 
-pub unsafe fn GetCombinedRootWindow(
-    mut window: &mut ImGuiWindow,
+pub fn GetCombinedRootWindow(
+    mut window: &mut ImguiWindow,
     popup_hierarchy: bool,
     dock_hierarchy: bool,
-) -> *mut ImGuiWindow {
-    let mut last_window: &mut ImGuiWindow = None;
-    while last_window != window {
-        last_window = window;
+) -> *mut ImguiWindow {
+    // let mut last_window: &mut ImGuiWindow = None;
+    loop {
+        let last_window = window;
         window = window.RootWindow;
         if popup_hierarchy {
             window = window.RootWindowPopupTree;
@@ -237,17 +244,20 @@ pub unsafe fn GetCombinedRootWindow(
         if dock_hierarchy {
             window = window.RootWindowDockTree;
         }
+        if last_window == window {
+            break;
+        }
     }
     return window;
 }
 
 pub unsafe fn IsWindowChildOf(
-    mut window: &mut ImGuiWindow,
-    potential_parent: *mut ImGuiWindow,
+    mut window: &mut ImguiWindow,
+    potential_parent: *mut ImguiWindow,
     popup_hierarchy: bool,
     dock_hierarchy: bool,
 ) -> bool {
-    let mut window_root: *mut ImGuiWindow =
+    let mut window_root: *mut ImguiWindow =
         GetCombinedRootWindow(window, popup_hierarchy, dock_hierarchy);
     if window_root == potential_parent {
         return true;
@@ -266,8 +276,8 @@ pub unsafe fn IsWindowChildOf(
 }
 
 pub fn IsWindowWithinBeginStackOf(
-    mut window: &mut ImGuiWindow,
-    potential_parent: *mut ImGuiWindow,
+    mut window: &mut ImguiWindow,
+    potential_parent: *mut ImguiWindow,
 ) -> bool {
     if window.RootWindow == potential_parent {
         return true;
@@ -282,8 +292,8 @@ pub fn IsWindowWithinBeginStackOf(
 }
 
 pub unsafe fn IsWindowAbove(
-    potential_above: *mut ImGuiWindow,
-    potential_below: *mut ImGuiWindow,
+    potential_above: *mut ImguiWindow,
+    potential_below: *mut ImguiWindow,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
@@ -296,7 +306,7 @@ pub unsafe fn IsWindowAbove(
 
     // for (let i: c_int = g.Windows.len() - 1; i >= 0; i--)
     for i in g.Windows.len() - 1..0 {
-        let mut candidate_window: &mut ImGuiWindow = g.Windows[i];
+        let mut candidate_window: &mut ImguiWindow = g.Windows[i];
         if candidate_window == potential_above {
             return true;
         }

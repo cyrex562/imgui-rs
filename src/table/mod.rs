@@ -12,14 +12,14 @@ use crate::table_row_flags::ImGuiTableRowFlags;
 use crate::table_sort_specs::ImGuiTableSortSpecs;
 use crate::table_temp_data::ImGuiTableTempData;
 use crate::text_buffer::ImGuiTextBuffer;
-use crate::type_defs::{ImGuiID, ImGuiTableColumnIdx, ImGuiTableDrawChannelIdx};
-use crate::window::ImGuiWindow;
+use crate::type_defs::{ImGuiTableColumnIdx, ImGuiTableDrawChannelIdx, ImguiHandle};
+use crate::window::ImguiWindow;
 use libc::{c_float, c_int, c_void};
 
 // FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiTable {
-    pub ID: ImGuiID,
+    pub ID: ImguiHandle,
     pub Flags: ImGuiTableFlags,
     pub RawData: Vec<u8>,
     // Single allocation to hold Columns[], DisplayOrderToIndex[] and RowCellData[]
@@ -107,9 +107,9 @@ pub struct ImGuiTable {
     // This is used to check if we can eventually merge our columns draw calls into the current draw call of the current window.
     pub HostBackupInnerClipRect: ImRect,
     // Backup of Innerwindow.ClipRect during PushTableBackground()/PopTableBackground()
-    pub OuterWindow: ImGuiWindow,
+    pub OuterWindow: ImguiWindow,
     // Parent window for the table
-    pub InnerWindow: ImGuiWindow,
+    pub InnerWindow: ImguiWindow,
     // Window holding the table data (== OuterWindow or a child window)
     pub ColumnsNames: ImGuiTextBuffer,
     // Contiguous buffer holding columns names

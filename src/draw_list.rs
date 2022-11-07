@@ -19,7 +19,7 @@ use crate::draw_list_flags::{
     ImDrawListFlags, ImDrawListFlags_AllowVtxOffset, ImDrawListFlags_AntiAliasedFill,
     ImDrawListFlags_AntiAliasedLines, ImDrawListFlags_AntiAliasedLinesUseTex, ImDrawListFlags_None,
 };
-use crate::draw_list_shared_data::ImDrawListSharedData;
+use crate::draw_list_shared_data::Imgui_DrawListSharedData;
 use crate::draw_list_splitter::ImDrawListSplitter;
 use crate::draw_vert::ImDrawVert;
 use crate::font::ImFont;
@@ -59,7 +59,7 @@ pub struct ImDrawList {
     // [Internal, used while building lists]
     pub _VtxCurrentIdx: usize,
     // [Internal] generally == VtxBuffer.Size unless we are past 64K vertices, in which case this gets reset to 0.
-    pub _Data: ImDrawListSharedData,
+    pub _Data: Imgui_DrawListSharedData,
     // Pointer to shared draw data (you can use GetDrawListSharedData() to get the one from current ImGui context)
     pub _OwnerName: String,
     // Pointer to owner window's name for debugging
@@ -83,7 +83,7 @@ pub struct ImDrawList {
 impl ImDrawList {
     // If you want to create ImDrawList instances, pass them GetDrawListSharedData() or create and use your own ImDrawListSharedData (so you can use ImDrawList without ImGui)
     // ImDrawList(const ImDrawListSharedData* shared_data) { memset(this, 0, sizeof(*this)); _Data = shared_data; }
-    pub fn new(shared_data: &ImDrawListSharedData) -> Self {
+    pub fn new(shared_data: &Imgui_DrawListSharedData) -> Self {
         Self {
             _Data: shared_data.clone(),
             ..Default::default()
@@ -93,7 +93,7 @@ impl ImDrawList {
     // ~ImDrawList() { _ClearFreeMemory(); }
 
     // void  PushClipRect(const clip_rect_min: &mut ImVec2, const clip_rect_max: &mut ImVec2, intersect_with_current_clip_rect: bool = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level PushClipRect() to affect logic (hit-testing and widget culling)
-    pub unsafe fn PushClipRect(
+    pub fn PushClipRect(
         &mut self,
         cr_min: &ImVec2,
         cr_max: &ImVec2,
@@ -139,7 +139,7 @@ impl ImDrawList {
     }
 
     // void  PopClipRect();
-    pub unsafe fn PopClipRect(&mut self) {
+    pub fn PopClipRect(&mut self) {
         self._ClipRectStack.pop_back();
         self._CmdHeader.ClipRect = if self._ClipRectStack.len() == 0 {
             self._Data.ClipRectFullscreen
@@ -197,7 +197,7 @@ impl ImDrawList {
     }
 
     // void  AddRect(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0, c_float thickness = 1.0);   // a: upper-left, b: lower-right (== upper-left + size)
-    pub unsafe fn AddRect(&mut self, p_min: ImVec2, p_max: ImVec2, col: u32, rounding: c_float) {
+    pub fn AddRect(&mut self, p_min: ImVec2, p_max: ImVec2, col: u32, rounding: c_float) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
         }
@@ -220,7 +220,7 @@ impl ImDrawList {
     }
 
     // void  AddRectFilled(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
-    pub unsafe fn AddRectFilled(
+    pub fn AddRectFilled(
         &mut self,
         p_min: &ImVec2,
         p_masx: &ImVec2,
@@ -330,7 +330,7 @@ impl ImDrawList {
     }
 
     // void  AddTriangleFilled(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, col: u32);
-    pub unsafe fn AddTriangleFilled(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32) {
+    pub fn AddTriangleFilled(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32) {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
         }
@@ -442,7 +442,7 @@ impl ImDrawList {
 
     // void  AddText(const font: *mut ImFont, c_float font_size, const pos: &mut ImVec2, col: u32, const char* text_begin, const char*
     // text_end = NULL, c_float wrap_width = 0.0, const ImVec4* cpu_fine_clip_rect = NULL);
-    pub unsafe fn AddText2(
+    pub fn AddText2(
         &mut self,
         mut font: Option<ImFont>,
         mut font_size: c_float,
@@ -491,9 +491,9 @@ impl ImDrawList {
     }
 
     // void  AddPolyline(const ImVec2* points, num_points: c_int, col: u32, flags: ImDrawFlags, c_float thickness);
-    pub unsafe fn AddPolyline(
+    pub fn AddPolyline(
         &mut self,
-        points:&Vec<ImVec2>,
+        points: &Vec<ImVec2>,
         color: u32,
         flags: ImDrawFlags,
         thickness: c_float,
@@ -841,12 +841,7 @@ impl ImDrawList {
     }
 
     // void  AddConvexPolyFilled(const ImVec2* points, num_points: c_int, col: u32);
-    pub unsafe fn AddConvexPolyFilled(
-        &mut self,
-        points: *const ImVec2,
-        points_count: size_t,
-        col: u32,
-    ) {
+    pub fn AddConvexPolyFilled(&mut self, points: *const ImVec2, points_count: size_t, col: u32) {
         if points_count < 3 {
             return;
         }
@@ -1119,13 +1114,13 @@ impl ImDrawList {
     }
 
     // inline    void  PathFillConvex(col: u32)                                   { AddConvexPolyFilled(_Path.Data, _Path.Size, col); _Path.Size = 0; }
-    pub unsafe fn PathFillConvex(&mut self, col: u32) {
+    pub fn PathFillConvex(&mut self, col: u32) {
         self.AddConvexPolyFilled(self._Path.as_ptr(), self._Path.len(), 0);
         self._Path.clear();
     }
 
     // inline    void  PathStroke(col: u32, flags: ImDrawFlags = 0, c_float thickness = 1.0) { AddPolyline(_Path.Data, _Path.Size, col, flags, thickness); _Path.Size = 0; }
-    pub unsafe fn PathStroke(&mut self, col: u32, flags: ImDrawFlags, thickness: c_float) {
+    pub fn PathStroke(&mut self, col: u32, flags: ImDrawFlags, thickness: c_float) {
         self.AddPolyline(&self._Path, col, flags, thickness);
     }
 
@@ -1311,8 +1306,7 @@ impl ImDrawList {
             rounding,
             ImFabs(b.x - a.x)
                 * (if ((flags & ImDrawFlags_RoundCornersTop) == ImDrawFlags_RoundCornersTop)
-                    || ((flags & ImDrawFlags_RoundCornersBottom)
-                        == ImDrawFlags_RoundCornersBottom)
+                    || ((flags & ImDrawFlags_RoundCornersBottom) == ImDrawFlags_RoundCornersBottom)
                 {
                     0.5
                 } else {
@@ -1323,10 +1317,8 @@ impl ImDrawList {
         rounding = ImMin(
             rounding,
             ImFabs(b.y - a.y)
-                * (if ((flags & ImDrawFlags_RoundCornersLeft)
-                    == ImDrawFlags_RoundCornersLeft)
-                    || ((flags & ImDrawFlags_RoundCornersRight)
-                        == ImDrawFlags_RoundCornersRight)
+                * (if ((flags & ImDrawFlags_RoundCornersLeft) == ImDrawFlags_RoundCornersLeft)
+                    || ((flags & ImDrawFlags_RoundCornersRight) == ImDrawFlags_RoundCornersRight)
                 {
                     0.5
                 } else {
@@ -1335,8 +1327,7 @@ impl ImDrawList {
                 - 1,
         );
 
-        if rounding < 0.5
-            || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
+        if rounding < 0.5 || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
         {
             self.PathLineTo(a);
             self.PathLineTo(&ImVec2::from_floats(b.x, a.y));
@@ -1703,12 +1694,11 @@ impl ImDrawList {
     }
 
     // void  _OnChangedClipRect();
-    pub unsafe fn _OnChangedClipRect(&mut self) {
+    pub fn _OnChangedClipRect(&mut self) {
         // If current command is used with different settings we need to add a new command
         // IM_ASSERT_PARANOID(CmdBuffer.Size > 0);
         let mut curr_cmd: *mut ImDrawCmd = &mut self.CmdBuffer[self.CmdBuffer.len() - 1];
-        if curr_cmd.ElemCount != 0 &&  curr_cmd.ClipRect != self._CmdHeader.ClipRect
-        {
+        if curr_cmd.ElemCount != 0 && curr_cmd.ClipRect != self._CmdHeader.ClipRect {
             self.AddDrawCmd();
             return;
         }

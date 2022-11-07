@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
-use std::ptr::null_mut;
+use crate::type_defs::ImguiHandle;
 use libc::{c_char, c_int, c_void};
-use crate::type_defs::ImGuiID;
+use std::ptr::null_mut;
 
 // Data payload for Drag and Drop operations: AcceptDragDropPayload(), GetDragDropPayload()
 #[derive(Default, Debug, Clone)]
@@ -10,12 +10,12 @@ pub struct ImGuiPayload {
     // Members
     pub Data: Vec<u8>,
     // Data (copied and owned by dear imgui)
-    pub DataSize: usize,           // Data size
+    pub DataSize: usize, // Data size
 
     // [Internal]
-    pub SourceId: ImGuiID,
+    pub SourceId: ImguiHandle,
     // Source item id
-    pub SourceParentId: ImGuiID,
+    pub SourceParentId: ImguiHandle,
     // Source parent id (if available)
     pub DataFrameCount: c_int,
     // Data timestamp
@@ -23,12 +23,11 @@ pub struct ImGuiPayload {
     // Data type tag (short user-supplied string, 32 characters max)
     pub Preview: bool,
     // Set when AcceptDragDropPayload() was called and mouse has been hovering the target item (nb: handle overlapping drag targets)
-    pub Delivery: bool,           // Set when AcceptDragDropPayload() was called and mouse button is released over the target item.
+    pub Delivery: bool, // Set when AcceptDragDropPayload() was called and mouse button is released over the target item.
 }
 
 impl ImGuiPayload {
     // ImGuiPayload()  { Clear(); }
-
 
     // void Clear()    { SourceId = SourceParentId = 0; Data = None; DataSize = 0; memset(DataType, 0, sizeof(DataType)); DataFrameCount = - 1; Preview = Delivery = false; }
     pub fn Clear(&mut self) {
@@ -46,12 +45,10 @@ impl ImGuiPayload {
         self.DataFrameCount != -1 && data_type == self.DataType
     }
 
-
     // IsPreview: bool() const { return Preview; }
     pub fn IsPreview(&mut self) -> bool {
         self.Preview
     }
-
 
     // IsDelivery: bool() const { return Delivery; }
     pub fn IsDelivery(&mut self) -> bool {

@@ -2545,7 +2545,7 @@ static void ShowDemoWindowWidgets() {
 //   bool MySliderU64(const char *label, u64* value, u64 min = 0, u64 max = 0,
 //   const char* format = "%lld")
 //   {
-//      return SliderScalar(label, ImGuiDataType_U64, value, &min, &max,
+//      return SliderScalar(label, IM_GUI_DATA_TYPE_U64, value, &min, &max,
 //      format);
 //   }
 

@@ -1,21 +1,21 @@
 #![allow(non_snake_case)]
 
-use libc::{c_float, c_int};
 use crate::input_text_flags::ImGuiInputTextFlags;
 use crate::math_ops::ImMin;
 use crate::stb::stb_text_edit_state::STB_TexteditState;
 use crate::stb::stb_textedit::{stb_textedit_key, STB_TEXTEDIT_UNDOSTATECOUNT};
-use crate::type_defs::{ImGuiID, ImWchar};
 use crate::stb_text_edit_state::STB_TexteditState;
 use crate::stb_textedit::STB_TEXTEDIT_UNDOSTATECOUNT;
+use crate::type_defs::{ImWchar, ImguiHandle};
+use libc::{c_float, c_int};
 
 // Internal state of the currently focused/edited text input box
 // For a given item ID, access with GetInputTextState()
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiInputTextState {
-    pub ID: ImGuiID,
+    pub ID: ImguiHandle,
     // widget id owning the text state
-// c_int                     CurLenW, CurLenA;       // we need to maintain our buffer length in both UTF-8 and wchar format. UTF-8 length is valid even if TextA is not.
+    // c_int                     CurLenW, CurLenA;       // we need to maintain our buffer length in both UTF-8 and wchar format. UTF-8 length is valid even if TextA is not.
     pub CurLenW: usize,
     pub CurLenA: usize,
     pub TextW: Vec<char>,
@@ -40,12 +40,11 @@ pub struct ImGuiInputTextState {
     // after a double-click to select all, we ignore further mouse drags to update selection
     pub Edited: bool,
     // edited this frame
-    pub Flags: ImGuiInputTextFlags,                  // copy of InputText() flags
+    pub Flags: ImGuiInputTextFlags, // copy of InputText() flags
 }
 
 impl ImGuiInputTextState {
     // ImGuiInputTextState()                   { memset(this, 0, sizeof(*this)); }
-
 
     // c_void        ClearText()                 { CurLenW = CurLenA = 0; TextW[0] = 0; TextA[0] = 0; CursorClamp(); }
     pub fn ClearText(&mut self) {
@@ -63,22 +62,19 @@ impl ImGuiInputTextState {
         self.InitialTextA.clear();
     }
 
-
     // c_int         GetUndoAvailCount() const   { return Stb.undostate.undo_point; }
     pub fn GetUndoAvailCount(&self) -> c_int {
         self.Stb.undostate.undo_point as c_int
     }
-
 
     // c_int         GetRedoAvailCount() const   { return STB_TEXTEDIT_UNDOSTATECOUNT - Stb.undostate.redo_point; }
     pub fn GetRedoAvailcount(&self) -> c_int {
         (STB_TEXTEDIT_UNDOSTATECOUNT - self.Stb.undostate.redo_point) as c_int
     }
 
-
     // c_void        OnKeyPressed(key: c_int);      // Cannot be inline because we call in code in stb_textedit.h implementation
     pub unsafe fn OnKeyPressed(&mut self, key: c_int) {
-            stb_textedit_key(&mut String::from(self.TextW.clone()), &mut self.Stb, key);
+        stb_textedit_key(&mut String::from(self.TextW.clone()), &mut self.Stb, key);
         self.CursorFollow = true;
         self.CursorAnimReset();
     }
@@ -112,18 +108,15 @@ impl ImGuiInputTextState {
         self.Stb.cursor
     }
 
-
     // c_int         GetSelectionStart() const   { return Stb.select_start; }
     pub fn GetSelectionStart(&self) -> usize {
         self.Stb.select_start
     }
 
-
     // c_int         GetSelectionEnd() const     { return Stb.select_end; }
     pub fn GetSelectionEnd(&self) -> usize {
         self.Stb.select_end
     }
-
 
     // c_void        SelectAll()                 { Stb.select_start = 0; Stb.cursor = Stb.select_end = CurLenW; Stb.has_preferred_x = 0; }
     pub fn SelectAll(&mut self) {
@@ -131,5 +124,4 @@ impl ImGuiInputTextState {
         self.Stb.cursor = self.CurLenW;
         self.Stb.select_end = self.CurLenW;
     }
-
 }

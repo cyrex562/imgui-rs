@@ -5,14 +5,14 @@ use libc::{c_char, c_float, c_int};
 use crate::color::{IM_COL32_A_MASK, IM_COL32_A_SHIFT, ImGuiCol, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_CheckMark, ImGuiCol_ChildBg, ImGuiCol_DockingEmptyBg, ImGuiCol_DockingPreview, ImGuiCol_DragDropTarget, ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered, ImGuiCol_Header, ImGuiCol_HeaderActive, ImGuiCol_HeaderHovered, ImGuiCol_MenuBarBg, ImGuiCol_ModalWindowDimBg, ImGuiCol_NavHighlight, ImGuiCol_NavWindowingDimBg, ImGuiCol_NavWindowingHighlight, ImGuiCol_PlotHistogram, ImGuiCol_PlotHistogramHovered, ImGuiCol_PlotLines, ImGuiCol_PlotLinesHovered, ImGuiCol_PopupBg, ImGuiCol_ResizeGrip, ImGuiCol_ResizeGripActive, ImGuiCol_ResizeGripHovered, ImGuiCol_ScrollbarBg, ImGuiCol_ScrollbarGrab, ImGuiCol_ScrollbarGrabActive, ImGuiCol_ScrollbarGrabHovered, ImGuiCol_Separator, ImGuiCol_SeparatorActive, ImGuiCol_SeparatorHovered, ImGuiCol_SliderGrab, ImGuiCol_SliderGrabActive, ImGuiCol_Tab, ImGuiCol_TabActive, ImGuiCol_TabHovered, ImGuiCol_TableBorderLight, ImGuiCol_TableBorderStrong, ImGuiCol_TableHeaderBg, ImGuiCol_TableRowBg, ImGuiCol_TableRowBgAlt, ImGuiCol_TabUnfocused, ImGuiCol_TabUnfocusedActive, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TextSelectedBg, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_TitleBgCollapsed, ImGuiCol_WindowBg};
 use crate::color_mod::ImGuiColorMod;
 use crate::color_ops::{ColorConvertFloat4ToU32, ColorConvertU32ToFloat4};
-use crate::style::ImGuiStyle;
+use crate::style::ImguiStyle;
 use crate::imgui::GImGui;
 use crate::math_ops::ImLerp;
 use crate::utils::is_not_null;
 use crate::vec4::ImVec4;
 
 // ImGuiStyle& GetStyle()
-pub fn GetStyle() -> &mut ImGuiStyle {
+pub fn GetStyle() -> &mut ImguiStyle {
 // IM_ASSERT(GImGui != NULL && "No current context. Did you call CreateContext() and SetCurrentContext() ?");
     return GimGui.Style;
 }
@@ -57,9 +57,9 @@ pub fn PushStyleColor(idx: ImGuiCol, col: u32) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut backup: ImGuiColorMod = ImGuiColorMod::default();
     backup.Col = idx;
-    backup.BackupValue = g.Style.Colors[idx.clone()];
+    backup.BackupValue = g.style.Colors[idx.clone()];
     g.ColorStack.push(backup);
-    g.Style.Colors[idx.clone()] = ColorConvertU32ToFloat4(col);
+    g.style.Colors[idx.clone()] = ColorConvertU32ToFloat4(col);
 }
 
 // c_void PushStyleColor(ImGuiCol idx, col: &ImVec4)
@@ -67,9 +67,9 @@ pub fn PushStyleColor2(idx: ImGuiCol, col: &ImVec4) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut backup: ImGuiColorMod = ImGuiColorMod::default();
     backup.Col = idx;
-    backup.BackupValue = g.Style.Colors[idx.clone()];
+    backup.BackupValue = g.style.Colors[idx.clone()];
     g.ColorStack.push(backup);
-    g.Style.Colors[idx.clone()] = col;
+    g.style.Colors[idx.clone()] = col;
 }
 
 // c_void PopStyleColor(count: c_int)
@@ -81,7 +81,7 @@ pub fn PopStyleColor(mut count: c_int) {
     }
     while count > 0 {
         let backup = g.ColorStack.last().unwrap();
-        g.Style.Colors[backup.Col] = backup.BackupValue.clone();
+        g.style.Colors[backup.Col] = backup.BackupValue.clone();
         g.ColorStack.pop_back();
         count -= 1;
     }
@@ -156,9 +156,9 @@ pub unsafe fn GetStyleColorName(idx: ImGuiCol) -> *const c_char
 }
 
 
-pub fn StyleColorsDark(dst: *mut ImGuiStyle)
+pub fn StyleColorsDark(dst: *mut ImguiStyle)
 {
-    let style: *mut ImGuiStyle = if is_not_null(dst) { dst } else { &GetStyle() };
+    let style: *mut ImguiStyle = if is_not_null(dst) { dst } else { &GetStyle() };
     colors: *mut ImVec4 = style.Colors.as_mut_ptr();
 
     colors[ImGuiCol_Text]                   = ImVec4::from_floats(1.0, 1.0, 1.0, 1.0);
@@ -218,9 +218,9 @@ pub fn StyleColorsDark(dst: *mut ImGuiStyle)
     colors[ImGuiCol_ModalWindowDimBg]       = ImVec4::from_floats(0.80, 0.80, 0.80, 0.350);
 }
 
-pub fn StyleColorsClassic(dst: *mut ImGuiStyle)
+pub fn StyleColorsClassic(dst: *mut ImguiStyle)
 {
-    style: *mut ImGuiStyle = if is_not_null(dst) { dst } else { &mut  GetStyle() };
+    style: *mut ImguiStyle = if is_not_null(dst) { dst } else { &mut  GetStyle() };
     colors: *mut ImVec4 = style.Colors;
 
     colors[ImGuiCol_Text]                   = ImVec4::from_floats(0.90, 0.90, 0.90, 1.0);
@@ -281,9 +281,9 @@ pub fn StyleColorsClassic(dst: *mut ImGuiStyle)
 }
 
 // Those light colors are better suited with a thicker font than the default one + FrameBorder
-pub fn StyleColorsLight(dst: *mut ImGuiStyle)
+pub fn StyleColorsLight(dst: *mut ImguiStyle)
 {
-    let style: *mut ImGuiStyle = if is_not_null(dst) { dst } else { &mut GetStyle() };
+    let style: *mut ImguiStyle = if is_not_null(dst) { dst } else { &mut GetStyle() };
     let colors: *mut ImVec4 = style.Colors.as_mut_ptr();
 
     colors[ImGuiCol_Text]                   = ImVec4::from_floats(0.00, 0.00, 0.00, 1.0);

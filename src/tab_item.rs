@@ -1,16 +1,16 @@
 #![allow(non_snake_case)]
 
-use libc::{c_float, c_int};
 use crate::tab_item_flags::ImGuiTabItemFlags;
-use crate::type_defs::ImGuiID;
-use crate::window::ImGuiWindow;
+use crate::type_defs::ImguiHandle;
+use crate::window::ImguiWindow;
+use libc::{c_float, c_int};
 
 // Storage for one active tab item (sizeof() 48 bytes)
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiTabItem {
-    pub ID: ImGuiID,
+    pub ID: ImguiHandle,
     pub Flags: ImGuiTabItemFlags,
-    pub window: &mut ImGuiWindow,
+    pub window: &mut ImguiWindow,
     // When TabItem is part of a DockNode's TabBar, we hold on to a window.
     pub LastFrameVisible: c_int,
     pub LastFrameSelected: c_int,
@@ -29,18 +29,17 @@ pub struct ImGuiTabItem {
     // BeginTabItem() order, used to re-order tabs after toggling ImGuiTabBarFlags_Reorderable
     pub IndexDuringLayout: i16,
     // Index only used during TabBarLayout()
-    pub WantClose: bool,              // Marked as closed by SetTabItemClosed()
+    pub WantClose: bool, // Marked as closed by SetTabItemClosed()
 }
 
 impl ImGuiTabItem {
     // ImGuiTabItem()      {
-    pub fn new() -> Self
-    {
-    // memset(this, 0, sizeof(*this));
-    //     LastFrameVisible = LastFrameSelected = -1;
-    //     RequestedWidth = -1.0;
-    //     NameOffset = -1;
-    //     BeginOrder = IndexDuringLayout = -1;
+    pub fn new() -> Self {
+        // memset(this, 0, sizeof(*this));
+        //     LastFrameVisible = LastFrameSelected = -1;
+        //     RequestedWidth = -1.0;
+        //     NameOffset = -1;
+        //     BeginOrder = IndexDuringLayout = -1;
         Self {
             LastFrameVisible: -1,
             LastFrameSelected: -1,

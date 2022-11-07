@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
-use crate::debug_log_flags::ImGuiDebugLogFlags_EventIO;
+use crate::debug_log_flags::IM_GUI_DEBUG_LOG_FLAGS_EVENT_IO;
 use crate::imgui::GImGui;
-use crate::input_event::ImGuiInputEvent;
+use crate::input_event::ImguiInputEvent;
 use crate::input_event_type::{
     ImGuiInputEventType_Focus, ImGuiInputEventType_Key, ImGuiInputEventType_MouseButton,
     ImGuiInputEventType_MousePos, ImGuiInputEventType_MouseViewport,
@@ -15,7 +15,7 @@ use crate::input_flags::{
     ImGuiInputFlags_RepeatRateNavMove, ImGuiInputFlags_RepeatRateNavTweak,
 };
 use crate::input_source::{input_source_names, ImGuiInputSource};
-use crate::io::ImGuiIO;
+use crate::io::ImguiIo;
 use crate::item_flags::ImGuiItemFlags_NoTabStop;
 use crate::item_ops::{PopItemFlag, PushItemFlag};
 use crate::key::{
@@ -36,7 +36,7 @@ use std::ffi::CString;
 
 // Test if mouse cursor is hovering given rectangle
 // NB- Rectangle is clipped by our current clip setting
-// NB- Expand the rectangle to be generous on imprecise inputs systems (g.Style.TouchExtraPadding)
+// NB- Expand the rectangle to be generous on imprecise inputs systems (g.style.TouchExtraPadding)
 // IsMouseHoveringRect: bool(const r_min: &mut ImVec2, const r_max: &mut ImVec2, clip: bool)
 pub unsafe fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -49,8 +49,8 @@ pub unsafe fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) ->
 
     // Expand for touch input const
     let mut rect_for_touch: ImRect = ImRect::from_vec2(
-        rect_clipped.Min - g.Style.TouchExtraPadding.clone(),
-        rect_clipped.Max + g.Style.TouchExtraPadding.clone(),
+        rect_clipped.min - g.style.TouchExtraPadding.clone(),
+        rect_clipped.max + g.style.TouchExtraPadding.clone(),
     );
     if !rect_for_touch.Contains(&g.IO.MousePos) {
         return false;
@@ -263,7 +263,7 @@ pub unsafe fn GetKeyName(mut key: ImGuiKey) -> *const c_char {
     // IM_ASSERT((IsNamedKey(key) || key == ImGuiKey_None) && "Support for user key indices was dropped in favor of ImGuiKey. Please update backend and user code.");
     // #else
     if IsLegacyKey(key) {
-        let mut io: *mut ImGuiIO = GetIO();
+        let mut io: *mut ImguiIo = GetIO();
         if io.KeyMap[key.clone()] == -1 {
             return str_to_const_c_char_ptr("NA");
         }
@@ -634,7 +634,7 @@ pub fn GetInputSourceName(source: ImGuiInputSource) -> *const c_char {
 }
 
 // static c_void DebugPrintInputEvent(prefix: *const c_char, *const ImGuiInputEvent e)
-pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImGuiInputEvent) {
+pub fn DebugPrintInputEvent(prefix: *const c_char, e: *const ImguiInputEvent) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if e.Type == ImGuiInputEventType_MousePos {
         IMGUI_DEBUG_LOG_IO(
@@ -696,7 +696,7 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
     // let event_n: c_int = 0;
     // for (; event_n < g.InputEventsQueue.Size; event_n++)
     for event_n in 0..g.InputEventsQueue.len() {
-        let mut e: *mut ImGuiInputEvent = &mut g.InputEventsQueue[event_n];
+        let mut e: *mut ImguiInputEvent = &mut g.InputEventsQueue[event_n];
         if e.Type == ImGuiInputEventType_MousePos {
             let mut event_pos = ImVec2::from_floats(e.MousePos.PosX, e.MousePos.PosY);
             if IsMousePosValid(&event_pos) {
@@ -833,7 +833,7 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
 
     // [DEBUG]
     // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
-    if event_n != 0 && (g.DebugLogFlags.clone() & ImGuiDebugLogFlags_EventIO) != 0 {
+    if event_n != 0 && (g.DebugLogFlags.clone() & IM_GUI_DEBUG_LOG_FLAGS_EVENT_IO) != 0 {
         // for (let n: c_int = 0; n < g.InputEventsQueue.Size; n+ +)
         for n in 0..g.InputEventsQueue.len() {
             // DebugPrintInputEvent(n < event_n?(g.InputEventsQueue[n].IgnoredAsSame? "Processed (Same)": "Processed"): "Remaining", &g.InputEventsQueue[n]);

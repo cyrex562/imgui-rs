@@ -55,7 +55,7 @@ impl ImGuiListClipper {
     // IMGUI_API void  Begin(int items_count, float items_height = -1.0);
     pub unsafe fn Begin(&mut self, items_count: usize, items_height: f32) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        let mut window  = &g.CurrentWindow;
+        let mut window = g.current_window_mut().unwrap();
         // IMGUI_DEBUG_LOG_CLIPPER("Clipper: Begin({},{}) in '{}'\n", items_count, items_height, window.Name);
 
         let table = g.CurrentTable;
@@ -65,7 +65,7 @@ impl ImGuiListClipper {
             }
         }
 
-        self.StartPosY = window.DC.CursorPos.y;
+        self.StartPosY = window.dc.cursor_pos.y;
         self.ItemsHeight = items_height;
         self.ItemsCount = items_count;
         self.DisplayStart = -1;
@@ -79,7 +79,7 @@ impl ImGuiListClipper {
         g.ClipperTempDataStacked += 1;
         let mut data = &mut g.ClipperTempData[g.ClipperTempDataStacked - 1];
         data.Reset(this);
-        data.LossynessOffset = window.DC.CursorStartPosLossyness.y;
+        data.LossynessOffset = window.dc.CursorStartPosLossyness.y;
         self.TempData = data;
     }
 
@@ -178,24 +178,24 @@ pub unsafe fn ImGuiListClipper_SeekCursorAndSetupPrevLine(pos_y: c_float, line_h
     // FIXME: It is problematic that we have to do that here, because custom/equivalent end-user code would stumble on the same issue.
     // The clipper should probably have a final step to display the last item in a regular manner, maybe with an opt-out flag for data sets which may have costly seek?
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    let off_y = pos_y - window.DC.CursorPos.y;
-    window.DC.CursorPos.y = pos_y;
-    window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, pos_y - g.Style.ItemSpacing.y);
-    window.DC.CursorPosPrevLine.y = window.DC.CursorPos.y - line_height; // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
-    window.DC.PrevLineSize.y = (line_height - g.Style.ItemSpacing.y); // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
+    let mut window = g.current_window_mut().unwrap();
+    let off_y = pos_y - window.dc.cursor_pos.y;
+    window.dc.cursor_pos.y = pos_y;
+    window.dc.CursorMaxPos.y = ImMax(window.dc.CursorMaxPos.y, pos_y - g.style.ItemSpacing.y);
+    window.dc.cursor_pos_prev_line.y = window.dc.cursor_pos.y - line_height; // Setting those fields so that SetScrollHereY() can properly function after the end of our clipper usage.
+    window.dc.PrevLineSize.y = (line_height - g.style.ItemSpacing.y); // If we end up needing more accurate data (to e.g. use SameLine) we may as well make the clipper have a fourth step to let user process and display the last item in their list.
 
-    let columns = window.DC.CurrentColumns;
-    // if (ImGuiOldColumns* columns = window.DC.CurrentColumns)
+    let columns = window.dc.CurrentColumns;
+    // if (ImGuiOldColumns* columns = window.dc.CurrentColumns)
     if columns.is_null() == false {
-        columns.LineMinY = window.DC.CursorPos.y;
+        columns.LineMinY = window.dc.cursor_pos.y;
     } // Setting this so that cell Y position are set properly
     let mut table = g.CurrentTable;
     if table.is_null() == false {
         if table.IsInsideRow() {
             TableEndRow(table);
         }
-        table.RowPosY2 = window.DC.CursorPos.y;
+        table.RowPosY2 = window.dc.cursor_pos.y;
         let row_increase = ((off_y / line_height) + 0.5);
         //table.CurrentRow += row_increase; // Can't do without fixing TableEndRow()
         table.RowBgColorCounter += row_increase;

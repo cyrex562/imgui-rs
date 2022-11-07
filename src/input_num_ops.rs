@@ -3,9 +3,9 @@ use crate::button_flags::{
 };
 use crate::button_ops::ButtonEx;
 use crate::data_type::{
-    ImGuiDataType, ImGuiDataType_Double, ImGuiDataType_Float, ImGuiDataType_S32,
+    ImGuiDataType, IM_GUI_DATA_TYPE_DOUBLE, IM_GUI_DATA_TYPE_FLOAT, IM_GUI_DATA_TYPE_S32,
 };
-use crate::data_type_info::GDataTypeInfo;
+use crate::data_type_info::GDATA_TYPE_INFO;
 use crate::data_type_ops::{
     DataTypeApplyFromText, DataTypeApplyOp, DataTypeFormatString, DATA_TYPE_OPERATION_ADD,
     DATA_TYPE_OPERATION_SUB,
@@ -13,7 +13,7 @@ use crate::data_type_ops::{
 use crate::data_type_temp_storage::ImGuiDataTypeTempStorage;
 use crate::frame_ops::GetFrameHeight;
 use crate::group_ops::{BeginGroup, EndGroup};
-use crate::id_ops::PopID;
+use crate::id_ops::pop_win_id_from_stack;
 use crate::input_text_flags::{
     ImGuiInputTextFlags, ImGuiInputTextFlags_AutoSelectAll, ImGuiInputTextFlags_CharsDecimal,
     ImGuiInputTextFlags_CharsHexadecimal, ImGuiInputTextFlags_CharsScientific,
@@ -22,16 +22,16 @@ use crate::input_text_flags::{
 use crate::item_ops::{
     CalcItemWidth, MarkItemEdited, PopItemWidth, PushMultiItemsWidths, SetNextItemWidth,
 };
-use crate::layout_ops::SameLine;
+use crate::layout_ops::same_line;
 use crate::math_ops::ImMax;
 use crate::rect::ImRect;
 use crate::render_ops::FindRenderedTextEnd;
 use crate::string_ops::ImStrTrimBlanks;
-use crate::type_defs::{ImGuiID, ImGuiInputTextCallback};
+use crate::type_defs::{ImGuiInputTextCallback, ImguiHandle};
 use crate::utils::flag_set;
 use crate::vec2::ImVec2;
 use crate::window::ops::{BeginDisabled, EndDisabled, GetCurrentWindow};
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use crate::{data_type_ops, input_text, text_ops, widgets, GImGui};
 use libc::{c_char, c_double, c_float, c_int, size_t, strlen};
 
@@ -39,7 +39,7 @@ pub unsafe fn InputScalar_DefaultCharsFilter(
     data_type: ImGuiDataType,
     format: &str,
 ) -> ImGuiInputTextFlags {
-    if data_type == ImGuiDataType_Float || data_type == ImGuiDataType_Double {
+    if data_type == IM_GUI_DATA_TYPE_FLOAT || data_type == IM_GUI_DATA_TYPE_DOUBLE {
         return ImGuiInputTextFlags_CharsScientific;
     }
     const format_last_char: c_char = if format[0] {
@@ -59,7 +59,7 @@ pub unsafe fn InputScalar_DefaultCharsFilter(
 // However this may not be ideal for all uses, as some user code may break on out of bound values.
 pub unsafe fn TempInputScalar(
     bb: &mut ImRect,
-    id: ImGuiID,
+    id: ImguiHandle,
     label: String,
     data_type: ImGuiDataType,
     p_data: &mut c_float,
@@ -87,7 +87,7 @@ pub unsafe fn TempInputScalar(
     let mut value_changed: bool = false;
     if input_text::TempInputText(bb, id, label, &mut data_buf, data_buf.len(), flags) {
         // Backup old value
-        data_type_size: size_t = data_type_ops::DataTypeGetInfo(data_type).Size;
+        data_type_size: size_t = data_type_ops::data_type_info(data_type).Size;
         let mut data_backup: ImGuiDataTypeTempStorage = ImGuiDataTypeTempStorage::default();
         // memcpy(&data_backup, p_data, data_type_size);
 
@@ -127,16 +127,16 @@ pub unsafe fn InputScalar(
     format: &mut String,
     mut flags: ImGuiInputTextFlags,
 ) -> bool {
-    let mut window = GetCurrentWindow();
-    if window.SkipItems {
+    let mut window = g.current_window_mut().unwrap();
+    if window.skip_items {
         return false;
     }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let style = &mut g.Style;
+    let style = &mut g.style;
 
     if format.is_empty() {
-        *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
+        *format = data_type_ops::data_type_info(data_type).PrintFmt;
     }
 
     // buf: [c_char;64];
@@ -163,7 +163,7 @@ pub unsafe fn InputScalar(
         PushID(label);
         SetNextItemWidth(ImMax(
             1.0,
-            CalcItemWidth() - (button_size + style.ItemInnerSpacing.x) * 2,
+            CalcItemWidth(g) - (button_size + style.ItemInnerSpacing.x) * 2,
         ));
         if InputText("", &mut buf, buf.len(), flags, None, None) {
             // PushId(label) + "" gives us the expected ID from outside point of view
@@ -178,7 +178,7 @@ pub unsafe fn InputScalar(
         if flags & ImGuiInputTextFlags_ReadOnly {
             BeginDisabled(false);
         }
-        SameLine(0.0, style.ItemInnerSpacing.x);
+        same_line(g, 0.0, style.ItemInnerSpacing.x);
         if ButtonEx("-", ImVec2::new(button_size, button_size), button_flags) {
             DataTypeApplyOp(
                 data_type,
@@ -193,7 +193,7 @@ pub unsafe fn InputScalar(
             );
             value_changed = true;
         }
-        SameLine(0.0, style.ItemInnerSpacing.x);
+        same_line(g, 0.0, style.ItemInnerSpacing.x);
         if ButtonEx("+", ImVec2::new(button_size, button_size), button_flags) {
             data_type_ops::DataTypeApplyOp(
                 data_type,
@@ -214,12 +214,12 @@ pub unsafe fn InputScalar(
 
         let mut label_end = FindRenderedTextEnd(label);
         if label != label_end {
-            SameLine(0.0, style.ItemInnerSpacing.x);
-            text_ops::TextEx(label, 0);
+            same_line(g, 0.0, style.ItemInnerSpacing.x);
+            text_ops::TextEx(g, label, 0);
         }
         style.FramePadding = backup_frame_padding;
 
-        PopID();
+        pop_win_id_from_stack(g);
         EndGroup();
     } else {
         if InputText(label, &mut buf, buf.len(), flags, None, None) {
@@ -227,7 +227,7 @@ pub unsafe fn InputScalar(
         }
     }
     if value_changed {
-        MarkItemEdited(g.LastItemData.ID);
+        MarkItemEdited(g, g.LastItemData.ID);
     }
 
     return value_changed;
@@ -243,8 +243,8 @@ pub unsafe fn InputScalarN(
     format: &mut String,
     flags: ImGuiInputTextFlags,
 ) -> bool {
-    let mut window = GetCurrentWindow();
-    if window.SkipItems {
+    let mut window = g.current_window_mut().unwrap();
+    if window.skip_items {
         return false;
     }
 
@@ -252,13 +252,13 @@ pub unsafe fn InputScalarN(
     let mut value_changed: bool = false;
     BeginGroup();
     PushID(label);
-    PushMultiItemsWidths(components, CalcItemWidth());
-    type_size: size_t = GDataTypeInfo[data_type].Size;
+    PushMultiItemsWidths(components, CalcItemWidth(g));
+    type_size: size_t = GDATA_TYPE_INFO[data_type].Size;
     // for (let i: c_int = 0; i < components; i++)
     for i in 0..components {
         PushID(i);
         if i > 0 {
-            SameLine(0.0, g.Style.ItemInnerSpacing.x);
+            same_line(g, 0.0, g.style.ItemInnerSpacing.x);
         }
         value_changed |= InputScalar(
             "",
@@ -269,16 +269,16 @@ pub unsafe fn InputScalarN(
             format,
             flags,
         );
-        PopID();
+        pop_win_id_from_stack(g);
         PopItemWidth();
         // p_data = (p_data + type_size);
     }
-    PopID();
+    pop_win_id_from_stack(g);
 
     let mut label_end = FindRenderedTextEnd(label);
     if label != label_end {
-        SameLine(0.0, g.Style.ItemInnerSpacing.x);
-        text_ops::TextEx(label, 0);
+        same_line(g, 0.0, g.style.ItemInnerSpacing.x);
+        text_ops::TextEx(g, label, 0);
     }
 
     EndGroup();
@@ -296,7 +296,7 @@ pub unsafe fn InputFloat(
     flags |= ImGuiInputTextFlags_CharsScientific;
     return InputScalar(
         label,
-        ImGuiDataType_Float,
+        IM_GUI_DATA_TYPE_FLOAT,
         v,
         (if step > 0.0 { Some(step) } else { None }),
         (if step_fast > 0.0 {
@@ -315,7 +315,16 @@ pub unsafe fn InputFloat2(
     format: &mut String,
     flags: ImGuiInputTextFlags,
 ) -> bool {
-    return InputScalarN(label, ImGuiDataType_Float, v, 2, None, None, format, flags);
+    return InputScalarN(
+        label,
+        IM_GUI_DATA_TYPE_FLOAT,
+        v,
+        2,
+        None,
+        None,
+        format,
+        flags,
+    );
 }
 
 pub unsafe fn InputFloat3(
@@ -324,7 +333,16 @@ pub unsafe fn InputFloat3(
     format: &mut String,
     flags: ImGuiInputTextFlags,
 ) -> bool {
-    return InputScalarN(label, ImGuiDataType_Float, v, 3, None, None, format, flags);
+    return InputScalarN(
+        label,
+        IM_GUI_DATA_TYPE_FLOAT,
+        v,
+        3,
+        None,
+        None,
+        format,
+        flags,
+    );
 }
 
 pub unsafe fn InputFloat4(
@@ -333,7 +351,16 @@ pub unsafe fn InputFloat4(
     format: &mut String,
     flags: ImGuiInputTextFlags,
 ) -> bool {
-    return InputScalarN(label, ImGuiDataType_Float, v, 4, None, None, format, flags);
+    return InputScalarN(
+        label,
+        IM_GUI_DATA_TYPE_FLOAT,
+        v,
+        4,
+        None,
+        None,
+        format,
+        flags,
+    );
 }
 
 pub unsafe fn InputInt(
@@ -355,7 +382,7 @@ pub unsafe fn InputInt(
     let step_fast_float: c_float = c_float::from(step_fast);
     return InputScalar(
         label,
-        ImGuiDataType_S32,
+        IM_GUI_DATA_TYPE_S32,
         &mut v_float,
         (if step > 0 { Some(step_float) } else { None }),
         (if step_fast > 0 {
@@ -373,7 +400,7 @@ pub unsafe fn InputInt2(label: String, v: &mut [c_int; 2], flags: ImGuiInputText
     let mut format = String::from("{}");
     return InputScalarN(
         label,
-        ImGuiDataType_S32,
+        IM_GUI_DATA_TYPE_S32,
         &mut v_float,
         2,
         None,
@@ -392,7 +419,7 @@ pub unsafe fn InputInt3(label: String, v: [c_int; 3], flags: ImGuiInputTextFlags
     let mut format = String::from("{}");
     return InputScalarN(
         label,
-        ImGuiDataType_S32,
+        IM_GUI_DATA_TYPE_S32,
         &mut v_float,
         3,
         None,
@@ -412,7 +439,7 @@ pub unsafe fn InputInt4(label: String, v: [c_int; 4], flags: ImGuiInputTextFlags
     let mut format = String::from("{}");
     return InputScalarN(
         label,
-        ImGuiDataType_S32,
+        IM_GUI_DATA_TYPE_S32,
         &mut v_float,
         4,
         None,
@@ -436,7 +463,7 @@ pub unsafe fn InputDouble(
     let mut step_fast_float = c_float::from(step_fast);
     return InputScalar(
         label,
-        ImGuiDataType_Double,
+        IM_GUI_DATA_TYPE_DOUBLE,
         &mut v_float,
         (if step > 0.0 { Some(step_float) } else { None }),
         (if step_fast > 0.0 {

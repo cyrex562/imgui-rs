@@ -1,11 +1,9 @@
 #![allow(non_snake_case)]
 
-use std::ptr::null_mut;
-use libc::{c_float, c_int};
-use crate::color::{IM_COL32_DISABLE, ImGuiCol_TableRowBg, ImGuiCol_TableRowBgAlt};
+use crate::a_imgui_cpp::GImGui;
+use crate::color::{ImGuiCol_TableRowBg, ImGuiCol_TableRowBgAlt, IM_COL32_DISABLE};
 use crate::cursor_ops::ErrorCheckUsingSetCursorPosToExtendParentBoundaries;
 use crate::draw_flags::ImDrawFlags_None;
-use crate::a_imgui_cpp::GImGui;
 use crate::logging_ops::LogRenderedText;
 use crate::math_ops::{ImMax, ImMin};
 use crate::nav_layer::{ImGuiNavLayer_Main, ImGuiNavLayer_Menu};
@@ -13,36 +11,40 @@ use crate::rect::ImRect;
 use crate::style_ops::GetColorU32;
 use crate::table::ImGuiTable;
 use crate::table_column::ImGuiTableColumn;
-use crate::table_flags::{ImGuiTableFlags_BordersInnerH, ImGuiTableFlags_NoClip, ImGuiTableFlags_RowBg};
+use crate::table_flags::{
+    ImGuiTableFlags_BordersInnerH, ImGuiTableFlags_NoClip, ImGuiTableFlags_RowBg,
+};
 use crate::table_instance_data::ImGuiTableInstanceData;
 use crate::table_row_flags::ImGuiTableRowFlags_Headers;
 use crate::vec2::ImVec2;
 use crate::window::rect::SetWindowClipRectBeforeSetChannel;
 use crate::window_ops::SetWindowClipRectBeforeSetChannel;
+use libc::{c_float, c_int};
+use std::ptr::null_mut;
 
 // [Internal] Called by TableNextRow()
 // c_void TableEndRow(table: *mut ImGuiTable)
 pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-// window: &mut ImGuiWindow = g.CurrentWindow;
+                    // window: &mut ImGuiWindow = g.CurrentWindow;
     let window = g.CurrentWindow;
     // IM_ASSERT(window == table.InnerWindow);
-// IM_ASSERT(table.IsInsideRow);
+    // IM_ASSERT(table.IsInsideRow);
 
     if table.CurrentColumn != -1 {
         TableEndCell(table);
     }
 
-// Logging
+    // Logging
     if g.LogEnabled {
-        LogRenderedText(None, "|".into());
+        LogRenderedText(g, None, "|".into());
     }
 
-// Position cursor at the bottom of our row so it can be used for e.g. clipping calculation. However it is
-// likely that the next call to TableBeginCell() will reposition the cursor to take account of vertical padding.
-    window.DC.CursorPos.y = table.RowPosY2;
+    // Position cursor at the bottom of our row so it can be used for e.g. clipping calculation. However it is
+    // likely that the next call to TableBeginCell() will reposition the cursor to take account of vertical padding.
+    window.dc.cursor_pos.y = table.RowPosY2;
 
-// Row background fill
+    // Row background fill
     let bg_y1 = table.RowPosY1;
     let bg_y2 = table.RowPosY2;
     let unfreeze_rows_actual = (table.CurrentRow + 1 == table.FreezeRowsCount as i32);
@@ -51,122 +53,164 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
         TableGetInstanceData(table, table.InstanceCurrent).LastFirstRowHeight = bg_y2 - bg_y1;
     }
 
-    let is_visible = (bg_y2 >= table.InnerClipRect.Min.y && bg_y1 <= table.InnerClipRect.Max.y);
+    let is_visible = (bg_y2 >= table.InnerClipRect.min.y && bg_y1 <= table.InnerClipRect.max.y);
     if is_visible {
-// Decide of background color for the row
+        // Decide of background color for the row
         let mut bg_col0 = 0;
         let mut bg_col1 = 0;
         if table.RowBgColor[0] != IM_COL32_DISABLE {
             bg_col0 = table.RowBgColor[0];
         } else if table.Flags & ImGuiTableFlags_RowBg {
-            bg_col0 = GetColorU32(if table.RowBgColorCounter & 1 { ImGuiCol_TableRowBgAlt } else { ImGuiCol_TableRowBg });
+            bg_col0 = GetColorU32(if table.RowBgColorCounter & 1 {
+                ImGuiCol_TableRowBgAlt
+            } else {
+                ImGuiCol_TableRowBg
+            });
         }
         if table.RowBgColor[1] != IM_COL32_DISABLE {
             bg_col1 = table.RowBgColor[1];
         }
 
-// Decide of top border color
+        // Decide of top border color
         let mut border_col = 0;
         let border_size = TABLE_BORDER_SIZE;
         if table.CurrentRow > 0 || table.InnerWindow == table.OuterWindow {
             if table.Flags & ImGuiTableFlags_BordersInnerH {
                 border_col = if table.LastRowFlags & ImGuiTableRowFlags_Headers {
                     table.BorderColorStrong
-                } else { table.BorderColorLight };
+                } else {
+                    table.BorderColorLight
+                };
             }
         }
 
         let draw_cell_bg_color = table.RowCellDataCurrent >= 0;
         let draw_strong_bottom_border = unfreeze_rows_actual;
-        if (bg_col0 | bg_col1 | border_col) != 0 || draw_strong_bottom_border || draw_cell_bg_color {
-// In theory we could call SetWindowClipRectBeforeSetChannel() but since we know TableEndRow() is
-// always followed by a change of clipping rectangle we perform the smallest overwrite possible here.
+        if (bg_col0 | bg_col1 | border_col) != 0 || draw_strong_bottom_border || draw_cell_bg_color
+        {
+            // In theory we could call SetWindowClipRectBeforeSetChannel() but since we know TableEndRow() is
+            // always followed by a change of clipping rectangle we perform the smallest overwrite possible here.
             if flag_set(table.Flags, ImGuiTableFlags_NoClip) == 0 {
                 window.DrawList._CmdHeader.ClipRect = table.Bg0ClipRectForDrawCmd.ToVec4();
             }
-            table.DrawSplitter.SetCurrentChannel(window.DrawList, TABLE_DRAW_CHANNEL_BG0);
+            table
+                .DrawSplitter
+                .SetCurrentChannel(window.DrawList, TABLE_DRAW_CHANNEL_BG0);
         }
 
-// Draw row background
-// We soft/cpu clip this so all backgrounds and borders can share the same clipping rectangle
+        // Draw row background
+        // We soft/cpu clip this so all backgrounds and borders can share the same clipping rectangle
         if bg_col0 || bg_col1 {
-            let mut row_rect = ImRect::from_floats(table.WorkRect.Min.x, bg_y1, table.WorkRect.Max.x, bg_y2);
+            let mut row_rect =
+                ImRect::from_floats(table.WorkRect.min.x, bg_y1, table.WorkRect.max.x, bg_y2);
             row_rect.ClipWith(&table.BgClipRect);
-            if bg_col0 != 0 && row_rect.Min.y < row_rect.Max.y {
-                window.DrawList.AddRectFilled(&row_rect.Min, &row_rect.Max, bg_col0, 0.0, ImDrawFlags_None);
+            if bg_col0 != 0 && row_rect.min.y < row_rect.max.y {
+                window.DrawList.AddRectFilled(
+                    &row_rect.min,
+                    &row_rect.max,
+                    bg_col0,
+                    0.0,
+                    ImDrawFlags_None,
+                );
             }
-            if bg_col1 != 0 && row_rect.Min.y < row_rect.Max.y {
-                window.DrawList.ddRectFilled(row_rect.Min, row_rect.Max, bg_col1);
+            if bg_col1 != 0 && row_rect.min.y < row_rect.max.y {
+                window
+                    .DrawList
+                    .ddRectFilled(row_rect.min, row_rect.max, bg_col1);
             }
         }
 
-// Draw cell background color
+        // Draw cell background color
         if draw_cell_bg_color {
             let mut cell_data_end = &mut table.RowCellData[table.RowCellDataCurrent];
             let mut cell_data = &mut table.RowCellData[0];
-// for (cell_data: *mut ImGuiTableCellData = &table.RowCellData[0]; cell_data <= cell_data_end; cell_data++)
+            // for (cell_data: *mut ImGuiTableCellData = &table.RowCellData[0]; cell_data <= cell_data_end; cell_data++)
             while cell_data <= cell_data_end {
-// As we render the BG here we need to clip things (for layout we would not)
-// FIXME: This cancels the OuterPadding addition done by TableGetCellBgRect(), need to keep it while rendering correctly while scrolling.
+                // As we render the BG here we need to clip things (for layout we would not)
+                // FIXME: This cancels the OuterPadding addition done by TableGetCellBgRect(), need to keep it while rendering correctly while scrolling.
                 let column: &mut ImGuiTableColumn = &mut table.Columns[cell_data.Column];
                 let mut cell_bg_rect = TableGetCellBgRect(table, cell_data.Column);
                 cell_bg_rect.ClipWith(&table.BgClipRect);
-                cell_bg_rect.Min.x = ImMax(cell_bg_rect.Min.x, column.ClipRect.Min.x);     // So that first column after frozen one gets clipped when scrolling
-                cell_bg_rect.Max.x = ImMin(cell_bg_rect.Max.x, column.MaxX);
-                window.DrawList.AddRectFilled(&cell_bg_rect.Min, &cell_bg_rect.Max, cell_data.BgColor, 0.0, ImDrawFlags_None);
+                cell_bg_rect.min.x = ImMax(cell_bg_rect.min.x, column.ClipRect.min.x); // So that first column after frozen one gets clipped when scrolling
+                cell_bg_rect.max.x = ImMin(cell_bg_rect.max.x, column.MaxX);
+                window.DrawList.AddRectFilled(
+                    &cell_bg_rect.min,
+                    &cell_bg_rect.max,
+                    cell_data.BgColor,
+                    0.0,
+                    ImDrawFlags_None,
+                );
                 cell_data += 1;
             }
         }
 
-// Draw top border
-        if border_col > 0 && bg_y1 >= table.BgClipRect.Min.y && bg_y1 < table.BgClipRect.Max.y {
-            window.DrawList.AddLine(&mut ImVec2::from_floats(table.BorderX1, bg_y1), &mut ImVec2::from_floats(table.BorderX2, bg_y1), border_col, border_size);
+        // Draw top border
+        if border_col > 0 && bg_y1 >= table.BgClipRect.min.y && bg_y1 < table.BgClipRect.max.y {
+            window.DrawList.AddLine(
+                &mut ImVec2::from_floats(table.BorderX1, bg_y1),
+                &mut ImVec2::from_floats(table.BorderX2, bg_y1),
+                border_col,
+                border_size,
+            );
         }
 
-// Draw bottom border at the row unfreezing mark (always strong)
-        if draw_strong_bottom_border && bg_y2 >= table.BgClipRect.Min.y && bg_y2 < table.BgClipRect.Max.y {
-            window.DrawList.AddLine(&mut ImVec2::from_floats(table.BorderX1, bg_y2), &mut ImVec2::from_floats(table.BorderX2, bg_y2), table.BorderColorStrong, border_size);
+        // Draw bottom border at the row unfreezing mark (always strong)
+        if draw_strong_bottom_border
+            && bg_y2 >= table.BgClipRect.min.y
+            && bg_y2 < table.BgClipRect.max.y
+        {
+            window.DrawList.AddLine(
+                &mut ImVec2::from_floats(table.BorderX1, bg_y2),
+                &mut ImVec2::from_floats(table.BorderX2, bg_y2),
+                table.BorderColorStrong,
+                border_size,
+            );
         }
     }
 
-// End frozen rows (when we are past the last frozen row line, teleport cursor and alter clipping rectangle)
-// We need to do that in TableEndRow() instead of TableBeginRow() so the list clipper can mark end of row and
-// get the new cursor position.
+    // End frozen rows (when we are past the last frozen row line, teleport cursor and alter clipping rectangle)
+    // We need to do that in TableEndRow() instead of TableBeginRow() so the list clipper can mark end of row and
+    // get the new cursor position.
     if unfreeze_rows_request {
         // for (column_n: c_int = 0; column_n < table.ColumnsCount; column_n+ +)
         for column_n in 0..table.ColumnsCount {
             let mut column: &mut ImGuiTableColumn = &mut table.Columns[column_n];
-            column.NavLayerCurrent = if column_n < table.FreezeColumnsCount as c_int { ImGuiNavLayer_Menu } else { ImGuiNavLayer_Main };
+            column.NavLayerCurrent = if column_n < table.FreezeColumnsCount as c_int {
+                ImGuiNavLayer_Menu
+            } else {
+                ImGuiNavLayer_Main
+            };
         }
     }
     if unfreeze_rows_actual {
-// IM_ASSERT(table.IsUnfrozenRows == false);
+        // IM_ASSERT(table.IsUnfrozenRows == false);
         table.IsUnfrozenRows = true;
 
-// BgClipRect starts as table.InnerClipRect, reduce it now and make BgClipRectForDrawCmd == BgClipRect
+        // BgClipRect starts as table.InnerClipRect, reduce it now and make BgClipRectForDrawCmd == BgClipRect
         let mut y0 = ImMax(table.RowPosY2 + 1, window.InnerClipRect.Min.y);
-        table.BgClipRect.Min.y = ImMin(y0, window.InnerClipRect.Max.y);
-        ;
-        table.Bg2ClipRectForDrawCmd.Min.y = ImMin(y0, window.InnerClipRect.Max.y);
-        table.BgClipRect.Max.y = window.InnerClipRect.Max.y;
-        table.Bg2ClipRectForDrawCmd.Max.y = window.InnerClipRect.Max.y;
+        table.BgClipRect.min.y = ImMin(y0, window.InnerClipRect.Max.y);
+        table.Bg2ClipRectForDrawCmd.min.y = ImMin(y0, window.InnerClipRect.Max.y);
+        table.BgClipRect.max.y = window.InnerClipRect.Max.y;
+        table.Bg2ClipRectForDrawCmd.max.y = window.InnerClipRect.Max.y;
         table.Bg2DrawChannelCurrent = table.Bg2DrawChannelUnfrozen;
-// IM_ASSERT(table.Bg2ClipRectForDrawCmd.Min.y <= table.Bg2ClipRectForDrawCmd.Max.y);
+        // IM_ASSERT(table.Bg2ClipRectForDrawCmd.Min.y <= table.Bg2ClipRectForDrawCmd.Max.y);
 
         let mut row_height = table.RowPosY2 - table.RowPosY1;
-        table.RowPosY2 = table.WorkRect.Min.y + table.RowPosY2 - table.OuterRect.Min.y;
-        window.DC.CursorPos.y = table.WorkRect.Min.y + table.RowPosY2 - table.OuterRect.Min.y;
+        table.RowPosY2 = table.WorkRect.min.y + table.RowPosY2 - table.OuterRect.min.y;
+        window.dc.cursor_pos.y = table.WorkRect.min.y + table.RowPosY2 - table.OuterRect.min.y;
         table.RowPosY1 = table.RowPosY2 - row_height;
-// for (column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
+        // for (column_n: c_int = 0; column_n < table.ColumnsCount; column_n++)
         for column_n in 0..table.ColumnsCount {
             let mut column: &mut ImGuiTableColumn = &mut table.Columns[column_n];
             column.DrawChannelCurrent = column.DrawChannelUnfrozen;
-            column.ClipRect.Min.y = table.Bg2ClipRectForDrawCmd.Min.y;
+            column.ClipRect.min.y = table.Bg2ClipRectForDrawCmd.min.y;
         }
 
-// Update cliprect ahead of TableBeginCell() so clipper can access to new ClipRect->Min.y
+        // Update cliprect ahead of TableBeginCell() so clipper can access to new ClipRect->Min.y
         SetWindowClipRectBeforeSetChannel(window, table.Columns[0].ClipRect);
-        table.DrawSplitter.SetCurrentChannel(window.DrawList, table.Columns[0].DrawChannelCurrent);
+        table
+            .DrawSplitter
+            .SetCurrentChannel(window.DrawList, table.Columns[0].DrawChannelCurrent);
     }
 
     if !(table.RowFlags & ImGuiTableRowFlags_Headers) {
@@ -175,45 +219,52 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
     table.IsInsideRow = false;
 }
 
-
 // [Internal] Called by TableNextRow()/TableSetColumnIndex()/TableNextColumn()
 // c_void TableEndCell(table: *mut ImGuiTable)
 pub unsafe fn TableEndCell(table: *mut ImGuiTable) {
     let mut column: &mut ImGuiTableColumn = &mut table.Columns[table.CurrentColumn];
     let mut window = table.InnerWindow;
 
-    if window.DC.IsSetPos {
-        ErrorCheckUsingSetCursorPosToExtendParentBoundaries();
+    if window.dc.is_set_pos {
+        ErrorCheckUsingSetCursorPosToExtendParentBoundaries(g);
     }
 
-// Report maximum position so we can infer content size per column.
-// *mut let mut p_max_pos_x: c_float = 0.0;
+    // Report maximum position so we can infer content size per column.
+    // *mut let mut p_max_pos_x: c_float = 0.0;
     let mut p_max_pos_x: &mut c_float = None;
     if table.RowFlags & ImGuiTableRowFlags_Headers {
         p_max_pos_x = &mut column.ContentMaxXHeadersUsed;
-    }  // Useful in case user submit contents in header row that is not a TableHeader() call
-    else {
-        p_max_pos_x = if table.IsUnfrozenRows { &mut column.ContentMaxXUnfrozen } else { &mut column.ContentMaxXFrozen };
     }
-    *p_max_pos_x = ImMax(*p_max_pos_x, window.DC.CursorMaxPos.x);
-    table.RowPosY2 = ImMax(table.RowPosY2, window.DC.CursorMaxPos.y + table.CellPaddingY);
-    column.ItemWidth = window.DC.ItemWidth;
+    // Useful in case user submit contents in header row that is not a TableHeader() call
+    else {
+        p_max_pos_x = if table.IsUnfrozenRows {
+            &mut column.ContentMaxXUnfrozen
+        } else {
+            &mut column.ContentMaxXFrozen
+        };
+    }
+    *p_max_pos_x = ImMax(*p_max_pos_x, window.dc.CursorMaxPos.x);
+    table.RowPosY2 = ImMax(
+        table.RowPosY2,
+        window.dc.CursorMaxPos.y + table.CellPaddingY,
+    );
+    column.ItemWidth = window.dc.item_width;
 
-// Propagate text baseline for the entire row
-// FIXME-TABLE: Here we propagate text baseline from the last line of the cell.. instead of the first one.
-    table.RowTextBaseline = ImMax(table.RowTextBaseline, window.DC.PrevLineTextBaseOffset);
+    // Propagate text baseline for the entire row
+    // FIXME-TABLE: Here we propagate text baseline from the last line of the cell.. instead of the first one.
+    table.RowTextBaseline = ImMax(table.RowTextBaseline, window.dc.prev_line_text_base_offset);
 }
 
-
 // inline *mut ImGuiTableInstanceData   TableGetInstanceData(table: *mut ImGuiTable, instance_no: c_int)
-pub fn TableGetInstanceData(table: *mut ImGuiTable, instance_no: c_int) -> *mut ImGuiTableInstanceData {
+pub fn TableGetInstanceData(
+    table: *mut ImGuiTable,
+    instance_no: c_int,
+) -> *mut ImGuiTableInstanceData {
     if instance_no == 0 {
         return &mut table.InstanceDataFirst;
     }
     return &mut table.InstanceDataExtra[instance_no - 1];
 }
-
-
 
 // Return the cell rectangle based on currently known height.
 // - Important: we generally don't know our row height until the end of the row, so Max.y will be incorrect in many situations.
@@ -230,7 +281,7 @@ pub fn TableGetCellBgRect(table: *const ImGuiTable, column_n: c_int) -> ImRect {
     //    x1 -= table.OuterPaddingX;
     //if (column.NextEnabledColumn == -1)
     //    x2 += table.OuterPaddingX;
-    x1 = ImMax(x1, table.WorkRect.Min.x);
-    x2 = ImMin(x2, table.WorkRect.Max.x);
+    x1 = ImMax(x1, table.WorkRect.min.x);
+    x2 = ImMin(x2, table.WorkRect.max.x);
     return ImRect::from_floats(x1, table.RowPosY1, x2, table.RowPosY2);
 }

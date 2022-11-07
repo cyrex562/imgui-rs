@@ -3,13 +3,13 @@
 use crate::condition::{
     ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_Once,
 };
-use crate::context::ImGuiContext;
-use crate::data_type::{ImGuiDataType_Pointer, ImGuiDataType_S32, ImGuiDataType_String};
+use crate::context::ImguiContext;
+use crate::data_type::{IM_GUI_DATA_TYPE_POINTER, IM_GUI_DATA_TYPE_S32, IM_GUI_DATA_TYPE_STRING};
 use crate::debug_ops::DebugHookIdInfo;
 use crate::direction::{ImGuiDir, ImGuiDir_None};
 use crate::dock_node::ImGuiDockNode;
 use crate::draw_list::ImDrawList;
-use crate::hash_ops::{ImHashData, ImHashStr};
+use crate::hash_ops::{hash_data, hash_string};
 use crate::id_ops::id_from_str;
 use crate::imgui::GImGui;
 use crate::item_status_flags::ImGuiItemStatusFlags;
@@ -20,10 +20,10 @@ use crate::rect::ImRect;
 use crate::stack_sizes::ImGuiStackSizes;
 use crate::storage::ImGuiStorage;
 use crate::string_ops::ImStrdup;
-use crate::type_defs::{ImGuiDir, ImGuiID};
+use crate::type_defs::{ImGuiDir, ImguiHandle};
 use crate::vec2::{ImVec2, ImVec2ih};
 use crate::vec4::ImVec4;
-use crate::viewport::ImGuiViewport;
+use crate::viewport::ImguiViewport;
 use crate::win_dock_style::ImGuiWindowDockStyle;
 use crate::window::window_class::ImGuiWindowClass;
 use crate::window::window_flags::ImGuiWindowFlags;
@@ -34,6 +34,7 @@ use crate::window_ops::WindowRectAbsToRel;
 use crate::window_temp_data::ImGuiWindowTempData;
 use libc::{c_char, c_float, c_int, c_short, c_void};
 use rect::window_rect_abs_to_rel;
+use std::borrow::Borrow;
 use std::mem;
 use std::ptr::null_mut;
 
@@ -52,25 +53,25 @@ pub mod window_stack_data;
 pub mod window_temp_data;
 
 // Storage for one window
-pub struct ImGuiWindow {
+pub struct ImguiWindow {
     pub Name: String,
     // Window name, owned by the window.
-    pub ID: ImGuiID,
+    pub ID: ImguiHandle,
     // == ImHashStr(Name)
     // ImGuiWindowFlags        Flags, FlagsPreviousFrame;          // See enum ImGuiWindowFlags_
     pub Flags: ImGuiWindowFlags,
     pub FlagsPreviousFrame: ImGuiWindowFlags,
     pub WindowClass: ImGuiWindowClass,
     // Advanced users only. Set with SetNextWindowClass()
-    pub Viewport: ImGuiViewport,
+    pub Viewport: ImguiViewport,
     // Always set in Begin(). Inactive windows may have a NULL value here if their viewport was discarded.
-    pub ViewportId: ImGuiID,
+    pub ViewportId: ImguiHandle,
     // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)
     pub ViewportPos: ImVec2,
     // We backup the viewport position (since the viewport may disappear or never be created if the window is inactive)
     pub ViewportAllowPlatformMonitorExtend: c_int,
     // Reset to -1 every frame (index is guaranteed to be valid between NewFrame..EndFrame), only used in the Appearing frame of a tooltip/popup to enforce clamping to a given monitor
-    pub Pos: ImVec2,
+    pub position: ImVec2,
     // Position (always rounded-up to nearest pixel)
     pub Size: ImVec2,
     // Current size (==SizeFull or collapsed title bar size)
@@ -89,13 +90,13 @@ pub struct ImGuiWindow {
     // Window border size at the time of Begin().
     pub NameBufLen: usize,
     // Size of buffer storing Name. May be larger than strlen(Name)!
-    pub MoveId: ImGuiID,
+    pub MoveId: ImguiHandle,
     // == window.GetID("#MOVE")
-    pub TabId: ImGuiID,
+    pub TabId: ImguiHandle,
     // == window.GetID("#TAB")
-    pub ChildId: ImGuiID,
+    pub ChildId: ImguiHandle,
     // ID of corresponding item in parent window (for navigation to return from child window to parent window)
-    pub Scroll: ImVec2,
+    pub scroll: ImVec2,
     pub ScrollMax: ImVec2,
     pub ScrollTarget: ImVec2,
     // target scroll position. stored as cursor position with scrolling canceled out, so the highest point is always 0.0. (f32::MAX for no change)
@@ -117,7 +118,7 @@ pub struct ImGuiWindow {
     pub Collapsed: bool,
     // Set when collapsing window to become only title-bar
     pub WantCollapseToggle: bool,
-    pub SkipItems: bool,
+    pub skip_items: bool,
     // Set when items can safely be all clipped (e.g. window not visible or collapsed)
     pub Appearing: bool,
     // Set during the frame where the window is appearing (or re-appearing)
@@ -139,7 +140,7 @@ pub struct ImGuiWindow {
     // Begin() order within entire imgui context. This is mostly used for debugging submission order related issues.
     pub FocusOrder: i32,
     // Order within WindowsFocusOrder[], altered when windows are focused.
-    pub PopupId: ImGuiID,
+    pub PopupId: ImguiHandle,
     // ID in the popup stack when this window is used as a popup/menu (because we use generic Name/ID for recycling)
     // i8                    AutoFitFramesX, AutoFitFramesY;
     pub AutoFitFramesX: i8,
@@ -167,9 +168,9 @@ pub struct ImGuiWindow {
     // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
     pub SetWindowPosPivot: ImVec2, // store window pivot for positioning. ImVec2::new(0, 0) when positioning from top-left corner; ImVec2::new(0.5, 0.5) for centering; ImVec2::new(1, 1) for bottom right.
 
-    // ImVector<ImGuiID>       IDStack;                            // ID stack. ID are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
-    pub IDStack: Vec<ImGuiID>,
-    pub DC: ImGuiWindowTempData, // Temporary per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the "DC" variable name.
+    // ImVector<ImguiHandle>       IDStack;                            // ID stack. ID are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
+    pub id_stack: Vec<ImguiHandle>,
+    pub dc: ImGuiWindowTempData, // Temporary per-window data, reset at the beginning of the frame. This used to be called ImGuiDrawContext, hence the "DC" variable name.
 
     // The best way to understand what those rectangles are is to use the 'Metrics->Tools->Show Windows Rectangles' viewer.
     // The main 'OuterRect', omitted as a field, is window.Rect().
@@ -179,13 +180,13 @@ pub struct ImGuiWindow {
     // Inner rectangle (omit title bar, menu bar, scroll bar)
     pub InnerClipRect: ImRect,
     // == InnerRect shrunk by WindowPadding*0.5 on each side, clipped within viewport or parent clip rect.
-    pub WorkRect: ImRect,
+    pub work_rect: ImRect,
     // Initially covers the whole scrolling region. Reduced by containers e.g columns/tables when active. Shrunk by WindowPadding*1.0 on each side. This is meant to replace ContentRegionRect over time (from 1.71+ onward).
     pub ParentWorkRect: ImRect,
     // Backup of WorkRect before entering a container such as columns/tables. Used by e.g. SpanAllColumns functions to easily access. Stacked containers are responsible for maintaining this. // FIXME-WORKRECT: Could be a stack?
     pub ClipRect: ImVec4,
     // Current clipping/scissoring rectangle, evolve as we are using PushClipRect(), etc. == DrawList.clip_rect_stack.back().
-    pub ContentRegionRect: ImRect,
+    pub content_region_rect: ImRect,
     // FIXME: This is currently confusing/misleading. It is essentially WorkRect but not handling of scrolling. We currently rely on it as right/bottom aligned sizing operation need some size to rely on.
     pub HitTestHoleSize: ImVec2ih,
     // Define an optional rectangular hole where mouse will pass-through the window.
@@ -208,24 +209,24 @@ pub struct ImGuiWindow {
 
     pub DrawList: ImDrawList,
     // == &DrawListInst (for backward compatibility reason with code using imgui_internal.h we keep this a pointer)
-    pub DrawListInst: *mut ImDrawList,
-    pub Parentwindow: &mut ImGuiWindow,
+    pub DrawListInst: Option<ImDrawList>,
+    pub Parentwindow: Option<ImguiHandle>,
     // If we are a child _or_ popup _or_ docked window, this is pointing to our parent. Otherwise NULL.
-    pub ParentWindowInBeginStack: *mut ImGuiWindow,
-    pub Rootwindow: &mut ImGuiWindow,
+    pub ParentWindowInBeginStack: ImguiHandle,
+    pub Rootwindow: ImguiHandle,
     // Point to ourself or first ancestor that is not a child window. Doesn't cross through popups/dock nodes.
-    pub RootWindowPopupTree: *mut ImGuiWindow,
+    pub RootWindowPopupTree: ImguiHandle,
     // Point to ourself or first ancestor that is not a child window. Cross through popups parent<>child.
-    pub RootWindowDockTree: *mut ImGuiWindow,
+    pub RootWindowDockTree: ImguiHandle,
     // Point to ourself or first ancestor that is not a child window. Cross through dock nodes.
-    pub RootWindowForTitleBarHighlight: *mut ImGuiWindow,
+    pub RootWindowForTitleBarHighlight: ImguiHandle,
     // Point to ourself or first ancestor which will display TitleBgActive color when this window is active.
-    pub RootWindowForNav: *mut ImGuiWindow, // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
+    pub RootWindowForNav: ImguiHandle, // Point to ourself or first ancestor which doesn't have the NavFlattened flag.
 
-    pub NavLastChildNavwindow: &mut ImGuiWindow,
+    pub NavLastChildNavwindow: ImguiHandle,
     // When going to the menu bar, we remember the child window we came from. (This could probably be made implicit if we kept g.Windows sorted by last focused including child window.)
-    // ImGuiID                 NavLastIds[ImGuiNavLayer_COUNT];    // Last known NavId for this window, per layer (0/1)
-    pub NavLastIds: [ImGuiID; ImGuiNavLayer_COUNT as usize],
+    // ImguiHandle                 NavLastIds[ImGuiNavLayer_COUNT];    // Last known NavId for this window, per layer (0/1)
+    pub NavLastIds: [ImguiHandle; ImGuiNavLayer_COUNT as usize],
     // ImRect                  NavRectRel[ImGuiNavLayer_COUNT];    // Reference rectangle, in window relative space
     pub NavRectRel: [ImRect; ImGuiNavLayer_COUNT as usize],
 
@@ -250,19 +251,19 @@ pub struct ImGuiWindow {
     // Which node are we docked into. Important: Prefer testing DockIsActive in many cases as this will still be set when the dock node is hidden.
     pub DockNodeAsHost: Option<ImGuiDockNode>,
     // Which node are we owning (for parent windows)
-    pub DockId: ImGuiID,
+    pub DockId: ImguiHandle,
     // Backup of last valid DockNode.ID, so single window remember their dock node id even when they are not bound any more
     pub DockTabItemStatusFlags: ImGuiItemStatusFlags,
     pub DockTabItemRect: ImRect,
 }
 
-impl ImGuiWindow {
+impl ImguiWindow {
     //ImGuiWindow(context: *mut ImGuiContext, *const c_char name);
-    pub unsafe fn new(context: *mut ImGuiContext, name: &str) {
+    pub fn new(g: &mut ImguiContext, name: &String) -> Self {
         let mut out = Self {
             Name: String::from(name),
             // NameBufLen: name.len(),
-            ID: ImHashStr(name, 0, 0),
+            ID: hash_string(name, 0),
             ViewportAllowPlatformMonitorExtend: -1,
             ViewportPos: ImVec2::from_floats(f32::MAX, f32::MAX),
             MoveId: id_from_str("#MOVE"),
@@ -302,54 +303,41 @@ impl ImGuiWindow {
             ..Default::default()
         };
 
-        out.DrawList._Data = &context.DrawListSharedData;
+        out.DrawList._Data = &g.DrawListSharedData;
         out.DrawList._OwnerName = Name;
-        out.IDStack.push(ID);
+        out.id_stack.push(ID);
     }
 
     //~ImGuiWindow();
 
-    // ImGuiID     GetID(*const c_char str, *const c_char str_end = NULL);
-    pub unsafe fn id_from_str(&self, begin: &String) -> ImGuiID {
-        let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
-        let mut id: ImGuiID = ImHashStr(begin, begin.len(), seed as u32);
-        let g = GImGui; // ImGuiContext& g = *GImGui;
+    // ImguiHandle     GetID(*const c_char str, *const c_char str_end = NULL);
+    pub fn id_by_string(&self, g: &mut ImguiContext, begin: &String) -> ImguiHandle {
+        let mut seed: ImguiHandle = self.id_stack.last().unwrap().clone();
+        let mut id: ImguiHandle = hash_string(begin, seed as u32);
+        // let g = GImGui; // ImGuiContext& g = *GImGui;
         if g.DebugHookIdInfo == id {
-            DebugHookIdInfo(id, ImGuiDataType_String, begin);
+            DebugHookIdInfo(g, id, IM_GUI_DATA_TYPE_STRING, begin.into_bytes().borrow());
         }
         return id;
     }
 
-    // ImGuiID     GetID(const void* ptr);
-    pub unsafe fn GetID2(&self, ptr: *const c_void) -> ImGuiID {
-        let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
-        let mut id: ImGuiID = ImHashData(&ptr, mem::size_of::<*mut c_void>(), seed as u32);
-        let g = GImGui; // ImGuiContext& g = *GImGui;
+    pub fn id_by_int(&self, g: &mut ImguiContext, n: c_int) -> ImguiHandle {
+        let mut seed = self.id_stack.last().unwrap().clone();
+        let mut id = hash_data(&n.to_le_bytes(), seed as u32);
         if g.DebugHookIdInfo == id {
-            DebugHookIdInfo(id, ImGuiDataType_Pointer, ptr);
+            // DebugHookIdInfo(id, IM_GUI_DATA_TYPE_S32, n, NULL);
         }
         return id;
     }
 
-    // ImGuiID     GetID(int n);
-    // ImGuiID ImGuiWindow::GetID(n: c_int)
-    pub unsafe fn GetID3(&self, n: c_int) -> ImGuiID {
-        let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
-        let mut id: ImGuiID = ImHashData(&n, libc::sizeof(n), seed as u32);
-        let g = GImGui; // ImGuiContext& g = *GImGui;
-        if g.DebugHookIdInfo == id {
-            // DebugHookIdInfo(id, ImGuiDataType_S32, n, NULL);
-        }
-        return id;
-    }
-
-    // ImGuiID     GetIDFromRectangle(const ImRect& r_abs);
+    // ImguiHandle     GetIDFromRectangle(const ImRect& r_abs);
     // This is only used in rare/specific situations to manufacture an ID out of nowhere.
-    // ImGuiID ImGuiWindow::GetIDFromRectangle(const ImRect& r_abs)
-    pub unsafe fn GetIDFromRectangle(&self, r_abs: &ImRect) -> ImGuiID {
-        let mut seed: ImGuiID = self.IDStack.last().unwrap().clone();
-        let r_rel: ImRect = window_rect_abs_to_rel(this, r_abs);
-        let mut id: ImGuiID = ImHashData(&r_rel, libc::sizeof(r_rel), seed as u32);
+    // ImguiHandle ImGuiWindow::GetIDFromRectangle(const ImRect& r_abs)
+    pub unsafe fn id_by_rectangle(&self, r_abs: &ImRect) -> ImguiHandle {
+        let mut seed: ImguiHandle = self.id_stack.last().unwrap().clone();
+        let r_rel: ImRect = window_rect_abs_to_rel(self, r_abs);
+
+        let mut id: ImguiHandle = hash_data(&r_rel, seed as u32);
         return id;
     }
 
@@ -358,11 +346,11 @@ impl ImGuiWindow {
 
     // float       CalcFontSize() const    { let g = GImGui; // ImGuiContext& g = *GImGui; float scale = g.FontBaseSize * FontWindowScale * FontDpiScale; if (ParentWindow) scale *= Parentwindow.FontWindowScale; return scale; }
 
-    // float       TitleBarHeight() const  { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0.0 : CalcFontSize() + g.Style.FramePadding.y * 2.0; }
+    // float       TitleBarHeight() const  { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_NoTitleBar) ? 0.0 : CalcFontSize() + g.style.FramePadding.y * 2.0; }
 
     // ImRect      TitleBarRect() const    { return ImRect(Pos, ImVec2::new(Pos.x + SizeFull.x, Pos.y + TitleBarHeight())); }
 
-    // float       MenuBarHeight() const   { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_MenuBar) ? DC.MenuBarOffset.y + CalcFontSize() + g.Style.FramePadding.y * 2.0 : 0.0; }
+    // float       MenuBarHeight() const   { let g = GImGui; // ImGuiContext& g = *GImGui; return (Flags & ImGuiWindowFlags_MenuBar) ? DC.MenuBarOffset.y + CalcFontSize() + g.style.FramePadding.y * 2.0 : 0.0; }
 
     // ImRect      MenuBarRect() const     { float y1 = Pos.y + TitleBarHeight(); return ImRect(Pos.x, y1, Pos.x + SizeFull.x, y1 + MenuBarHeight()); }
 }

@@ -248,7 +248,7 @@ pub fn ImFormatStringToTempBufferV(fmt_str: String) -> String {
 // A nearly-branchless UTF-8 decoder, based on work of Christopher Wellons (https://github.com/skeeto/branchless-utf8).
 // We handle UTF-8 decoding error by skipping forward.
 // int ImTextCharFromUtf8(unsigned int* out_char, const char* in_text, const char* in_text_end)
-pub unsafe fn ImTextCharFromUtf8(out_char: &mut c, in_text: String) -> c_int
+pub fn ImTextCharFromUtf8(out_char: &mut c, in_text: String) -> c_int
 {
     // pub const lengths: [c_char;32] = [ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 2, 2, 2, 2, 3, 3, 4, 0 ];
     // pub const masks: [c_int;5]  = [ 0x00, 0x7f, 0x1f, 0x0f32, 0x07 ];

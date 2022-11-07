@@ -45,6 +45,6 @@ pub fn ImLerpVec4(a: &ImVec4, b: &ImVec4, t: c_float) -> ImVec4 {
 }
 
 // static inline c_float  ImLengthSqr(lhs: &ImVec4)                             { return (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w); }
-pub fn ImLengthSqrVec4(lhs: &ImVec4) -> c_float {
+pub fn ImLengthSqrVec4(lhs: &ImVec4) -> f32 {
     (lhs.x * lhs.x) + (lhs.y * lhs.y) + (lhs.z * lhs.z) + (lhs.w * lhs.w)
 }

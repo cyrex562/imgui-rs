@@ -22,7 +22,7 @@ use std::str::pattern::Pattern;
 
 // Font runtime data and rendering
 // ImFontAtlas automatically loads a default embedded font for you when you call GetTexDataAsAlpha8() or GetTexDataAsRGBA32().
-#[derive(Default, Debug, Clone,Copy)]
+#[derive(Default, Debug, Clone, Copy)]
 pub struct ImFont {
     // Members: Hot ~20/24 bytes (for CalcTextSize)
     pub IndexAdvanceX: Vec<c_float>,
@@ -89,7 +89,7 @@ impl ImFont {
     // ~ImFont();
 
     // const ImFontGlyph*FindGlyph(ImWchar c) const;
-    pub unsafe fn FindGlyph(&mut self, c: char) -> ImFontGlyph {
+    pub fn FindGlyph(&mut self, c: char) -> ImFontGlyph {
         let mut out_glyph: ImFontGlyph = ImFontGlyph::default();
         // if c >= self.IndexLookup.len() {
         //     out_glyph = *(self.FallbackGlyph.clone());
@@ -115,7 +115,7 @@ impl ImFont {
     }
 
     // c_float                       GetCharAdvance(ImWchar c) const     { return (c < IndexAdvanceX.len()) ? IndexAdvanceX[c] : FallbackAdvanceX; }
-    pub fn GetCharAdvance(&self, c: ImWchar) -> c_float {
+    pub fn GetCharAdvance(&self, c: ImWchar) -> f32 {
         return if (c as usize) < self.IndexAdvanceX.len() {
             self.IndexAdvanceX[c.clone()]
         } else {
@@ -141,7 +141,7 @@ impl ImFont {
     // 'max_width' stops rendering after a certain width (could be turned into a 2d size). f32::MAX to disable.
     // 'wrap_width' enable automatic word-wrapping across multiple lines to fit into given width. 0.0 to disable.
     // ImVec2            CalcTextSizeA(c_float size, c_float max_width, c_float wrap_width, const char* text_begin, const char* text_end = NULL, const char** remaining = NULL) const; // utf8
-    pub unsafe fn CalcTextSizeA(
+    pub fn CalcTextSizeA(
         &mut self,
         size: c_float,
         max_width: c_float,
@@ -170,7 +170,11 @@ impl ImFont {
             if word_wrap_enabled {
                 // Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
                 if word_wrap_eol.is_empty() {
-                    word_wrap_eol = self.calc_word_wrap_position(scale, &text[s..].to_string(), wrap_width - line_width);
+                    word_wrap_eol = self.calc_word_wrap_position(
+                        scale,
+                        &text[s..].to_string(),
+                        wrap_width - line_width,
+                    );
                     if word_wrap_eol == s {
                         // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
                         word_wrap_eol = word_wrap_eol[1..].to_string();
@@ -257,7 +261,7 @@ impl ImFont {
     }
 
     // const char*       CalcWordWrapPositionA(c_float scale, const char* text, const char* text_end, c_float wrap_width) const;
-    pub unsafe fn calc_word_wrap_position(
+    pub fn calc_word_wrap_position(
         &mut self,
         scale: c_float,
         text: Stringing,
@@ -304,7 +308,7 @@ impl ImFont {
             }
 
             if c < 32 {
-                if c == '\n'{
+                if c == '\n' {
                     line_width = 0.0;
                     word_width = 0.0;
                     blank_width = 0.0;
@@ -371,7 +375,7 @@ impl ImFont {
     }
 
     // void              RenderChar(draw_list: *mut ImDrawList, c_float size, const pos: &mut ImVec2, col: u32, ImWchar c) const;
-    pub unsafe fn RenderChar(
+    pub fn RenderChar(
         &mut self,
         draw_list: &mut ImDrawList,
         size: c_float,
@@ -421,7 +425,7 @@ impl ImFont {
 
         // Align to be pixel perfect
         let mut x: c_float = pos.x.floor();
-        let mut y: c_float = pos.y.floor();;
+        let mut y: c_float = pos.y.floor();
         if y > clip_rect.w {
             return;
         }
@@ -473,8 +477,11 @@ impl ImFont {
             if word_wrap_enabled {
                 // Calculate how far we can render. Requires two passes on the string data but keeps the code simple and not intrusive for what's essentially an uncommon feature.
                 if !word_wrap_eol {
-                    word_wrap_eol =
-                        self.calc_word_wrap_position(scale, text[s..].to_string(), wrap_width - (x - start_x));
+                    word_wrap_eol = self.calc_word_wrap_position(
+                        scale,
+                        text[s..].to_string(),
+                        wrap_width - (x - start_x),
+                    );
                     if word_wrap_eol == s {
                         // Wrap_width is too small to fit anything. Force displaying 1 character to minimize the height discontinuity.
                         word_wrap_eol += 1;
@@ -686,17 +693,16 @@ impl ImFont {
         }
 
         // Setup fallback character
-        let fallback_chars: [u8; 3] = [
-            IM_UNICODE_CODEPOINT_INVALID,
-            '?'.into(),
-            ' '.into(),
-        ];
-        self.FallbackGlyph.replace(self.FindGlyphNoFallback(self.FallbackChar.clone()).unwrap());
+        let fallback_chars: [u8; 3] = [IM_UNICODE_CODEPOINT_INVALID, '?'.into(), ' '.into()];
+        self.FallbackGlyph
+            .replace(self.FindGlyphNoFallback(self.FallbackChar.clone()).unwrap());
         if self.FallbackGlyph.is_none() {
             self.FallbackChar = FindFirstExistingGlyph(self, &fallback_chars).unwrap();
-            self.FallbackGlyph.replace(self.FindGlyphNoFallback(self.FallbackChar.clone()).unwrap());
+            self.FallbackGlyph
+                .replace(self.FindGlyphNoFallback(self.FallbackChar.clone()).unwrap());
             if self.FallbackGlyph.is_none() {
-                self.FallbackGlyph.replace(self.Glyphs.last().unwrap().clone());
+                self.FallbackGlyph
+                    .replace(self.Glyphs.last().unwrap().clone());
                 self.FallbackChar = self.FallbackGlyph.Codepoint;
             }
         }

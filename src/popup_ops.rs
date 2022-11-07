@@ -1,6 +1,7 @@
 use crate::a_imgui_cpp::NavMoveRequestTryWrapping;
 use crate::condition::ImGuiCond_FirstUseEver;
 use crate::config_flags::ImGuiConfigFlags_NavEnableSetMousePos;
+use crate::context::ImguiContext;
 use crate::direction::{
     ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right,
     ImGuiDir_Up,
@@ -29,7 +30,7 @@ use crate::popup_position_policy::{
 };
 use crate::rect::ImRect;
 use crate::string_ops::{str_to_const_c_char_ptr, ImFormatString};
-use crate::type_defs::ImGuiID;
+use crate::type_defs::ImguiHandle;
 use crate::utils::{flag_clear, flag_set, is_not_null};
 use crate::vec2::ImVec2;
 use crate::viewport_ops::GetMainViewport;
@@ -43,26 +44,26 @@ use crate::window::window_flags::{
     ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoDocking, ImGuiWindowFlags_NoSavedSettings,
     ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip,
 };
-use crate::window::ImGuiWindow;
-use crate::{GImGui, ImGuiViewport};
+use crate::window::ImguiWindow;
+use crate::{GImGui, ImguiViewport};
 use libc::{c_char, c_float, c_int};
 use std::ptr::{null, null_mut};
 
 // Supported flags: ImGuiPopupFlags_AnyPopupId, ImGuiPopupFlags_AnyPopupLevel
-// IsPopupOpen: bool(id: ImGuiID, ImGuiPopupFlags popup_flags)
-pub unsafe fn IsPopupOpen(id: ImGuiID, popup_flags: ImGuiPopupFlags) -> bool {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (popup_flags & ImGuiPopupFlags_AnyPopupId) {
+// IsPopupOpen: bool(id: ImguiHandle, ImGuiPopupFlags popup_flags)
+pub fn IsPopupOpen(g: &mut ImguiContext, id: ImguiHandle, popup_flags: ImGuiPopupFlags) -> bool {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    if flag_set(popup_flags, ImGuiPopupFlags_AnyPopupId) {
         // Return true if any popup is open at the current BeginPopup() level of the popup stack
         // This may be used to e.g. test for another popups already opened to handle popups priorities at the same level.
         // IM_ASSERT(id == 0);
-        if (popup_flags & ImGuiPopupFlags_AnyPopupLevel) {
+        if flag_set(popup_flags, ImGuiPopupFlags_AnyPopupLevel) {
             return g.OpenPopupStack.len() > 0;
         } else {
             return g.OpenPopupStack.len() > g.BeginPopupStack.len();
         }
     } else {
-        if (popup_flags & ImGuiPopupFlags_AnyPopupLevel) {
+        if flag_set(popup_flags, ImGuiPopupFlags_AnyPopupLevel) {
             // Return true if the popup is open anywhere in the popup stack
             // for (let n: c_int = 0; n < g.OpenPopupStack.len(); n++)
             for n in 0..g.OpenPopupStack.len() {
@@ -80,27 +81,31 @@ pub unsafe fn IsPopupOpen(id: ImGuiID, popup_flags: ImGuiPopupFlags) -> bool {
 }
 
 // IsPopupOpen: bool(str_id: *const c_char, ImGuiPopupFlags popup_flags)
-pub unsafe fn IsPopupOpenWithStrId(str_id: *const c_char, popup_flags: ImGuiPopupFlags) -> bool {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut id: ImGuiID = if flag_set(popup_flags, ImGuiPopupFlags_AnyPopupId) {
+pub fn IsPopupOpenWithStrId(
+    g: &mut ImguiContext,
+    str_id: &String,
+    popup_flags: ImGuiPopupFlags,
+) -> bool {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut id: ImguiHandle = if flag_set(popup_flags, ImGuiPopupFlags_AnyPopupId) {
         0
     } else {
         g.Currentwindow.GetID(str_id)
     };
     if flag_set(popup_flags, ImGuiPopupFlags_AnyPopupLevel) && id != 0 {}
     // IM_ASSERT(0 && "Cannot use IsPopupOpen() with a string id and ImGuiPopupFlags_AnyPopupLevel."); // But non-string version is legal and used internally
-    return IsPopupOpen(id, popup_flags);
+    return IsPopupOpen(g, id, popup_flags);
 }
 
 // GetTopMostPopupModal: *mut ImGuiWindow()
-pub unsafe fn GetTopMostPopupModal() -> *mut ImGuiWindow {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-                    // for (let n: c_int = g.OpenPopupStack.len() - 1; n >= 0; n--)
+pub fn GetTopMostPopupModal(g: &mut ImguiContext) -> Option<ImguiWindow> {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    // for (let n: c_int = g.OpenPopupStack.len() - 1; n >= 0; n--)
     for n in g.OpenPopupStack.len() - 1..0 {
-        let mut popup: *mut ImGuiWindow = g.OpenPopupStack.Data[n].Window;
-        if is_not_null(popup) {
-            if flag_set(popup.Flags, ImGuiWindowFlags_Modal) {
-                return popup;
+        let mut popup = &mut g.OpenPopupStack[n].Window;
+        if popup.is_some() {
+            if flag_set(popup.unwrap().Flags, ImGuiWindowFlags_Modal) {
+                return popup.clone();
             }
         }
     }
@@ -108,11 +113,11 @@ pub unsafe fn GetTopMostPopupModal() -> *mut ImGuiWindow {
 }
 
 // GetTopMostAndVisiblePopupModal: *mut ImGuiWindow()
-pub unsafe fn GetTopMostAndVisiblePopupModal() -> *mut ImGuiWindow {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-                    // for (let n: c_int = g.OpenPopupStack.len() - 1; n >= 0; n--)
+pub fn GetTopMostAndVisiblePopupModal(g: &mut ImguiContext) -> Option<&mut ImguiWindow> {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    // for (let n: c_int = g.OpenPopupStack.len() - 1; n >= 0; n--)
     for n in g.OpenPopupStack.len() - 1..0 {
-        let mut popup: *mut ImGuiWindow = g.OpenPopupStack.Data[n].Window;
+        let mut popup = g.OpenPopupStack.Data[n].Window;
         if is_not_null(popup) {
             if flag_set(popup.Flags, ImGuiWindowFlags_Modal) && IsWindowActiveAndVisible(popup) {
                 return popup;
@@ -124,26 +129,25 @@ pub unsafe fn GetTopMostAndVisiblePopupModal() -> *mut ImGuiWindow {
 
 pub unsafe fn OpenPopup(str_id: &str, popup_flags: ImGuiPopupFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut id: ImGuiID = g.Currentwindow.GetID(str_id);
+    let mut id: ImguiHandle = g.Currentwindow.GetID(str_id);
     IMGUI_DEBUG_LOG_POPUP("[popup] OpenPopup(\"{}\" -> 0x{}\n", str_id, id);
-    OpenPopupEx(id, popup_flags);
+    OpenPopupEx(g, id, popup_flags);
 }
 
-pub unsafe fn OpenPopup2(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
-    OpenPopupEx(id, popup_flags);
+pub unsafe fn OpenPopup2(id: ImguiHandle, popup_flags: ImGuiPopupFlags) {
+    OpenPopupEx(g, id, popup_flags);
 }
 
 // Mark popup as open (toggle toward open state).
 // Popups are closed when user click outside, or activate a pressable item, or CloseCurrentPopup() is called within a BeginPopup()/EndPopup() block.
 // Popup identifiers are relative to the current ID-stack (so OpenPopup and BeginPopup needs to be at the same level).
 // One open popup per level of the popup hierarchy (NB: when assigning we reset the Window member of ImGuiPopupRef to NULL)
-pub unsafe fn OpenPopupEx(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut parent_window = &g.CurrentWindow;
+pub  fn OpenPopupEx(g: &mut ImguiContext, id: ImguiHandle, popup_flags: ImGuiPopupFlags) {
+    let mut parent_window = g.current_window_mut().unwrap();
     let current_stack_size: usize = g.BeginPopupStack.len();
 
-    if (popup_flags & ImGuiPopupFlags_NoOpenOverExistingPopup) {
-        if (IsPopupOpen(0, ImGuiPopupFlags_AnyPopupId)) {
+    if flag_set(popup_flags , ImGuiPopupFlags_NoOpenOverExistingPopup) {
+        if IsPopupOpen(g, 0, ImGuiPopupFlags_AnyPopupId) {
             return;
         }
     }
@@ -154,8 +158,8 @@ pub unsafe fn OpenPopupEx(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
     popup_ref.Window = None;
     popup_ref.BackupNavWindow = g.NavWindow; // When popup closes focus may be restored to NavWindow (depend on window type).
     popup_ref.OpenFrameCount = g.FrameCount;
-    popup_ref.OpenParentId = parent_window.IDStack.last().unwrap().clone();
-    popup_ref.OpenPopupPos = NavCalcPreferredRefPos();
+    popup_ref.OpenParentId = parent_window.id_stack.last().unwrap().clone();
+    popup_ref.OpenPopupPos = NavCalcPreferredRefPos(g);
     popup_ref.OpenMousePos = if IsMousePosValid(&g.IO.MousePos) {
         g.IO.MousePos
     } else {
@@ -189,7 +193,7 @@ pub unsafe fn OpenPopupEx(id: ImGuiID, popup_flags: ImGuiPopupFlags) {
 // When popups are stacked, clicking on a lower level popups puts focus back to it and close popups above it.
 // This function closes any popups that are over 'ref_window'.
 pub unsafe fn ClosePopupsOverWindow(
-    ref_window: &mut ImGuiWindow,
+    ref_window: &mut ImguiWindow,
     restore_focus_to_window_under_popup: bool,
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -220,7 +224,7 @@ pub unsafe fn ClosePopupsOverWindow(
             let mut ref_window_is_descendent_of_popup: bool = false;
             // for (let n: c_int = popup_count_to_keep; n < g.OpenPopupStack.len(); n++)
             for n in popup_count_to_keep..g.OpenPopupStack.len() {
-                let mut popup_window: &mut ImGuiWindow = g.OpenPopupStack[n].Window;
+                let mut popup_window: &mut ImguiWindow = g.OpenPopupStack[n].Window;
                 if is_not_null(popup_window) {
                     //if (popup_window.RootWindowDockTree == ref_window.RootWindowDockTree) // FIXME-MERGE
                     if IsWindowWithinBeginStackOf(ref_window, popup_window) {
@@ -249,7 +253,7 @@ pub unsafe fn ClosePopupsExceptModals() {
     let mut popup_count_to_keep: usize = 0;
     // for (popup_count_to_keep = g.OpenPopupStack.len(); popup_count_to_keep > 0; popup_count_to_keep--)
     for popup_count_to_keep in g.OpenPopupStack.len()..0 {
-        let mut window: &mut ImGuiWindow = g.OpenPopupStack[popup_count_to_keep - 1].Window;
+        let mut window: &mut ImguiWindow = g.OpenPopupStack[popup_count_to_keep - 1].Window;
         if !is_not_null(window) || flag_set(window.Flags, ImGuiWindowFlags_Modal) {
             break;
         }
@@ -266,13 +270,13 @@ pub unsafe fn ClosePopupToLevel(remaining: usize, restore_focus_to_window_under_
                     // IM_ASSERT(remaining >= 0 && remaining < g.OpenPopupStack.Size);
 
     // Trim open popup stack
-    let mut popup_window: &mut ImGuiWindow = g.OpenPopupStack[remaining].Window;
-    let mut popup_backup_nav_window: &mut ImGuiWindow = g.OpenPopupStack[remaining].BackupNavWindow;
+    let mut popup_window: &mut ImguiWindow = g.OpenPopupStack[remaining].Window;
+    let mut popup_backup_nav_window: &mut ImguiWindow = g.OpenPopupStack[remaining].BackupNavWindow;
     g.OpenPopupStack
         .resize_with(remaining, ImGuiPopupData::default());
 
     if restore_focus_to_window_under_popup {
-        let mut focus_window: &mut ImGuiWindow = if is_not_null(popup_window)
+        let mut focus_window: &mut ImguiWindow = if is_not_null(popup_window)
             && flag_set(popup_window.Flags, ImGuiWindowFlags_ChildMenu)
         {
             popup_window.ParentWindow
@@ -304,8 +308,8 @@ pub unsafe fn CloseCurrentPopup() {
 
     // Closing a menu closes its top-most parent popup (unless a modal)
     while (popup_idx > 0) {
-        let mut popup_window: &mut ImGuiWindow = g.OpenPopupStack[popup_idx].Window;
-        let mut parent_popup_window: &mut ImGuiWindow = g.OpenPopupStack[popup_idx - 1].Window;
+        let mut popup_window: &mut ImguiWindow = g.OpenPopupStack[popup_idx].Window;
+        let mut parent_popup_window: &mut ImguiWindow = g.OpenPopupStack[popup_idx - 1].Window;
         let mut close_parent: bool = false;
         if (is_not_null(popup_window) && flag_set(popup_window.Flags, ImGuiWindowFlags_ChildMenu)) {
             if (is_not_null(parent_popup_window)
@@ -329,15 +333,15 @@ pub unsafe fn CloseCurrentPopup() {
     // A common pattern is to close a popup when selecting a menu item/selectable that will open another window.
     // To improve this usage pattern, we avoid nav highlight for a single frame in the parent window.
     // Similarly, we could avoid mouse hover highlight in this window but it is less visually problematic.
-    let mut window: &mut ImGuiWindow = g.NavWindow;
+    let mut window: &mut ImguiWindow = g.NavWindow;
     if is_not_null(window) {
-        window.DC.NavHideHighlightOneFrame = true;
+        window.dc.NavHideHighlightOneFrame = true;
     }
 }
 
 // Attention! BeginPopup() adds default flags which BeginPopupEx()!
-// BeginPopupEx: bool(id: ImGuiID, flags: ImGuiWindowFlags)
-pub unsafe fn BeginPopupEx(id: ImGuiID, mut flags: ImGuiWindowFlags) -> bool {
+// BeginPopupEx: bool(id: ImguiHandle, flags: ImGuiWindowFlags)
+pub unsafe fn BeginPopupEx(id: ImguiHandle, mut flags: ImGuiWindowFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if !IsPopupOpen(id, ImGuiPopupFlags_None) {
         g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
@@ -354,10 +358,10 @@ pub unsafe fn BeginPopupEx(id: ImGuiID, mut flags: ImGuiWindowFlags) -> bool {
     } // Not recycling, so we can close/open during the same frame
 
     flags |= ImGuiWindowFlags_Popup | ImGuiWindowFlags_NoDocking;
-    let mut is_open: bool = Begin(name, null_mut());
+    let mut is_open: bool = Begin(g, name, null_mut());
     if (!is_open) {
         // NB: Begin can return false when the popup is completely clipped (e.g. zero size display)
-        EndPopup();
+        EndPopup(g);
     }
 
     return is_open;
@@ -375,7 +379,7 @@ pub unsafe fn BeginPopup(str_id: &str, mut flags: ImGuiWindowFlags) -> bool {
     flags |= ImGuiWindowFlags_AlwaysAutoResize
         | ImGuiWindowFlags_NoTitleBar
         | ImGuiWindowFlags_NoSavedSettings;
-    let mut id: ImGuiID = g.Currentwindow.GetID(str_id);
+    let mut id: ImguiHandle = g.Currentwindow.GetID(str_id);
     return BeginPopupEx(id, flags);
 }
 
@@ -388,8 +392,8 @@ pub unsafe fn BeginPopupModal(
     mut flags: ImGuiWindowFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    let mut id: ImGuiID = window.id_from_str(name, null());
+    let mut window = g.current_window_mut().unwrap();
+    let mut id: ImguiHandle = window.id_from_str(name, null());
     if !IsPopupOpen(id, ImGuiPopupFlags_None) {
         g.NextWindowData.ClearFlags(); // We behave like Begin() and need to consume those values
         return false;
@@ -399,15 +403,15 @@ pub unsafe fn BeginPopupModal(
     // (this won't really last as settings will kick in, and is mostly for backward compatibility. user may do the same themselves)
     // FIXME: Should test for (PosCond & window.SetWindowPosAllowFlags) with the upcoming window.
     if ((g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) == 0) {
-        let viewport: *const ImGuiViewport = if window.WasActive {
+        let viewport: *const ImguiViewport = if window.WasActive {
             window.Viewport
         } else {
             GetMainViewport()
         }; // FIXME-VIEWPORT: What may be our reference viewport?
-        SetNextWindowPos(
-            &viewport.GetCenter(),
-            ImGuiCond_FirstUseEver,
-            &ImVec2::from_floats(0.5, 0.5),
+        SetNextWindowPos(,
+                         &viewport.GetCenter(),
+                         ImGuiCond_FirstUseEver,
+                         &ImVec2::from_floats(0.5, 0.5),
         );
     }
 
@@ -415,11 +419,11 @@ pub unsafe fn BeginPopupModal(
         | ImGuiWindowFlags_Modal
         | ImGuiWindowFlags_NoCollapse
         | ImGuiWindowFlags_NoDocking;
-    let is_open: bool = Begin(name, p_open);
+    let is_open: bool = Begin(g, name, p_open);
     if !is_open || (is_not_null(p_open) && !*p_open)
     // NB: is_open can be 'false' when the popup is completely clipped (e.g. zero size display)
     {
-        EndPopup();
+        EndPopup(g);
         if is_open {
             ClosePopupToLevel(g.BeginPopupStack.len(), true);
         }
@@ -428,9 +432,9 @@ pub unsafe fn BeginPopupModal(
     return is_open;
 }
 
-pub unsafe fn EndPopup() {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+pub fn EndPopup(g: &mut ImguiContext) {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.current_window_mut().unwrap();
     // IM_ASSERT(window.Flags & ImGuiWindowFlags_Popup);  // Mismatched BeginPopup()/EndPopup() calls
     // IM_ASSERT(g.BeginPopupStack.Size > 0);
 
@@ -452,16 +456,16 @@ pub unsafe fn EndPopup() {
 // - This is essentially the same as BeginPopupContextItem() but without the trailing BeginPopup()
 pub unsafe fn OpenPopupOnItemClick(str_id: &str, popup_flags: ImGuiPopupFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) {
-        let mut id: ImGuiID = if str_id {
+        let mut id: ImguiHandle = if str_id {
             window.id_from_str(str_id, null())
         } else {
             g.LastItemData.ID
         }; // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
            // IM_ASSERT(id != 0);                                             // You cannot pass a NULL str_id if the last item has no identifier (e.g. a Text() item)
-        OpenPopupEx(id, popup_flags);
+        OpenPopupEx(g, id, popup_flags);
     }
 }
 
@@ -483,11 +487,11 @@ pub unsafe fn OpenPopupOnItemClick(str_id: &str, popup_flags: ImGuiPopupFlags) {
 //   The main difference being that this is tweaked to avoid computing the ID twice.
 pub unsafe fn BeginPopupContextItem(str_id: *const c_char, popup_flags: ImGuiPopupFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    if (window.SkipItems) {
+    let mut window = g.current_window_mut().unwrap();
+    if (window.skip_items) {
         return false;
     }
-    let mut id: ImGuiID = if str_id {
+    let mut id: ImguiHandle = if str_id {
         window.id_from_str(str_id, null())
     } else {
         g.LastItemData.ID
@@ -495,7 +499,7 @@ pub unsafe fn BeginPopupContextItem(str_id: *const c_char, popup_flags: ImGuiPop
        // IM_ASSERT(id != 0);                                             // You cannot pass a NULL str_id if the last item has no identifier (e.g. a Text() item)
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
     if (IsMouseReleased(mouse_button) && IsItemHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup)) {
-        OpenPopupEx(id, popup_flags);
+        OpenPopupEx(g, id, popup_flags);
     }
     return BeginPopupEx(
         id,
@@ -510,15 +514,15 @@ pub unsafe fn BeginPopupContextWindow(
     popup_flags: ImGuiPopupFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     if !str_id {
         str_id = str_to_const_c_char_ptr("window_context");
     }
-    let mut id: ImGuiID = window.id_from_str(str_id, null());
+    let mut id: ImguiHandle = window.id_from_str(str_id, null());
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
-    if IsMouseReleased(mouse_button) && IsWindowHovered(ImGuiHoveredFlags_AllowWhenBlockedByPopup) {
+    if IsMouseReleased(mouse_button) && IsWindowHovered(g, ImGuiHoveredFlags_AllowWhenBlockedByPopup) {
         if flag_clear(popup_flags, ImGuiPopupFlags_NoOpenOverItems) || !IsAnyItemHovered() {
-            OpenPopupEx(id, popup_flags);
+            OpenPopupEx(g, id, popup_flags);
         }
     }
     return BeginPopupEx(
@@ -534,15 +538,15 @@ pub unsafe fn BeginPopupContextVoid(
     popup_flags: ImGuiPopupFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     if (!str_id) {
         str_id = str_to_const_c_char_ptr("void_context");
     }
-    let mut id: ImGuiID = window.id_from_str(str_id, null());
+    let mut id: ImguiHandle = window.id_from_str(str_id, null());
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);
-    if IsMouseReleased(mouse_button) && !IsWindowHovered(ImGuiHoveredFlags_AnyWindow) {
+    if IsMouseReleased(mouse_button) && !IsWindowHovered(g, ImGuiHoveredFlags_AnyWindow) {
         if GetTopMostPopupModal() == None {
-            OpenPopupEx(id, popup_flags);
+            OpenPopupEx(g, id, popup_flags);
         }
     }
     return BeginPopupEx(
@@ -558,25 +562,25 @@ pub unsafe fn BeginPopupContextVoid(
 // (r_outer is usually equivalent to the viewport rectangle minus padding, but when multi-viewports are enabled and monitor
 //  information are available, it may represent the entire platform monitor from the frame of reference of the current viewport.
 //  this allows us to have tooltips/popups displayed out of the parent viewport.)
-pub unsafe fn FindBestWindowPosForPopupEx(
+pub fn FindBestWindowPosForPopupEx(
     ref_pos: &ImVec2,
     size: &ImVec2,
-    last_dir: *mut ImGuiDir,
+    last_dir: &mut ImGuiDir,
     r_outer: &mut ImRect,
     r_avoid: &ImRect,
     policy: ImGuiPopupPositionPolicy,
 ) -> ImVec2 {
-    let base_pos_clamped: ImVec2 = ImClamp(ref_pos.clone(), r_outer.Min, r_outer.Max - size);
+    let base_pos_clamped: ImVec2 = ImClamp(ref_pos.clone(), r_outer.min, r_outer.max - size);
     //GetForegroundDrawList().AddRect(r_avoid.Min, r_avoid.Max, IM_COL32(255,0,0,255));
     //GetForegroundDrawList().AddRect(r_outer.Min, r_outer.Max, IM_COL32(0,255,0,255));
 
     // Combo Box policy (we want a connecting edge)
-    if (policy == ImGuiPopupPositionPolicy_ComboBox) {
+    if policy == ImGuiPopupPositionPolicy_ComboBox {
         let dir_prefered_order: [ImGuiDir; 4] =
             [ImGuiDir_Down, ImGuiDir_Right, ImGuiDir_Left, ImGuiDir_Up];
         // for (let n: c_int = (*last_dir != ImGuiDir_None) ? -1 : 0; n < ImGuiDir_COUNT; n++)
         for n in if *last_idr != ImGuiDir_None { -1 } else { 0 }..ImGuiDir_COUNT {
-            const dir: ImGuiDir = if (n == -1) {
+            const dir: ImGuiDir = if n == -1 {
                 *last_dir
             } else {
                 dir_prefered_order[n]
@@ -587,18 +591,18 @@ pub unsafe fn FindBestWindowPosForPopupEx(
             }
             pos: ImVec2;
             if dir == ImGuiDir_Down {
-                pos = ImVec2::from_floats(r_avoid.Min.x, r_avoid.Max.y);
+                pos = ImVec2::from_floats(r_avoid.min.x, r_avoid.max.y);
             } // Below, Toward Right (default)
             if dir == ImGuiDir_Right {
-                pos = ImVec2::from_floats(r_avoid.Min.x, r_avoid.Min.y - size.y);
+                pos = ImVec2::from_floats(r_avoid.min.x, r_avoid.min.y - size.y);
             } // Above, Toward Right
             if dir == ImGuiDir_Left {
-                pos = ImVec2::from_floats(r_avoid.Max.x - size.x, r_avoid.Max.y);
+                pos = ImVec2::from_floats(r_avoid.max.x - size.x, r_avoid.max.y);
             } // Below, Toward Left
             if dir == ImGuiDir_Up {
-                pos = ImVec2::from_floats(r_avoid.Max.x - size.x, r_avoid.Min.y - size.y);
+                pos = ImVec2::from_floats(r_avoid.max.x - size.x, r_avoid.min.y - size.y);
             } // Above, Toward Left
-            if (!r_outer.Contains(ImRect(pos, pos + size))) {
+            if !r_outer.Contains(ImRect(pos, pos + size)) {
                 continue;
             }
             *last_dir = dir;
@@ -624,22 +628,22 @@ pub unsafe fn FindBestWindowPosForPopupEx(
             }
 
             let avail_w: c_float = (if dir == ImGuiDir_Left {
-                r_avoid.Min.x
+                r_avoid.min.x
             } else {
-                r_outer.Max.x
+                r_outer.max.x
             }) - (if dir == ImGuiDir_Right {
-                r_avoid.Max.x
+                r_avoid.max.x
             } else {
-                r_outer.Min.x
+                r_outer.min.x
             });
             let avail_h: c_float = (if dir == ImGuiDir_Up {
-                r_avoid.Min.y
+                r_avoid.min.y
             } else {
-                r_outer.Max.y
+                r_outer.max.y
             }) - (if dir == ImGuiDir_Down {
-                r_avoid.Max.y
+                r_avoid.max.y
             } else {
-                r_outer.Min.y
+                r_outer.min.y
             });
 
             // If there not enough room on one axis, there's no point in positioning on a side on this axis (e.g. when not enough width, use a top/bottom position to maximize available width)
@@ -652,27 +656,27 @@ pub unsafe fn FindBestWindowPosForPopupEx(
 
             let mut pos: ImVec2 = ImVec2::default();
             pos.x = if dir == ImGuiDir_Left {
-                r_avoid.Min.x - size.x
+                r_avoid.min.x - size.x
             } else {
                 if dir == ImGuiDir_Right {
-                    r_avoid.Max.x
+                    r_avoid.max.x
                 } else {
                     base_pos_clamped.x
                 }
             };
             pos.y = if dir == ImGuiDir_Up {
-                r_avoid.Min.y - size.y
+                r_avoid.min.y - size.y
             } else {
                 if dir == ImGuiDir_Down {
-                    r_avoid.Max.y
+                    r_avoid.max.y
                 } else {
                     base_pos_clamped.y
                 }
             };
 
             // Clamp top-left corner of popup
-            pos.x = ImMax(pos.x, r_outer.Min.x);
-            pos.y = ImMax(pos.y, r_outer.Min.y);
+            pos.x = ImMax(pos.x, r_outer.min.x);
+            pos.y = ImMax(pos.y, r_outer.min.y);
 
             *last_dir = dir;
             return pos;
@@ -689,25 +693,25 @@ pub unsafe fn FindBestWindowPosForPopupEx(
 
     // Otherwise try to keep within display
     let mut pos: ImVec2 = ref_pos.clone();
-    pos.x = ImMax(ImMin(pos.x + size.x, r_outer.Max.x) - size.x, r_outer.Min.x);
-    pos.y = ImMax(ImMin(pos.y + size.y, r_outer.Max.y) - size.y, r_outer.Min.y);
+    pos.x = ImMax(ImMin(pos.x + size.x, r_outer.max.x) - size.x, r_outer.min.x);
+    pos.y = ImMax(ImMin(pos.y + size.y, r_outer.max.y) - size.y, r_outer.min.y);
     return pos;
 }
 
 // Note that this is used for popups, which can overlap the non work-area of individual viewports.
-pub unsafe fn GetPopupAllowedExtentRect(window: &mut ImGuiWindow) -> ImRect {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
+pub fn GetPopupAllowedExtentRect(g: &mut ImguiContext, window: &mut ImguiWindow) -> ImRect {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut r_screen: ImRect = ImRect::default();
     if window.ViewportAllowPlatformMonitorExtend >= 0 {
         // Extent with be in the frame of reference of the given viewport (so Min is likely to be negative here)
         let monitor = g.PlatformIO.Monitors[window.ViewportAllowPlatformMonitorExtend];
-        r_screen.Min = monitor.WorkPos;
-        r_screen.Max = monitor.WorkPos + monitor.WorkSize;
+        r_screen.min = monitor.WorkPos;
+        r_screen.max = monitor.WorkPos + monitor.WorkSize;
     } else {
         // Use the full viewport area (not work area) for popups
         r_screen = window.Viewport.GetMainRect();
     }
-    let padding: ImVec2 = g.Style.DisplaySafeAreaPadding;
+    let padding: ImVec2 = g.style.DisplaySafeAreaPadding;
     r_screen.expand_from_vec(&ImVec2::from_floats(
         if r_screen.GetWidth() > padding.x * 2 {
             -padding.x
@@ -723,17 +727,17 @@ pub unsafe fn GetPopupAllowedExtentRect(window: &mut ImGuiWindow) -> ImRect {
     return r_screen;
 }
 
-pub unsafe fn FindBestWindowPosForPopup(window: &mut ImGuiWindow) -> ImVec2 {
+pub unsafe fn FindBestWindowPosForPopup(window: &mut ImguiWindow) -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
-    let mut r_outer: ImRect = GetPopupAllowedExtentRect(window);
+    let mut r_outer: ImRect = GetPopupAllowedExtentRect(g, window);
     if window.Flags & ImGuiWindowFlags_ChildMenu {
         // Child menus typically request _any_ position within the parent menu item, and then we move the new menu outside the parent bounds.
         // This is how we end up with child menus appearing (most-commonly) on the right of the parent menu.
-        let mut parent_window: &mut ImGuiWindow = window.ParentWindow;
-        let horizontal_overlap: c_float = g.Style.ItemInnerSpacing.x; // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
+        let mut parent_window: &mut ImguiWindow = window.ParentWindow;
+        let horizontal_overlap: c_float = g.style.ItemInnerSpacing.x; // We want some overlap to convey the relative depth of each menu (currently the amount of overlap is hard-coded to style.ItemSpacing.x).
         let mut r_avoid: ImRect = ImRect::default();
-        if parent_window.DC.MenuBarAppending {
+        if parent_window.dc.MenuBarAppending {
             r_avoid = ImRect(
                 -f32::MAX,
                 parent_window.ClipRect.Min.y,
@@ -744,16 +748,16 @@ pub unsafe fn FindBestWindowPosForPopup(window: &mut ImGuiWindow) -> ImVec2 {
         // Avoid parent menu-bar. If we wanted multi-line menu-bar, we may instead want to have the calling window setup e.g. a NextWindowData.PosConstraintAvoidRect field
         else {
             r_avoid = ImRect(
-                parent_window.Pos.x + horizontal_overlap,
+                parent_window.position.x + horizontal_overlap,
                 -f32::MAX,
-                parent_window.Pos.x + parent_window.Size.x
+                parent_window.position.x + parent_window.Size.x
                     - horizontal_overlap
-                    - parent_window.ScrollbarSizes.x,
+                    - parent_window.scrollbarSizes.x,
                 f32::MAX,
             );
         }
         return FindBestWindowPosForPopupEx(
-            &window.Pos,
+            &window.position,
             &window.Size,
             &mut window.AutoPosLastDirection,
             &mut r_outer,
@@ -763,18 +767,18 @@ pub unsafe fn FindBestWindowPosForPopup(window: &mut ImGuiWindow) -> ImVec2 {
     }
     if flag_set(window.Flags, ImGuiWindowFlags_Popup) {
         return FindBestWindowPosForPopupEx(
-            &window.Pos,
+            &window.position,
             &window.Size,
             &mut window.AutoPosLastDirection,
             &mut r_outer,
-            &ImRect::from_vec2(&window.Pos, &window.Pos),
+            &ImRect::from_vec2(&window.position, &window.position),
             ImGuiPopupPositionPolicy_Default,
         ); // Ideally we'd disable r_avoid here
     }
     if flag_set(window.Flags, ImGuiWindowFlags_Tooltip) {
         // Position tooltip (always follows mouse)
-        let sc: c_float = g.Style.MouseCursorScale;
-        let ref_pos: ImVec2 = NavCalcPreferredRefPos();
+        let sc: c_float = g.style.MouseCursorScale;
+        let ref_pos: ImVec2 = NavCalcPreferredRefPos(g);
         let mut r_avoid: ImRect = ImRect::default();
         if !g.NavDisableHighlight
             && g.NavDisableMouseHover
@@ -799,14 +803,14 @@ pub unsafe fn FindBestWindowPosForPopup(window: &mut ImGuiWindow) -> ImVec2 {
         );
     }
     // IM_ASSERT(0);
-    return window.Pos;
+    return window.position;
 }
 
-pub unsafe fn CalcMaxPopupHeightFromItemCount(items_count: c_int) -> c_float {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
+pub fn CalcMaxPopupHeightFromItemCount(ctx: &mut ImguiContext, items_count: c_int) -> f32 {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
     if items_count <= 0 {
         return f32::MAX;
     }
-    return (g.FontSize + g.Style.ItemSpacing.y) * items_count - g.Style.ItemSpacing.y
-        + (g.Style.WindowPadding.y * 2);
+    return (g.FontSize + g.style.ItemSpacing.y) * items_count - g.style.ItemSpacing.y
+        + (g.style.WindowPadding.y * 2);
 }

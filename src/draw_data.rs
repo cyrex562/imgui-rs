@@ -5,7 +5,7 @@ use crate::draw_list::ImDrawList;
 use crate::draw_vert::ImDrawVert;
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
-use crate::viewport::ImGuiViewport;
+use crate::viewport::ImguiViewport;
 use libc::{c_int, size_t};
 use std::ptr::null_mut;
 
@@ -30,7 +30,7 @@ pub struct ImDrawData {
     // Size of the viewport to render (== GetMainViewport().Size for the main viewport, == io.DisplaySize in most single-viewport applications)
     pub FramebufferScale: ImVec2,
     // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
-    pub OwnerViewport: *mut ImGuiViewport, // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
+    pub OwnerViewport: *mut ImguiViewport, // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
 }
 
 impl ImDrawData {

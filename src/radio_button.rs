@@ -9,27 +9,27 @@ use crate::rect::ImRect;
 use crate::render_ops::{RenderNavHighlight, RenderText};
 use crate::style_ops::GetColorU32;
 use crate::text_ops::CalcTextSize;
-use crate::type_defs::ImGuiID;
+use crate::type_defs::ImguiHandle;
 use crate::vec2::ImVec2;
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use crate::window::ops::GetCurrentWindow;
 
 pub unsafe fn RadioButton(label: String, active: bool) -> bool
 {
-    let mut window = GetCurrentWindow();
-    if window.SkipItems { return  false; }
+    let mut window = g.current_window_mut().unwrap();
+    if window.skip_items { return  false; }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let setyle = &mut g.Style;
-    let mut id: ImGuiID =  window.id_from_str(label);
-    let label_size: ImVec2 = CalcTextSize(label, true, 0.0);
+    let setyle = &mut g.style;
+    let mut id: ImguiHandle =  window.id_from_str(label, );
+    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
 
     let square_sz: c_float =  GetFrameHeight();
-    let pos: ImVec2 = window.DC.CursorPos;
+    let pos: ImVec2 = window.dc.cursor_pos;
     let mut check_bb: ImRect = ImRect::new(pos, pos + ImVec2::from_floats(square_sz, square_sz));
     let mut total_bb: ImRect = ImRect::new(pos, pos + ImVec2::from_floats(square_sz + (if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x } else { 0.0 }), label_size.y + style.FramePadding.y * 2.0));
-    ItemSize(&total_bb.GetSize(), style.FramePadding.y);
-    if !ItemAdd(&mut total_bb, id, None, 0) { return  false; }
+    ItemSize(g, &total_bb.GetSize(), style.FramePadding.y);
+    if !ItemAdd(g, &mut total_bb, id, None, 0) { return  false; }
 
     let mut center: ImVec2 = check_bb.GetCenter();
     center.x = IM_ROUND(center.x);
@@ -38,11 +38,11 @@ pub unsafe fn RadioButton(label: String, active: bool) -> bool
 
     let mut hovered = false;
     let mut held = false;
-    let mut pressed: bool =  button_ops::ButtonBehavior(&total_bb, id, &mut hovered, &mut held, 0);
+    let mut pressed: bool =  button_ops::ButtonBehavior(g, &total_bb, id, &mut hovered, &mut held, 0);
     if pressed {
-        MarkItemEdited(id); }
+        MarkItemEdited(g, id); }
 
-    RenderNavHighlight(&total_bb, id, 0);
+    RenderNavHighlight(, &total_bb, id, 0);
     window.DrawList.AddCircleFilled(&center, radius, GetColorU32(if (held && hovered) { ImGuiCol_FrameBgActive } else { if hovered { ImGuiCol_FrameBgHovered } else { ImGuiCol_FrameBg } }, 0.0), 16);
     if (active)
     {
@@ -56,12 +56,12 @@ pub unsafe fn RadioButton(label: String, active: bool) -> bool
         window.DrawList.AddCircle(&center, radius, GetColorU32(ImGuiCol_Border, 0.0), 16, style.FrameBorderSize);
     }
 
-    let label_pos: ImVec2 = ImVec2::from_floats(check_bb.Max.x + style.ItemInnerSpacing.x, check_bb.Min.y + style.FramePadding.y);
+    let label_pos: ImVec2 = ImVec2::from_floats(check_bb.max.x + style.ItemInnerSpacing.x, check_bb.min.y + style.FramePadding.y);
     if g.LogEnabled {
         // LogRenderedText(&label_pos, active? "(x)": "( )");
     }
     if label_size.x > 0.0 {
-        RenderText(label_pos, label, false);
+        RenderText(label_pos, label, false, g);
     }
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);

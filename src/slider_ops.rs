@@ -4,12 +4,12 @@ use crate::color::{
     ImGuiCol_SliderGrabActive,
 };
 use crate::data_type::{
-    ImGuiDataType, ImGuiDataType_Double, ImGuiDataType_Float, ImGuiDataType_S32,
+    ImGuiDataType, IM_GUI_DATA_TYPE_DOUBLE, IM_GUI_DATA_TYPE_FLOAT, IM_GUI_DATA_TYPE_S32,
 };
-use crate::data_type_info::GDataTypeInfo;
+use crate::data_type_info::GDATA_TYPE_INFO;
 use crate::direction::{ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_Right, ImGuiDir_Up};
 use crate::group_ops::{BeginGroup, EndGroup};
-use crate::id_ops::{ClearActiveID, PopID, SetActiveID};
+use crate::id_ops::{ClearActiveID, pop_win_id_from_stack, SetActiveID};
 use crate::imgui::GImGui;
 use crate::input_ops::IsKeyDown;
 use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
@@ -23,7 +23,7 @@ use crate::key::{
     ImGuiKey_NavGamepadTweakFast, ImGuiKey_NavGamepadTweakSlow, ImGuiKey_NavKeyboardTweakFast,
     ImGuiKey_NavKeyboardTweakSlow,
 };
-use crate::layout_ops::SameLine;
+use crate::layout_ops::same_line;
 use crate::logging_ops::LogSetNextTextDecoration;
 use crate::math_ops::{ImLerp, ImMax, ImSwap};
 use crate::nav_ops::{GetNavTweakPressedAmount, SetFocusID};
@@ -38,12 +38,12 @@ use crate::slider_flags::{
 };
 use crate::style_ops::GetColorU32;
 use crate::text_ops::CalcTextSize;
-use crate::type_defs::ImGuiID;
+use crate::type_defs::ImguiHandle;
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
 use crate::window::focus::FocusWindow;
 use crate::window::ops::GetCurrentWindow;
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use crate::{data_type_ops, input_num_ops, text_ops, widgets};
 use libc::{c_char, c_float, c_int, size_t};
 use std::borrow::Borrow;
@@ -53,7 +53,7 @@ use std::ptr::{null, null_mut};
 // template<typename TYPE, typename SIGNEDTYPE, typename FLOATTYPE>
 pub unsafe fn SliderBehaviorT(
     bb: &ImRect,
-    id: ImGuiID,
+    id: ImguiHandle,
     data_type: ImGuiDataType,
     v: &mut c_float,
     v_min: c_float,
@@ -63,7 +63,7 @@ pub unsafe fn SliderBehaviorT(
     out_grab_bb: &mut ImRect,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let style = &mut g.Style;
+    let style = &mut g.style;
 
     const axis: ImGuiAxis = if flags & ImGuiSliderFlags_Vertical {
         ImGuiAxis_Y
@@ -72,7 +72,7 @@ pub unsafe fn SliderBehaviorT(
     };
     let is_logarithmic: bool = flag_set(flags, ImGuiSliderFlags_Logarithmic);
     let is_floating_point: bool =
-        (data_type == ImGuiDataType_Float) || (data_type == ImGuiDataType_Double);
+        (data_type == IM_GUI_DATA_TYPE_FLOAT) || (data_type == IM_GUI_DATA_TYPE_DOUBLE);
     let v_range = (if v_min < v_max {
         v_max - v_min
     } else {
@@ -81,7 +81,7 @@ pub unsafe fn SliderBehaviorT(
 
     // Calculate bounds
     let grab_padding: c_float = 2.0; // FIXME: Should be part of style.
-    let slider_sz: c_float = (bb.Max[axis] - bb.Min[axis]) - grab_padding * 2.0;
+    let slider_sz: c_float = (bb.max[axis] - bb.min[axis]) - grab_padding * 2.0;
     let mut grab_sz: c_float = style.GrabMinSize;
     if !is_floating_point && v_range >= 0.0 as c_float {
         // v_range < 0 may happen on integer overflows
@@ -89,8 +89,8 @@ pub unsafe fn SliderBehaviorT(
     } // For integer sliders: if possible have the grab size represent 1 unit
     grab_sz = grab_sz.min(slider_sz);
     let slider_usable_sz: c_float = slider_sz - grab_sz;
-    let slider_usable_pos_min: c_float = bb.Min[axis] + grab_padding + grab_sz * 0.5;
-    let slider_usable_pos_max: c_float = bb.Max[axis] - grab_padding - grab_sz * 0.5;
+    let slider_usable_pos_min: c_float = bb.min[axis] + grab_padding + grab_sz * 0.5;
+    let slider_usable_pos_max: c_float = bb.max[axis] - grab_padding - grab_sz * 0.5;
 
     let mut logarithmic_zero_epsilon: c_float = 0.0; // Only valid when is_logarithmic is true
     let mut zero_deadzone_halfsize: c_float = 0.0; // Only valid when is_logarithmic is true
@@ -112,7 +112,7 @@ pub unsafe fn SliderBehaviorT(
         let mut clicked_t: c_float = 0.0;
         if g.ActiveIdSource == ImGuiInputSource_Mouse {
             if !g.IO.MouseDown[0] {
-                ClearActiveID();
+                ClearActiveID(g);
             } else {
                 let mouse_abs_pos: c_float = g.IO.MousePos[axis];
                 if g.ActiveIdIsJustActivated {
@@ -204,7 +204,7 @@ pub unsafe fn SliderBehaviorT(
 
             let delta: c_float = g.SliderCurrentAccum;
             if g.NavActivatePressedId == id && !g.ActiveIdIsJustActivated {
-                ClearActiveID();
+                ClearActiveID(g);
             } else if g.SliderCurrentAccumDirty {
                 clicked_t = ScaleRatioFromValueT(
                     data_type,
@@ -285,7 +285,7 @@ pub unsafe fn SliderBehaviorT(
     }
 
     if slider_sz < 1.0 {
-        *out_grab_bb = ImRect(bb.Min, bb.Min);
+        *out_grab_bb = ImRect(bb.min, bb.min);
     } else {
         // Output grab position so it can be displayed by the caller
         let mut grab_t: c_float = ScaleRatioFromValueT(
@@ -304,15 +304,15 @@ pub unsafe fn SliderBehaviorT(
         if axis == ImGuiAxis_X {
             *out_grab_bb = ImRect::from_floats(
                 grab_pos - grab_sz * 0.5,
-                bb.Min.y + grab_padding,
+                bb.min.y + grab_padding,
                 grab_pos + grab_sz * 0.5,
-                bb.Max.y - grab_padding,
+                bb.max.y - grab_padding,
             );
         } else {
             *out_grab_bb = ImRect::from_floats(
-                bb.Min.x + grab_padding,
+                bb.min.x + grab_padding,
                 grab_pos - grab_sz * 0.5,
-                bb.Max.x - grab_padding,
+                bb.max.x - grab_padding,
                 grab_pos + grab_sz * 0.5,
             );
         }
@@ -326,7 +326,7 @@ pub unsafe fn SliderBehaviorT(
 // It would be possible to lift that limitation with some work but it doesn't seem to be worth it for sliders.
 pub unsafe fn SliderBehavior(
     bb: &ImRect,
-    id: ImGuiID,
+    id: ImguiHandle,
     data_type: ImGuiDataType,
     p_v: &mut c_float,
     p_min: c_float,
@@ -349,7 +349,7 @@ pub unsafe fn SliderBehavior(
     SliderBehaviorT(
         bb,
         id,
-        ImGuiDataType_S32,
+        IM_GUI_DATA_TYPE_S32,
         p_v,
         p_min,
         p_max,
@@ -360,33 +360,33 @@ pub unsafe fn SliderBehavior(
 
     // match data_type
     // {
-    // ImGuiDataType_S8 =>  {
+    // IM_GUI_DATA_TYPE_S8 =>  {
     //     let v32 = p_v;
-    //     let mut r: bool =  SliderBehaviorT(bb, id, ImGuiDataType_S32, &v32, p_min,  p_max,  format, flags, out_grab_bb);
+    //     let mut r: bool =  SliderBehaviorT(bb, id, IM_GUI_DATA_TYPE_S32, &v32, p_min,  p_max,  format, flags, out_grab_bb);
     //     if r { p_v = v32;}
     //     return r; }
-    // ImGuiDataType_U8 =>  { v32: u32 = *(*mut u8)p_v;  let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, *(*const u8)p_min,  *(*const u8)p_max,  format, flags, out_grab_bb); if r) *(*mut u8 { p_v = v32;}  return r; }
-    // ImGuiDataType_S16 => { i32 v32 = *(*mut i16)p_v; let mut r: bool =  SliderBehaviorT<i32, i32, c_float>(bb, id, ImGuiDataType_S32, &v32, p_min, p_max, format, flags, out_grab_bb); if (r) *(*mut i16)p_v = v32; return r; }
-    // ImGuiDataType_U16 => { v32: u32 = *(*mut ImU16)p_v; let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, ImGuiDataType_U32, &v32, p_min, p_max, format, flags, out_grab_bb); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
-    // ImGuiDataType_S32 =>
+    // IM_GUI_DATA_TYPE_U8 =>  { v32: u32 = *(*mut u8)p_v;  let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, IM_GUI_DATA_TYPE_U32, &v32, *(*const u8)p_min,  *(*const u8)p_max,  format, flags, out_grab_bb); if r) *(*mut u8 { p_v = v32;}  return r; }
+    // IM_GUI_DATA_TYPE_S16 => { i32 v32 = *(*mut i16)p_v; let mut r: bool =  SliderBehaviorT<i32, i32, c_float>(bb, id, IM_GUI_DATA_TYPE_S32, &v32, p_min, p_max, format, flags, out_grab_bb); if (r) *(*mut i16)p_v = v32; return r; }
+    // IM_GUI_DATA_TYPE_U16 => { v32: u32 = *(*mut ImU16)p_v; let mut r: bool =  SliderBehaviorT<u32, i32, c_float>(bb, id, IM_GUI_DATA_TYPE_U32, &v32, p_min, p_max, format, flags, out_grab_bb); if (r) *(*mut ImU16)p_v = (ImU16)v32; return r; }
+    // IM_GUI_DATA_TYPE_S32 =>
     //     // IM_ASSERT(p_min >= IM_S32_MIN / 2 && p_max <= IM_S32_MAX / 2);
     //     return SliderBehaviorT<i32, i32, c_float >(bb, id, data_type, (*mut i32)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
-    // ImGuiDataType_U32 =>
+    // IM_GUI_DATA_TYPE_U32 =>
     //     // IM_ASSERT(p_max <= IM_U32_MAX / 2);
     //     return SliderBehaviorT<u32, i32, c_float >(bb, id, data_type, (*mut u32)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
-    // ImGuiDataType_S64 =>
+    // IM_GUI_DATA_TYPE_S64 =>
     //     // IM_ASSERT(*(*const ImS64)p_min >= IM_S64_MIN / 2 && *(*const ImS64)p_max <= IM_S64_MAX / 2);
     //     return SliderBehaviorT<i64, i64, double>(bb, id, data_type, (*mut i64)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
-    // ImGuiDataType_U64 =>
+    // IM_GUI_DATA_TYPE_U64 =>
     //     // IM_ASSERT(p_max <= IM_U64_MAX / 2);
     //     return SliderBehaviorT<u64, i64, double>(bb, id, data_type, (*mut u64)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
-    // ImGuiDataType_Float =>
+    // IM_GUI_DATA_TYPE_FLOAT =>
     //     // IM_ASSERT(p_min >= -f32::MAX / 2.0 && p_max <= f32::MAX / 2.0);
     //     return SliderBehaviorT<c_float, c_float, c_float >(bb, id, data_type, (&mut c_float)p_v,  p_min,  p_max,  format, flags, out_grab_bb);
-    // ImGuiDataType_Double =>
+    // IM_GUI_DATA_TYPE_DOUBLE =>
     //     // IM_ASSERT(p_min >= -DBL_MAX / 2.0 && p_max <= DBL_MAX / 2.0);
     //     return SliderBehaviorT<double, double, double>(bb, id, data_type, (*mut double)p_v, p_min, p_max, format, flags, out_grab_bb);
-    // ImGuiDataType_COUNT => break;
+    // IM_GUI_DATA_TYPE_COUNT => break;
     // }
     // // IM_ASSERT(0);
     // return false;
@@ -403,24 +403,24 @@ pub unsafe fn SliderScalar(
     format: &mut String,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    let mut window = GetCurrentWindow();
-    if window.SkipItems {
+    let mut window = g.current_window_mut().unwrap();
+    if window.skip_items {
         return false;
     }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let setyle = &mut g.Style;
-    let mut id: ImGuiID = window.GetID(label);
-    let w: c_float = CalcItemWidth();
+    let setyle = &mut g.style;
+    let mut id: ImguiHandle = window.GetID(label);
+    let w: c_float = CalcItemWidth(g);
 
-    let label_size: ImVec2 = CalcTextSize(label, true, 0.0);
+    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
     let mut frame_bb: ImRect = ImRect::new(
-        window.DC.CursorPos,
-        window.DC.CursorPos + ImVec2::new(w, label_size.y + style.FramePadding.y * 2.0),
+        window.dc.cursor_pos,
+        window.dc.cursor_pos + ImVec2::new(w, label_size.y + style.FramePadding.y * 2.0),
     );
     let mut total_bb: ImRect = ImRect::new(
-        frame_bb.Min,
-        frame_bb.Max
+        frame_bb.min,
+        frame_bb.max
             + ImVec2::new(
                 if label_size.x > 0.0 {
                     style.ItemInnerSpacing.x + label_size.x
@@ -432,8 +432,9 @@ pub unsafe fn SliderScalar(
     );
 
     let temp_input_allowed: bool = flag_clear(flags, ImGuiSliderFlags_NoInput);
-    ItemSize(total_bb.GetSize().borrow(), style.FramePadding.y);
+    ItemSize(g, total_bb.GetSize().borrow(), style.FramePadding.y);
     if !ItemAdd(
+        g,
         &mut total_bb,
         id,
         &frame_bb,
@@ -448,8 +449,8 @@ pub unsafe fn SliderScalar(
 
     // Default format string when passing NULL
     if format == None {
-        *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
-    } else if data_type == ImGuiDataType_S32 && format != String::from("{}") {
+        *format = data_type_ops::data_type_info(data_type).PrintFmt;
+    } else if data_type == IM_GUI_DATA_TYPE_S32 && format != String::from("{}") {
         // (FIXME-LEGACY: Patch old "{}f" format string to use "{}", read function more details.)
         *format = data_type_ops::PatchFormatStringFloatToInt(format);
     }
@@ -472,7 +473,7 @@ pub unsafe fn SliderScalar(
         }
 
         if make_active && !temp_input_is_active {
-            SetActiveID(id, window);
+            SetActiveID(g, id, window);
             SetFocusID(id, window);
             FocusWindow(window);
             g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Left) | (1 << ImGuiDir_Right);
@@ -507,13 +508,13 @@ pub unsafe fn SliderScalar(
         },
         0.0,
     );
-    RenderNavHighlight(&frame_bb, id, 0);
+    RenderNavHighlight(, &frame_bb, id, 0);
     RenderFrame(
-        frame_bb.Min,
-        frame_bb.Max,
+        frame_bb.min,
+        frame_bb.max,
         frame_col,
         true,
-        g.Style.FrameRounding,
+        g.style.FrameRounding,
     );
 
     // Slider behavior
@@ -530,14 +531,14 @@ pub unsafe fn SliderScalar(
         &mut grab_bb,
     );
     if value_changed {
-        MarkItemEdited(id);
+        MarkItemEdited(g, id);
     }
 
     // Render grab
-    if grab_bb.Max.x > grab_bb.Min.x {
+    if grab_bb.max.x > grab_bb.min.x {
         window.DrawList.AddRectFilled(
-            &grab_bb.Min,
-            &grab_bb.Max,
+            &grab_bb.min,
+            &grab_bb.max,
             GetColorU32(
                 if g.ActiveId == id {
                     ImGuiCol_SliderGrabActive
@@ -565,8 +566,8 @@ pub unsafe fn SliderScalar(
         LogSetNextTextDecoration("{", "}");
     }
     RenderTextClipped(
-        &frame_bb.Min,
-        &frame_bb.Max,
+        &frame_bb.min,
+        &frame_bb.max,
         value_buf,
         None,
         ImVec2::new(0.5, 0.5),
@@ -576,11 +577,12 @@ pub unsafe fn SliderScalar(
     if label_size.x > 0.0 {
         RenderText(
             ImVec2::new(
-                frame_bb.Max.x + style.ItemInnerSpacing.x,
-                frame_bb.Min.y + style.FramePadding.y,
+                frame_bb.max.x + style.ItemInnerSpacing.x,
+                frame_bb.min.y + style.FramePadding.y,
             ),
             label,
             false,
+            g,
         );
     }
 
@@ -599,8 +601,8 @@ pub unsafe fn SliderScalarN(
     format: &str,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    let mut window = GetCurrentWindow();
-    if window.SkipItems {
+    let mut window = g.current_window_mut().unwrap();
+    if window.skip_items {
         return false;
     }
 
@@ -608,13 +610,13 @@ pub unsafe fn SliderScalarN(
     let mut value_changed: bool = false;
     BeginGroup();
     PushID(label);
-    PushMultiItemsWidths(components, CalcItemWidth());
-    type_size: size_t = GDataTypeInfo[data_type].Size;
+    PushMultiItemsWidths(components, CalcItemWidth(g));
+    type_size: size_t = GDATA_TYPE_INFO[data_type].Size;
     // for (let i: c_int = 0; i < components; i++)
     for i in 0..components {
         PushID(i);
         if i > 0 {
-            SameLine(0.0, g.Style.ItemInnerSpacing.x);
+            same_line(g, 0.0, g.style.ItemInnerSpacing.x);
         }
         value_changed |= SliderScalar(
             "",
@@ -625,16 +627,16 @@ pub unsafe fn SliderScalarN(
             format.as_str(),
             flags,
         );
-        PopID();
+        pop_win_id_from_stack(g);
         PopItemWidth();
         *v = (*v + type_size);
     }
-    PopID();
+    pop_win_id_from_stack(g);
 
     let mut label_end = FindRenderedTextEnd(label);
     if label.len() > 0 {
-        SameLine(0.0, g.Style.ItemInnerSpacing.x);
-        text_ops::TextEx(label, 0);
+        same_line(g, 0.0, g.style.ItemInnerSpacing.x);
+        text_ops::TextEx(g, label, 0);
     }
 
     EndGroup();
@@ -649,7 +651,7 @@ pub unsafe fn SliderFloat(
     format: &mut String,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    return SliderScalar(label, ImGuiDataType_Float, v, v_min, v_max, format, flags);
+    return SliderScalar(label, IM_GUI_DATA_TYPE_FLOAT, v, v_min, v_max, format, flags);
 }
 
 pub unsafe fn SliderFloat2(
@@ -662,7 +664,7 @@ pub unsafe fn SliderFloat2(
 ) -> bool {
     return SliderScalarN(
         label,
-        ImGuiDataType_Float,
+        IM_GUI_DATA_TYPE_FLOAT,
         v,
         2,
         v_min,
@@ -680,7 +682,7 @@ pub unsafe fn SliderFloat3(
     format: &str,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    return SliderScalarN(label, ImGuiDataType_Float, v, 3, v_min, _max, format, flags);
+    return SliderScalarN(label, IM_GUI_DATA_TYPE_FLOAT, v, 3, v_min, _max, format, flags);
 }
 
 pub unsafe fn SliderFloat4(
@@ -693,7 +695,7 @@ pub unsafe fn SliderFloat4(
 ) -> bool {
     return SliderScalarN(
         label,
-        ImGuiDataType_Float,
+        IM_GUI_DATA_TYPE_FLOAT,
         v,
         4,
         v_min,
@@ -740,7 +742,7 @@ pub unsafe fn SliderInt(
     let mut v_max_float = *v_max as c_float;
     return SliderScalar(
         label,
-        ImGuiDataType_S32,
+        IM_GUI_DATA_TYPE_S32,
         &mut v_float,
         v_min_float,
         v_max_float,
@@ -762,7 +764,7 @@ pub unsafe fn SliderInt2(
     let mut v_max_float: [c_float; 2] = [v_max[0] as c_float, v_max[1] as c_float];
     return SliderScalarN(
         label,
-        ImGuiDataType_S32,
+        IM_GUI_DATA_TYPE_S32,
         &mut v_float,
         2,
         &mut v_min_float,
@@ -793,7 +795,7 @@ pub unsafe fn SliderInt3(
     ];
     return SliderScalarN(
         label,
-        ImGuiDataType_S32,
+        IM_GUI_DATA_TYPE_S32,
         &mut v_float,
         3,
         &mut v_min_float,
@@ -831,7 +833,7 @@ pub unsafe fn SliderInt4(
     ];
     return SliderScalarN(
         label,
-        ImGuiDataType_S32,
+        IM_GUI_DATA_TYPE_S32,
         &mut v_float,
         4,
         &mut v_min_float,
@@ -851,20 +853,20 @@ pub unsafe fn VSliderScalar(
     format: &mut String,
     flags: ImGuiSliderFlags,
 ) -> bool {
-    let mut window = GetCurrentWindow();
-    if window.SkipItems {
+    let mut window = g.current_window_mut().unwrap();
+    if window.skip_items {
         return false;
     }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let setyle = &mut g.Style;
-    let mut id: ImGuiID = window.GetID(label);
+    let setyle = &mut g.style;
+    let mut id: ImguiHandle = window.GetID(label);
 
-    let label_size: ImVec2 = CalcTextSize(label, true, 0.0);
-    let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + size);
+    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let mut frame_bb: ImRect = ImRect::new(window.dc.cursor_pos, window.dc.cursor_pos + size);
     let mut bb: ImRect = ImRect::new(
-        frame_bb.Min,
-        frame_bb.Max
+        frame_bb.min,
+        frame_bb.max
             + ImVec2::new(
                 if label_size.x > 0.0 {
                     style.ItemInnerSpacing.x + label_size.x
@@ -875,22 +877,22 @@ pub unsafe fn VSliderScalar(
             ),
     );
 
-    ItemSize(&bb.GetSize(), style.FramePadding.y);
-    if !ItemAdd(&mut frame_bb, id, None, 0) {
+    ItemSize(g, &bb.GetSize(), style.FramePadding.y);
+    if !ItemAdd(g, &mut frame_bb, id, None, 0) {
         return false;
     }
 
     // Default format string when passing NULL
     if format.is_empty() {
-        *format = data_type_ops::DataTypeGetInfo(data_type).PrintFmt;
-    } else if data_type == ImGuiDataType_S32 && format != "{}".into_string() {
+        *format = data_type_ops::data_type_info(data_type).PrintFmt;
+    } else if data_type == IM_GUI_DATA_TYPE_S32 && format != "{}".into_string() {
         // (FIXME-LEGACY: Patch old "{}f" format string to use "{}", read function more details.)
         *format = data_type_ops::PatchFormatStringFloatToInt(format);
     }
 
     let hovered: bool = ItemHoverable(&frame_bb, id);
     if (hovered && g.IO.MouseClicked[0]) || g.NavActivateId == id || g.NavActivateInputId == id {
-        SetActiveID(id, window);
+        SetActiveID(g, id, window);
         SetFocusID(id, window);
         FocusWindow(window);
         g.ActiveIdUsingNavDirMask |= (1 << ImGuiDir_Up) | (1 << ImGuiDir_Down);
@@ -909,13 +911,13 @@ pub unsafe fn VSliderScalar(
         },
         0.0,
     );
-    RenderNavHighlight(&frame_bb, id, 0);
+    RenderNavHighlight(, &frame_bb, id, 0);
     RenderFrame(
-        frame_bb.Min,
-        frame_bb.Max,
+        frame_bb.min,
+        frame_bb.max,
         frame_col,
         true,
-        g.Style.FrameRounding,
+        g.style.FrameRounding,
     );
 
     // Slider behavior
@@ -932,14 +934,14 @@ pub unsafe fn VSliderScalar(
         &mut grab_bb,
     );
     if value_changed {
-        MarkItemEdited(id);
+        MarkItemEdited(g, id);
     }
 
     // Render grab
-    if grab_bb.Max.y > grab_bb.Min.y {
+    if grab_bb.max.y > grab_bb.min.y {
         window.DrawList.AddRectFilled(
-            &grab_bb.Min,
-            &grab_bb.Max,
+            &grab_bb.min,
+            &grab_bb.max,
             GetColorU32(
                 if g.ActiveId == id {
                     ImGuiCol_SliderGrabActive
@@ -965,8 +967,8 @@ pub unsafe fn VSliderScalar(
             format,
         );
     RenderTextClipped(
-        ImVec2::new(frame_bb.Min.x, frame_bb.Min.y + style.FramePadding.y),
-        &frame_bb.Max,
+        ImVec2::new(frame_bb.min.x, frame_bb.min.y + style.FramePadding.y),
+        &frame_bb.max,
         value_buf,
         None,
         ImVec2::new(0.5, 0.0),
@@ -975,11 +977,12 @@ pub unsafe fn VSliderScalar(
     if label_size.x > 0.0 {
         RenderText(
             ImVec2::new(
-                frame_bb.Max.x + style.ItemInnerSpacing.x,
-                frame_bb.Min.y + style.FramePadding.y,
+                frame_bb.max.x + style.ItemInnerSpacing.x,
+                frame_bb.min.y + style.FramePadding.y,
             ),
             label,
             false,
+            g,
         );
     }
 
@@ -998,7 +1001,7 @@ pub unsafe fn VSliderFloat(
     return VSliderScalar(
         label,
         size,
-        ImGuiDataType_Float,
+        IM_GUI_DATA_TYPE_FLOAT,
         v,
         v_min,
         v_max,
@@ -1022,7 +1025,7 @@ pub unsafe fn VSliderInt(
     return VSliderScalar(
         label,
         size,
-        ImGuiDataType_S32,
+        IM_GUI_DATA_TYPE_S32,
         &mut v_float,
         v_min_float,
         v_max_float,
@@ -1040,7 +1043,7 @@ pub fn ScaleRatioFromValueT(
     is_logarithmic: bool,
     logarithmic_zero_epsilon: c_float,
     zero_deadzone_halfsize: c_float,
-) -> c_float {
+) -> f32 {
     if v_min == v_max {
         return 0.0;
     }
@@ -1144,7 +1147,7 @@ pub fn ScaleValueFromRatioT(
     is_logarithmic: bool,
     logarithmic_zero_epsilon: c_float,
     zero_deadzone_halfsize: c_float,
-) -> c_float {
+) -> f32 {
     // We special-case the extents because otherwise our logarithmic fudging can lead to "mathematically correct"
     // but non-intuitive behaviors like a fully-left slider not actually reaching the minimum value. Also generally simpler.
     if t <= 0.0 || v_min == v_max {
@@ -1220,7 +1223,7 @@ pub fn ScaleValueFromRatioT(
     } else {
         // Linear slider
         let is_floating_point: bool =
-            (data_type == ImGuiDataType_Float) || (data_type == ImGuiDataType_Double);
+            (data_type == IM_GUI_DATA_TYPE_FLOAT) || (data_type == IM_GUI_DATA_TYPE_DOUBLE);
         if is_floating_point {
             result = ImLerp(v_min, v_max, t);
         } else if t < 1.0 {

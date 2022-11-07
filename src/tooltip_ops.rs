@@ -14,7 +14,7 @@ use crate::window::window_flags::{
     ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_None,
     ImGuiWindowFlags_Tooltip,
 };
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use crate::GImGui;
 use libc::c_char;
 use std::ptr::null_mut;
@@ -33,19 +33,19 @@ pub unsafe fn BeginTooltipEx(
         // The default tooltip position is a little offset to give space to see the context menu (it's also clamped within the current viewport/monitor)
         // In the context of a dragging tooltip we try to reduce that offset and we enforce following the cursor.
         // Whatever we do we want to call SetNextWindowPos() to enforce a tooltip position and disable clipping the tooltip without our display area, like regular tooltip do.
-        //let mut tooltip_pos: ImVec2 =  g.IO.MousePos - g.ActiveIdClickOffset - g.Style.WindowPadding;
+        //let mut tooltip_pos: ImVec2 =  g.IO.MousePos - g.ActiveIdClickOffset - g.style.WindowPadding;
         let tooltip_pos: ImVec2 = g.IO.MousePos
-            + ImVec2::from_floats(16 * g.Style.MouseCursorScale, 8 * g.Style.MouseCursorScale);
-        SetNextWindowPos(&tooltip_pos, 0, &Default::default());
-        SetNextWindowBgAlpha(g.Style.Colors[ImGuiCol_PopupBg].w * 0.60);
-        //PushStyleVar(ImGuiStyleVar_Alpha, g.Style.Alpha * 0.60); // This would be nice but e.g ColorButton with checkboard has issue with transparent colors :(
+            + ImVec2::from_floats(16 * g.style.MouseCursorScale, 8 * g.style.MouseCursorScale);
+        SetNextWindowPos(, &tooltip_pos, 0, &Default::default());
+        SetNextWindowBgAlpha(g.style.Colors[ImGuiCol_PopupBg].w * 0.60);
+        //PushStyleVar(ImGuiStyleVar_Alpha, g.style.Alpha * 0.60); // This would be nice but e.g ColorButton with checkboard has issue with transparent colors :(
         tooltip_flags |= ImGuiTooltipFlags_OverridePreviousTooltip;
     }
 
     window_name: [c_char; 16];
     // ImFormatString(window_name, window_name.len(), "##Tooltip_{}", g.TooltipOverrideCount);
     if (tooltip_flags & ImGuiTooltipFlags_OverridePreviousTooltip) {
-        let mut window: &mut ImGuiWindow = FindWindowByName(window_name);
+        let mut window: &mut ImguiWindow = FindWindowByName(window_name);
         if (is_not_null(window)) {
             if window.Active {
                 // Hide previous tooltip from being displayed. We can't easily "reset" the content of a window so we create a new one.
@@ -63,7 +63,7 @@ pub unsafe fn BeginTooltipEx(
         | ImGuiWindowFlags_NoSavedSettings
         | ImGuiWindowFlags_AlwaysAutoResize
         | ImGuiWindowFlags_NoDocking;
-    Begin(window_name, null_mut());
+    Begin(g, window_name, null_mut());
 }
 
 pub unsafe fn EndTooltip() {

@@ -2235,7 +2235,7 @@ Other Changes:
 
 - Added GetBackgroundDrawList() helper to quickly get access to a ImDrawList that will be rendered
   behind every other windows. (#2391, #545)
-- DragScalar, InputScalar, SliderScalar: Added support for u8/s8/u16/s16 data types (ImGuiDataType_S8, etc.)
+- DragScalar, InputScalar, SliderScalar: Added support for u8/s8/u16/s16 data types (IM_GUI_DATA_TYPE_S8, etc.)
   We are reusing function instances of larger types to reduce code size. (#643, #320, #708, #1011)
 - Added InputTextWithHint() to display a description/hint in the text box when no text
   has been entered. (#2400) [@Organic-Code, @ocornut]

@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
 use crate::dock_node_flags::ImGuiDockNodeFlags;
-use crate::GImGui;
 use crate::next_window_data_flags::ImGuiNextWindowDataFlags_HasWindowClass;
 use crate::tab_item_flags::ImGuiTabItemFlags;
-use crate::type_defs::ImGuiID;
+use crate::type_defs::ImguiHandle;
 use crate::viewport_flags::ImGuiViewportFlags;
+use crate::GImGui;
 
 // [ALPHA] Rarely used / very advanced uses only. Use with SetNextWindowClass() and DockSpace() functions.
 // Important: the content of this class is still highly WIP and likely to change and be refactored
@@ -16,9 +16,9 @@ use crate::viewport_flags::ImGuiViewportFlags;
 // - To the docking system for various options and filtering.
 #[derive(Debug, Default, Clone)]
 pub struct ImGuiWindowClass {
-    pub ClassId: ImGuiID,
+    pub ClassId: ImguiHandle,
     // User data. 0 = Default class (unclassed). Windows of different classes cannot be docked with each others.
-    pub ParentViewportId: ImGuiID,
+    pub ParentViewportId: ImguiHandle,
     // Hint for the platform backend. -1: use default. 0: request platform backend to not parent the platform. != 0: request platform backend to create a parent<>child relationship between the platform windows. Not conforming backends are free to e.g. parent every viewport to the main viewport or not.
     pub ViewportFlagsOverrideSet: ImGuiViewportFlags,
     // Viewport flags to set when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
@@ -30,9 +30,9 @@ pub struct ImGuiWindowClass {
     // [EXPERIMENTAL] Dock node flags to set when a window of this class is hosted by a dock node (it doesn't have to be selected!)
     pub DockingAlwaysTabBar: bool,
     // Set to true to enforce single floating windows of this class always having their own docking node (equivalent of setting the global io.ConfigDockingAlwaysTabBar)
-    pub DockingAllowUnclassed: bool,      // Set to true to allow windows of this class to be docked/merged with an unclassed window. // FIXME-DOCK: Move to DockNodeFlags override?
+    pub DockingAllowUnclassed: bool, // Set to true to allow windows of this class to be docked/merged with an unclassed window. // FIXME-DOCK: Move to DockNodeFlags override?
 
-    // ImGuiWindowClass() { memset(this, 0, sizeof(*this)); ParentViewportId = -1; DockingAllowUnclassed = true; }
+                                     // ImGuiWindowClass() { memset(this, 0, sizeof(*this)); ParentViewportId = -1; DockingAllowUnclassed = true; }
 }
 
 impl ImGuiWindowClass {
@@ -45,10 +45,9 @@ impl ImGuiWindowClass {
     }
 }
 
-pub unsafe fn SetNextWindowClass(mut window_class: *const ImGuiWindowClass)
-{
+pub unsafe fn SetNextWindowClass(mut window_class: *const ImGuiWindowClass) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IM_ASSERT((window_class.ViewportFlagsOverrideSet & window_class.ViewportFlagsOverrideClear) == 0); // Cannot set both set and clear for the same bit
+                    // IM_ASSERT((window_class.ViewportFlagsOverrideSet & window_class.ViewportFlagsOverrideClear) == 0); // Cannot set both set and clear for the same bit
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasWindowClass;
     g.NextWindowData.WindowClass = (*window_class).clone();
 }

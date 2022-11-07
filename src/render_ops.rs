@@ -7,10 +7,13 @@
 //-----------------------------------------------------------------------------
 
 use crate::color::{
-    ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_NavHighlight, ImGuiCol_Text, color_u32_from_rgba,
-    IM_COL32_A_MASK, IM_COL32_A_SHIFT, IM_COL32_BLACK, IM_COL32_WHITE,
+    color_u32_from_rgba, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_NavHighlight,
+    ImGuiCol_Text, IM_COL32_A_MASK, IM_COL32_A_SHIFT, IM_COL32_BLACK, IM_COL32_WHITE,
 };
-use crate::context_hook::{ImGuiContextHookType_RenderPost, ImGuiContextHookType_RenderPre};
+use crate::context::ImguiContext;
+use crate::context_hook::{
+    IM_GUI_CONTEXT_HOOK_TYPE_RENDER_POST, IM_GUI_CONTEXT_HOOK_TYPE_RENDER_PRE,
+};
 use crate::direction::{
     ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right,
     ImGuiDir_Up,
@@ -43,18 +46,18 @@ use crate::string_ops::{
 };
 use crate::style_ops::GetColorU32;
 use crate::text_ops::CalcTextSize;
-use crate::type_defs::{ImGuiID, ImTextureID, ImWchar};
+use crate::type_defs::{ImTextureID, ImWchar, ImguiHandle};
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
-use crate::viewport::ImGuiViewport;
+use crate::viewport::ImguiViewport;
 use crate::viewport_ops::SetupViewportDrawData;
 use crate::window::ops::IsWindowActiveAndVisible;
 use crate::window::render::RenderDimmedBackgrounds;
 use crate::window::window_flags::{
     ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoBringToFrontOnFocus,
 };
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use crate::window_flags::{ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoBringToFrontOnFocus};
 use crate::window_ops::{IsWindowActiveAndVisible, RenderDimmedBackgrounds};
 use crate::CallContextHooks;
@@ -63,7 +66,7 @@ use std::mem::swap;
 use std::ptr::{null, null_mut};
 
 // FindRenderedTextEnd: *const c_char(text: &String, text_end: *const c_char)
-pub unsafe fn FindRenderedTextEnd(text: &String) -> usize {
+pub fn FindRenderedTextEnd(text: &String) -> usize {
     // let mut text_display_end: *const c_char = text;
     // if !text_end {
     //     text_end = None;
@@ -79,9 +82,8 @@ pub unsafe fn FindRenderedTextEnd(text: &String) -> usize {
 // Internal ImGui functions to render text
 // RenderText***() functions calls ImDrawList::AddText() calls ImBitmapFont::RenderText()
 // c_void RenderText(pos: ImVec2, text: &String, text_end: *const c_char, hide_text_after_hash: bool)
-pub unsafe fn RenderText(pos: ImVec2, text: &String, hide_text_after_hash: bool) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = g.CurrentWindow.unwrap();
+pub fn RenderText(pos: ImVec2, text: &String, hide_text_after_hash: bool, g: &mut ImguiContext) {
+    let mut window = g.current_window_mut().unwrap();
 
     // Hide anything after a '##' string
     let mut text_display_end = 0usize;
@@ -111,8 +113,7 @@ pub unsafe fn RenderText(pos: ImVec2, text: &String, hide_text_after_hash: bool)
 }
 
 // c_void RenderTextWrapped(pos: ImVec2, text: &String, text_end: *const c_char, c_float wrap_width)
-pub unsafe fn RenderTextWrapped(pos: ImVec2, text: String) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
+pub fn RenderTextWrapped(g: &mut ImguiWindow, pos: ImVec2, text: String) {
     let mut window = g.CurrentWindow.unwrap();
 
     // if !text_end {
@@ -136,8 +137,8 @@ pub unsafe fn RenderTextWrapped(pos: ImVec2, text: String) {
 // Default clip_rect uses (pos_min,pos_max)
 // Handle clipping on CPU immediately (vs typically let the GPU clip the triangles that are overlapping the clipping rectangle edges)
 // c_void RenderTextClippedEx(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: &String, text_display_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
-pub unsafe fn RenderTextClippedEx(
-    mut draw_list: ImDrawList,
+pub fn RenderTextClippedEx(
+    mut draw_list: &mut ImDrawList,
     pos_min: ImVec2,
     pos_max: ImVec2,
     text: &String,
@@ -150,7 +151,7 @@ pub unsafe fn RenderTextClippedEx(
     let text_size = if text_size_if_known {
         text_size_if_known.clone()
     } else {
-        CalcTextSize(text, false, 0.0)
+        CalcTextSize(g, text, false, 0.0)
     };
 
     let clip_min: *const ImVec2 = if clip_rect { &clip_rect.Min } else { &pos_min };
@@ -197,7 +198,7 @@ pub unsafe fn RenderTextClippedEx(
 }
 
 // c_void RenderTextClipped(const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, text: &String, text_end: *const c_char, *const text_size_if_known: ImVec2, const align: &mut ImVec2, *const ImRect clip_rect)
-pub unsafe fn RenderTextClipped(
+pub fn RenderTextClipped(
     pos_min: ImVec2,
     pos_max: ImVec2,
     text: &String,
@@ -213,7 +214,7 @@ pub unsafe fn RenderTextClipped(
     }
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     RenderTextClippedEx(
         window.DrawList,
         pos_min,
@@ -221,7 +222,7 @@ pub unsafe fn RenderTextClipped(
         text.clone(),
         text_size_if_known,
         align,
-        clip_rect.unwrap()
+        clip_rect.unwrap(),
     );
     if g.LogEnabled {
         // LogRenderedText(pos_min, text);
@@ -232,21 +233,21 @@ pub unsafe fn RenderTextClipped(
 // This is made more complex because we have dissociated the layout rectangle (pos_min..pos_max) which define _where_ the ellipsis is, from actual clipping of text and limit of the ellipsis display.
 // This is because in the context of tabs we selectively hide part of the text when the Close Button appears, but we don't want the ellipsis to move.
 // c_void RenderTextEllipsis(draw_list: *mut ImDrawList, const pos_min: &mut ImVec2, const pos_max: &mut ImVec2, c_float clip_max_x, c_float ellipsis_max_x, text: &String, text_end_full: *const c_char, *const text_size_if_known: ImVec2)
-pub unsafe fn RenderTextEllipsis(
-    draw_list: ImDrawList,
+pub fn RenderTextEllipsis(
+    g: &mut ImguiContext,
+    draw_list: &mut ImDrawList,
     pos_min: ImVec2,
     pos_max: ImVec2,
     clip_max_x: c_float,
     ellipsis_max_x: c_float,
-    text: String,
+    text: &String,
     text_size_if_known: Option<ImVec2>,
 ) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-                    // if text_end_full == None {
-                    //     text_end_full = FindRenderedTextEnd(text);
-                    // }
+    // if text_end_full == None {
+    //     text_end_full = FindRenderedTextEnd(text);
+    // }
     let text_end_full = FindRenderedTextEnd(text);
-    let text_size: ImVec2 = text_size_if_known.unwrap_or(CalcTextSize(text.clone(), false, 0.0));
+    let text_size: ImVec2 = text_size_if_known.unwrap_or(CalcTextSize(g, text, false, 0.0));
 
     //draw_list.AddLine(ImVec2::new(pos_max.x, pos_min.y - 4), ImVec2::new(pos_max.x, pos_max.y + 4), IM_COL32(0, 0, 255, 255));
     //draw_list.AddLine(ImVec2::new(ellipsis_max_x, pos_min.y-2), ImVec2::new(ellipsis_max_x, pos_max.y+2), IM_COL32(0, 255, 0, 255));
@@ -268,7 +269,7 @@ pub unsafe fn RenderTextEllipsis(
             ellipsis_char = font.DotChar;
             ellipsis_char_count = 3;
         }
-        let glyph  = font.FindGlyph(ellipsis_char);
+        let glyph = font.FindGlyph(ellipsis_char);
 
         let mut ellipsis_glyph_width: c_float = glyph.X1; // Width of the glyph with no padding on either side
         let mut ellipsis_total_width: c_float = ellipsis_glyph_width; // Full width of entire ellipsis
@@ -299,7 +300,13 @@ pub unsafe fn RenderTextEllipsis(
             // Always display at least 1 character if there's no room for character + ellipsis
             // text_end_ellipsis = text + ImTextCountUtf8BytesFromChar(text.clone());
             text_size_clipped_x = font
-                .CalcTextSizeA(font_size, f32::MAX, 0.0, text.clone(), Some(&mut text_end_ellipsis))
+                .CalcTextSizeA(
+                    font_size,
+                    f32::MAX,
+                    0.0,
+                    text.clone(),
+                    Some(&mut text_end_ellipsis),
+                )
                 .x;
         }
         // while text_end_ellipsis > text && char_is_blank(text_end_ellipsis[-1])
@@ -319,17 +326,17 @@ pub unsafe fn RenderTextEllipsis(
             draw_list,
             pos_min,
             ImVec2::from_floats(clip_max_x, pos_max.y),
-            text.clone(),
+            text,
             Some(text_size),
             Some(ImVec2::from_floats(0.0, 0.0)),
-            None
+            None,
         );
         let mut ellipsis_x: c_float = pos_min.x + text_size_clipped_x;
         if ellipsis_x + ellipsis_total_width <= ellipsis_max_x {
             // for (let i: c_int = 0; i < ellipsis_char_count; i+ +)
             for i in 0..ellipsis_char_count {
                 font.RenderChar(
-                    &mut draw_list,
+                    draw_list,
                     font_size,
                     &ImVec2::from_floats(ellipsis_x, pos_min.y),
                     GetColorU32(ImGuiCol_Text, 0.0),
@@ -344,7 +351,6 @@ pub unsafe fn RenderTextEllipsis(
             pos_min,
             ImVec2::from_floats(clip_max_x, pos_max.y),
             &text,
-
             &text_size,
             ImVec2::from_floats(0.0, 0.0),
             None,
@@ -352,7 +358,7 @@ pub unsafe fn RenderTextEllipsis(
     }
 
     if g.LogEnabled {
-        LogRenderedText(pos_min, text);
+        LogRenderedText(g, pos_min, text);
     }
 }
 
@@ -366,11 +372,11 @@ pub unsafe fn RenderFrame(
     rounding: c_float,
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     window
         .DrawList
         .AddRectFilled(&p_min, &p_max, fill_col, rounding, ImDrawFlags_None);
-    let border_size: c_float = g.Style.FrameBorderSize;
+    let border_size: c_float = g.style.FrameBorderSize;
     if border && border_size > 0.0 {
         window.DrawList.AddRect(
             p_min + ImVec2::from_floats(1.0, 1.0),
@@ -385,57 +391,60 @@ pub unsafe fn RenderFrame(
 }
 
 // c_void RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, c_float rounding)
-pub unsafe fn RenderFrameBorder(p_min: ImVec2, p_max: ImVec2, rounding: c_float) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    let border_size: c_float = g.Style.FrameBorderSize;
+pub fn RenderFrameBorder(g: &mut ImguiContext, p_min: ImVec2, p_max: ImVec2, rounding: c_float) {
+    let mut window = g.current_window_mut().unwrap();
+    let border_size: c_float = g.style.FrameBorderSize;
     if border_size > 0.0 {
         window.DrawList.AddRect(
-            p_min + ImVec2::from_floats(1, 1),
-            p_max + ImVec2::from_floats(1, 1),
+            p_min + ImVec2::from_ints(1, 1),
+            p_max + ImVec2::from_ints(1, 1),
             GetColorU32(ImGuiCol_BorderShadow, 0.0),
             rounding,
         );
         window
             .DrawList
-            .AddRect(&p_min, &p_max, GetColorU32(ImGuiCol_Border, 0.0), rounding);
+            .AddRect(p_min, p_max, GetColorU32(ImGuiCol_Border, 0.0), rounding);
     }
 }
 
-// c_void RenderNavHighlight(const ImRect& bb, ImGuiID id, ImGuiNavHighlightFlags flags)
-pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighlightFlags) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
+// c_void RenderNavHighlight(const ImRect& bb, ImguiHandle id, ImGuiNavHighlightFlags flags)
+pub fn RenderNavHighlight(
+    g: &mut ImguiContext,
+    bb: &ImRect,
+    id: ImguiHandle,
+    flags: ImGuiNavHighlightFlags,
+) {
     if id != g.NavId {
         return;
     }
     if g.NavDisableHighlight && flag_clear(flags, ImGuiNavHighlightFlags_AlwaysDraw) == 0 {
         return;
     }
-    let mut window  = &g.CurrentWindow;
-    if window.DC.NavHideHighlightOneFrame {
+    let mut window = g.current_window_mut().unwrap();
+    if window.dc.NavHideHighlightOneFrame {
         return;
     }
 
     let rounding: c_float = if flag_set(flags, ImGuiNavHighlightFlags_NoRounding) {
         0.0
     } else {
-        g.Style.FrameRounding
+        g.style.FrameRounding
     };
     let mut display_rect: ImRect = bb.clone();
     display_rect.ClipWith(&window.ClipRect);
     if flags & ImGuiNavHighlightFlags_TypeDefault {
         let THICKNESS: c_float = 2.0;
         let DISTANCE: c_float = 3.0 + THICKNESS * 0.5;
-        display_rect.Expand(ImVec2::from_floats(DISTANCE, DISTANCE));
+        display_rect.expand_from_vec(&ImVec2::from_floats(DISTANCE, DISTANCE));
         let mut fully_visible: bool = window.ClipRect.Contains2(&display_rect);
         if !fully_visible {
             window
                 .DrawList
-                .PushClipRect(&display_rect.Min, &display_rect.Max, false);
+                .PushClipRect(&display_rect.min, &display_rect.max, false);
         }
         window.DrawList.AddRect(
-            display_rect.Min + ImVec2::from_floats(THICKNESS * 0.5, THICKNESS * 0.5),
-            display_rect.Max - ImVec2::from_floats(THICKNESS * 0.5, THICKNESS * 0.5),
+            display_rect.min + ImVec2::from_floats(THICKNESS * 0.5, THICKNESS * 0.5),
+            display_rect.max - ImVec2::from_floats(THICKNESS * 0.5, THICKNESS * 0.5),
             GetColorU32(ImGuiCol_NavHighlight, 0.0),
             rounding,
         );
@@ -445,8 +454,8 @@ pub unsafe fn RenderNavHighlight(bb: &ImRect, id: ImGuiID, flags: ImGuiNavHighli
     }
     if flags & ImGuiNavHighlightFlags_TypeThin {
         window.DrawList.AddRect(
-            &display_rect.Min,
-            &display_rect.Max,
+            &display_rect.min,
+            &display_rect.max,
             GetColorU32(ImGuiCol_NavHighlight, 0.0),
             rounding,
         );
@@ -483,7 +492,7 @@ pub unsafe fn RenderMouseCursor(
         ) {
             continue;
         }
-        let mut viewport: *mut ImGuiViewport = g.Viewports[n];
+        let mut viewport: *mut ImguiViewport = g.Viewports[n];
         let pos: ImVec2 = &base_pos - &offset;
         let scale: c_float = base_scale * viewport.DpiScale;
         if !viewport.GetMainRect().Overlaps(ImRect(
@@ -528,23 +537,24 @@ pub unsafe fn RenderMouseCursor(
 // (As with anything within the  namspace this doesn't touch your GPU or graphics API at all:
 // it is the role of the ImGui_ImplXXXX_RenderDrawData() function provided by the renderer backend)
 // c_void Render()
-pub unsafe fn Render() {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-                    // IM_ASSERT(g.Initialized);
+pub fn Render(g: &mut ImguiContext) {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    // IM_ASSERT(g.Initialized);
 
     if g.FrameCountEnded != g.FrameCount {
-        EndFrame();
+        EndFrame(g);
     }
     let first_render_of_frame: bool = (g.FrameCountRendered != g.FrameCount);
     g.FrameCountRendered = g.FrameCount;
     g.IO.MetricsRenderWindows = 0;
 
-    CallContextHooks(g, ImGuiContextHookType_RenderPre);
+    // CallContextHooks(g, IM_GUI_CONTEXT_HOOK_TYPE_RENDER_PRE);
+    g.call_context_hooks(IM_GUI_CONTEXT_HOOK_TYPE_RENDER_PRE);
 
     // Add background ImDrawList (for each active viewport)
     // for (let n: c_int = 0; n != g.Viewports.Size; n++)
     for n in 0..g.Viewports.len() {
-        let mut viewport: *mut ImGuiViewport = g.Viewports[n];
+        let mut viewport: *mut ImguiViewport = g.Viewports[n];
         viewport.DrawDataBuilder.Clear();
         if viewport.DrawLists[0] != None {
             AddDrawListToDrawData(
@@ -555,7 +565,7 @@ pub unsafe fn Render() {
     }
 
     // Add ImDrawList to render
-    let mut windows_to_render_top_most: [*mut ImGuiWindow; 2] = [None, None];
+    let mut windows_to_render_top_most: [*mut ImguiWindow; 2] = [None, None];
     windows_to_render_top_most[0] = if g.NavWindowingTarget.is_null() == false
         && !flag_set(
             g.NavWindowingTarget.Flags,
@@ -572,7 +582,7 @@ pub unsafe fn Render() {
     });
     // for (let n: c_int = 0; n != g.Windows.Size; n++)
     for n in 0..g.Windows.len() {
-        let mut window: &mut ImGuiWindow = g.Windows[n];
+        let mut window: &mut ImguiWindow = g.Windows[n];
         IM_MSVC_WARNING_SUPPRESS(6011); // Static Analysis false positive "warning C6011: Dereferencing NULL pointer 'window'"
         if IsWindowActiveAndVisible(window)
             && flag_set(window.Flags, ImGuiWindowFlags_ChildWindow) == 0
@@ -601,7 +611,7 @@ pub unsafe fn Render() {
     if g.IO.MouseDrawCursor && first_render_of_frame && g.MouseCursor != ImGuiMouseCursor_None {
         RenderMouseCursor(
             g.IO.MousePos.clone(),
-            g.Style.MouseCursorScale,
+            g.style.MouseCursorScale,
             g.MouseCursor,
             IM_COL32_WHITE,
             IM_COL32_BLACK,
@@ -614,7 +624,7 @@ pub unsafe fn Render() {
     g.IO.MetricsRenderIndices = 0;
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
     for n in 0..g.Viewports.len() {
-        let mut viewport: *mut ImGuiViewport = g.Viewports[n];
+        let mut viewport: *mut ImguiViewport = g.Viewports[n];
         viewport.DrawDataBuilder.FlattenIntoSingleLayer();
 
         // Add foreground ImDrawList (for each active viewport)
@@ -631,11 +641,12 @@ pub unsafe fn Render() {
         g.IO.MetricsRenderIndices += draw_Data.TotalIdxCount;
     }
 
-    CallContextHooks(g, ImGuiContextHookType_RenderPost);
+    // CallContextHooks(g, IM_GUI_CONTEXT_HOOK_TYPE_RENDER_POST);
+    g.call_context_hooks(IM_GUI_CONTEXT_HOOK_TYPE_RENDER_POST);
 }
 
 // Render an arrow aimed to be aligned with text (p_min is a position in the same space text would be positioned). To e.g. denote expanded/collapsed state
-pub unsafe fn RenderArrow(
+pub fn RenderArrow(
     mut draw_list: &mut ImDrawList,
     pos: &ImVec2,
     col: u32,
@@ -777,8 +788,8 @@ pub unsafe fn RenderRectFilledRangeH(
         swap(&mut x_start_norm, &mut x_end_norm);
     }
 
-    let p0: ImVec2 = ImVec2::from_floats(ImLerp(rect.Min.x, rect.Max.x, x_start_norm), rect.Min.y);
-    let p1: ImVec2 = ImVec2::from_floats(ImLerp(rect.Min.x, rect.Max.x, x_end_norm), rect.Max.y);
+    let p0: ImVec2 = ImVec2::from_floats(ImLerp(rect.min.x, rect.max.x, x_start_norm), rect.min.y);
+    let p1: ImVec2 = ImVec2::from_floats(ImLerp(rect.min.x, rect.max.x, x_end_norm), rect.max.y);
     if rounding == 0.0 {
         draw_list.AddRectFilled(&p0, &p1, col, 0.0, 0);
         return;
@@ -786,17 +797,17 @@ pub unsafe fn RenderRectFilledRangeH(
 
     rounding = ImClamp(
         ImMin(
-            (rect.Max.x - rect.Min.x) * 0.5,
-            (rect.Max.y - rect.Min.y) * 0.5,
+            (rect.max.x - rect.min.x) * 0.5,
+            (rect.max.y - rect.min.y) * 0.5,
         ) - 1,
         0.0,
         rounding,
     );
     let inv_rounding: c_float = 1 / rounding;
-    let arc0_b: c_float = ImAcosX(1 - (p0.x - rect.Min.x) * inv_rounding);
-    let arc0_e: c_float = ImAcosX(1 - (p1.x - rect.Min.x) * inv_rounding);
+    let arc0_b: c_float = ImAcosX(1 - (p0.x - rect.min.x) * inv_rounding);
+    let arc0_e: c_float = ImAcosX(1 - (p1.x - rect.min.x) * inv_rounding);
     let half_pi: c_float = IM_PI * 0.5; // We will == compare to this because we know this is the exact value ImAcos01 can return.
-    let x0: c_float = ImMax(p0.x, rect.Min.x + rounding);
+    let x0: c_float = ImMax(p0.x, rect.min.x + rounding);
     if arc0_b == arc0_e {
         draw_list.PathLineTo(&ImVec2::from_floats(x0, p1.y));
         draw_list.PathLineTo(&ImVec2::from_floats(x0, p0.y));
@@ -820,10 +831,10 @@ pub unsafe fn RenderRectFilledRangeH(
             3,
         ); // TR
     }
-    if p1.x > rect.Min.x + rounding {
-        let arc1_b: c_float = ImAcos01(1 - (rect.Max.x - p1.x) * inv_rounding);
-        let arc1_e: c_float = ImAcos01(1 - (rect.Max.x - p0.x) * inv_rounding);
-        let x1: c_float = ImMin(p1.x, rect.Max.x - rounding);
+    if p1.x > rect.min.x + rounding {
+        let arc1_b: c_float = ImAcos01(1 - (rect.max.x - p1.x) * inv_rounding);
+        let arc1_e: c_float = ImAcos01(1 - (rect.max.x - p0.x) * inv_rounding);
+        let x1: c_float = ImMin(p1.x, rect.max.x - rounding);
         if arc1_b == arc1_e {
             draw_list.PathLineTo(&ImVec2::from_floats(x1, p0.y));
             draw_list.PathLineTo(&ImVec2::from_floats(x1, p1.y));
@@ -858,14 +869,14 @@ pub unsafe fn RenderRectFilledWithHole(
     col: u32,
     rounding: c_float,
 ) {
-    let fill_L: bool = (inner.Min.x > outer.Min.x);
-    let fill_R: bool = (inner.Max.x < outer.Max.x);
-    let fill_U: bool = (inner.Min.y > outer.Min.y);
-    let fill_D: bool = (inner.Max.y < outer.Max.y);
+    let fill_L: bool = (inner.min.x > outer.min.x);
+    let fill_R: bool = (inner.max.x < outer.max.x);
+    let fill_U: bool = (inner.min.y > outer.min.y);
+    let fill_D: bool = (inner.max.y < outer.max.y);
     if fill_L {
         draw_list.AddRectFilled(
-            &ImVec2::from_floats(outer.Min.x, inner.Min.y),
-            &ImVec2::from_floats(inner.Min.x, inner.Max.y),
+            &ImVec2::from_floats(outer.min.x, inner.min.y),
+            &ImVec2::from_floats(inner.min.x, inner.max.y),
             col,
             rounding,
             ImDrawFlags_RoundCornersNone
@@ -883,8 +894,8 @@ pub unsafe fn RenderRectFilledWithHole(
     }
     if fill_R {
         draw_list.AddRectFilled(
-            &ImVec2::from_floats(inner.Max.x, inner.Min.y),
-            &ImVec2::from_floats(outer.Max.x, inner.Max.y),
+            &ImVec2::from_floats(inner.max.x, inner.min.y),
+            &ImVec2::from_floats(outer.max.x, inner.max.y),
             col,
             rounding,
             ImDrawFlags_RoundCornersNone
@@ -902,8 +913,8 @@ pub unsafe fn RenderRectFilledWithHole(
     }
     if fill_U {
         draw_list.AddRectFilled(
-            &ImVec2::from_floats(inner.Min.x, outer.Min.y),
-            &ImVec2::from_floats(inner.Max.x, inner.Min.y),
+            &ImVec2::from_floats(inner.min.x, outer.min.y),
+            &ImVec2::from_floats(inner.max.x, inner.min.y),
             col,
             rounding,
             ImDrawFlags_RoundCornersNone
@@ -921,8 +932,8 @@ pub unsafe fn RenderRectFilledWithHole(
     }
     if fill_D {
         draw_list.AddRectFilled(
-            &ImVec2::from_floats(inner.Min.x, inner.Max.y),
-            &ImVec2::from_floats(inner.Max.x, outer.Max.y),
+            &ImVec2::from_floats(inner.min.x, inner.max.y),
+            &ImVec2::from_floats(inner.max.x, outer.max.y),
             col,
             rounding,
             ImDrawFlags_RoundCornersNone
@@ -940,8 +951,8 @@ pub unsafe fn RenderRectFilledWithHole(
     }
     if fill_L && fill_U {
         draw_list.AddRectFilled(
-            &ImVec2::from_floats(outer.Min.x, outer.Min.y),
-            &ImVec2::from_floats(inner.Min.x, inner.Min.y),
+            &ImVec2::from_floats(outer.min.x, outer.min.y),
+            &ImVec2::from_floats(inner.min.x, inner.min.y),
             col,
             rounding,
             ImDrawFlags_RoundCornersTopLeft,
@@ -949,8 +960,8 @@ pub unsafe fn RenderRectFilledWithHole(
     }
     if fill_R && fill_U {
         draw_list.AddRectFilled(
-            &ImVec2::from_floats(inner.Max.x, outer.Min.y),
-            &ImVec2::from_floats(outer.Max.x, inner.Min.y),
+            &ImVec2::from_floats(inner.max.x, outer.min.y),
+            &ImVec2::from_floats(outer.max.x, inner.min.y),
             col,
             rounding,
             ImDrawFlags_RoundCornersTopRight,
@@ -958,8 +969,8 @@ pub unsafe fn RenderRectFilledWithHole(
     }
     if fill_L && fill_D {
         draw_list.AddRectFilled(
-            &ImVec2::from_floats(outer.Min.x, inner.Max.y),
-            &ImVec2::from_floats(inner.Min.x, outer.Max.y),
+            &ImVec2::from_floats(outer.min.x, inner.max.y),
+            &ImVec2::from_floats(inner.min.x, outer.max.y),
             col,
             rounding,
             ImDrawFlags_RoundCornersBottomLeft,
@@ -967,8 +978,8 @@ pub unsafe fn RenderRectFilledWithHole(
     }
     if fill_R && fill_D {
         draw_list.AddRectFilled(
-            &ImVec2::from_floats(inner.Max.x, inner.Max.y),
-            &ImVec2::from_floats(outer.Max.x, outer.Max.y),
+            &ImVec2::from_floats(inner.max.x, inner.max.y),
+            &ImVec2::from_floats(outer.max.x, outer.max.y),
             col,
             rounding,
             ImDrawFlags_RoundCornersBottomRight,
@@ -981,10 +992,10 @@ pub fn CalcRoundingFlagsForRectInRect(
     r_outer: &ImRect,
     threshold: c_float,
 ) -> ImDrawFlags {
-    let mut round_l: bool = r_in.Min.x <= r_outer.Min.x + threshold;
-    let mut round_r: bool = r_in.Max.x >= r_outer.Max.x - threshold;
-    let mut round_t: bool = r_in.Min.y <= r_outer.Min.y + threshold;
-    let mut round_b: bool = r_in.Max.y >= r_outer.Max.y - threshold;
+    let mut round_l: bool = r_in.min.x <= r_outer.min.x + threshold;
+    let mut round_r: bool = r_in.max.x >= r_outer.max.x - threshold;
+    let mut round_t: bool = r_in.min.y <= r_outer.min.y + threshold;
+    let mut round_b: bool = r_in.max.y >= r_outer.max.y - threshold;
     return ImDrawFlags_RoundCornersNone
         | (if round_t && round_l {
             ImDrawFlags_RoundCornersTopLeft
@@ -1026,8 +1037,14 @@ pub unsafe fn RenderColorRectWithAlphaCheckerboard(
         flags = ImDrawFlags_RoundCornersDefault_;
     }
     if (((col & IM_COL32_A_MASK) >> IM_COL32_A_SHIFT) < 0xF0) {
-        col_bg1: u32 = GetColorU32(ImAlphaBlendColors(color_u32_from_rgba(204, 204, 204, 255), col), 0.0);
-        col_bg2: u32 = GetColorU32(ImAlphaBlendColors(color_u32_from_rgba(128, 128, 128, 255), col), 0.0);
+        col_bg1: u32 = GetColorU32(
+            ImAlphaBlendColors(color_u32_from_rgba(204, 204, 204, 255), col),
+            0.0,
+        );
+        col_bg2: u32 = GetColorU32(
+            ImAlphaBlendColors(color_u32_from_rgba(128, 128, 128, 255), col),
+            0.0,
+        );
         draw_list.AddRectFilled(&p_min, &p_max, col_bg1, rounding, flags);
 
         let mut yi: c_int = 0;

@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
 
-use libc::c_float;
 use crate::rect::ImRect;
 use crate::sort_direction::{ImGuiSortDirection, ImGuiSortDirection_None};
 use crate::table_column_flags::ImGuiTableColumnFlags;
-use crate::type_defs::{ImGuiID, ImGuiTableColumnIdx, ImGuiTableDrawChannelIdx};
+use crate::type_defs::{ImGuiTableColumnIdx, ImGuiTableDrawChannelIdx, ImguiHandle};
+use libc::c_float;
 
 // [Internal] sizeof() ~ 104
 // We use the terminology "Enabled" to refer to a column that is not Hidden by user/api.
@@ -29,7 +29,7 @@ pub struct ImGuiTableColumn {
     // Value passed to TableSetupColumn(). For Width it is a content width (_without padding_).
     pub ClipRect: ImRect,
     // Clipping rectangle for the column
-    pub UserID: ImGuiID,
+    pub UserID: ImguiHandle,
     // Optional, value passed to TableSetupColumn()
     pub WorkMinX: c_float,
     // Contents region min ~(MinX + CellPaddingX + CellSpacingX1) == cursor start position when entering column
@@ -86,26 +86,25 @@ pub struct ImGuiTableColumn {
     // Number of available sort directions (0 to 3)
     pub SortDirectionsAvailMask: i8,
     // Mask of available sort directions (1-bit each)
-    pub SortDirectionsAvailList: i8,        // Ordered of available sort directions (2-bits each)
+    pub SortDirectionsAvailList: i8, // Ordered of available sort directions (2-bits each)
 }
 
 impl ImGuiTableColumn {
     pub fn new() -> Self {
-        Self
-        {
+        Self {
             // memset(this, 0, sizeof(*this));
             StretchWeight: -1.0,
-            WidthRequest : -1.0,
-            NameOffset : -1,
-            DisplayOrder : -1,
-            IndexWithinEnabledSet : -1,
-            PrevEnabledColumn : -1,
-            NextEnabledColumn : -1,
-            SortOrder : -1,
-            SortDirection : ImGuiSortDirection_None,
-            DrawChannelCurrent : -1,
-            DrawChannelFrozen : -1,
-            DrawChannelUnfrozen : -1,
+            WidthRequest: -1.0,
+            NameOffset: -1,
+            DisplayOrder: -1,
+            IndexWithinEnabledSet: -1,
+            PrevEnabledColumn: -1,
+            NextEnabledColumn: -1,
+            SortOrder: -1,
+            SortDirection: ImGuiSortDirection_None,
+            DrawChannelCurrent: -1,
+            DrawChannelFrozen: -1,
+            DrawChannelUnfrozen: -1,
             ..Default::default()
         }
     }

@@ -1,7 +1,9 @@
+use crate::context::ImguiContext;
 use crate::direction::{ImGuiDir_Down, ImGuiDir_None, ImGuiDir_Up};
 use crate::dock_node::ImGuiDockNode;
 use crate::nav_layer::ImGuiNavLayer_Main;
 use crate::nav_move_flags::{ImGuiNavMoveFlags_FocusApi, ImGuiNavMoveFlags_Tabbing};
+use crate::nav_ops::SetNavWindow;
 use crate::scroll_flags::{
     ImGuiScrollFlags_AlwaysCenterY, ImGuiScrollFlags_KeepVisibleEdgeX,
     ImGuiScrollFlags_KeepVisibleEdgeY, ImGuiScrollFlags_None,
@@ -12,15 +14,14 @@ use crate::window::window_flags::{
     ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoBringToFrontOnFocus,
     ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs,
 };
-use crate::window::{ops, ImGuiWindow};
+use crate::window::{ops, ImguiWindow};
 use crate::GImGui;
 use libc::c_int;
 use std::ptr::null_mut;
 use ClearActiveID;
-use crate::nav_ops::SetNavWindow;
 
 // Moving window to front of display and set focus (which happens to be back of our sorted list)
-pub unsafe fn FocusWindow(window: &mut ImGuiWindow) {
+pub unsafe fn FocusWindow(window: &mut ImguiWindow) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     if g.NavWindow != window {
@@ -43,12 +44,12 @@ pub unsafe fn FocusWindow(window: &mut ImGuiWindow) {
 
     // Move the root window to the top of the pile
     // IM_ASSERT(window == NULL || window.RootWindowDockTree != NULL);
-    let mut focus_front_window: &mut ImGuiWindow = if is_not_null(window) {
+    let mut focus_front_window: &mut ImguiWindow = if is_not_null(window) {
         window.RootWindow
     } else {
         None
     };
-    let mut display_front_window: &mut ImGuiWindow = if is_not_null(window) {
+    let mut display_front_window: &mut ImguiWindow = if is_not_null(window) {
         window.RootWindowDockTree
     } else {
         None
@@ -98,8 +99,8 @@ pub unsafe fn FocusWindow(window: &mut ImGuiWindow) {
 }
 
 pub unsafe fn FocusTopMostWindowUnderOne(
-    mut under_this_window: &mut ImGuiWindow,
-    ignore_window: &mut ImGuiWindow,
+    mut under_this_window: &mut ImguiWindow,
+    ignore_window: &mut ImguiWindow,
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut start_idx: c_int = g.WindowsFocusOrder.Size - 1;
@@ -115,7 +116,7 @@ pub unsafe fn FocusTopMostWindowUnderOne(
     // for (let i: c_int = start_idx; i >= 0; i--)
     for i in start_idx..0 {
         // We may later decide to test for different NoXXXInputs based on the active navigation input (mouse vs nav) but that may feel more confusing to the user.
-        let mut window: &mut ImGuiWindow = g.WindowsFocusOrder[i];
+        let mut window: &mut ImguiWindow = g.WindowsFocusOrder[i];
         // IM_ASSERT(window == window.RootWindow);
         if window != ignore_window && window.WasActive {
             if (window.Flags & (ImGuiWindowFlags_NoMouseInputs | ImGuiWindowFlags_NoNavInputs))
@@ -125,7 +126,7 @@ pub unsafe fn FocusTopMostWindowUnderOne(
                 // If A and B are docked into window and B disappear, at the NewFrame() call site window.NavLastChildNavWindow will still point to B.
                 // We might leverage the tab order implicitly stored in window.DockNodeAsHost.TabBar (essentially the 'most_recently_selected_tab' code in tab bar will do that but on next update)
                 // to tell which is the "previous" window. Or we may leverage 'LastFrameFocused/LastFrameJustFocused' and have this function handle child window itself?
-                let mut focus_window: &mut ImGuiWindow = NavRestoreLastChildNavWindow(window);
+                let mut focus_window: &mut ImguiWindow = NavRestoreLastChildNavWindow(window);
                 FocusWindow(focus_window);
                 return;
             }
@@ -134,25 +135,25 @@ pub unsafe fn FocusTopMostWindowUnderOne(
     FocusWindow(null_mut());
 }
 
-pub unsafe fn PushFocusScope(id: ImGuiID) {
+pub unsafe fn PushFocusScope(id: ImguiHandle) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    g.FocusScopeStack.push(window.DC.NavFocusScopeIdCurrent);
-    window.DC.NavFocusScopeIdCurrent = id;
+    let mut window = g.current_window_mut().unwrap();
+    g.FocusScopeStack.push(window.dc.NavFocusScopeIdCurrent);
+    window.dc.NavFocusScopeIdCurrent = id;
 }
 
 pub unsafe fn PopFocusScope() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     // IM_ASSERT(g.FocusScopeStack.Size > 0); // Too many PopFocusScope() ?
-    window.DC.NavFocusScopeIdCurrent = g.FocusScopeStack.last().unwrap().clone();
+    window.dc.NavFocusScopeIdCurrent = g.FocusScopeStack.last().unwrap().clone();
     g.FocusScopeStack.pop_back();
 }
 
 // Note: this will likely be called ActivateItem() once we rework our Focus/Activation system!
 pub unsafe fn SetKeyboardFocusHere(offset: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     // IM_ASSERT(offset >= -1);    // -1 is allowed but not below
     IMGUI_DEBUG_LOG_ACTIVEID(
         "SetKeyboardFocusHere({}) in window \"{}\"\n",
@@ -194,26 +195,25 @@ pub unsafe fn SetKeyboardFocusHere(offset: c_int) {
     }
 }
 
-pub unsafe fn SetItemDefaultFocus() {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+pub fn SetItemDefaultFocus(g: &mut ImguiContext) {
+    let mut window = g.current_window_mut().unwrap();
     if !window.Appearing {
         return;
     }
     if g.NavWindow != window.RootWindowForNav
         || (!g.NavInitRequest && g.NavInitResultId == 0)
-        || g.NavLayer != window.DC.NavLayerCurrent
+        || g.NavLayer != window.dc.NavLayerCurrent
     {
         return;
     }
 
     g.NavInitRequest = false;
-    g.NavInitResultId = g.LastItemData.ID;
-    g.NavInitResultRectRel = window_rect_abs_to_rel(window, &g.LastItemData.Rect);
+    g.NavInitResultId = g.last_item_data.id;
+    g.NavInitResultRectRel = window_rect_abs_to_rel(window, &g.last_item_data.rect);
     NavUpdateAnyRequestFlag();
 
     // Scroll could be done in NavInitRequestApplyResult() via a opt-in flag (we however don't want regular init requests to scroll)
     if !IsItemVisible() {
-        ScrollToRectEx(window, g.LastItemData.Rect, ImGuiScrollFlags_None);
+        ScrollToRectEx(window, g.last_item_data.rect, ImGuiScrollFlags_None);
     }
 }

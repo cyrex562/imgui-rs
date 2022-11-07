@@ -2817,13 +2817,13 @@ pub unsafe fn stbtt_GetFontBoundingBox(info: *const stbtt_fontinfo, x0: *mut c_i
    *y1 = ttSHORT(info.data + info.head + 42) as c_int;
 }
 
-pub fn stbtt_ScaleForPixelHeight(info: *const stbtt_fontinfo,height: c_float) -> c_float
+pub fn stbtt_ScaleForPixelHeight(info: *const stbtt_fontinfo,height: c_float) -> f32
 {
    let fheight: c_int = (ttSHORT(info.data + info.hhea + 4) - ttSHORT(info.data + info.hhea + 6)) as c_int;
    return  height / fheight;
 }
 
-pub fn stbtt_ScaleForMappingEmToPixels(info: *const stbtt_fontinfo,pixels: c_float) -> c_float
+pub fn stbtt_ScaleForMappingEmToPixels(info: *const stbtt_fontinfo,pixels: c_float) -> f32
 {
    let unitsPerEm: c_int = ttUSHORT(info.data + info.head + 18) as c_int;
    return pixels / unitsPerEm;
@@ -3239,19 +3239,19 @@ pub unsafe fn stbtt__handle_clipped_edge(scanline: &mut c_float, x: c_int, e: *m
    }
 }
 
-pub unsafe fn stbtt__sized_trapezoid_area(height: c_float,top_width: c_float,bottom_width: c_float) -> c_float
+pub unsafe fn stbtt__sized_trapezoid_area(height: c_float,top_width: c_float,bottom_width: c_float) -> f32
 {
    STBTT_assert(top_width >= 0.0);
    STBTT_assert(bottom_width >= 0.0);
    return (top_width + bottom_width) / 2.0 * height;
 }
 
-pub unsafe fn stbtt__position_trapezoid_area(height: c_float,tx0: c_float,tx1: c_float,bx0: c_float,bx1: c_float) -> c_float
+pub unsafe fn stbtt__position_trapezoid_area(height: c_float,tx0: c_float,tx1: c_float,bx0: c_float,bx1: c_float) -> f32
 {
    return stbtt__sized_trapezoid_area(height, tx1 - tx0, bx1 - bx0);
 }
 
-pub unsafe fn stbtt__sized_triangle_area(height: c_float,width: c_float) -> c_float
+pub unsafe fn stbtt__sized_triangle_area(height: c_float,width: c_float) -> f32
 {
    return height * width / 2;
 }
@@ -4462,7 +4462,7 @@ pub unsafe fn stbtt__v_prefilter(c_upixels: *mut c_char, w: c_int, h: c_int, str
    }
 }
 
-pub unsafe fn staticstbtt__oversample_shift(oversample: c_int) -> c_float
+pub unsafe fn staticstbtt__oversample_shift(oversample: c_int) -> f32
 {
    if (!oversample) {
        return 0.0;
@@ -4944,7 +4944,7 @@ pub fn stbtt__compute_crossings_x(x: c_float,mut y: c_float, nverts: c_int, vert
    return winding;
 }
 
-pub unsafe fn staticstbtt__cuberoot(x: c_float) -> c_float {
+pub unsafe fn staticstbtt__cuberoot(x: c_float) -> f32 {
     if (x < 0.0) {
         return -STBTT_pow(-x, 1.0 / 3.0);
     } else {

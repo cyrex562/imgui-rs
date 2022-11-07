@@ -45,7 +45,7 @@ impl ImGuiMenuColumns {
         w_label: c_float,
         w_shortcut: c_float,
         w_mark: c_float,
-    ) -> c_float {
+    ) -> f32 {
         self.Widths[0] = self.Widths[0].max(w_icon as u16);
         self.Widths[1] = self.Widths[1].max(w_label as u16);
         self.Widths[2] = self.Widths[2].max(w_shortcut as u16);

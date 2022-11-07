@@ -3,28 +3,28 @@
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_double, c_float, c_int, c_void};
 use crate::backend_flags::ImGuiBackendFlags;
-use crate::config_flags::{ImGuiConfigFlags, ImGuiConfigFlags_None};
+use crate::config_flags::{ImguiConfigFlags, ImGuiConfigFlags_None};
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
 use crate::imgui::GImGui;
 use crate::a_imgui_cpp::{GImGui, ImTextCharFromUtf8};
-use crate::input_event::ImGuiInputEvent;
+use crate::input_event::ImguiInputEvent;
 use crate::input_ops::{GetKeyData, IsGamepadKey};
 use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Keyboard, ImGuiInputSource_Mouse};
 use crate::key::{ImGuiKey, ImGuiKey_COUNT, ImGuiKey_KeysData_SIZE, ImGuiKey_None};
 use crate::mod_flags::{ImGuiModFlags, ImGuiModFlags_None};
 use crate::platform_ime_data::ImGuiPlatformImeData;
 use crate::string_ops::ImTextCharFromUtf8;
-use crate::type_defs::{ImGuiID, ImWchar, ImWchar16};
+use crate::type_defs::{ImguiHandle, ImWchar, ImWchar16};
 use crate::vec2::ImVec2;
-use crate::viewport::ImGuiViewport;
+use crate::viewport::ImguiViewport;
 
 #[derive(Default, Debug, Clone)]
-pub struct ImGuiIO {
+pub struct ImguiIo {
     //------------------------------------------------------------------
     // Configuration                            // Default value
     //------------------------------------------------------------------
-    pub ConfigFlags: ImGuiConfigFlags,
+    pub ConfigFlags: ImguiConfigFlags,
     // = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
     pub BackendFlags: ImGuiBackendFlags,
     // = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
@@ -53,8 +53,8 @@ pub struct ImGuiIO {
     pub HoverDelayShort: c_float,
     // = 0.10 sec       // Delay on hovering before IsItemHovered(ImGuiHoveredFlags_DelayShort) returns true.
     // void*       UserData;                       // = NULL           // Store your own data for retrieval by callbacks.
-    pub UserData: *mut c_void,
-    pub Fonts: ImFontAtlas,
+    pub UserData: Vec<u8>,
+    pub Fonts: Option<ImFontAtlas>,
     // <auto>           // Font atlas: load, rasterize and pack one or more fonts into a single texture.
     pub FontGlobalScale: c_float,
     // = 1.0           // Global scale all fonts
@@ -105,63 +105,69 @@ pub struct ImGuiIO {
     // Platform Functions
     // (the imgui_impl_xxxx backend files are setting those up for you)
     //------------------------------------------------------------------
-
-    // Optional: Platform/Renderer backend name (informational only! will be displayed in About Window) + User data for backend/wrappers to store their own stuff.
+    // Optional: Platform/Renderer backend name (informational only! will be displayed in
+    // About Window) + User data for backend/wrappers to store their own stuff.
     pub BackendPlatformName: *const c_char,
-    // = NULL
     pub BackendRendererName: *const c_char,
-    // = NULL
     pub BackendPlatformUserData: *mut c_void,
-    // = NULL           // User data for platform backend
+    // User data for platform backend
     pub BackendRendererUserData: *mut c_void,
-    // = NULL           // User data for renderer backend
-    pub BackendLanguageUserData: *mut c_void,        // = NULL           // User data for non C++ programming language backend
-
+     // User data for renderer backend
+    pub BackendLanguageUserData: *mut c_void, // User data for non C++ programming
+    // language backend
     // Optional: Access OS clipboard
-    // (default to use native Win32 clipboard on Windows, otherwise uses a private clipboard. Override to access OS clipboard on other architectures)
+    // (default to use native Win32 clipboard on Windows, otherwise uses a private
+    // clipboard. Override to access OS clipboard on other architectures)
     pub GetClipboardTextFn: fn(user_data: *mut c_void) -> *const c_char,
-    // void        (*SetClipboardTextFn)(void* user_data, const char* text);
     pub SetClipboardTextFn: fn(user_dat: *mut c_void, text: &String),
     pub ClipboardUserData: *mut c_void,
-
-    // Optional: Notify OS Input Method Editor of the screen position of your cursor for text input position (e.g. when using Japanese/Chinese IME on Windows)
+    // Optional: Notify OS Input Method Editor of the screen position of your cursor for
+    // text input position (e.g. when using Japanese/Chinese IME on Windows)
     // (default to use native imm32 api on Windows)
-    // void        (*SetPlatformImeDataFn)(viewport: *mut ImGuiViewport, ImGuiPlatformImeData* data);
-    pub SetPlatformImeDataFn: fn(viewport: *mut ImGuiViewport, data: *mut ImGuiPlatformImeData),
-    // #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    pub ImeWindowHandle: *mut c_void,
-    // = NULL           // [Obsolete] Set ImGuiViewport::PlatformHandleRaw instead. Set this to your HWND to get automatic IME cursor positioning.
-// #else
-    pub _UnusedPadding: *mut c_void,                                     // Unused field to keep data structure the same size.
-// #endif
-
+    pub SetPlatformImeDataFn: Option<fn(viewport: &mut ImguiViewport, data: &mut  ImGuiPlatformImeData)>,
     //------------------------------------------------------------------
     // Input - Call before calling NewFrame()
     //------------------------------------------------------------------
-
-
-
     //------------------------------------------------------------------
     // Output - Updated by NewFrame() or EndFrame()/Render()
-    // (when reading from the io.WantCaptureMouse, io.WantCaptureKeyboard flags to dispatch your inputs, it is
-    //  generally easier and more correct to use their state BEFORE calling NewFrame(). See FAQ for details!)
+    // (when reading from the io.WantCaptureMouse, io.WantCaptureKeyboard flags to
+    // dispatch your inputs, it is
+    //  generally easier and more correct to use their state BEFORE calling NewFrame().
+    // See FAQ for details!)
     //------------------------------------------------------------------
     pub WantCaptureMouse: bool,
-    // Set when Dear ImGui will use mouse inputs, in this case do not dispatch them to your main game/application (either way, always pass on mouse inputs to imgui). (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse was clicked over an imgui window, etc.).
+    // Set when Dear ImGui will use mouse inputs, in this case do not dispatch them to
+    // your main game/application (either way, always pass on mouse inputs to imgui).
+    // (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse
+    // was clicked over an imgui window, etc.).
     pub WantCaptureKeyboard: bool,
-    // Set when Dear ImGui will use keyboard inputs, in this case do not dispatch them to your main game/application (either way, always pass keyboard inputs to imgui). (e.g. InputText active, or an imgui window is focused and navigation is enabled, etc.).
+    // Set when Dear ImGui will use keyboard inputs, in this case do not dispatch them to
+    // your main game/application (either way, always pass keyboard inputs to imgui).
+    // (e.g. InputText active, or an imgui window is focused and navigation is enabled,
+    // etc.).
     pub WantTextInput: bool,
-    // Mobile/console: when set, you may display an on-screen keyboard. This is set by Dear ImGui when it wants textual keyboard input to happen (e.g. when a InputText widget is active).
+    // Mobile/console: when set, you may display an on-screen keyboard. This is set by
+    // Dear ImGui when it wants textual keyboard input to happen (e.g. when a InputText
+    // widget is active).
     pub WantSetMousePos: bool,
-    // MousePos has been altered, backend should reposition mouse on next frame. Rarely used! Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
+    // MousePos has been altered, backend should reposition mouse on next frame. Rarely
+    // used! Set only when ImGuiConfigFlags_NavEnableSetMousePos flag is enabled.
     pub WantSaveIniSettings: bool,
-    // When manual .ini load/save is active (io.IniFilename == NULL), this will be set to notify your application that you can call SaveIniSettingsToMemory() and save yourself. Important: clear io.WantSaveIniSettings yourself after saving!
+    // When manual .ini load/save is active (io.IniFilename == NULL), this will be set
+    // to notify your application that you can call SaveIniSettingsToMemory() and save
+    // yourself. Important: clear io.WantSaveIniSettings yourself after saving!
     pub NavActive: bool,
-    // Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs flag.
+    // Keyboard/Gamepad navigation is currently allowed (will handle ImGuiKey_NavXXX
+    // events) = a window is focused and it doesn't use the ImGuiWindowFlags_NoNavInputs
+    // flag.
     pub NavVisible: bool,
-    // Keyboard/Gamepad navigation is visible and allowed (will handle ImGuiKey_NavXXX events).
+    // Keyboard/Gamepad navigation is visible and allowed (will handle ImGuiKey_NavXXX
+    // events).
     pub Framerate: c_float,
-    // Estimate of application framerate (rolling average over 60 frames, based on io.DeltaTime), in frame per second. Solely for convenience. Slow applications may not want to use a moving average or may want to reset underlying buffers occasionally.
+    // Estimate of application framerate (rolling average over 60 frames, based on io
+    // .DeltaTime), in frame per second. Solely for convenience. Slow applications may
+    // not want to use a moving average or may want to reset underlying buffers
+    // occasionally.
     pub MetricsRenderVertices: c_int,
     // Vertices output during last call to Render()
     pub MetricsRenderIndices: c_int,
@@ -171,36 +177,26 @@ pub struct ImGuiIO {
     pub MetricsActiveWindows: c_int,
     // Number of active windows
     pub MetricsActiveAllocations: c_int,
-    // Number of active allocations, updated by MemAlloc/MemFree based on current context. May be off if you have multiple imgui contexts.
-    pub MouseDelta: ImVec2,                         // Mouse delta. Note that this is zero if either current or previous position are invalid (-f32::MAX,-f32::MAX), so a disappearing/reappearing mouse won't have a huge delta.
-
-    // Legacy: before 1.87, we required backend to fill io.KeyMap[] (imgui->native map) during initialization and io.KeysDown[] (native indices) every frame.
-    // This is still temporarily supported as a legacy feature. However the new preferred scheme is for backend to call io.AddKeyEvent().
-// #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//     c_int         KeyMap[ImGuiKey_COUNT];             // [LEGACY] Input: map of indices into the KeysDown[512] entries array which represent your "native" keyboard state. The first 512 are now unused and should be kept zero. Legacy backend will write into KeyMap[] using ImGuiKey_ indices which are always >512.
-//     KeyMap: [c_int;ImGuiKey_COUNT],
-    // bool        KeysDown[ImGuiKey_COUNT];           // [LEGACY] Input: Keyboard keys that are pressed (ideally left in the "native" order your engine has access to keyboard keys, so you can use your own defines/enums for keys). This used to be [512] sized. It is now ImGuiKey_COUNT to allow legacy io.KeysDown[GetKeyIndex(...)] to work without an overflow.
-    // KeysDown: [bool;ImGuiKey_COUNT],
-    // c_float       NavInputs[ImGuiNavInput_COUNT];     // [LEGACY] Since 1.88, NavInputs[] was removed. Backends from 1.60 to 1.86 won't build. Feed gamepad inputs via io.AddKeyEvent() and ImGuiKey_GamepadXXX enums.
-// #endif
-
-
+    // Number of active allocations, updated by MemAlloc/MemFree based on current context.
+    // May be off if you have multiple imgui contexts.
+    // Mouse delta. Note that this is zero if either current or previous position are
+    // invalid (-f32::MAX,-f32::MAX), so a disappearing/reappearing mouse won't have
+    // a huge delta.
+    pub MouseDelta: ImVec2,
     //------------------------------------------------------------------
     // [Internal] Dear ImGui will maintain those fields. Forward compatibility not guaranteed!
     //------------------------------------------------------------------
-
     // Main Input State
     // (this block used to be written by backend, since 1.87 it is best to NOT write to those directly, call the AddXXX functions above instead)
     // (reading from those variables is fair game, as they are extremely unlikely to be moving anywhere)
     pub MousePos: ImVec2,
-    // Mouse position, in pixels. Set to ImVec2::new(-f32::MAX, -f32::MAX) if mouse is unavailable (on another screen, etc.)
-    // bool        MouseDown[5];                       // Mouse buttons: 0=left, 1=right, 2=middle + extras (ImGuiMouseButton_COUNT == 5). Dear ImGui mostly uses left and right buttons. Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
+    // Mouse buttons: 0=left, 1=right, 2=middle + extras (ImGuiMouseButton_COUNT == 5). Dear ImGui mostly uses left and right buttons. Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
     pub MouseDown: [bool; 5],
     pub MouseWheel: c_float,
     // Mouse wheel Vertical: 1 unit scrolls about 5 lines text.
     pub MouseWheelH: c_float,
     // Mouse wheel Horizontal. Most users don't have a mouse with an horizontal wheel, may not be filled by all backends.
-    pub MouseHoveredViewport: ImGuiID,
+    pub MouseHoveredViewport: ImguiHandle,
     // (Optional) Modify using io.AddMouseViewportEvent(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ImGuiViewportFlags_NoInputs flag is much better (few backends can handle that). Set io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows).
     pub KeyCtrl: bool,
     // Keyboard modifier down: Control
@@ -263,7 +259,7 @@ pub struct ImGuiIO {
 
 
 
-impl ImGuiIO {
+impl ImguiIo {
     // ImGuiIO::ImGuiIO()
     pub fn new() -> Self {
         // Most fields are initialized with zero
@@ -374,7 +370,7 @@ impl ImGuiIO {
         }
 
         // ImGuiInputEvent e;
-        let mut e: ImGuiInputEvent = ImGuiInputEvent::new();
+        let mut e: ImguiInputEvent = ImguiInputEvent::new();
         e.Type = ImGuiInputEventType_Text;
         e.Source = ImGuiInputSource_Keyboard;
         e.Text.Char = c;
@@ -517,7 +513,7 @@ impl ImGuiIO {
         }
 
         // Add event
-        let mut e = ImGuiInputEvent::new();
+        let mut e = ImguiInputEvent::new();
         e.Type = ImGuiInputEventType_Key;
         e.Source = if IsGamepadKey(key) { ImGuiInputSource_Gamepad } else { ImGuiInputSource_Keyboard };
         e.Key.Key = key;
@@ -581,7 +577,7 @@ impl ImGuiIO {
         }
 
         // ImGuiInputEvent e;
-        let mut e = ImGuiInputEvent::new();
+        let mut e = ImguiInputEvent::new();
         e.Type = ImGuiInputEventType_MousePos;
         e.Source = ImGuiInputSource_Mouse;
         e.MousePos.PosX = x;
@@ -600,7 +596,7 @@ impl ImGuiIO {
         }
 
         // ImGuiInputEvent e;
-        let mut e = ImGuiInputEvent::new();
+        let mut e = ImguiInputEvent::new();
         e.Type = ImGuiInputEventType_MouseButton;
         e.Source = ImGuiInputSource_Mouse;
         e.MouseButton.Button = mouse_button;
@@ -619,7 +615,7 @@ impl ImGuiIO {
         }
 
         // ImGuiInputEvent e;
-        let mut e = ImGuiInputEvent::new();
+        let mut e = ImguiInputEvent::new();
         e.Type = ImGuiInputEventType_MouseWheel;
         e.Source = ImGuiInputSource_Mouse;
         e.MouseWheel.WheelX = wheel_x;
@@ -627,15 +623,15 @@ impl ImGuiIO {
         g.InputEventsQueue.push(e);
     }
 
-    // void ImGuiIO::AddMouseViewportEvent(ImGuiID viewport_id)
-    pub fn AddMouseViewportEvent(&mut self, viewport_id: ImGuiID)
+    // void ImGuiIO::AddMouseViewportEvent(ImguiHandle viewport_id)
+    pub fn AddMouseViewportEvent(&mut self, viewport_id: ImguiHandle)
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
         // IM_ASSERT(g.IO.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport);
 
         // ImGuiInputEvent e;
-        let mut e = ImGuiInputEvent::new();
+        let mut e = ImguiInputEvent::new();
         e.Type = ImGuiInputEventType_MouseViewport;
         e.Source = ImGuiInputSource_Mouse;
         e.MouseViewport.HoveredViewportID = viewport_id;
@@ -649,7 +645,7 @@ impl ImGuiIO {
         // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
 
         // ImGuiInputEvent e;
-        let mut e = ImGuiInputEvent::new();
+        let mut e = ImguiInputEvent::new();
         e.Type = ImGuiInputEventType_Focus;
         e.AppFocused.Focused = focused;
         g.InputEventsQueue.push(e);
@@ -666,7 +662,7 @@ impl ImGuiIO {
 
     // void  AddMouseWheelEvent(c_float wh_x, c_float wh_y);             // Queue a mouse wheel update
 
-    // void  AddMouseViewportEvent(ImGuiID id);                      // Queue a mouse hovered viewport. Requires backend to set
+    // void  AddMouseViewportEvent(ImguiHandle id);                      // Queue a mouse hovered viewport. Requires backend to set
 
     // ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
 

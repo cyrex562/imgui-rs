@@ -2,19 +2,20 @@
 extern crate core;
 extern crate freetype;
 
-use crate::context_hook::ImGuiContextHookType_Shutdown;
+use crate::context::ImguiContext;
+use crate::context_hook::IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN;
 use crate::context_ops::CallContextHooks;
-use crate::dock_context_ops::{DockContextInitialize, DockContextShutdown};
+use crate::dock_context_ops::{init_dock_context, shutdown_dock_context};
 use crate::file_ops::ImFileClose;
-use crate::hash_ops::ImHashStr;
+use crate::hash_ops::hash_string;
 use crate::imgui::GImGui;
-use crate::settings_handler::ImGuiSettingsHandler;
+use crate::settings_handler::SettingsHandler;
 use crate::settings_ops::{
     AddSettingsHandler, SaveIniSettingsToDisk, WindowSettingsHandler_ApplyAll,
     WindowSettingsHandler_ClearAll, WindowSettingsHandler_ReadLine, WindowSettingsHandler_WriteAll,
 };
 use crate::tables::TableSettingsAddSettingsHandler;
-use crate::viewport::ImGuiViewport;
+use crate::viewport::ImguiViewport;
 use crate::viewport_flags::ImGuiViewportFlags_OwnedByApp;
 use crate::viewport_ops::DestroyPlatformWindows;
 use std::collections::HashSet;
@@ -32,7 +33,6 @@ mod button_flags;
 mod button_ops;
 mod checkbox_ops;
 mod child_ops;
-mod chunk_stream;
 mod clipboard_ops;
 mod color;
 mod color_edit_flags;
@@ -233,7 +233,6 @@ mod table_settings;
 mod table_sort_specs;
 mod table_temp_data;
 mod tables;
-mod text_buffer;
 mod text_filter;
 mod text_flags;
 mod text_ops;
@@ -253,28 +252,25 @@ mod win_dock_style;
 mod window;
 
 // c_void Initialize()
-pub unsafe fn Initialize() {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-                    // IM_ASSERT(!g.Initialized && !g.SettingsLoaded);
-
+pub fn Initialize(g: &mut ImguiContext) {
+    // IM_ASSERT(!g.Initialized && !g.SettingsLoaded);
     // Add .ini handle for ImGuiWindow type
-    {
-        let mut ini_handler = ImGuiSettingsHandler::new();
-        ini_handler.TypeName = "Window";
-        ini_handler.TypeHash = ImHashStr2("Window");
-        ini_handler.ClearAllFn = WindowSettingsHandler_ClearAll;
-        ini_handler.ReadOpenFn = WindowSettingsHandler_ReadOpen;
-        ini_handler.ReadLineFn = WindowSettingsHandler_ReadLine;
-        ini_handler.ApplyAllFn = WindowSettingsHandler_ApplyAll;
-        ini_handler.WriteAllFn = WindowSettingsHandler_WriteAll;
-        AddSettingsHandler(&ini_handler);
-    }
+    let mut ini_handler = SettingsHandler::new();
+    ini_handler.TypeName = "Window";
+    ini_handler.TypeHash = ImHashStr2("Window");
+    ini_handler.ClearAllFn = WindowSettingsHandler_ClearAll;
+    ini_handler.ReadOpenFn = WindowSettingsHandler_ReadOpen;
+    ini_handler.ReadLineFn = WindowSettingsHandler_ReadLine;
+    ini_handler.ApplyAllFn = WindowSettingsHandler_ApplyAll;
+    ini_handler.WriteAllFn = WindowSettingsHandler_WriteAll;
+    // AddSettingsHandler(g, &ini_handler);
+    g.add_settings_handler(&ini_handler);
 
     // Add .ini handle for ImGuiTable type
-    TableSettingsAddSettingsHandler();
+    TableSettingsAddSettingsHandler(g);
 
     // Create default viewport
-    let mut viewport: *mut ImGuiViewport = IM_NEW(ImGuiViewportP)();
+    let mut viewport: *mut ImguiViewport = IM_NEW(ImGuiViewportP)();
     viewport.ID = IMGUI_VIEWPORT_DEFAULT_ID;
     viewport.Idx = 0;
     viewport.PlatformWindowCreated = true;
@@ -285,7 +281,7 @@ pub unsafe fn Initialize() {
 
     // #ifdef IMGUI_HAS_DOCK
     // Initialize Docking
-    DockContextInitialize(g);
+    init_dock_context(g);
     // #endif
 
     g.Initialized = true;
@@ -293,12 +289,11 @@ pub unsafe fn Initialize() {
 
 // This function is merely here to free heap allocations.
 // c_void Shutdown()
-pub unsafe fn Shutdown() {
+pub fn Shutdown(g: &mut ImguiContext) {
     // The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    if g.IO.Fonts.is_null() == false && g.FontAtlasOwnedByContext {
+    if g.IO.Fonts.is_some() && g.FontAtlasOwnedByContext {
         g.IO.Fonts.Locked = false;
-        IM_DELETE(g.IO.Fonts);
+        // IM_DELETE(g.IO.Fonts);
     }
     g.IO.Fonts = None;
 
@@ -316,9 +311,10 @@ pub unsafe fn Shutdown() {
     DestroyPlatformWindows();
 
     // Shutdown extensions
-    DockContextShutdown(g);
+    shutdown_dock_context(g);
 
-    CallContextHooks(g, ImGuiContextHookType_Shutdown);
+    // CallContextHooks(g, IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN);
+    g.call_context_hooks(IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN);
 
     // Clear everything else
     g.Windows.clear_delete();
@@ -334,7 +330,7 @@ pub unsafe fn Shutdown() {
     g.ActiveIdPreviousFrameWindow = None;
     g.MovingWindow = None;
     g.ColorStack.clear();
-    g.StyleVarStack.clear();
+    g.styleVarStack.clear();
     g.FontStack.clear();
     g.OpenPopupStack.clear();
     g.BeginPopupStack.clear();

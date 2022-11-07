@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
-use libc::c_short;
 use crate::GImGui;
+use libc::c_short;
 
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiStackSizes {
@@ -14,20 +14,18 @@ pub struct ImGuiStackSizes {
     pub SizeOfItemFlagsStack: c_short,
     pub SizeOfBeginPopupStack: c_short,
     pub SizeOfDisabledStack: c_short,
-
 }
 
 impl ImGuiStackSizes {
     // ImGuiStackSizes() { memset(this, 0, sizeof(*this)); }
 
-
     // c_void SetToCurrentState();
     pub unsafe fn SetToCurrentState(&mut self) {
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        let mut window  = &g.CurrentWindow;
+        let mut window = g.current_window_mut().unwrap();
         self.SizeOfIDStack = window.IDStack.Size;
         self.SizeOfColorStack = g.ColorStack.Size;
-        self.SizeOfStyleVarStack = g.StyleVarStack.Size;
+        self.SizeOfStyleVarStack = g.styleVarStack.Size;
         self.SizeOfFontStack = g.FontStack.Size;
         self.SizeOfFocusScopeStack = g.FocusScopeStack.Size;
         self.SizeOfGroupStack = g.GroupStack.Size;
@@ -38,9 +36,8 @@ impl ImGuiStackSizes {
 
     // c_void CompareWithCurrentState();
     pub unsafe fn CompareWithCurrentState(&mut self) {
-
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        let mut window  = &g.CurrentWindow;
+        let mut window = g.current_window_mut().unwrap();
         // IM_UNUSED(window);
 
         // Window stacks
@@ -54,9 +51,8 @@ impl ImGuiStackSizes {
         // IM_ASSERT(SizeOfDisabledStack   == g.DisabledStackSize      && "BeginDisabled/EndDisabled Mismatch!");
         // IM_ASSERT(SizeOfItemFlagsStack  >= g.ItemFlagsStack.Size    && "PushItemFlag/PopItemFlag Mismatch!");
         // IM_ASSERT(SizeOfColorStack      >= g.ColorStack.Size        && "PushStyleColor/PopStyleColor Mismatch!");
-        // IM_ASSERT(SizeOfStyleVarStack   >= g.StyleVarStack.Size     && "PushStyleVar/PopStyleVar Mismatch!");
+        // IM_ASSERT(SizeOfStyleVarStack   >= g.styleVarStack.Size     && "PushStyleVar/PopStyleVar Mismatch!");
         // IM_ASSERT(SizeOfFontStack       >= g.FontStack.Size         && "PushFont/PopFont Mismatch!");
         // IM_ASSERT(SizeOfFocusScopeStack == g.FocusScopeStack.Size   && "PushFocusScope/PopFocusScope Mismatch!");
-
     }
 }

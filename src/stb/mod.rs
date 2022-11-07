@@ -57,7 +57,7 @@ pub unsafe fn STB_TEXTEDIT_GETWIDTH(
     obj: &mut ImGuiInputTextState,
     line_start_idx: c_int,
     char_idx: c_int,
-) -> c_float {
+) -> f32 {
     let c = obj.TextW[line_start_idx + char_idx];
     if c == '\n' {
         return STB_TEXTEDIT_GETWIDTH_NEWLINE;

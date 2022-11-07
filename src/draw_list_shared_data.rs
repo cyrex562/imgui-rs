@@ -1,17 +1,17 @@
 #![allow(non_snake_case)]
 
+use crate::constants::{IM_DRAWLIST_ARCFAST_SAMPLE_MAX, IM_DRAWLIST_ARCFAST_TABLE_SIZE};
 use crate::draw_list_flags::ImDrawListFlags;
 use crate::font::ImFont;
 use crate::math_ops::{ImCos, ImSin};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use libc::c_float;
-use crate::constants::{IM_DRAWLIST_ARCFAST_SAMPLE_MAX, IM_DRAWLIST_ARCFAST_TABLE_SIZE};
 
 // Data shared between all ImDrawList instances
 // You may want to create your own instance of this if you want to use ImDrawList completely without ImGui. In that case, watch out for future changes to this structure.
 #[derive(Default, Debug, Clone, Copy)]
-pub struct ImDrawListSharedData {
+pub struct Imgui_DrawListSharedData {
     pub TexUvWhitePixel: ImVec2,
     // UV of white pixel in the atlas
     pub Font: ImFont,
@@ -33,13 +33,13 @@ pub struct ImDrawListSharedData {
     // Cutoff radius after which arc drawing will fallback to slower PathArcTo()
     pub CircleSegmentCounts: [u8; 64],
     // Precomputed segment count for given radius before we calculate it dynamically (to avoid calculation overhead)
-    pub TexUvLines: Vec<ImVec4> //*const ImVec4, // UV of anti-aliased lines in the atlas
+    pub TexUvLines: Vec<ImVec4>, //*const ImVec4, // UV of anti-aliased lines in the atlas
 }
 
-impl ImDrawListSharedData {
+impl Imgui_DrawListSharedData {
     // ImDrawListSharedData();
     pub fn new() -> Self {
-        let mut out = ImDrawListSharedData::default();
+        let mut out = Imgui_DrawListSharedData::default();
         // memset(this, 0, sizeof(*this));
         // for (let i: c_int = 0; i < IM_ARRAYSIZE(ArcFastVtx); i++)
         for i in 0..out.ArcFastVtx.len() {

@@ -1,13 +1,11 @@
-#[derive(Default,Debug,Clone,Copy)]
-pub struct ImGuiDockContextPruneNodeData
-{
+#[derive(Default, Debug, Clone, Copy)]
+pub struct ImGuiDockContextPruneNodeData {
     // c_int         CountWindows, CountChildWindows, CountChildNodes;
     pub CountWindows: c_int,
     pub CountChildWIndows: c_int,
     pub CountChildNodes: c_int,
-    // ImGuiID     RootId;
-    pub RootId: ImGuiID
-    
+    // ImguiHandle     RootId;
+    pub RootId: ImguiHandle,
 }
 
 impl ImGuiDockContextPruneNodeData {

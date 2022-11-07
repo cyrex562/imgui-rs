@@ -1,24 +1,24 @@
 #![allow(non_snake_case)]
 
-use crate::type_defs::ImGuiID;
+use crate::type_defs::ImguiHandle;
 use crate::vec2::ImVec2;
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use libc::c_int;
 
 // Storage for current popup stack
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiPopupData {
-    pub PopupId: ImGuiID,
+    pub PopupId: ImguiHandle,
     // Set on OpenPopup()
-    pub Window: ImGuiWindow,
+    pub Window: ImguiHandle,
     // Resolved on BeginPopup() - may stay unresolved if user never calls OpenPopup()
-    pub BackupNavWindow: ImGuiWindow,
+    pub BackupNavWindow: ImguiHandle,
     // Set on OpenPopup(), a NavWindow that will be restored on popup close
     pub ParentNavLayer: c_int,
     // Resolved on BeginPopup(). Actually a ImGuiNavLayer type (declared down below), initialized to -1 which is not part of an enum, but serves well-enough as "not any of layers" value
-    pub OpenFrameCount: c_int,
+    pub OpenFrameCount: usize,
     // Set on OpenPopup()
-    pub OpenParentId: ImGuiID,
+    pub OpenParentId: ImguiHandle,
     // Set on OpenPopup(), we need this to differentiate multiple menu sets from each others (e.g. inside menu bar vs loose menu items)
     pub OpenPopupPos: ImVec2,
     // Set on OpenPopup(), preferred popup position (typically == OpenMousePos when using mouse)

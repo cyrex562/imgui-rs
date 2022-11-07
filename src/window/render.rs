@@ -2,7 +2,7 @@ use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int};
 use crate::color::{IM_COL32_A_MASK, IM_COL32_A_SHIFT, ImGuiCol_Border, ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_MenuBarBg, ImGuiCol_ModalWindowDimBg, ImGuiCol_NavWindowingDimBg, ImGuiCol_NavWindowingHighlight, ImGuiCol_SeparatorActive, ImGuiCol_Text, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_TitleBgCollapsed};
 use crate::direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right};
-use crate::{GImGui, ImGuiViewport};
+use crate::{GImGui, ImguiViewport};
 use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
 use crate::draw_flags::{ImDrawFlags_None, ImDrawFlags_RoundCornersBottom, ImDrawFlags_RoundCornersTop};
 use crate::draw_list::ImDrawList;
@@ -19,21 +19,21 @@ use crate::render_ops::{RenderBullet, RenderFrame, RenderRectFilledWithHole, Ren
 use crate::resize_border_def::resize_border_def;
 use crate::resize_grip_def::resize_grip_def;
 use crate::string_ops::str_to_const_c_char_ptr;
-use crate::style::ImGuiStyle;
+use crate::style::ImguiStyle;
 use crate::style_ops::GetColorU32;
 use crate::text_ops::CalcTextSize;
-use crate::type_defs::ImGuiID;
+use crate::type_defs::ImguiHandle;
 use crate::utils::{flag_clear, flag_set, is_not_null, is_null};
 use crate::vec2::ImVec2;
-use crate::window::{find, ImGuiWindow, ops};
+use crate::window::{find, ImguiWindow, ops};
 use crate::window::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NavFlattened, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoCollapse, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip, ImGuiWindowFlags_UnsavedDocument};
 
 // Render title text, collapse button, close button
 // When inside a dock node, this is handled in DockNodeCalcTabBarLayout() instead.
-pub unsafe fn RenderWindowTitleBarContents(window: &mut ImGuiWindow, mut title_bar_rect: *mut ImRect, name: *const c_char, p_open: *mut bool)
+pub unsafe fn RenderWindowTitleBarContents(window: &mut ImguiWindow, mut title_bar_rect: *mut ImRect, name: *const c_char, p_open: *mut bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let style = &mut g.Style;
+    let style = &mut g.style;
     flags: ImGuiWindowFlags = window.Flags;
 
     let has_close_button: bool = (p_open != null_mut());
@@ -43,7 +43,7 @@ pub unsafe fn RenderWindowTitleBarContents(window: &mut ImGuiWindow, mut title_b
     // FIXME-NAV: Might want (or not?) to set the equivalent of ImGuiButtonFlags_NoNavFocus so that mouse clicks on standard title bar items don't necessarily set nav/keyboard ref?
     let mut item_flags_backup: ImGuiItemFlags =  g.CurrentItemFlags;
     g.CurrentItemFlags |= ImGuiItemFlags_NoNavDefaultFocus;
-    window.DC.NavLayerCurrent = ImGuiNavLayer_Menu;
+    window.dc.NavLayerCurrent = ImGuiNavLayer_Menu;
 
     // Layout buttons
     // FIXME: Would be nice to generalize the subtleties expressed here into reusable code.
@@ -55,34 +55,34 @@ pub unsafe fn RenderWindowTitleBarContents(window: &mut ImGuiWindow, mut title_b
     if has_close_button
     {
         pad_r += button_sz;
-        close_button_pos = ImVec2::from_floats(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
+        close_button_pos = ImVec2::from_floats(title_bar_rect.max.x - pad_r - style.FramePadding.x, title_bar_rect.min.y);
     }
     if has_collapse_button && style.WindowMenuButtonPosition == ImGuiDir_Right
     {
         pad_r += button_sz;
-        collapse_button_pos = ImVec2::from_floats(title_bar_rect.Max.x - pad_r - style.FramePadding.x, title_bar_rect.Min.y);
+        collapse_button_pos = ImVec2::from_floats(title_bar_rect.max.x - pad_r - style.FramePadding.x, title_bar_rect.min.y);
     }
     if has_collapse_button && style.WindowMenuButtonPosition == ImGuiDir_Left
     {
-        collapse_button_pos = ImVec2::from_floats(title_bar_rect.Min.x + pad_l - style.FramePadding.x, title_bar_rect.Min.y);
+        collapse_button_pos = ImVec2::from_floats(title_bar_rect.min.x + pad_l - style.FramePadding.x, title_bar_rect.min.y);
         pad_l += button_sz;
     }
 
     // Collapse button (submitting first so it gets priority when choosing a navigation init fallback)
     if has_collapse_button {
-        if CollapseButton(window.id_from_str(str_to_const_c_char_ptr("#COLLAPSE"), null()), collapse_button_pos, null_mut()) {
+        if CollapseButton(window.id_by_string(null(), str_to_const_c_char_ptr("#COLLAPSE")), collapse_button_pos, null_mut()) {
             window.WantCollapseToggle = true;
         }
     } // Defer actual collapsing to next frame as we are too far in the Begin() function
 
     // Close button
     if has_close_button {
-        if CloseButton(window.id_from_str(str_to_const_c_char_ptr("#CLOSE"), null()), close_button_pos) {
+        if CloseButton(window.id_by_string(null(), str_to_const_c_char_ptr("#CLOSE")), close_button_pos) {
             *p_open = false;
         }
     }
 
-    window.DC.NavLayerCurrent = ImGuiNavLayer_Main;
+    window.dc.NavLayerCurrent = ImGuiNavLayer_Main;
     g.CurrentItemFlags = item_flags_backup;
 
     // Title bar text (with: horizontal alignment, avoiding collapse/close button, optional "unsaved document" marker)
@@ -93,10 +93,10 @@ pub unsafe fn RenderWindowTitleBarContents(window: &mut ImGuiWindow, mut title_b
     // As a nice touch we try to ensure that centered title text doesn't get affected by visibility of Close/Collapse button,
     // while uncentered title text will still reach edges correctly.
     if pad_l > style.FramePadding.x {
-        pad_l += g.Style.ItemInnerSpacing.x;
+        pad_l += g.style.ItemInnerSpacing.x;
     }
     if pad_r > style.FramePadding.x {
-        pad_r += g.Style.ItemInnerSpacing.x;
+        pad_r += g.style.ItemInnerSpacing.x;
     }
     if style.WindowTitleAlign.x > 0.0 && style.WindowTitleAlign.x < 1.0
     {
@@ -106,26 +106,26 @@ pub unsafe fn RenderWindowTitleBarContents(window: &mut ImGuiWindow, mut title_b
         pad_r = ImMax(pad_r, pad_extend * centerness);
     }
 
-    let mut layout_r: ImRect = ImRect::new(title_bar_rect.Min.x + pad_l, title_bar_rect.Min.y, title_bar_rect.Max.x - pad_r, title_bar_rect.Max.y);
-    let mut clip_r: ImRect = ImRect::new(layout_r.Min.x, layout_r.Min.y, ImMin(layout_r.Max.x + g.Style.ItemInnerSpacing.x, title_bar_rect.Max.x), layout_r.Max.y);
+    let mut layout_r: ImRect = ImRect::new(title_bar_rect.min.x + pad_l, title_bar_rect.min.y, title_bar_rect.max.x - pad_r, title_bar_rect.max.y);
+    let mut clip_r: ImRect = ImRect::new(layout_r.min.x, layout_r.min.y, ImMin(layout_r.max.x + g.style.ItemInnerSpacing.x, title_bar_rect.max.x), layout_r.max.y);
     if flags & ImGuiWindowFlags_UnsavedDocument
     {
         marker_pos: ImVec2;
-        marker_pos.x = ImClamp(layout_r.Min.x + (layout_r.GetWidth() - text_size.x) * style.WindowTitleAlign.x + text_size.x, layout_r.Min.x, layout_r.Max.x);
-        marker_pos.y = (layout_r.Min.y + layout_r.Max.y) * 0.5;
-        if marker_pos.x > layout_r.Min.x
+        marker_pos.x = ImClamp(layout_r.min.x + (layout_r.GetWidth() - text_size.x) * style.WindowTitleAlign.x + text_size.x, layout_r.min.x, layout_r.max.x);
+        marker_pos.y = (layout_r.min.y + layout_r.max.y) * 0.5;
+        if marker_pos.x > layout_r.min.x
         {
             RenderBullet(window.DrawList, marker_pos, GetColorU32(ImGuiCol_Text, 0.0));
-            clip_r.Max.x = ImMin(clip_r.Max.x, marker_pos.x - (marker_size_x * 0.5));
+            clip_r.max.x = ImMin(clip_r.max.x, marker_pos.x - (marker_size_x * 0.5));
         }
     }
     //if (g.IO.KeyShift) window.DrawList.AddRect(layout_r.Min, layout_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
     //if (g.IO.KeyCtrl) window.DrawList.AddRect(clip_r.Min, clip_r.Max, IM_COL32(255, 128, 0, 255)); // [DEBUG]
-    RenderTextClipped(&layout_r.Min, &layout_r.Max, name, None, &text_size, &style.WindowTitleAlign, &clip_r);
+    RenderTextClipped(&layout_r.min, &layout_r.max, name, None, &text_size, &style.WindowTitleAlign, &clip_r);
 }
 
 
-pub fn UpdateWindowParentAndRootLinks(window: &mut ImGuiWindow, flags: ImGuiWindowFlags, parent_window: &mut ImGuiWindow)
+pub fn UpdateWindowParentAndRootLinks(window: &mut ImguiWindow, flags: ImGuiWindowFlags, parent_window: &mut ImguiWindow)
 {
     window.ParentWindow = parent_window;
     window.RootWindow = window.RootWindowPopupTree = window.RootWindowDockTree = window.RootWindowForTitleBarHighlight = window.RootWindowForNav = window;
@@ -148,12 +148,12 @@ pub fn UpdateWindowParentAndRootLinks(window: &mut ImGuiWindow, flags: ImGuiWind
 }
 
 // static c_void RenderDimmedBackgroundBehindWindow(window: &mut ImGuiWindow, col: u32)
-pub unsafe fn RenderDimmedBackgroundBehindWindow(window: &mut ImGuiWindow, col: u32) {
+pub unsafe fn RenderDimmedBackgroundBehindWindow(window: &mut ImguiWindow, col: u32) {
     if (col & IM_COL32_A_MASK) == 0 {
         return;
     }
 
-    let mut viewport: *mut ImGuiViewport = window.Viewport;
+    let mut viewport: *mut ImguiViewport = window.Viewport;
     let viewport_rect: ImRect = viewport.GetMainRect();
 
     // Draw behind window by moving the draw command at the FRONT of the draw list
@@ -166,13 +166,13 @@ pub unsafe fn RenderDimmedBackgroundBehindWindow(window: &mut ImGuiWindow, col: 
             draw_list.AddDrawCmd();
         }
         draw_list.PushClipRect(
-            viewport_rect.Min - ImVec2::from_floats(1.0, 1.0),
-            viewport_rect.Max + ImVec2::from_floats(1.0, 1.0),
+            viewport_rect.min - ImVec2::from_floats(1.0, 1.0),
+            viewport_rect.max + ImVec2::from_floats(1.0, 1.0),
             false,
         ); // Ensure ImDrawCmd are not merged
         draw_list.AddRectFilled(
-            &viewport_rect.Min,
-            &viewport_rect.Max,
+            &viewport_rect.min,
+            &viewport_rect.max,
             col,
             0.0,
             ImDrawFlags_None,
@@ -192,7 +192,7 @@ pub unsafe fn RenderDimmedBackgroundBehindWindow(window: &mut ImGuiWindow, col: 
         if draw_list.CmdBuffer.len() == 0 {
             draw_list.AddDrawCmd();
         }
-        draw_list.PushClipRect(&viewport_rect.Min, &viewport_rect.Max, false);
+        draw_list.PushClipRect(&viewport_rect.min, &viewport_rect.max, false);
         RenderRectFilledWithHole(
             draw_list,
             window.RootWindowDockTree.Rect(),
@@ -206,7 +206,7 @@ pub unsafe fn RenderDimmedBackgroundBehindWindow(window: &mut ImGuiWindow, col: 
 
 pub unsafe fn RenderDimmedBackgrounds() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut modal_window: &mut ImGuiWindow = GetTopMostAndVisiblePopupModal();
+    let mut modal_window: &mut ImguiWindow = GetTopMostAndVisiblePopupModal();
     if g.DimBgRatio <= 0.0 && g.NavWindowingHighlightAlpha <= 0.0 {
         return;
     }
@@ -217,10 +217,10 @@ pub unsafe fn RenderDimmedBackgrounds() {
         return;
     }
 
-    let mut viewports_already_dimmed: [*mut ImGuiViewport; 2] = [None, None];
+    let mut viewports_already_dimmed: [*mut ImguiViewport; 2] = [None, None];
     if dim_bg_for_modal {
         // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
-        let mut dim_behind_window: &mut ImGuiWindow =
+        let mut dim_behind_window: &mut ImguiWindow =
             FindBottomMostVisibleWindowWithinBeginStack(modal_window);
         RenderDimmedBackgroundBehindWindow(
             dim_behind_window,
@@ -250,7 +250,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
         };
 
         // Draw border around CTRL+Tab target window
-        let mut window: &mut ImGuiWindow = g.NavWindowingTargetAnim;
+        let mut window: &mut ImguiWindow = g.NavWindowingTargetAnim;
         ImGuiViewport * viewport = window.Viewport;
         let distance: c_float = g.FontSize;
         let mut bb: ImRect = window.Rect();
@@ -265,8 +265,8 @@ pub unsafe fn RenderDimmedBackgrounds() {
             .DrawList
             .PushClipRect(viewport.Pos, viewport.Pos + viewport.Size, false);
         window.DrawList.AddRect(
-            &bb.Min,
-            &bb.Max,
+            &bb.min,
+            &bb.max,
             GetColorU32(ImGuiCol_NavWindowingHighlight, g.NavWindowingHighlightAlpha),
             window.WindowRounding,
         );
@@ -276,7 +276,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
     // Draw dimming background on _other_ viewports than the ones our windows are in
     // for (let viewport_n: c_int = 0; viewport_n < g.Viewports.Size; viewport_n++)
     for viewport_n in 0..g.Viewports.len() {
-        let mut viewport: *mut ImGuiViewport = g.Viewports[viewport_n];
+        let mut viewport: *mut ImguiViewport = g.Viewports[viewport_n];
         if viewport == viewports_already_dimmed[0] || viewport == viewports_already_dimmed[1] {
             continue;
         }
@@ -303,13 +303,13 @@ pub unsafe fn RenderDimmedBackgrounds() {
 }
 
 
-pub unsafe fn RenderWindowOuterBorders(window: &mut ImGuiWindow)
+pub unsafe fn RenderWindowOuterBorders(window: &mut ImguiWindow)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let rounding: c_float =  window.WindowRounding;
     let border_size: c_float =  window.WindowBorderSize;
     if border_size > 0.0 && flag_clear(window.Flags, ImGuiWindowFlags_NoBackground) {
-        window.DrawList.AddRect(&window.Pos, window.Pos + window.Size, GetColorU32(ImGuiCol_Border, 0.0), rounding);
+        window.DrawList.AddRect(&window.position, window.position + window.Size, GetColorU32(ImGuiCol_Border, 0.0), rounding);
     }
 
     let border_held = window.ResizeBorderHeld;
@@ -317,29 +317,29 @@ pub unsafe fn RenderWindowOuterBorders(window: &mut ImGuiWindow)
     {
         let def = resize_border_def[border_held];
         let border_r: ImRect =  ops::GetResizeBorderRect(window, border_held as c_int, rounding, 0.0);
-        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN1) + ImVec2::from_floats(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle - IM_PI * 0.25, def.OuterAngle, 0);
-        window.DrawList.PathArcTo(ImLerp(border_r.Min, border_r.Max, def.SegmentN2) + ImVec2::from_floats(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle, def.OuterAngle + IM_PI * 0.25, 0);
+        window.DrawList.PathArcTo(ImLerp(border_r.min, border_r.max, def.SegmentN1) + ImVec2::from_floats(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle - IM_PI * 0.25, def.OuterAngle, 0);
+        window.DrawList.PathArcTo(ImLerp(border_r.min, border_r.max, def.SegmentN2) + ImVec2::from_floats(0.5, 0.5) + def.InnerDir * rounding, rounding, def.OuterAngle, def.OuterAngle + IM_PI * 0.25, 0);
         window.DrawList.PathStroke(GetColorU32(ImGuiCol_SeparatorActive, 0.0), 0, ImMax(2.0, border_size)); // Thicker than usual
     }
-    if g.Style.FrameBorderSize > 0.0 && flag_clear(window.Flags, ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive
+    if g.style.FrameBorderSize > 0.0 && flag_clear(window.Flags, ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive
     {
-        let y: c_float =  window.Pos.y + window.TitleBarHeight() - 1;
-        window.DrawList.AddLine(&ImVec2::from_floats(window.Pos.x + border_size, y), &ImVec2::from_floats(window.Pos.x + window.Size.x - border_size, y), GetColorU32(ImGuiCol_Border, 0.0), g.Style.FrameBorderSize);
+        let y: c_float =  window.position.y + window.TitleBarHeight() - 1;
+        window.DrawList.AddLine(&ImVec2::from_floats(window.position.x + border_size, y), &ImVec2::from_floats(window.position.x + window.Size.x - border_size, y), GetColorU32(ImGuiCol_Border, 0.0), g.style.FrameBorderSize);
     }
 }
 
 
 // Draw background and borders
 // Draw and handle scrollbars
-pub unsafe fn RenderWindowDecorations(window: &mut ImGuiWindow, title_bar_rect: &ImRect, title_bar_is_highlight: bool, handle_borders_and_resize_grips: bool, resize_grip_count: c_int, resize_grip_col: [u32;4],resize_grip_draw_size: c_float)
+pub unsafe fn RenderWindowDecorations(window: &mut ImguiWindow, title_bar_rect: &ImRect, title_bar_is_highlight: bool, handle_borders_and_resize_grips: bool, resize_grip_count: c_int, resize_grip_col: [u32;4], resize_grip_draw_size: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let style = &mut g.Style;
+    let style = &mut g.style;
     let flags: ImGuiWindowFlags = window.Flags;
 
     // Ensure that ScrollBar doesn't read last frame's SkipItems
     // IM_ASSERT(window.BeginCount == 0);
-    window.SkipItems = false;
+    window.skip_items = false;
 
     // Draw window + handle manual resize
     // As we highlight the title bar when want_focus is set, multiple reappearing windows will have have their title bar highlighted on their reappearing frame.
@@ -349,10 +349,10 @@ pub unsafe fn RenderWindowDecorations(window: &mut ImGuiWindow, title_bar_rect: 
     {
         // Title bar only
         let backup_border_size: c_float =  style.FrameBorderSize;
-        g.Style.FrameBorderSize = window.WindowBorderSize;
+        g.style.FrameBorderSize = window.WindowBorderSize;
         title_bar_col: u32 = GetColorU32(if title_bar_is_highlight && !g.NavDisableHighlight { ImGuiCol_TitleBgActive } else { ImGuiCol_TitleBgCollapsed }, 0.0);
-        RenderFrame(title_bar_rect.Min, title_bar_rect.Max, title_bar_col, true, window_rounding);
-        g.Style.FrameBorderSize = backup_border_size;
+        RenderFrame(title_bar_rect.min, title_bar_rect.max, title_bar_col, true, window_rounding);
+        g.style.FrameBorderSize = backup_border_size;
     }
     else
     {
@@ -404,7 +404,7 @@ pub unsafe fn RenderWindowDecorations(window: &mut ImGuiWindow, title_bar_rect: 
             if window.DockIsActive || flag_set(flags, ImGuiWindowFlags_DockNodeHost) {
                 bg_draw_list.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_BG);
             }
-            bg_draw_list.AddRectFilled(window.Pos + ImVec2::from_floats(0.0, window.TitleBarHeight()), window.Pos + window.Size, bg_col, window_rounding, if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { 0 } else { ImDrawFlags_RoundCornersBottom });
+            bg_draw_list.AddRectFilled(window.position + ImVec2::from_floats(0.0, window.TitleBarHeight()), window.position + window.Size, bg_col, window_rounding, if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { 0 } else { ImDrawFlags_RoundCornersBottom });
             if window.DockIsActive || flag_set(flags, ImGuiWindowFlags_DockNodeHost) {
                 bg_draw_list.ChannelsSetCurrent(DOCKING_HOST_DRAW_CHANNEL_FG);
             }
@@ -419,7 +419,7 @@ pub unsafe fn RenderWindowDecorations(window: &mut ImGuiWindow, title_bar_rect: 
         if flag_clear(flags, ImGuiWindowFlags_NoTitleBar) && !window.DockIsActive
         {
             title_bar_col: u32 = GetColorU32(if title_bar_is_highlight { ImGuiCol_TitleBgActive } else { ImGuiCol_TitleBg }, 0.0);
-            window.DrawList.AddRectFilled(&title_bar_rect.Min, &title_bar_rect.Max, title_bar_col, window_rounding, ImDrawFlags_RoundCornersTop);
+            window.DrawList.AddRectFilled(&title_bar_rect.min, &title_bar_rect.max, title_bar_col, window_rounding, ImDrawFlags_RoundCornersTop);
         }
 
         // Menu bar
@@ -427,8 +427,8 @@ pub unsafe fn RenderWindowDecorations(window: &mut ImGuiWindow, title_bar_rect: 
         {
             let mut menu_bar_rect: ImRect =  window.MenuBarRect();
             menu_bar_rect.ClipWith(window.Rect());  // Soft clipping, in particular child window don't have minimum size covering the menu bar so this is useful for them.
-            window.DrawList.AddRectFilled(menu_bar_rect.Min + ImVec2::from_floats(window_border_size, 0.0), menu_bar_rect.Max - ImVec2::from_floats(window_border_size, 0.0), GetColorU32(ImGuiCol_MenuBarBg, 0.0), if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { window_rounding }else { 0.0 }, ImDrawFlags_RoundCornersTop);
-            if style.FrameBorderSize > 0.0 && menu_bar_rect.Max.y < window.Pos.y + window.Size.y {
+            window.DrawList.AddRectFilled(menu_bar_rect.min + ImVec2::from_floats(window_border_size, 0.0), menu_bar_rect.max - ImVec2::from_floats(window_border_size, 0.0), GetColorU32(ImGuiCol_MenuBarBg, 0.0), if flag_set(flags, ImGuiWindowFlags_NoTitleBar) { window_rounding }else { 0.0 }, ImDrawFlags_RoundCornersTop);
+            if style.FrameBorderSize > 0.0 && menu_bar_rect.max.y < window.position.y + window.Size.y {
                 window.DrawList.AddLine(&menu_bar_rect.GetBL(), &menu_bar_rect.GetBR(), GetColorU32(ImGuiCol_Border, 0.0), style.FrameBorderSize);
             }
         }
@@ -441,7 +441,7 @@ pub unsafe fn RenderWindowDecorations(window: &mut ImGuiWindow, title_bar_rect: 
             let unhide_sz_hit: c_float =  ImFloor(g.FontSize * 0.550f32);
             let p: ImVec2 = node.Pos;
             let mut r: ImRect = ImRect::new(p, p + ImVec2::from_floats(unhide_sz_hit, unhide_sz_hit));
-            let mut unhide_id: ImGuiID =  window.id_from_str(str_to_const_c_char_ptr("#UNHIDE"), null());
+            let mut unhide_id: ImguiHandle =  window.id_by_string(null(), str_to_const_c_char_ptr("#UNHIDE"));
             KeepAliveID(unhide_id);
             // hovered: bool, held;
             let mut hovered = false;
@@ -463,10 +463,10 @@ pub unsafe fn RenderWindowDecorations(window: &mut ImGuiWindow, title_bar_rect: 
         }
 
         // Scrollbars
-        if window.ScrollbarX {
+        if window.scrollbarX {
             Scrollbar(ImGuiAxis_X);
         }
-        if window.ScrollbarY {
+        if window.scrollbarY {
             Scrollbar(ImGuiAxis_Y);
         }
 
@@ -477,7 +477,7 @@ pub unsafe fn RenderWindowDecorations(window: &mut ImGuiWindow, title_bar_rect: 
             for resize_grip_n in 0 .. resize_grip_count
             {
                 let grip = resize_grip_def[resize_grip_n];
-                let corner: ImVec2 = ImLerp(window.Pos, window.Pos + window.Size, grip.CornerPosN);
+                let corner: ImVec2 = ImLerp(window.position, window.position + window.Size, grip.CornerPosN);
                 window.DrawList.PathLineTo(corner + grip.InnerDir * (if resize_grip_n & 1 { ImVec2::from_floats(window_border_size, resize_grip_draw_size) } else { ImVec2::from_floats(resize_grip_draw_size, window_border_size) }));
                 window.DrawList.PathLineTo(corner + grip.InnerDir * (if resize_grip_n & 1 { ImVec2::from_floats(resize_grip_draw_size, window_border_size) } else { ImVec2::from_floats(window_border_size, resize_grip_draw_size) }));
                 window.DrawList.PathArcToFast(&ImVec2::from_floats(corner.x + grip.InnerDir.x * (window_rounding + window_border_size), corner.y + grip.InnerDir.y * (window_rounding + window_border_size)), window_rounding, grip.AngleMin12, grip.AngleMax12);

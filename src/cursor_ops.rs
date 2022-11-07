@@ -1,11 +1,10 @@
-#![allow(non_snake_case)]
-
 use crate::a_imgui_cpp::GImGui;
+use crate::context::ImguiContext;
 use crate::imgui::GImGui;
 use crate::math_ops::ImMax;
 use crate::vec2::ImVec2;
 use crate::window::ops::GetCurrentWindow;
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use libc::c_float;
 
 // Until 1.89 (IMGUI_VERSION_NUM < 18814) it was legal to use SetCursorPos() to extend the boundary of a parent (e.g. window or table cell)
@@ -24,107 +23,100 @@ use libc::c_float;
 //  The previous logic made SetCursorScreenPos(GetCursorScreenPos()) have a side-effect! It would erroneously incorporate ItemSpacing.y after the item into content size, making the group taller!
 //  While this code is a little twisted, no-one would expect SetXXX(GetXXX()) to have a side-effect. Using vertical alignment patterns could trigger this issue.
 // c_void ErrorCheckUsingSetCursorPosToExtendParentBoundaries()
-pub unsafe fn ErrorCheckUsingSetCursorPosToExtendParentBoundaries() {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    // IM_ASSERT(window.DC.IsSetPos);
-    window.DC.IsSetPos = false;
-    // #ifdef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
-    if window.DC.CursorPos.x <= window.DC.CursorMaxPos.x
-        && window.DC.CursorPos.y <= window.DC.CursorMaxPos.y
+pub fn ErrorCheckUsingSetCursorPosToExtendParentBoundaries(g: &mut ImguiContext) {
+    let mut window = g.current_window_mut().unwrap();
+    // IM_ASSERT(window.dc.is_set_pos);
+    window.dc.is_set_pos = false;
+    if window.dc.cursor_pos.x <= window.dc.CursorMaxPos.x
+        && window.dc.cursor_pos.y <= window.dc.CursorMaxPos.y
     {
         return;
     }
     // IM_ASSERT(0 && "Code uses SetCursorPos()/SetCursorScreenPos() to extend window/parent boundaries. Please submit an item e.g. Dummy() to validate extent.");
-    // #else
-    window.DC.CursorMaxPos = ImMax(window.DC.CursorMaxPos, window.DC.CursorPos);
-    // #endif
 }
 
-// GetCursorScreenPos: ImVec2()
-pub unsafe fn GetCursorScreenPos() -> ImVec2 {
-    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
-    return window.DC.CursorPos;
+pub fn cursor_screen_pos(g: &mut ImguiContext) -> ImVec2 {
+    let mut window = g.current_window_mut().unwrap();
+    return window.dc.cursor_pos;
 }
 
-// 2022/08/05: Setting cursor position also extend boundaries (via modifying CursorMaxPos) used to compute window size, group size etc.
-// I believe this was is a judicious choice but it's probably being relied upon (it has been the case since 1.31 and 1.50)
-// It would be sane if we requested user to use SetCursorPos() + Dummy(ImVec2::new(0,0)) to extend CursorMaxPos...
-pub unsafe fn SetCursorScreenPos(pos: &ImVec2) {
-    let mut window = GetCurrentWindow();
-    window.DC.CursorPos = pos.clone();
-    //window.DC.CursorMaxPos = ImMax(window.DC.CursorMaxPos, window.DC.CursorPos);
-    window.DC.IsSetPos = true;
+// 2022/08/05: Setting cursor position also extend boundaries (via modifying CursorMaxPos)
+// used to compute window size, group size etc.
+// I believe this was is a judicious choice but it's probably being relied upon (it has
+// been the case since 1.31 and 1.50)
+// It would be sane if we requested user to use SetCursorPos() + Dummy(ImVec2::new(0,0))
+// to extend CursorMaxPos...
+pub fn set_cursor_screen_pos(g: &mut ImguiContext, pos: &ImVec2) {
+    let mut window = g.current_window_mut().unwrap();
+    window.dc.cursor_pos = pos.clone();
+    //window.dc.CursorMaxPos = ImMax(window.dc.CursorMaxPos, window.dc.cursor_pos);
+    window.dc.is_set_pos = true;
 }
 
 // User generally sees positions in window coordinates. Internally we store CursorPos in absolute screen coordinates because it is more convenient.
-// Conversion happens as we pass the value to user, but it makes our naming convention confusing because GetCursorPos() == (DC.CursorPos - window.Pos). May want to rename 'DC.CursorPos'.
+// Conversion happens as we pass the value to user, but it makes our naming convention confusing because GetCursorPos() == (dc.cursor_pos - window.position). May want to rename 'dc.cursor_pos'.
 // GetCursorPos: ImVec2()
-pub unsafe fn GetCursorPos() -> ImVec2 {
-    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
-    return window.DC.CursorPos - window.Pos + window.Scroll;
+pub fn cursor_pos(g: &mut ImguiContext) -> ImVec2 {
+    let mut window = g.current_window_mut().unwrap();
+    return window.dc.cursor_pos - window.position + window.scroll;
 }
 
 // GetCursorPosX: c_float()
-pub unsafe fn GetCursorPosX() -> c_float {
-    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
-    return window.DC.CursorPos.x - window.Pos.x + window.Scroll.x;
+pub fn cursor_pos_x(g: &mut ImguiContext) -> f32 {
+    let mut window = g.current_window_mut().unwrap();
+    return window.dc.cursor_pos.x - window.position.x + window.scroll.x;
 }
 
 // GetCursorPosY: c_float()
-pub unsafe fn GetCursorPosY() -> c_float {
-    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
-    return window.DC.CursorPos.y - window.Pos.y + window.Scroll.y;
+pub fn cursor_pos_y(g: &mut ImguiContext) -> f32 {
+    let mut window = g.current_window_mut().unwrap();
+    return window.dc.cursor_pos.y - window.position.y + window.scroll.y;
 }
 
 // c_void SetCursorPos(local_pos: &ImVec2)
-pub unsafe fn SetCursorPos(local_pos: &ImVec2) {
-    let mut window = GetCurrentWindow();
-    window.DC.CursorPos = window.Pos - window.Scroll + local_pos;
-    //window.DC.CursorMaxPos = ImMax(window.DC.CursorMaxPos, window.DC.CursorPos);
-    window.DC.IsSetPos = true;
+pub fn set_cursor_pos(g: &mut ImguiContext, local_pos: &ImVec2) {
+    let mut window = g.current_window_mut().unwrap();
+    window.dc.cursor_pos = window.position - window.scroll + local_pos;
+    //window.dc.CursorMaxPos = ImMax(window.dc.CursorMaxPos, window.dc.cursor_pos);
+    window.dc.is_set_pos = true;
 }
 
-// c_void SetCursorPosX(x: c_float)
-pub unsafe fn SetCursorPosX(x: c_float) {
-    let mut window = GetCurrentWindow();
-    window.DC.CursorPos.x = window.Pos.x - window.Scroll.x + x;
-    //window.DC.CursorMaxPos.x = ImMax(window.DC.CursorMaxPos.x, window.DC.CursorPos.x);
-    window.DC.IsSetPos = true;
+pub fn set_cursor_x(g: &mut ImguiContext, x: c_float) {
+    let mut window = g.current_window_mut().unwrap();
+    window.dc.cursor_pos.x = window.position.x - window.scroll.x + x;
+    //window.dc.CursorMaxPos.x = ImMax(window.dc.CursorMaxPos.x, window.dc.cursor_pos.x);
+    window.dc.is_set_pos = true;
 }
 
-pub unsafe fn SetCursorPosY(y: c_float) {
-    let mut window = GetCurrentWindow();
-    window.DC.CursorPos.y = window.Pos.y - window.Scroll.y + y;
-    //window.DC.CursorMaxPos.y = ImMax(window.DC.CursorMaxPos.y, window.DC.CursorPos.y);
-    window.DC.IsSetPos = true;
+pub fn set_cursor_pos_y(g: &mut ImguiContext, y: c_float) {
+    let mut window = g.current_window_mut().unwrap();
+    window.dc.cursor_pos.y = window.position.y - window.scroll.y + y;
+    //window.dc.CursorMaxPos.y = ImMax(window.dc.CursorMaxPos.y, window.dc.cursor_pos.y);
+    window.dc.is_set_pos = true;
 }
 
-// GetCursorStartPos: ImVec2()
-pub unsafe fn GetCursorStartPos() -> ImVec2 {
-    let mut window: &mut ImGuiWindow = GetCurrentWindowRead();
-    return window.DC.CursorStartPos - window.Pos;
+pub fn cursor_start_pos(g: &mut ImguiContext) -> ImVec2 {
+    let mut window = g.current_window_mut().unwrap();
+    return window.dc.cursor_start_pos - window.position;
 }
 
 // c_void Indent(indent_w: c_float)
-pub unsafe fn Indent(indent_w: c_float) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = GetCurrentWindow();
-    window.DC.Indent.x += if indent_w != 0.0 {
+pub fn indent(indent_w: c_float, g: &mut ImguiContext) {
+    let mut window = g.current_window_mut().unwrap();
+    window.dc.indent.x += if indent_w != 0.0 {
         indent_w
     } else {
-        g.Style.IndentSpacing
+        g.style.indent_spacing
     };
-    window.DC.CursorPos.x = window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x;
+    window.dc.cursor_pos.x = window.position.x + window.dc.indent.x + window.dc.columns_offset.x;
 }
 
-pub unsafe fn Unindent(indent_w: c_float) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = GetCurrentWindow();
-    window.DC.Indent.x -= if (indent_w != 0.0) {
+pub fn unindent(g: &mut ImguiContext, indent_w: c_float) {
+    let mut window = g.current_window_mut().unwrap();
+    window.dc.indent.x -= if indent_w != 0.0 {
         indent_w
     } else {
-        g.Style.IndentSpacing
+        g.style.indent_spacing
     };
-    window.DC.CursorPos.x = window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x;
+    window.dc.cursor_pos.x = window.position.x + window.dc.indent.x + window.dc.columns_offset.x;
 }

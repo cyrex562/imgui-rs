@@ -1,5 +1,6 @@
 use crate::math_ops::ImRsqrtFloat;
 use libc::{c_float, c_short};
+use std::mem;
 use std::ops::Index;
 
 // ImVec2: 2D vector used to store positions, sizes etc. [Compile-time configurable type]
@@ -7,11 +8,8 @@ use std::ops::Index;
 // IM_MSVC_RUNTIME_CHECKS_OFF
 #[derive(Debug, Default, Clone, Copy)]
 pub struct ImVec2 {
-    // float                                   x, y;
     pub x: f32,
-    pub y: f32, // #ifdef IM_VEC2_CLASS_EXTRA
-                // IM_VEC2_CLASS_EXTRA     // Define additional constructors and implicit cast operators in imconfig.h to convert back and forth between your math types and ImVec2.
-                // #endif
+    pub y: f32,
 }
 
 impl ImVec2 {
@@ -32,9 +30,13 @@ impl ImVec2 {
             y: y as f32,
         }
     }
-
-    // float  operator[] (idx: size_t) const    { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
-    // float& operator[] (idx: size_t)          { IM_ASSERT(idx <= 1); return (&x)[idx]; }    // We very rarely use this [] operator, the assert overhead is fine.
+    pub fn to_vec(&mut self) -> Vec<u8> {
+        let mut out = vec![];
+        let elem_len = mem::size_of::<f32>();
+        let x_bytes = self.x.to_le_bytes();
+        let y_bytes = self.y.to_le_bytes();
+        out.copy_from_slice()
+    }
 }
 
 // Helper: ImVec2ih (2D vector, half-size integer, for long-term packed storage)

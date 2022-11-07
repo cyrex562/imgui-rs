@@ -1,11 +1,10 @@
 #![allow(non_snake_case)]
 
+use crate::window::ImguiWindow;
 use crate::GImGui;
-use crate::window::ImGuiWindow;
 
 // c_void GcCompactTransientMiscBuffers()
-pub unsafe fn GcCompatTransientMiscBuffers()
-{
+pub unsafe fn GcCompatTransientMiscBuffers() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.ItemFlagsStack.clear();
     g.GroupStack.clear();
@@ -17,26 +16,30 @@ pub unsafe fn GcCompatTransientMiscBuffers()
 // - ImGuiWindow, ImGuiWindowSettings, Name, StateStorage, ColumnsStorage (may hold useful data)
 // This should have no noticeable visual effect. When the window reappear however, expect new allocation/buffer growth/copy cost.
 // c_void GcCompactTransientWindowBuffers(window: &mut ImGuiWindow)
-pub unsafe fn GcCompactTransientWindowBuffers(window: &mut ImGuiWindow)
-{
+pub unsafe fn GcCompactTransientWindowBuffers(window: &mut ImguiWindow) {
     window.MemoryCompacted = true;
     window.MemoryDrawListIdxCapacity = window.DrawList.IdxBuffer.Capacity;
     window.MemoryDrawListVtxCapacity = window.DrawList.VtxBuffer.Capacity;
-    window.IDStack.clear();
+    window.id_stack.clear();
     window.DrawList._ClearFreeMemory();
-    window.DC.ChildWindows.clear();
-    window.DC.ItemWidthStack.clear();
-    window.DC.TextWrapPosStack.clear();
+    window.dc.ChildWindows.clear();
+    window.dc.ItemWidthStack.clear();
+    window.dc.TextWrapPosStack.clear();
 }
 
 // c_void GcAwakeTransientWindowBuffers(window: &mut ImGuiWindow)
-pub fn GcAwakeTransientWindowBuffers(window: &mut ImGuiWindow)
-{
+pub fn GcAwakeTransientWindowBuffers(window: &mut ImguiWindow) {
     // We stored capacity of the ImDrawList buffer to reduce growth-caused allocation/copy when awakening.
     // The other buffers tends to amortize much faster.
     window.MemoryCompacted = false;
-    window.DrawList.IdxBuffer.reserve(window.MemoryDrawListIdxCapacity as usize);
-    window.DrawList.VtxBuffer.reserve(window.MemoryDrawListVtxCapacity as usize);
+    window
+        .DrawList
+        .IdxBuffer
+        .reserve(window.MemoryDrawListIdxCapacity as usize);
+    window
+        .DrawList
+        .VtxBuffer
+        .reserve(window.MemoryDrawListVtxCapacity as usize);
     window.MemoryDrawListIdxCapacity = 0;
     window.MemoryDrawListVtxCapacity = 0;
 }

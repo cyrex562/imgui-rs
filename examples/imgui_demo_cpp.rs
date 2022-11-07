@@ -2060,7 +2060,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         // and then pass their address to the generic function. For example:
         //   MySliderU64: bool(const label: *mut c_char, u64* value, u64 min = 0, u64 max = 0, const char* format = "%lld")
         //   {
-        //      return SliderScalar(label, ImGuiDataType_U64, value, &min, &max, format);
+        //      return SliderScalar(label, IM_GUI_DATA_TYPE_U64, value, &min, &max, format);
         //   }
 
         // Setup limits (as helper variables so we can take their address, as explained above)
@@ -3065,7 +3065,7 @@ pub unsafe fn ShowDemoWindowLayout()
             TextUnformatted(names[i]);
 
             const child_flags: ImGuiWindowFlags = if enable_extra_decorations { ImGuiWindowFlags_MenuBar } else { 0 };
-            let mut child_id: ImGuiID =  GetID(i);
+            let mut child_id: ImguiHandle =  GetID(i);
             let child_is_visible: bool = BeginChild(child_id, ImVec2::new(child_w, 200), true, child_flags);
             if (BeginMenuBar())
             {
@@ -3112,7 +3112,7 @@ pub unsafe fn ShowDemoWindowLayout()
         {
             let child_height: c_float =  GetTextLineHeight() + style.ScrollbarSize + style.WindowPadding.y * 2.0;
             child_flags: ImGuiWindowFlags = ImGuiWindowFlags_HorizontalScrollbar | (if enable_extra_decorations { ImGuiWindowFlags_AlwaysVerticalScrollbar }else { 0 });
-            let mut child_id: ImGuiID =  GetID(i);
+            let mut child_id: ImguiHandle =  GetID(i);
             let mut child_is_visible: bool =  BeginChild(child_id, ImVec2::new(-100, child_height), true, child_flags);
             if scroll_to_off {
                 SetScrollX(scroll_to_off_px)(); }
@@ -7913,7 +7913,7 @@ pub unsafe fn ShowExampleAppDockSpace(bool* p_open)
     ImGuiIO& io = GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
     {
-        let mut dockspace_id: ImGuiID =  GetID("MyDockSpace");
+        let mut dockspace_id: ImguiHandle =  GetID("MyDockSpace");
         DockSpace(dockspace_id, ImVec2::new(0.0, 0.0), dockspace_flags);
     }
     else
@@ -8189,7 +8189,7 @@ pub unsafe fn ShowExampleAppDocuments(bool* p_open)
             NotifyOfDocumentsClosedElsewhere(app);
 
             // Create a DockSpace node where any window can be docked
-            let mut dockspace_id: ImGuiID =  GetID("MyDockSpace");
+            let mut dockspace_id: ImguiHandle =  GetID("MyDockSpace");
             DockSpace(dockspace_id);
 
             // Create Windows

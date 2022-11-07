@@ -1,34 +1,39 @@
 #![allow(non_snake_case)]
 
-use std::ptr::null_mut;
-use libc::c_int;
 use crate::draw_data::ImDrawData;
-use crate::{GImGui, ImGuiViewport};
 use crate::draw_list::ImDrawList;
 use crate::draw_list_flags::ImDrawListFlags_AllowVtxOffset;
 use crate::type_defs::ImDrawIdx;
-use crate::window::ImGuiWindow;
 use crate::window::ops::{GetWindowDisplayLayer, IsWindowActiveAndVisible};
 use crate::window::window_flags::ImGuiWindowFlags_DockNodeHost;
+use crate::window::ImguiWindow;
 use crate::window_flags::ImGuiWindowFlags_DockNodeHost;
 use crate::window_ops::{GetWindowDisplayLayer, IsWindowActiveAndVisible};
+use crate::{GImGui, ImguiViewport};
+use libc::c_int;
+use std::ptr::null_mut;
 
 // Pass this to your backend rendering function! Valid after Render() and until the next call to NewFrame()
 // ImDrawData* GetDrawData()
 pub unsafe fn GetDrawData() -> *mut ImDrawData {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut viewport: *mut ImGuiViewport = g.Viewports[0];
-    return if viewport.DrawDataP.Valid { &mut viewport.DrawDataP } else { None };
+    let mut viewport: *mut ImguiViewport = g.Viewports[0];
+    return if viewport.DrawDataP.Valid {
+        &mut viewport.DrawDataP
+    } else {
+        None
+    };
 }
 
-
 // static c_void AddDrawListToDrawData(Vec<ImDrawList*>* out_list, draw_list: *mut ImDrawList)
-pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mut ImDrawList)
-{
+pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mut ImDrawList) {
     if draw_list.CmdBuffer.len() == 0 {
         return;
     }
-    if draw_list.CmdBuffer.len() == 1 && draw_list.CmdBuffer[0].ElemCount == 0 && draw_list.CmdBuffer[0].UserCallback == None {
+    if draw_list.CmdBuffer.len() == 1
+        && draw_list.CmdBuffer[0].ElemCount == 0
+        && draw_list.CmdBuffer[0].UserCallback == None
+    {
         return;
     }
 
@@ -37,7 +42,7 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
     // IM_ASSERT(draw_list.VtxBuffer.Size == 0 || draw_list._VtxWritePtr == draw_list.VtxBuffer.Data + draw_list.VtxBuffer.Size);
     // IM_ASSERT(draw_list.IdxBuffer.Size == 0 || draw_list._IdxWritePtr == draw_list.IdxBuffer.Data + draw_list.IdxBuffer.Size);
     if flag_clear(draw_list.Flags, ImDrawListFlags_AllowVtxOffset) {}
-        // IM_ASSERT(draw_list._VtxCurrentIdx == draw_list.VtxBuffer.Size);
+    // IM_ASSERT(draw_list._VtxCurrentIdx == draw_list.VtxBuffer.Size);
 
     // Check that draw_list doesn't use more vertices than indexable (default ImDrawIdx = unsigned short = 2 bytes = 64K vertices per ImDrawList = per window)
     // If this assert triggers because you are drawing lots of stuff manually:
@@ -55,26 +60,25 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
     // - If for some reason neither of those solutions works for you, a workaround is to call BeginChild()/EndChild() before reaching
     //   the 64K limit to split your draw commands in multiple draw lists.
     if libc::sizeof == 2 {}
-        // IM_ASSERT(draw_list._VtxCurrentIdx < (1 << 16) && "Too many vertices in ImDrawList using 16-bit indices. Read comment above");
+    // IM_ASSERT(draw_list._VtxCurrentIdx < (1 << 16) && "Too many vertices in ImDrawList using 16-bit indices. Read comment above");
 
     out_list.push(draw_list);
 }
 
 // static c_void AddWindowToDrawData(window: &mut ImGuiWindow, layer: c_int)
-pub unsafe fn AddWindowToDrawData(window: &mut ImGuiWindow, layer: c_int)
-{
+pub unsafe fn AddWindowToDrawData(window: &mut ImguiWindow, layer: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut viewport: *mut ImGuiViewport =  window.Viewport;
-    g.IO.MetricsRenderWindows+= 1;
+    let mut viewport: *mut ImguiViewport = window.Viewport;
+    g.IO.MetricsRenderWindows += 1;
     if window.Flags & ImGuiWindowFlags_DockNodeHost {
         window.DrawList.ChannelsMerge();
     }
     AddDrawListToDrawData(&mut viewport.DrawDataBuilder.Layers[layer], window.DrawList);
-    // for (let i: c_int = 0; i < window.DC.ChildWindows.Size; i++)
-    for i in 0 .. window.DC.ChildWindows.len()
-    {
-        let mut child: *mut ImGuiWindow =  window.DC.ChildWindows[i];
-        if IsWindowActiveAndVisible(child) { // Clipped children may have been marked not active
+    // for (let i: c_int = 0; i < window.dc.ChildWindows.Size; i++)
+    for i in 0..window.dc.ChildWindows.len() {
+        let mut child: *mut ImguiWindow = window.dc.ChildWindows[i];
+        if IsWindowActiveAndVisible(child) {
+            // Clipped children may have been marked not active
             AddWindowToDrawData(child, layer);
         }
     }
@@ -82,7 +86,6 @@ pub unsafe fn AddWindowToDrawData(window: &mut ImGuiWindow, layer: c_int)
 
 // Layer is locked for the root window, however child windows may use a different viewport (e.g. extruding menu)
 // pub unsafe fn AddRootWindowToDrawData(window: &mut ImGuiWindow)
-pub unsafe fn AddRootWindowToDrawData(window: &mut ImGuiWindow)
-{
+pub unsafe fn AddRootWindowToDrawData(window: &mut ImguiWindow) {
     AddWindowToDrawData(window, GetWindowDisplayLayer(window));
 }

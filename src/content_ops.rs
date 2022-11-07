@@ -1,50 +1,44 @@
 // GetContentRegionAvail: ImVec2()
 
+use crate::context::ImguiContext;
 use crate::utils::is_not_null;
 use crate::vec2::ImVec2;
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use crate::GImGui;
 
-pub unsafe fn GetContentRegionAvail() -> ImVec2 {
-    let g = GImGui;
-    let mut window  = &g.CurrentWindow;
-    return GetContentRegionMaxAbs() - window.DC.CursorPos;
+pub fn content_region_avail(g: &mut ImguiContext) -> ImVec2 {
+    let mut window = g.current_window_mut().unwrap();
+    return content_region_max_abs(g) - window.dc.cursor_pos;
 }
 
 // [Internal] Absolute coordinate. Saner. This is not exposed until we finishing refactoring work rect features.
-pub unsafe fn GetContentRegionMaxAbs() -> ImVec2 {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window = &g.CurrentWindow;
-    let mut mx: ImVec2 = window.ContentRegionRect.Max;
-    if is_not_null(window.DC.CurrentColumns) || is_not_null(g.CurrentTable) {
-        mx.x = window.WorkRect.Max.x;
+pub fn content_region_max_abs(g: &mut ImguiContext) -> ImVec2 {
+    let mut window = g.current_window_mut().unwrap();
+    let mut mx: ImVec2 = window.content_region_rect.max;
+    if is_not_null(window.dc.current_columns) || g.current_table.is_some() {
+        mx.x = window.work_rect.max.x;
     }
     return mx;
 }
-
 
 // FIXME: This is in window space (not screen space!).
-// GetContentRegionMax: ImVec2()
-pub unsafe fn GetContentRegionMax() -> ImVec2 {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    let mut mx: ImVec2 = window.ContentRegionRect.Max - window.Pos;
-    if is_not_null(window.DC.CurrentColumns) || is_not_null(g.CurrentTable) {
-        mx.x = window.WorkRect.Max.x - window.Pos.x;
+pub fn content_region_max(g: &mut ImguiContext) -> ImVec2 {
+    let mut window = g.current_window_mut().unwrap();
+    let mut mx: ImVec2 = window.content_region_rect.max - window.position;
+    if is_not_null(window.dc.current_columns) || g.current_table.is_some() {
+        mx.x = window.work_rect.max.x - window.position.x;
     }
     return mx;
 }
 
-
 // In window space (not screen space!)
-pub unsafe fn GetWindowContentRegionMin() -> ImVec2 {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    return window.ContentRegionRect.Min - window.Pos;
+pub unsafe fn GetWindowContentRegionMin(g: &mut ImguiContext) -> ImVec2 {
+    let mut window = g.current_window_mut().unwrap();
+    return window.content_region_rect.min - window.position;
 }
 
-pub unsafe fn GetWindowContentRegionMax() -> ImVec2 {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    return window.ContentRegionRect.Max - window.Pos;
+pub fn GetWindowContentRegionMax(g: &mut ImguiContext) -> ImVec2 {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    let mut window = g.current_window_mut().unwrap();
+    return window.content_region_rect.Max - window.position;
 }

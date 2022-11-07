@@ -1,15 +1,15 @@
 #![allow(non_snake_case)]
 
-use libc::{c_float, c_int};
 use crate::draw_list_splitter::ImDrawListSplitter;
 use crate::old_column_data::ImGuiOldColumnData;
 use crate::old_column_flags::ImGuiOldColumnFlags;
 use crate::rect::ImRect;
-use crate::type_defs::ImGuiID;
+use crate::type_defs::ImguiHandle;
+use libc::{c_float, c_int};
 
-#[derive(Default,Debug,Clone)]
+#[derive(Default, Debug, Clone)]
 pub struct ImGuiOldColumns {
-    pub ID: ImGuiID,
+    pub ID: ImguiHandle,
     pub Flags: ImGuiOldColumnFlags,
     pub IsFirstFrame: bool,
     pub IsBeingResized: bool,
@@ -33,6 +33,5 @@ pub struct ImGuiOldColumns {
     //Backup of WorkRect at the time of BeginColumns()
     pub Columns: Vec<ImGuiOldColumnData>,
     pub Splitter: ImDrawListSplitter,
-
     // ImGuiOldColumns()   { memset(this, 0, sizeof(*this)); }
 }

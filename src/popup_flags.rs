@@ -27,8 +27,9 @@ pub const ImGuiPopupFlags_NoOpenOverExistingPopup: ImGuiPopupFlags = 1 << 5;
 pub const ImGuiPopupFlags_NoOpenOverItems: ImGuiPopupFlags = 1 << 6;
 // For BeginPopupContextWindow(): don't return true when hovering items; only when hovering empty space
 pub const ImGuiPopupFlags_AnyPopupId: ImGuiPopupFlags = 1 << 7;
-// For IsPopupOpen(): ignore the ImGuiID parameter and test for any popup.
+// For IsPopupOpen(): ignore the ImguiHandle parameter and test for any popup.
 pub const ImGuiPopupFlags_AnyPopupLevel: ImGuiPopupFlags = 1 << 8;
 // For IsPopupOpen(): search/test at any level of the popup stack (default test in the current level)
-pub const ImGuiPopupFlags_AnyPopup: ImGuiPopupFlags = ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel;
+pub const ImGuiPopupFlags_AnyPopup: ImGuiPopupFlags =
+    ImGuiPopupFlags_AnyPopupId | ImGuiPopupFlags_AnyPopupLevel;
 // };

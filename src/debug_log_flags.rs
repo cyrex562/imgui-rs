@@ -1,23 +1,23 @@
-#![allow(non_upper_case_globals)]
-
 use libc::c_int;
 
-// typedef int ImGuiDebugLogFlags;         // -> enum ImGuiDebugLogFlags_      // Flags: for ShowDebugLogWindow(), g.DebugLogFlags
 pub type ImGuiDebugLogFlags = c_int;
 
-
-// enum ImGuiDebugLogFlags_
-// {
-// Event types
-pub const ImGuiDebugLogFlags_None: ImGuiDebugLogFlags = 0;
-pub const ImGuiDebugLogFlags_EventActiveId: ImGuiDebugLogFlags = 1 << 0;
-pub const ImGuiDebugLogFlags_EventFocus: ImGuiDebugLogFlags = 1 << 1;
-pub const ImGuiDebugLogFlags_EventPopup: ImGuiDebugLogFlags = 1 << 2;
-pub const ImGuiDebugLogFlags_EventNav: ImGuiDebugLogFlags = 1 << 3;
-pub const ImGuiDebugLogFlags_EventClipper: ImGuiDebugLogFlags = 1 << 4;
-pub const ImGuiDebugLogFlags_EventIO: ImGuiDebugLogFlags = 1 << 5;
-pub const ImGuiDebugLogFlags_EventDocking: ImGuiDebugLogFlags = 1 << 6;
-pub const ImGuiDebugLogFlags_EventViewport: ImGuiDebugLogFlags = 1 << 7;
-pub const ImGuiDebugLogFlags_EventMask_: ImGuiDebugLogFlags = ImGuiDebugLogFlags_EventActiveId | ImGuiDebugLogFlags_EventFocus | ImGuiDebugLogFlags_EventPopup | ImGuiDebugLogFlags_EventNav | ImGuiDebugLogFlags_EventClipper | ImGuiDebugLogFlags_EventIO | ImGuiDebugLogFlags_EventDocking | ImGuiDebugLogFlags_EventViewport;
-pub const ImGuiDebugLogFlags_OutputToTTY: ImGuiDebugLogFlags = 1 << 10;  // Also send output to TTY
-// };
+pub const IM_GUI_DEBUG_LOG_FLAGS_NONE: ImGuiDebugLogFlags = 0;
+pub const IM_GUI_DEBUG_LOG_FLAGS_EVENT_ACTIVE_ID: ImGuiDebugLogFlags = 1 << 0;
+pub const IM_GUI_DEBUG_LOG_FLAGS_EVENT_FOCUS: ImGuiDebugLogFlags = 1 << 1;
+pub const IM_GUI_DEBUG_LOG_FLAGS_EVENT_POPUP: ImGuiDebugLogFlags = 1 << 2;
+pub const IM_GUI_DEBUG_LOG_FLAGS_EVENT_NAV: ImGuiDebugLogFlags = 1 << 3;
+pub const IM_GUI_DEBUG_LOG_FLAGS_EVENT_CLIPPER: ImGuiDebugLogFlags = 1 << 4;
+pub const IM_GUI_DEBUG_LOG_FLAGS_EVENT_IO: ImGuiDebugLogFlags = 1 << 5;
+pub const IM_GUI_DEBUG_LOG_FLAGS_EVENT_DOCKING: ImGuiDebugLogFlags = 1 << 6;
+pub const IM_GUI_DEBUG_LOG_FLAGS_EVENT_VIEWPORT: ImGuiDebugLogFlags = 1 << 7;
+pub const IM_GUI_DEBUG_LOG_FLAGS_EVENT_MASK: ImGuiDebugLogFlags =
+    IM_GUI_DEBUG_LOG_FLAGS_EVENT_ACTIVE_ID
+        | IM_GUI_DEBUG_LOG_FLAGS_EVENT_FOCUS
+        | IM_GUI_DEBUG_LOG_FLAGS_EVENT_POPUP
+        | IM_GUI_DEBUG_LOG_FLAGS_EVENT_NAV
+        | IM_GUI_DEBUG_LOG_FLAGS_EVENT_CLIPPER
+        | IM_GUI_DEBUG_LOG_FLAGS_EVENT_IO
+        | IM_GUI_DEBUG_LOG_FLAGS_EVENT_DOCKING
+        | IM_GUI_DEBUG_LOG_FLAGS_EVENT_VIEWPORT;
+pub const IM_GUI_DEBUG_LOG_FLAGS_OUTPUT_TO_TTY: ImGuiDebugLogFlags = 1 << 10;

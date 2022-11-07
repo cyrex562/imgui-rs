@@ -2,9 +2,9 @@
 
 use crate::condition::ImGuiCond_FirstUseEver;
 use crate::context_hook::{
-    ImGuiContextHookType_EndFramePost, ImGuiContextHookType_EndFramePre,
-    ImGuiContextHookType_NewFramePost, ImGuiContextHookType_NewFramePre,
-    ImGuiContextHookType_PendingRemoval_,
+    IM_GUI_CONTEXT_HOOK_TYPE_END_FRAME_POST, IM_GUI_CONTEXT_HOOK_TYPE_END_FRAME_PRE,
+    IM_GUI_CONTEXT_HOOK_TYPE_NEW_FRAME_POST, IM_GUI_CONTEXT_HOOK_TYPE_NEW_FRAME_PRE,
+    IM_GUI_CONTEXT_HOOK_TYPE_PENDING_REMOVAL,
 };
 use crate::drag_drop_flags::{
     ImGuiDragDropFlags_SourceAutoExpirePayload, ImGuiDragDropFlags_SourceNoPreviewTooltip,
@@ -17,12 +17,13 @@ use crate::error_ops::{ErrorCheckEndFrameSanityChecks, ErrorCheckNewFrameSanityC
 use crate::font_atlas_flags::ImFontAtlasFlags_NoBakedLines;
 use crate::font_ops::SetCurrentFont;
 use crate::garbage_collection::GcCompactTransientWindowBuffers;
-use crate::{CallContextHooks, GImGui, ImGuiViewport};
+use crate::{CallContextHooks, GImGui, ImguiViewport};
 use libc::{c_float, c_int};
 use std::ptr::null_mut;
 
 use crate::a_imgui_cpp::{UpdateDebugToolItemPicker, UpdateDebugToolStackQueries};
 use crate::backend_flags::ImGuiBackendFlags_RendererHasVtxOffset;
+use crate::context::ImguiContext;
 use crate::dock_context_ops::{
     DockContextEndFrame, DockContextNewFrameUpdateDocking, DockContextNewFrameUpdateUndocking,
 };
@@ -53,25 +54,24 @@ use crate::viewport_ops::{
 use crate::window::focus::FocusTopMostWindowUnderOne;
 use crate::window::ops::{AddWindowToSortBuffer, Begin, End, SetNextWindowSize};
 use crate::window::window_flags::ImGuiWindowFlags_ChildWindow;
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use crate::window_flags::ImGuiWindowFlags_ChildWindow;
 use crate::window_ops::{AddWindowToSortBuffer, SetNextWindowSize};
 
 // c_void NewFrame()
-pub unsafe fn NewFrame() {
+pub fn NewFrame(g: &mut ImguiContext) {
     // IM_ASSERT(GImGui != NULL && "No current context. Did you call CreateContext() and SetCurrentContext() ?");
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-
     // Remove pending delete hooks before frame start.
     // This deferred removal avoid issues of removal while iterating the hook vector
     // for (let n: c_int = g.Hooks.Size - 1; n >= 0; n--)
     for n in g.Hooks.len() - 1..0 {
-        if g.Hooks[n].Type == ImGuiContextHookType_PendingRemoval_ {
+        if g.Hooks[n].Type == IM_GUI_CONTEXT_HOOK_TYPE_PENDING_REMOVAL {
             g.Hooks.erase(&g.Hooks[n]);
         }
     }
 
-    CallContextHooks(g, ImGuiContextHookType_NewFramePre);
+    // CallContextHooks(g, IM_GUI_CONTEXT_HOOK_TYPE_NEW_FRAME_PRE);
+    g.call_context_hooks(IM_GUI_CONTEXT_HOOK_TYPE_NEW_FRAME_PRE);
 
     // Check and assert for various common IO and Configuration mistakes
     g.ConfigFlagsLastFrame = g.ConfigFlagsCurrFrame;
@@ -116,19 +116,19 @@ pub unsafe fn NewFrame() {
         virtual_space.Add(&g.Viewports[n].GetMainRect().Min);
     }
     g.DrawListSharedData.ClipRectFullscreen = virtual_space.ToVec4();
-    g.DrawListSharedData.CurveTessellationTol = g.Style.CurveTessellationTol;
+    g.DrawListSharedData.CurveTessellationTol = g.style.CurveTessellationTol;
     g.DrawListSharedData
-        .SetCircleTessellationMaxError(g.Style.CircleTessellationMaxError);
+        .SetCircleTessellationMaxError(g.style.CircleTessellationMaxError);
     g.DrawListSharedData.InitialFlags = ImDrawListFlags_None;
-    if g.Style.AntiAliasedLines {
+    if g.style.AntiAliasedLines {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLines;
     }
-    if g.Style.AntiAliasedLinesUseTex
+    if g.style.AntiAliasedLinesUseTex
         && flag_clear(g.Font.ContainerAtlas.Flags, ImFontAtlasFlags_NoBakedLines)
     {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedLinesUseTex;
     }
-    if g.Style.AntiAliasedFill {
+    if g.style.AntiAliasedFill {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedFill;
     }
     if g.IO.BackendFlags & ImGuiBackendFlags_RendererHasVtxOffset {
@@ -138,14 +138,14 @@ pub unsafe fn NewFrame() {
     // Mark rendering data as invalid to prevent user who may have a handle on it to use it.
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
     for n in 0..g.Viewports.len() {
-        let mut viewport: *mut ImGuiViewport = g.Viewports[n];
+        let mut viewport: *mut ImguiViewport = g.Viewports[n];
         viewport.DrawData = None;
         viewport.DrawDataP.Clear();
     }
 
     // Drag and drop keep the source ID alive so even if the source disappear our state is consistent
     if g.DragDropActive && g.DragDropPayload.SourceId == g.ActiveId {
-        KeepAliveID(g.DragDropPayload.SourceId);
+        KeepAliveID(g, g.DragDropPayload.SourceId);
     }
 
     // Update HoveredId data
@@ -173,7 +173,7 @@ pub unsafe fn NewFrame() {
     // As a result, custom widget using ButtonBehavior() _without_ ItemAdd() need to call KeepAliveID() themselves.
     if g.ActiveId != 0 && g.ActiveIdIsAlive != g.ActiveId && g.ActiveIdPreviousFrame == g.ActiveId {
         // IMGUI_DEBUG_LOG_ACTIVEID("NewFrame(): ClearActiveID() because it isn't marked alive anymore!\n");
-        ClearActiveID();
+        ClearActiveID(g);
     }
 
     // Update ActiveId data (clear reference to active widget if the widget isn't alive anymore)
@@ -300,7 +300,7 @@ pub unsafe fn NewFrame() {
         };
     // for (let i: c_int = 0; i != g.Windows.Size; i++)
     for i in 0..g.Windows.len() {
-        let mut window: &mut ImGuiWindow = g.Windows[i];
+        let mut window: &mut ImguiWindow = g.Windows[i];
         window.WasActive = window.Active;
         window.BeginCount = 0;
         window.Active = false;
@@ -361,25 +361,25 @@ pub unsafe fn NewFrame() {
     // This fallback is particularly important as it avoid  calls from crashing.
     g.WithinFrameScopeWithImplicitWindow = true;
     SetNextWindowSize(&ImVec2::from_floats(400.0, 400.0), ImGuiCond_FirstUseEver);
-    Begin(str_to_const_c_char_ptr("Debug##Default"), null_mut());
+    Begin(g, str_to_const_c_char_ptr("Debug##Default"), null_mut());
     // IM_ASSERT(g.Currentwindow.IsFallbackWindow == true);
 
-    CallContextHooks(g, ImGuiContextHookType_NewFramePost);
+    // CallContextHooks(g, IM_GUI_CONTEXT_HOOK_TYPE_NEW_FRAME_POST);
+    g.call_context_hooks(IM_GUI_CONTEXT_HOOK_TYPE_NEW_FRAME_POST)
 }
 
 // This is normally called by Render(). You may want to call it directly if you want to avoid calling Render() but the gain will be very minimal.
 // c_void EndFrame()
-pub unsafe fn EndFrame() {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-                    // IM_ASSERT(g.Initialized);
-
+pub fn EndFrame(g: &mut ImguiContext) {
+    // IM_ASSERT(g.Initialized);
     // Don't process EndFrame() multiple times.
     if g.FrameCountEnded == g.FrameCount {
         return;
     }
     // IM_ASSERT(g.WithinFrameScope && "Forgot to call NewFrame()?");
 
-    CallContextHooks(g, ImGuiContextHookType_EndFramePre);
+    // CallContextHooks(g, IM_GUI_CONTEXT_HOOK_TYPE_END_FRAME_PRE);
+    g.call_context_hooks(IM_GUI_CONTEXT_HOOK_TYPE_END_FRAME_PRE);
 
     ErrorCheckEndFrameSanityChecks();
 
@@ -454,7 +454,7 @@ pub unsafe fn EndFrame() {
     g.WindowsTempSortBuffer.reserve(g.Windows.len());
     // for (let i: c_int = 0; i != g.Windows.Size; i++)
     for i in 0..g.Windows.len() {
-        let mut window: &mut ImGuiWindow = g.Windows[i];
+        let mut window: &mut ImguiWindow = g.Windows[i];
         if window.Active && flag_set(window.Flags, ImGuiWindowFlags_ChildWindow) {
             // if a child is active its parent will add it
             continue;
@@ -475,17 +475,18 @@ pub unsafe fn EndFrame() {
     g.IO.MouseWheelH = 0.0;
     g.IO.InputQueueCharacters.clear();
 
-    CallContextHooks(g, ImGuiContextHookType_EndFramePost);
+    // CallContextHooks(g, IM_GUI_CONTEXT_HOOK_TYPE_END_FRAME_POST);
+    g.call_context_hooks(IM_GUI_CONTEXT_HOOK_TYPE_END_FRAME_POST);
 }
 
 // GetFrameHeight: c_float()
-pub unsafe fn GetFrameHeight() -> c_float {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.FontSize + g.Style.FramePadding.y * 2.0;
+pub fn GetFrameHeight(g: &mut ImguiContext) -> f32 {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    return g.FontSize + g.style.FramePadding.y * 2.0;
 }
 
 // GetFrameHeightWithSpacing: c_float()
-pub unsafe fn GetFrameHeightWithSpacing() -> c_float {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.FontSize + g.Style.FramePadding.y * 2.0 + g.Style.ItemSpacing.y;
+pub fn GetFrameHeightWithSpacing(g: &mut ImguiContext) -> f32 {
+    // let g = GImGui; // ImGuiContext& g = *GImGui;
+    return g.FontSize + g.style.FramePadding.y * 2.0 + g.style.item_spacing.y;
 }

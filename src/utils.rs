@@ -2,11 +2,11 @@
 
 use std::ptr::null_mut;
 use libc::{c_char, c_void, size_t};
-use crate::context::ImGuiContext;
-use crate::context_hook::{ImGuiContextHook, ImGuiContextHookType, ImGuiContextHookType_PendingRemoval_};
+use crate::context::ImguiContext;
+use crate::context_hook::{ImGuiContextHook, ImguiContextHookType, IM_GUI_CONTEXT_HOOK_TYPE_PENDING_REMOVAL};
 use crate::font_atlas::ImFontAtlas;
 use crate::imgui::{GImAllocatorUserData, GImGui};
-use crate::type_defs::{ImGuiID, ImGuiMemAllocFunc, ImGuiMemFreeFunc};
+use crate::type_defs::{ImguiHandle, ImGuiMemAllocFunc, ImGuiMemFreeFunc};
 
 // Memory Allocator functions. Use SetAllocatorFunctions() to change them.
 // - You probably don't want to modify that mid-program, and if you use global/static e.g. ImVector<> instances you may need to keep them accessible during program destruction.

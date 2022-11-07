@@ -8,7 +8,7 @@ use crate::config_flags::{
     ImGuiConfigFlags_ViewportsEnable,
 };
 use crate::group_ops::EndGroup;
-use crate::id_ops::PopID;
+use crate::id_ops::pop_win_id_from_stack;
 use crate::item_ops::PopItemFlag;
 use crate::key::{ImGuiKey_COUNT, ImGuiKey_NamedKey_BEGIN};
 use crate::keyboard_ops::GetMergedModFlags;
@@ -41,12 +41,12 @@ pub unsafe fn ErrorCheckNewFrameSanityChecks() {
     // IM_ASSERT((g.FrameCount == 0 || g.FrameCountEnded == g.FrameCount)  && "Forgot to call Render() or EndFrame() at the end of the previous frame?");
     // IM_ASSERT(g.IO.DisplaySize.x >= 0.0 && g.IO.DisplaySize.y >= 0.0  && "Invalid DisplaySize value!");
     // IM_ASSERT(g.IO.Fonts.IsBuilt()                                     && "Font Atlas not built! Make sure you called ImGui_ImplXXXX_NewFrame() function for renderer backend, which should call io.Fonts.GetTexDataAsRGBA32() / GetTexDataAsAlpha8()");
-    // IM_ASSERT(g.Style.CurveTessellationTol > 0.0                       && "Invalid style setting!");
-    // IM_ASSERT(g.Style.CircleTessellationMaxError > 0.0                 && "Invalid style setting!");
-    // IM_ASSERT(g.Style.Alpha >= 0.0 && g.Style.Alpha <= 1.0            && "Invalid style setting!"); // Allows us to avoid a few clamps in color computations
-    // IM_ASSERT(g.Style.WindowMinSize.x >= 1.0 && g.Style.WindowMinSize.y >= 1.0 && "Invalid style setting.");
-    // IM_ASSERT(g.Style.WindowMenuButtonPosition == ImGuiDir_None || g.Style.WindowMenuButtonPosition == ImGuiDir_Left || g.Style.WindowMenuButtonPosition == ImGuiDir_Right);
-    // IM_ASSERT(g.Style.ColorButtonPosition == ImGuiDir_Left || g.Style.ColorButtonPosition == ImGuiDir_Right);
+    // IM_ASSERT(g.style.CurveTessellationTol > 0.0                       && "Invalid style setting!");
+    // IM_ASSERT(g.style.CircleTessellationMaxError > 0.0                 && "Invalid style setting!");
+    // IM_ASSERT(g.style.Alpha >= 0.0 && g.style.Alpha <= 1.0            && "Invalid style setting!"); // Allows us to avoid a few clamps in color computations
+    // IM_ASSERT(g.style.WindowMinSize.x >= 1.0 && g.style.WindowMinSize.y >= 1.0 && "Invalid style setting.");
+    // IM_ASSERT(g.style.WindowMenuButtonPosition == ImGuiDir_None || g.style.WindowMenuButtonPosition == ImGuiDir_Left || g.style.WindowMenuButtonPosition == ImGuiDir_Right);
+    // IM_ASSERT(g.style.ColorButtonPosition == ImGuiDir_Left || g.style.ColorButtonPosition == ImGuiDir_Right);
     // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
     //     for (let n: c_int = ImGuiKey_NamedKey_BEGIN; n < ImGuiKey_COUNT; n++)
     for n in ImGuiKey_NamedKey_BEGIN..ImGuiKey_COUNT {}
@@ -160,7 +160,7 @@ pub unsafe fn ErrorCheckEndFrameRecover(
     //-V1044
     {
         ErrorCheckEndWindowRecover(log_callback, user_data);
-        let mut window  = &g.CurrentWindow;
+        let mut window  = g.current_window_mut().unwrap();
         if g.CurrentWindowStack.Size == 1 {
             // IM_ASSERT(window.IsFallbackWindow);
             break;
@@ -189,8 +189,8 @@ pub unsafe fn ErrorCheckEndWindowRecover(
         EndTable();
     }
 
-    let mut window  = &g.CurrentWindow;
-    let stack_sizes = &g.CurrentWindowStack.last().unwrap().StackSizesOnBegin;
+    let mut window  = g.current_window_mut().unwrap();
+    let stack_sizes = g.current_window_mut().unwrap()Stack.last().unwrap().StackSizesOnBegin;
     // IM_ASSERT(window != NULL);
     while (g.CurrentTabBar != null_mut())
     //-V1044
@@ -198,7 +198,7 @@ pub unsafe fn ErrorCheckEndWindowRecover(
         // if (log_callback) { log_callback(user_data, "Recovered from missing EndTabBar() in '{}'", window.Name); }
         EndTabBar();
     }
-    while (window.DC.TreeDepth > 0) {
+    while (window.dc.TreeDepth > 0) {
         // if (log_callback) { log_callback(user_data, "Recovered from missing TreePop() in '{}'", window.Name); }
         TreePop();
     }
@@ -210,7 +210,7 @@ pub unsafe fn ErrorCheckEndWindowRecover(
     }
     while window.IDStack.Size > 1 {
         // if (log_callback) { log_callback(user_data, "Recovered from missing PopID() in '{}'", window.Name); }
-        PopID();
+        pop_win_id_from_stack(g);
     }
     while g.DisabledStackSize > stack_sizes.SizeOfDisabledStack
     //-V1044
@@ -228,7 +228,7 @@ pub unsafe fn ErrorCheckEndWindowRecover(
         // if (log_callback) log_callback(user_data, "Recovered from missing PopItemFlag() in '{}'", window.Name);
         PopItemFlag();
     }
-    while g.StyleVarStack.Size > stack_sizes.SizeOfStyleVarStack
+    while g.styleVarStack.Size > stack_sizes.SizeOfStyleVarStack
     //-V1044
     {
         // if (log_callback) log_callback(user_data, "Recovered from missing PopStyleVar() in '{}'", window.Name);

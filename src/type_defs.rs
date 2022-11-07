@@ -1,5 +1,5 @@
-use libc::{c_char, c_int, c_void, size_t};
 use crate::bit_array::ImBitArray;
+use libc::{c_char, c_int, c_void, size_t};
 
 // typedef int ImGuiDir;               // -> enum ImGuiDir_             // Enum: A cardinal direction
 // pub type ImGuiDir = c_int;
@@ -22,34 +22,9 @@ pub type ImTextureID = *mut c_void;
 pub type ImDrawIdx = size_t;
 
 // Scalar data types
-// typedef unsigned int        ImGuiID;// A unique ID used by widgets (typically the result of hashing a stack of string)
-pub type ImGuiID = i32;
-pub const INVALID_IMGUI_ID: i32 = i32::MAX;
-
-// typedef signed char         ImS8;   // 8-bit signed integer
-// typedef unsigned char       ImU8;   // 8-bit unsigned integer
-// typedef signed short        ImS16;  // 16-bit signed integer
-// typedef unsigned short      ImU16;  // 16-bit unsigned integer
-// typedef signed int          ImS32;  // 32-bit signed integer == int
-// typedef unsigned int        u32;  // 32-bit unsigned integer (often used to store packed colors)
-// typedef signed   long long  ImS64;  // 64-bit signed integer
-// typedef unsigned long long  u64;  // 64-bit unsigned integer
-
-// Character types
-// (we generally use UTF-8 encoded string in the API. This is storage specifically for a decoded character used for keyboard input and display)
-// typedef unsigned short ImWchar16;   // A single decoded U16 character/code point. We encode them as multi bytes UTF-8 when used in strings.
-pub type ImWchar16 = u16;
-
-// typedef unsigned int ImWchar32;     // A single decoded U32 character/code point. We encode them as multi bytes UTF-8 when used in strings.
-pub type ImWchar32 = u32;
-
-// #ifdef IMGUI_USE_WCHAR32            // ImWchar [configurable type: override in imconfig.h with '#define IMGUI_USE_WCHAR32' to support Unicode planes 1-16]
-// typedef ImWchar32 ImWchar;
-pub type ImWchar = ImWchar32;
-
-// #else
-// typedef ImWchar16 ImWchar;
-// #endif
+// typedef unsigned int        ImguiHandle;// A unique ID used by widgets (typically the result of hashing a stack of string)
+pub type ImguiHandle = u64;
+pub const INVALID_IMGUI_HANDLE: u64 = u64::MAX;
 
 // Callback and functions types
 // typedef int     (*ImGuiInputTextCallback)(ImGuiInputTextCallbackData* data);    // Callback function for InputText()
@@ -69,21 +44,17 @@ pub type ImGuiMemFreeFunc = fn(ptr: *mut c_void, user_data: *mut c_void);
 // typedef void (*ImGuiErrorLogCallback)(void* user_data, const char* fmt, ...);
 pub type ImGuiErrorLogCallback = fn(user_data: *mut c_void, fmt: *const c_char);
 
-
 // typedef ImBitArray<ImGuiKey_NamedKey_COUNT, -ImGuiKey_NamedKey_BEGIN>    ImBitArrayForNamedKeys;
 pub type ImBitArrayForNamedKeys = ImBitArray;
 
-
 // typedef let mut ImPoolIdx: c_int = 0;
 pub type ImPoolIdx = c_int;
-
 
 // // Our current column maximum is 64 but we may raise that in the future.
 // typedef i8 ImGuiTableColumnIdx;
 pub type ImGuiTableColumnIdx = i8;
 // typedef ImU8 ImGuiTableDrawChannelIdx;
 pub type ImGuiTableDrawChannelIdx = u8;
-
 
 // typedef *mut FILE ImFileHandle;
 pub type ImFileHandle = *mut libc::FILE;

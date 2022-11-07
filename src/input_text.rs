@@ -13,7 +13,7 @@ use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_AlphaBar,
 use crate::color_ops::{ColorConvertFloat4ToU32, ColorConvertHSVtoRGB, ColorConvertRGBtoHSV};
 use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Once};
 use crate::config_flags::ImGuiConfigFlags_NavEnableGamepad;
-use crate::cursor_ops::{GetCursorScreenPos, Indent, SetCursorScreenPos, Unindent};
+use crate::cursor_ops::{cursor_screen_pos, indent, set_cursor_screen_pos, unindent};
 use crate::direction::{ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_Right, ImGuiDir_Up};
 use crate::drag_drop_ops::{AcceptDragDropPayload, BeginDragDropSource, BeginDragDropTarget, EndDragDropSource, EndDragDropTarget, SetDragDropPayload};
 use crate::draw_flags::{ImDrawFlags_RoundCornersLeft, ImDrawFlags_RoundCornersRight};
@@ -23,7 +23,7 @@ use crate::font_ops::{PopFont, PushFont};
 use crate::frame_ops::GetFrameHeight;
 use crate::geometry_ops::{ImTriangleBarycentricCoords, ImTriangleClosestPoint, ImTriangleContainsPoint};
 use crate::group_ops::{BeginGroup, EndGroup};
-use crate::id_ops::{ClearActiveID, GetIDWithSeed, PopID, PushOverrideID, SetActiveID};
+use crate::id_ops::{ClearActiveID, GetIDWithSeed, pop_win_id_from_stack, PushOverrideID, SetActiveID};
 use crate::input_ops::IsKeyPressed;
 use crate::input_source::{ImGuiInputSource, ImGuiInputSource_Clipboard, ImGuiInputSource_Keyboard};
 use crate::input_text_callback_data::ImGuiInputTextCallbackData;
@@ -34,7 +34,7 @@ use crate::item_ops::{CalcItemSize, CalcItemWidth, IsItemActive, ItemAdd, ItemHo
 use crate::item_status_flags::{ImGuiItemStatusFlags, ImGuiItemStatusFlags_FocusedByTabbing, ImGuiItemStatusFlags_HasDisplayRect, ImGuiItemStatusFlags_HoveredRect, ImGuiItemStatusFlags_HoveredWindow, ImGuiItemStatusFlags_Openable, ImGuiItemStatusFlags_Opened, ImGuiItemStatusFlags_ToggledOpen, ImGuiItemStatusFlags_ToggledSelection};
 use crate::key::{ImGuiKey, ImGuiKey_A, ImGuiKey_Backspace, ImGuiKey_C, ImGuiKey_Delete, ImGuiKey_DownArrow, ImGuiKey_End, ImGuiKey_Enter, ImGuiKey_Escape, ImGuiKey_Home, ImGuiKey_Insert, ImGuiKey_KeypadEnter, ImGuiKey_LeftArrow, ImGuiKey_NavGamepadActivate, ImGuiKey_NavGamepadCancel, ImGuiKey_NavGamepadInput, ImGuiKey_None, ImGuiKey_PageDown, ImGuiKey_PageUp, ImGuiKey_RightArrow, ImGuiKey_Tab, ImGuiKey_UpArrow, ImGuiKey_V, ImGuiKey_X, ImGuiKey_Y, ImGuiKey_Z};
 use crate::last_item_data::ImGuiLastItemData;
-use crate::layout_ops::SameLine;
+use crate::layout_ops::same_line;
 use crate::logging_ops::LogSetNextTextDecoration;
 use crate::math_ops::{ImAtan2, char_is_blank, ImClamp, ImCos, ImFmod, ImLerp, ImMax, ImMin, ImRotate, ImSin, ImSwap};
 use crate::mod_flags::{ImGuiModFlags_Ctrl, ImGuiModFlags_Shift, ImGuiModFlags_Super};
@@ -58,12 +58,12 @@ use crate::text_ops::{CalcTextSize, GetTextLineHeightWithSpacing};
 use crate::tooltip_flags::ImGuiTooltipFlags_OverridePreviousTooltip;
 use crate::tooltip_ops::{BeginTooltipEx, EndTooltip};
 use crate::tree_node_flags::{ImGuiTreeNodeFlags, ImGuiTreeNodeFlags_AllowItemOverlap, ImGuiTreeNodeFlags_Bullet, ImGuiTreeNodeFlags_ClipLabelForTrailingButton, ImGuiTreeNodeFlags_CollapsingHeader, ImGuiTreeNodeFlags_DefaultOpen, ImGuiTreeNodeFlags_Framed, ImGuiTreeNodeFlags_FramePadding, ImGuiTreeNodeFlags_NavLeftJumpsBackHere, ImGuiTreeNodeFlags_NoAutoOpenOnLog, ImGuiTreeNodeFlags_None, ImGuiTreeNodeFlags_NoTreePushOnOpen, ImGuiTreeNodeFlags_OpenOnArrow, ImGuiTreeNodeFlags_OpenOnDoubleClick, ImGuiTreeNodeFlags_Selected, ImGuiTreeNodeFlags_SpanAvailWidth, ImGuiTreeNodeFlags_SpanFullWidth};
-use crate::type_defs::{ImGuiID, ImGuiInputTextCallback, ImWchar};
+use crate::type_defs::{ImguiHandle, ImGuiInputTextCallback, ImWchar};
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use crate::window::focus::FocusWindow;
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use crate::window::ops::{BeginDisabled, EndDisabled, GetCurrentWindow};
 use crate::window::props::{GetFontTexUvWhitePixel, SetNextWindowPos};
 use crate::window::rect::window_rect_abs_to_rel;
@@ -72,7 +72,7 @@ use crate::window::window_flags::{ImGuiWindowFlags_NoMove, ImGuiWindowFlags_None
 // Create text input in place of another active widget (e.g. used when doing a CTRL+Click on drag/slider widgets)
 // FIXME: Facilitate using this in variety of other situations.
 pub unsafe fn TempInputText(bb: &mut ImRect,
-                            id: ImGuiID,
+                            id: ImguiHandle,
                             label: String,
                             buf: &mut String,
                             buf_size: usize,
@@ -83,9 +83,9 @@ pub unsafe fn TempInputText(bb: &mut ImRect,
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let init: bool = (g.TempInputId != id);
     if init {
-        ClearActiveID(); }
+        ClearActiveID(g); }
 
-    g.Currentwindow.DC.CursorPos = bb.Min;
+    g.Currentwindow.dc.cursor_pos = bb.min;
     let mut value_changed: bool =  InputTextEx(label, "", buf, buf_size, &mut bb.GetSize(), flags | ImGuiInputTextFlags_MergedItem, None, None);
     if init
     {
@@ -368,8 +368,8 @@ pub unsafe fn InputTextEx(label: String,
                           callback: Option<ImGuiInputTextCallback>,
                           callback_user_data: Option<&Vec<u8>>) -> bool
 {
-    let mut window = GetCurrentWindow();
-    if window.SkipItems { return  false; }
+    let mut window = g.current_window_mut().unwrap();
+    if window.skip_items { return  false; }
 
     // IM_ASSERT(buf != NULL && buf_size >= 0);
     // IM_ASSERT(!(flag_set(flags, ImGuiInputTextFlags_CallbackHistory) && (flags & ImGuiInputTextFlags_Multiline)));        // Can't use both together (they both use up/down keys)
@@ -377,7 +377,7 @@ pub unsafe fn InputTextEx(label: String,
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let io = &mut g.IO;
-    let setyle = &mut g.Style;
+    let setyle = &mut g.style;
 
     let RENDER_SELECTION_WHEN_INACTIVE: bool = false;
     let is_multiline: bool = flag_set(flags, ImGuiInputTextFlags_Multiline);
@@ -391,30 +391,30 @@ pub unsafe fn InputTextEx(label: String,
     if is_multiline { // Open group before calling GetID() because groups tracks id created within their scope (including the scrollbar)
         BeginGroup();
     }
-    let mut id: ImGuiID =  window.GetID(label);
-    let label_size: ImVec2 = CalcTextSize(label, true, 0.0);
-    let frame_size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(), (if is_multiline { g.FontSize * 8.0} else {label_size.y}) + style.FramePadding.y * 2.0); // Arbitrary default of 8 lines high for multi-line
+    let mut id: ImguiHandle =  window.GetID(label);
+    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let frame_size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(g), (if is_multiline { g.FontSize * 8.0} else {label_size.y}) + style.FramePadding.y * 2.0); // Arbitrary default of 8 lines high for multi-line
     let total_size: ImVec2 = ImVec2::new(frame_size.x + (if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x} else {0.0}), frame_size.y);
 
-    let mut frame_bb: ImRect = ImRect::new(window.DC.CursorPos, window.DC.CursorPos + frame_size);
-    let mut total_bb: ImRect = ImRect::new(frame_bb.Min, frame_bb.Min + total_size);
+    let mut frame_bb: ImRect = ImRect::new(window.dc.cursor_pos, window.dc.cursor_pos + frame_size);
+    let mut total_bb: ImRect = ImRect::new(frame_bb.min, frame_bb.min + total_size);
 
-    draw_window: &mut ImGuiWindow = window;
+    draw_window: &mut ImguiWindow = window;
     let mut inner_size: ImVec2 = frame_size;
     let mut item_status_flags: ImGuiItemStatusFlags =  0;
     let mut item_data_backup = ImGuiLastItemData::default();
     if is_multiline
     {
-        let backup_pos: ImVec2 = window.DC.CursorPos;
-        ItemSize(&total_bb.GetSize(), style.FramePadding.y);
-        if !ItemAdd(&mut total_bb, id, &frame_bb, ImGuiItemFlags_Inputable)
+        let backup_pos: ImVec2 = window.dc.cursor_pos;
+        ItemSize(g, &total_bb.GetSize(), style.FramePadding.y);
+        if !ItemAdd(g, &mut total_bb, id, &frame_bb, ImGuiItemFlags_Inputable)
         {
             EndGroup();
             return false;
         }
         item_status_flags = g.LastItemData.StatusFlags;
         item_data_backup = g.LastItemData;
-        window.DC.CursorPos = backup_pos;
+        window.dc.cursor_pos = backup_pos;
 
         // We reproduce the contents of BeginChildFrame() in order to provide 'label' so our window internal data are easier to read/debug.
         // FIXME-NAV: Pressing NavActivate will trigger general child activation right before triggering our own below. Harmless but bizarre.
@@ -433,15 +433,15 @@ pub unsafe fn InputTextEx(label: String,
         }
         draw_window = g.CurrentWindow; // Child window
         draw_window.DC.NavLayersActiveMaskNext |= (1 << draw_window.DC.NavLayerCurrent); // This is to ensure that EndChild() will display a navigation highlight so we can "enter" into it.
-        draw_window.DC.CursorPos += style.FramePadding;
-        inner_size.x -= draw_window.ScrollbarSizes.x;
+        draw_window.dc.cursor_pos += style.FramePadding;
+        inner_size.x -= draw_window.scrollbarSizes.x;
     }
     else
     {
         // Support for internal ImGuiInputTextFlags_MergedItem flag, which could be redesigned as an ItemFlags if needed (with test performed in ItemAdd)
-        ItemSize(&total_bb.GetSize(), style.FramePadding.y);
+        ItemSize(g, &total_bb.GetSize(), style.FramePadding.y);
         if flag_clear(flags, ImGuiInputTextFlags_MergedItem) {
-            if !ItemAdd(&mut total_bb, id, &frame_bb, ImGuiItemFlags_Inputable) { return false; }
+            if !ItemAdd(g, &mut total_bb, id, &frame_bb, ImGuiItemFlags_Inputable) { return false; }
         }
         item_status_flags = g.LastItemData.StatusFlags;
     }
@@ -461,7 +461,7 @@ pub unsafe fn InputTextEx(label: String,
     let mut clear_active_id: bool =  false;
     let mut select_all: bool =  false;
 
-    let mut scroll_y: c_float =  if is_multiline { draw_window.Scroll.y} else {f32::MAX};
+    let mut scroll_y: c_float =  if is_multiline { draw_window.scroll.y} else {f32::MAX};
 
     let init_changed_specs: bool = (state != None && state.Stb.single_line != !is_multiline);
     let init_make_active: bool = (user_clicked || user_scroll_finish || input_requested_by_nav || input_requested_by_tabbing);
@@ -523,7 +523,7 @@ pub unsafe fn InputTextEx(label: String,
     if (g.ActiveId != id && init_make_active)
     {
         // IM_ASSERT(state && state.ID == id);
-        SetActiveID(id, window);
+        SetActiveID(g, id, window);
         SetFocusID(id, window);
         FocusWindow(window);
 
@@ -549,7 +549,7 @@ pub unsafe fn InputTextEx(label: String,
 
     // We have an edge case if ActiveId was set through another widget (e.g. widget being swapped), clear id immediately (don't wait until the end of the function)
     if g.ActiveId == id && state == None{
-        ClearActiveID();}
+        ClearActiveID(g);}
 
     // Release focus when we click outside
     if g.ActiveId == id && io.MouseClicked[0] && !init_state && !init_make_active { //-V560
@@ -610,8 +610,8 @@ pub unsafe fn InputTextEx(label: String,
         g.WantTextInputNextFrame = 1;
 
         // Edit in progress
-        let mouse_x: c_float =  (io.MousePos.x - frame_bb.Min.x - style.FramePadding.x) + state.ScrollX;
-        let mouse_y: c_float =  (if is_multiline { (io.MousePos.y - draw_window.DC.CursorPos.y) }else {g.FontSize * 0.5});
+        let mouse_x: c_float =  (io.MousePos.x - frame_bb.min.x - style.FramePadding.x) + state.ScrollX;
+        let mouse_y: c_float =  (if is_multiline { (io.MousePos.y - draw_window.dc.cursor_pos.y) }else {g.FontSize * 0.5});
 
         let is_osx: bool = io.ConfigMacOSXBehaviors;
         if (select_all)
@@ -748,9 +748,9 @@ pub unsafe fn InputTextEx(label: String,
         if IsKeyPressed(ImGuiKey_LeftArrow, false) { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_LINESTART} else { if is_wordmove_key_down { STB_TEXTEDIT_K_WORDLEFT}else {STB_TEXTEDIT_K_LEFT}}) | k_mask); }
         else if IsKeyPressed(ImGuiKey_RightArrow, false) { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_LINEEND} else { if is_wordmove_key_down { STB_TEXTEDIT_K_WORDRIGHT}else {STB_TEXTEDIT_K_RIGHT}}) | k_mask); }
         else if IsKeyPressed(ImGuiKey_UpArrow, false) && is_multiline { if io.KeyCtrl {
-            SetScrollY(draw_window, ImMax(draw_window.Scroll.y - g.FontSize, 0.0));
+            SetScrollY(draw_window, ImMax(draw_window.scroll.y - g.FontSize, 0.0));
         } else {state.OnKeyPressed((if is_startend_key_down {STB_TEXTEDIT_K_TEXTSTART} else { STB_TEXTEDIT_K_UP }) | k_mask); }
-         if IsKeyPressed(ImGuiKey_DownArrow, false) && is_multiline { if io.KeyCtrl { SetScrollY(draw_window, ImMin(draw_window.Scroll.y + g.FontSize, GetScrollMaxY() as c_int)); } else { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_TEXTEND } else { STB_TEXTEDIT_K_DOWN }) | k_mask); }}
+         if IsKeyPressed(ImGuiKey_DownArrow, false) && is_multiline { if io.KeyCtrl { SetScrollY(draw_window, ImMin(draw_window.scroll.y + g.FontSize, GetScrollMaxY() as c_int)); } else { state.OnKeyPressed((if is_startend_key_down { STB_TEXTEDIT_K_TEXTEND } else { STB_TEXTEDIT_K_DOWN }) | k_mask); }}
         else if IsKeyPressed(ImGuiKey_PageUp, false) && is_multiline { state.OnKeyPressed(STB_TEXTEDIT_K_PGUP | k_mask); scroll_y -= row_count_per_page * g.FontSize; }
         else if IsKeyPressed(ImGuiKey_PageDown, false) && is_multiline { state.OnKeyPressed(STB_TEXTEDIT_K_PGDOWN | k_mask); scroll_y += row_count_per_page * g.FontSize; }
         else if IsKeyPressed(ImGuiKey_Home, false) { state.OnKeyPressed(if io.KeyCtrl { STB_TEXTEDIT_K_TEXTSTART | k_mask} else {STB_TEXTEDIT_K_LINESTART | k_mask}); }
@@ -1035,17 +1035,17 @@ pub unsafe fn InputTextEx(label: String,
 
     // Release active ID at the end of the function (so e.g. pressing Return still does a final application of the value)
     if clear_active_id && g.ActiveId == id{
-        ClearActiveID();}
+        ClearActiveID(g);}
 
     // Render frame
     if !is_multiline
     {
-        RenderNavHighlight(&frame_bb, id, 0);
-        RenderFrame(frame_bb.Min, frame_bb.Max, GetColorU32(ImGuiCol_FrameBg, 0.0), true, style.FrameRounding);
+        RenderNavHighlight(, &frame_bb, id, 0);
+        RenderFrame(frame_bb.min, frame_bb.max, GetColorU32(ImGuiCol_FrameBg, 0.0), true, style.FrameRounding);
     }
 
-    let mut clip_rect = ImVec4(frame_bb.Min.x, frame_bb.Min.y, frame_bb.Min.x + inner_size.x, frame_bb.Min.y + inner_size.y); // Not using frame_bb.Max because we have adjusted size
-    let mut draw_pos: ImVec2 = if is_multiline { draw_window.DC.CursorPos} else {frame_bb.Min + style.FramePadding};
+    let mut clip_rect = ImVec4(frame_bb.min.x, frame_bb.min.y, frame_bb.min.x + inner_size.x, frame_bb.min.y + inner_size.y); // Not using frame_bb.Max because we have adjusted size
+    let mut draw_pos: ImVec2 = if is_multiline { draw_window.dc.cursor_pos} else {frame_bb.min + style.FramePadding};
     let mut text_size = ImVec2::from_floats(0.0, 0.0);
 
     // Set upper limit of single-line InputTextEx() at 2 million characters strings. The current pathological worst case is a long line
@@ -1171,8 +1171,8 @@ pub unsafe fn InputTextEx(label: String,
                 }
                 let scroll_max_y: c_float =  ImMax((text_size.y + style.FramePadding.y * 2.0) - inner_size.y, 0.0);
                 scroll_y = ImClamp(scroll_y, 0.0, scroll_max_y);
-                draw_pos.y += (draw_window.Scroll.y - scroll_y);   // Manipulate cursor pos immediately avoid a frame of lag
-                draw_window.Scroll.y = scroll_y;
+                draw_pos.y += (draw_window.scroll.y - scroll_y);   // Manipulate cursor pos immediately avoid a frame of lag
+                draw_window.scroll.y = scroll_y;
             }
 
             state.CursorFollow = false;
@@ -1235,7 +1235,7 @@ pub unsafe fn InputTextEx(label: String,
             let cursor_screen_pos: ImVec2 = ImFloor(draw_pos + cursor_offset - draw_scroll);
             let mut cursor_screen_rect: ImRect = ImRect::new(cursor_screen_pos.x, cursor_screen_pos.y - g.FontSize + 0.5, cursor_screen_pos.x + 1.0, cursor_screen_pos.y - 1.5);
             if cursor_is_visible && cursor_screen_rect.Overlaps(clip_rect) {
-                draw_window.DrawList.AddLine(cursor_screen_rect.Min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text, 0.0));
+                draw_window.DrawList.AddLine(cursor_screen_rect.min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text, 0.0));
             }
 
             // Notify OS of text input position for advanced IME (-1 x offset so that Windows IME can cover our cursor. Bit of an extra nicety.)
@@ -1275,11 +1275,11 @@ pub unsafe fn InputTextEx(label: String,
     if is_multiline
     {
         // For focus requests to work on our multiline we need to ensure our child ItemAdd() call specifies the ImGuiItemFlags_Inputable (ref issue #4761)...
-        layout_ops::Dummy(ImVec2::new(text_size.x, text_size.y + style.FramePadding.y));
+        layout_ops::Dummy(g, ImVec2::new(text_size.x, text_size.y + style.FramePadding.y));
         let mut backup_item_flags: ImGuiItemFlags =  g.CurrentItemFlags;
         g.CurrentItemFlags |= ImGuiItemFlags_Inputable | ImGuiItemFlags_NoTabStop;
         EndChild();
-        item_data_backup.StatusFlags |= (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredWindow);
+        item_data_backup.status_flags |= (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredWindow);
         g.CurrentItemFlags = backup_item_flags;
 
         // ...and then we need to undo the group overriding last item data, which gets a bit messy as EndGroup() tries to forward scrollbar being active...
@@ -1288,8 +1288,8 @@ pub unsafe fn InputTextEx(label: String,
         if g.LastItemData.ID == 0
         {
             g.LastItemData.ID = id;
-            g.LastItemData.InFlags = item_data_backup.InFlags;
-            g.LastItemData.StatusFlags = item_data_backup.StatusFlags;
+            g.LastItemData.InFlags = item_data_backup.in_flags;
+            g.LastItemData.StatusFlags = item_data_backup.status_flags;
         }
     }
 
@@ -1301,11 +1301,11 @@ pub unsafe fn InputTextEx(label: String,
     }
 
     if label_size.x > 0.0 {
-        RenderText(ImVec2::new(frame_bb.Max.x + style.ItemInnerSpacing.x, frame_bb.Min.y + style.FramePadding.y), label, false);
+        RenderText(ImVec2::new(frame_bb.max.x + style.ItemInnerSpacing.x, frame_bb.min.y + style.FramePadding.y), label, false, g);
     }
 
     if value_changed && flag_clear(flags, ImGuiInputTextFlags_NoMarkEdited) {
-        MarkItemEdited(id);
+        MarkItemEdited(g, id);
     }
 
     IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);

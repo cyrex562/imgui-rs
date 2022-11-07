@@ -1,11 +1,11 @@
 #![allow(non_upper_case_globals)]
 
-use std::ptr::null_mut;
+use crate::context::ImguiContext;
 use libc::c_void;
-use crate::context::ImGuiContext;
+use std::ptr::null_mut;
 
 // ImGuiContext*   GImGui = None;
-pub static mut GImGui: Option<ImGuiContext> = None;
+// pub static mut GImGui: Option<ImGuiContext> = None;
 
 // static void*                GImAllocatorUserData = None;
-pub static mut GImAllocatorUserData: *mut c_void = None;
+// pub static mut GImAllocatorUserData: *mut c_void = None;

@@ -2,7 +2,8 @@
 
 use crate::activate_flags::ImGuiActivateFlags_None;
 use crate::color::color_u32_from_rgba;
-use crate::content_ops::GetContentRegionMaxAbs;
+use crate::content_ops::content_region_max_abs;
+use crate::context::ImguiContext;
 use crate::draw_flags::ImDrawFlags_None;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::hovered_flags::{
@@ -22,35 +23,34 @@ use crate::item_status_flags::{
     ImGuiItemStatusFlags_ToggledOpen, ImGuiItemStatusFlags_ToggledSelection,
 };
 use crate::key::{ImGuiKey_MouseWheelX, ImGuiKey_MouseWheelY};
-use crate::layout_ops::SameLine;
+use crate::layout_ops::same_line;
 use crate::layout_type::ImGuiLayoutType_Horizontal;
 use crate::math_ops::ImMax;
 use crate::mouse_button::ImGuiMouseButton;
 use crate::nav_ops::NavProcessItem;
 use crate::next_item_data_flags::{ImGuiNextItemDataFlags_HasWidth, ImGuiNextItemDataFlags_None};
 use crate::rect::ImRect;
-use crate::type_defs::ImGuiID;
+use crate::type_defs::ImguiHandle;
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
 use crate::window::ops::{GetCurrentWindow, IsWindowContentHoverable};
 use crate::window::window_flags::ImGuiWindowFlags_NavFlattened;
-use crate::window::ImGuiWindow;
+use crate::window::ImguiWindow;
 use crate::window_flags::ImGuiWindowFlags_NavFlattened;
 use crate::window_ops::IsWindowContentHoverable;
 use libc::{c_float, c_int};
 use std::ptr::null_mut;
 
-// c_void MarkItemEdited(ImGuiID id)
-pub unsafe fn MarkItemEdited(id: ImGuiID) {
+// c_void MarkItemEdited(ImguiHandle id)
+pub fn MarkItemEdited(g: &mut ImguiContext, id: ImguiHandle) {
     // This marking is solely to be able to provide info for IsItemDeactivatedAfterEdit().
     // ActiveId might have been released by the time we call this (as in the typical press/release button behavior) but still need need to fill the data.
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-                    // IM_ASSERT(g.ActiveId == id || g.ActiveId == 0 || g.DragDropActive);
-                    // IM_UNUSED(id); // Avoid unused variable warnings when asserts are compiled out.
-                    //IM_ASSERT(g.Currentwindow.DC.LastItemId == id);
+    // IM_ASSERT(g.ActiveId == id || g.ActiveId == 0 || g.DragDropActive);
+    // IM_UNUSED(id); // Avoid unused variable warnings when asserts are compiled out.
+    //IM_ASSERT(g.Currentwindow.DC.LastItemId == id);
     g.ActiveIdHasBeenEditedThisFrame = true;
     g.ActiveIdHasBeenEditedBefore = true;
-    g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Edited;
+    g.last_item_data.status_flags |= ImGuiItemStatusFlags_Edited;
 }
 
 // == GetItemID() == GetFocusID()
@@ -63,7 +63,7 @@ pub unsafe fn IsItemFocused() -> bool {
 
     // Special handling for the dummy item after Begin() which represent the title bar or tab.
     // When the window is collapsed (SkipItems==true) that last item will never be overwritten so we need to detect the case.
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     if g.LastItemData.ID == window.ID && window.WriteAccessed {
         return false;
     }
@@ -77,7 +77,7 @@ pub unsafe fn IsItemFocused() -> bool {
 // IsItemHovered: bool(flags: ImGuiHoveredFlags)
 pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     if g.NavDisableMouseHover
         && !g.NavDisableHighlight
         && flag_clear(flags, ImGuiHoveredFlags_NoNavOverride)
@@ -150,7 +150,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
         delay = 0.0;
     }
     if delay > 0.0 {
-        let mut hover_delay_id: ImGuiID = if g.LastItemData.ID != 0 {
+        let mut hover_delay_id: ImguiHandle = if g.LastItemData.ID != 0 {
             g.LastItemData.ID
         } else {
             window.GetIDFromRectangle(&g.LastItemData.Rect)
@@ -168,21 +168,21 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
 }
 
 // Internal facing ItemHoverable() used when submitting widgets. Differs slightly from IsItemHovered().
-// ItemHoverable: bool(const ImRect& bb, ImGuiID id)
-pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
+// ItemHoverable: bool(const ImRect& bb, ImguiHandle id)
+pub unsafe fn ItemHoverable(bb: &ImRect, id: ImguiHandle) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.HoveredId != 0 && g.HoveredId != id && !g.HoveredIdAllowOverlap {
         return false;
     }
 
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     if g.HoveredWindow != window {
         return false;
     }
     if g.ActiveId != 0 && g.ActiveId != id && !g.ActiveIdAllowOverlap {
         return false;
     }
-    if !IsMouseHoveringRect(&bb.Min, &bb.Max, false) {
+    if !IsMouseHoveringRect(&bb.min, &bb.max, false) {
         return false;
     }
     if !IsWindowContentHoverable(window, ImGuiHoveredFlags_None) {
@@ -205,7 +205,7 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
     if item_flags & ImGuiItemFlags_Disabled {
         // Release active id if turning disabled
         if g.ActiveId == id {
-            ClearActiveID();
+            ClearActiveID(g);
         }
         g.HoveredIdDisabled = true;
         return false;
@@ -219,8 +219,8 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
         // #define IMGUI_DEBUG_TOOL_ITEM_PICKER_EX in imconfig.h if you want this check to also be performed in ItemAdd().
         if g.DebugItemPickerActive && g.HoveredIdPreviousFrame == id {
             GetForegroundDrawList(null_mut()).AddRect(
-                &bb.Min,
-                &bb.Max,
+                &bb.min,
+                &bb.max,
                 color_u32_from_rgba(255, 255, 0, 255),
                 0.0,
             );
@@ -237,10 +237,10 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImGuiID) -> bool {
     return true;
 }
 
-// IsClippedEx: bool(const ImRect& bb, ImGuiID id)
-pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImGuiID) -> bool {
+// IsClippedEx: bool(const ImRect& bb, ImguiHandle id)
+pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImguiHandle) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     if !bb.Overlaps(&ImRect::from_vec4(&window.ClipRect)) {
         if id == 0 || (id != g.ActiveId && id != g.NavId) {
             if !g.LogEnabled {
@@ -251,42 +251,38 @@ pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImGuiID) -> bool {
     return false;
 }
 
-// This is also inlined in ItemAdd()
-// Note: if ImGuiItemStatusFlags_HasDisplayRect is set, user needs to set window.DC.LastItemDisplayRect!
-// c_void SetLastItemData(ImGuiID item_id, ImGuiItemFlags in_flags, ImGuiItemStatusFlags item_flags, const ImRect& item_rect)
-pub unsafe fn SetLastItemData(
-    item_id: ImGuiID,
+pub fn set_last_item_data(
+    g: &mut ImguiContext,
+    item_id: ImguiHandle,
     in_flags: ImGuiItemFlags,
     item_flags: ImGuiItemStatusFlags,
     item_rect: &ImRect,
 ) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    g.LastItemData.ID = item_id;
-    g.LastItemData.InFlags = in_flags;
-    g.LastItemData.StatusFlags = item_flags;
-    g.LastItemData.Rect = item_rect.clone();
+    g.last_item_data.id = item_id;
+    g.last_item_data.in_flags = in_flags;
+    g.last_item_data.status_flags = item_flags;
+    g.last_item_data.rect = item_rect.clone();
 }
 
-// c_float CalcWrapWidthForPos(const pos: &mut ImVec2, c_float wrap_pos_x)
-pub unsafe fn CalcWrapWidthForPos(pos: &ImVec2, mut wrap_pos_x: c_float) -> c_float {
+pub fn calc_width_for_pos(g: &mut ImguiContext, pos: &ImVec2, mut wrap_pos_x: f32) -> f32 {
     if wrap_pos_x < 0.0 {
         return 0.0;
     }
 
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
     if wrap_pos_x == 0.0 {
         // We could decide to setup a default wrapping max point for auto-resizing windows,
         // or have auto-wrap (with unspecified wrapping pos) behave as a ContentSize extending function?
         //if (window.Hidden && (window.Flags & ImGuiWindowFlags_AlwaysAutoResize))
-        //    wrap_pos_x = ImMax(window.WorkRect.Min.x + g.FontSize * 10.0, window.WorkRect.Max.x);
+        //    wrap_pos_x = ImMax(window.work_rect.Min.x + g.FontSize * 10.0, window.work_rect.Max.x);
         //else
-        wrap_pos_x = window.WorkRect.Max.x;
+        wrap_pos_x = window.work_rect.Max.x;
     } else if wrap_pos_x > 0.0 {
-        wrap_pos_x += window.Pos.x - window.Scroll.x; // wrap_pos_x is provided is window local space
+        // wrap_pos_x is provided is window local space
+        wrap_pos_x += window.position.x - window.scroll.x;
     }
 
-    return ImMax(wrap_pos_x - pos.x, 1.0);
+    return (wrap_pos_x - pos.x).max(1.0);
 }
 
 // IsItemActive: bool()
@@ -385,7 +381,7 @@ pub unsafe fn IsItemEdited() -> bool {
 // c_void SetItemAllowOverlap()
 pub unsafe fn SetItemAllowedOverlap() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut id: ImGuiID = g.LastItemData.ID;
+    let mut id: ImguiHandle = g.LastItemData.ID;
     if g.HoveredId == id {
         g.HoveredIdAllowOverlap = true;
     }
@@ -397,7 +393,7 @@ pub unsafe fn SetItemAllowedOverlap() {
 // c_void SetItemUsingMouseWheel()
 pub unsafe fn SetItemUsingMouseWheel() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut id: ImGuiID = g.LastItemData.ID;
+    let mut id: ImguiHandle = g.LastItemData.ID;
     if g.HoveredId == id {
         g.HoveredIdUsingMouseWheel = true;
     }
@@ -428,26 +424,26 @@ pub unsafe fn GetItemRectSize() -> ImVec2 {
 // Declare item bounding box for clipping and interaction.
 // Note that the size can be different than the one provided to ItemSize(). Typically, widgets that spread over available surface
 // declare their minimum size requirement to ItemSize() and provide a larger region to ItemAdd() which is used drawing/interaction.
-pub unsafe fn ItemAdd(
+pub fn ItemAdd(
+    g: &mut ImguiContext,
     bb: &mut ImRect,
-    id: ImGuiID,
+    id: ImguiHandle,
     nav_bb_arg: Option<&ImRect>,
     extra_flags: ImGuiItemFlags,
 ) -> bool {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
 
     // Set item data
     // (DisplayRect is left untouched, made valid when ImGuiItemStatusFlags_HasDisplayRect is set)
-    g.LastItemData.ID = id;
-    g.LastItemData.Rect = bb.clone();
-    g.LastItemData.NavRect = nav_bb_arg.unwrap_or(bb).clone();
-    g.LastItemData.InFlags = g.CurrentItemFlags | extra_flags;
-    g.LastItemData.StatusFlags = ImGuiItemStatusFlags_None;
+    g.last_item_data.id = id;
+    g.last_item_data.rect = bb.clone();
+    g.last_item_data.NavRect = nav_bb_arg.unwrap_or(bb).clone();
+    g.last_item_data.in_flags = g.CurrentItemFlags | extra_flags;
+    g.last_item_data.status_flags = ImGuiItemStatusFlags_None;
 
     // Directional navigation processing
     if id != 0 {
-        KeepAliveID(id);
+        KeepAliveID(g, id);
 
         // Runs prior to clipping early-out
         //  (a) So that NavInitRequest can be honored, for newly opened windows to select a default widget
@@ -458,7 +454,7 @@ pub unsafe fn ItemAdd(
         //      to reach unclipped widgets. This would work if user had explicit scrolling control (e.g. mapped on a stick).
         // We intentionally don't check if g.NavWindow != NULL because g.NavAnyRequest should only be set when it is non null.
         // If we crash on a NULL g.NavWindow we need to fix the bug elsewhere.
-        window.DC.NavLayersActiveMaskNext |= (1 << window.DC.NavLayerCurrent);
+        window.dc.NavLayersActiveMaskNext |= (1 << window.dc.NavLayerCurrent);
         if g.NavId == id || g.NavAnyRequest {
             if g.NavWindow.RootWindowForNav == window.RootWindowForNav {
                 if window == g.NavWindow
@@ -501,8 +497,8 @@ pub unsafe fn ItemAdd(
     //if (g.IO.KeyAlt) window.DrawList.AddRect(bb.Min, bb.Max, IM_COL32(255,255,0,120)); // [DEBUG]
 
     // We need to calculate this now to take account of the current clipping rectangle (as items like Selectable may change them)
-    if IsMouseHoveringRect(&bb.Min, &bb.Max, false) {
-        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredRect;
+    if IsMouseHoveringRect(&bb.min, &bb.max, false) {
+        g.last_item_data.status_flags |= ImGuiItemStatusFlags_HoveredRect;
     }
     return true;
 }
@@ -510,56 +506,57 @@ pub unsafe fn ItemAdd(
 // Advance cursor given item size for layout.
 // Register minimum needed size so it can extend the bounding box used for auto-fit calculation.
 // See comments in ItemAdd() about how/why the size provided to ItemSize() vs ItemAdd() may often different.
-pub unsafe fn ItemSize(size: &ImVec2, text_baseline_y: c_float) {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    if window.SkipItems {
+pub fn ItemSize(g: &mut ImguiContext, size: &ImVec2, text_baseline_y: f32) {
+    let mut window = g.current_window_mut().unwrap();
+    if window.skip_items {
         return;
     }
 
     // We increase the height in this function to accommodate for baseline offset.
-    // In theory we should be offsetting the starting position (window.DC.CursorPos), that will be the topic of a larger refactor,
+    // In theory we should be offsetting the starting position (window.dc.cursor_pos), that will be the topic of a larger refactor,
     // but since ItemSize() is not yet an API that moves the cursor (to handle e.g. wrapping) enlarging the height has the same effect.
-    let offset_to_match_baseline_y: c_float = if text_baseline_y >= 0.0 {
-        ImMax(0.0, window.DC.CurrLineTextBaseOffset - text_baseline_y)
+    let offset_to_match_baseline_y: f32 = if text_baseline_y >= 0.0 {
+        (0.0).max(window.dc.curr_line_text_base_offset - text_baseline_y)
     } else {
         0.0
     };
 
-    let line_y1: c_float = if window.DC.IsSameLine {
-        window.DC.CursorPosPrevLine.y
+    let line_y1: c_float = if window.dc.is_same_line {
+        window.dc.cursor_pos_prev_line.y
     } else {
-        window.DC.CursorPos.y
+        window.dc.cursor_pos.y
     };
     let line_height: c_float = ImMax(
-        window.DC.CurrLineSize.y,
+        window.dc.curr_line_size.y,
         /*ImMax(*/
-        window.DC.CursorPos.y - line_y1/*, 0.0)*/ + size.y + offset_to_match_baseline_y,
+        window.dc.cursor_pos.y - line_y1/*, 0.0)*/ + size.y + offset_to_match_baseline_y,
     );
 
     // Always align ourselves on pixel boundaries
-    //if (g.IO.KeyAlt) window.DrawList.AddRect(window.DC.CursorPos, window.DC.CursorPos + ImVec2::new(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
-    window.DC.CursorPosPrevLine.x = window.DC.CursorPos.x + size.x;
-    window.DC.CursorPosPrevLine.y = line_y1;
-    window.DC.CursorPos.x = IM_FLOOR(window.Pos.x + window.DC.Indent.x + window.DC.ColumnsOffset.x); // Next line
-    window.DC.CursorPos.y = IM_FLOOR(line_y1 + line_height + g.Style.ItemSpacing.y); // Next line
-    window.DC.CursorMaxPos.x = ImMax(window.DC.CursorMaxPos.x, window.DC.CursorPosPrevLine.x);
-    window.DC.CursorMaxPos.y = ImMax(
-        window.DC.CursorMaxPos.y,
-        window.DC.CursorPos.y - g.Style.ItemSpacing.y,
+    //if (g.IO.KeyAlt) window.DrawList.AddRect(window.dc.cursor_pos, window.dc.cursor_pos + ImVec2::new(size.x, line_height), IM_COL32(255,0,0,200)); // [DEBUG]
+    window.dc.cursor_pos_prev_line.x = window.dc.cursor_pos.x + size.x;
+    window.dc.cursor_pos_prev_line.y = line_y1;
+    window.dc.cursor_pos.x =
+        IM_FLOOR(window.position.x + window.dc.indent.x + window.dc.columns_offset.x); // Next line
+    window.dc.cursor_pos.y = IM_FLOOR(line_y1 + line_height + g.style.item_spacing.y); // Next line
+    window.dc.CursorMaxPos.x = ImMax(window.dc.CursorMaxPos.x, window.dc.cursor_pos_prev_line.x);
+    window.dc.CursorMaxPos.y = ImMax(
+        window.dc.CursorMaxPos.y,
+        window.dc.cursor_pos.y - g.style.item_spacing.y,
     );
-    //if (g.IO.KeyAlt) window.DrawList.AddCircle(window.DC.CursorMaxPos, 3.0, IM_COL32(255,0,0,255), 4); // [DEBUG]
+    //if (g.IO.KeyAlt) window.DrawList.AddCircle(window.dc.CursorMaxPos, 3.0, IM_COL32(255,0,0,255), 4); // [DEBUG]
 
-    window.DC.PrevLineSize.y = line_height;
-    window.DC.CurrLineSize.y = 0.0;
-    window.DC.PrevLineTextBaseOffset = ImMax(window.DC.CurrLineTextBaseOffset, text_baseline_y);
-    window.DC.CurrLineTextBaseOffset = 0.0;
-    window.DC.IsSameLine = false;
-    window.DC.IsSetPos = false;
+    window.dc.prev_line_size.y = line_height;
+    window.dc.curr_line_size.y = 0.0;
+    window.dc.prev_line_text_base_offset =
+        ImMax(window.dc.curr_line_text_base_offset, text_baseline_y);
+    window.dc.curr_line_text_base_offset = 0.0;
+    window.dc.is_same_line = false;
+    window.dc.is_set_pos = false;
 
     // Horizontal layout mode
-    if window.DC.LayoutType == ImGuiLayoutType_Horizontal {
-        SameLine(0.0, 0.0);
+    if window.dc.LayoutType == ImGuiLayoutType_Horizontal {
+        same_line(g, 0.0, 0.0);
     }
 }
 
@@ -583,7 +580,7 @@ pub unsafe fn PopItemFlag() {
     g.CurrentItemFlags = g.ItemFlagsStack.last().unwrap().clone();
 }
 
-pub unsafe fn ActivateItem(id: ImGuiID) {
+pub unsafe fn ActivateItem(id: ImguiHandle) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NavNextActivateId = id;
     g.NavNextActivateFlags = ImGuiActivateFlags_None;
@@ -599,9 +596,9 @@ pub unsafe fn SetNextItemWidth(item_width: c_float) {
 // FIXME: Remove the == 0.0 behavior?
 pub unsafe fn PushItemWidth(item_width: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    window.DC.ItemWidthStack.push(window.DC.ItemWidth); // Backup current width
-    window.DC.ItemWidth = (if item_width == 0.0 {
+    let mut window = g.current_window_mut().unwrap();
+    window.dc.ItemWidthStack.push(window.dc.ItemWidth); // Backup current width
+    window.dc.ItemWidth = (if item_width == 0.0 {
         window.ItemWidthDefault
     } else {
         item_width
@@ -611,8 +608,8 @@ pub unsafe fn PushItemWidth(item_width: c_float) {
 
 pub unsafe fn PushMultiItemsWidths(components: usize, w_full: c_float) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
-    let style = &mut g.Style;
+    let mut window = g.current_window_mut().unwrap();
+    let style = &mut g.style;
     w_item_one: c_float = ImMax(
         1.0,
         IM_FLOOR((w_full - (style.ItemInnerSpacing.x) * (components - 1)) / components),
@@ -621,13 +618,13 @@ pub unsafe fn PushMultiItemsWidths(components: usize, w_full: c_float) {
         1.0,
         IM_FLOOR(w_full - (w_item_one + style.ItemInnerSpacing.x) * (components - 1)),
     );
-    window.DC.ItemWidthStack.push(window.DC.ItemWidth); // Backup current width
-    window.DC.ItemWidthStack.push(w_item_last);
+    window.dc.ItemWidthStack.push(window.dc.ItemWidth); // Backup current width
+    window.dc.ItemWidthStack.push(w_item_last);
     // for (let i: c_int = 0; i < components - 2; i++)
     for i in 0..components - 2 {
-        window.DC.ItemWidthStack.push(w_item_one);
+        window.dc.ItemWidthStack.push(w_item_one);
     }
-    window.DC.ItemWidth = if components == 1 {
+    window.dc.ItemWidth = if components == 1 {
         w_item_last
     } else {
         w_item_one
@@ -636,25 +633,24 @@ pub unsafe fn PushMultiItemsWidths(components: usize, w_full: c_float) {
 }
 
 pub unsafe fn PopItemWidth() {
-    let mut window = GetCurrentWindow();
-    window.DC.ItemWidth = window.DC.ItemWidthStack.last().unwrap().clone();
-    window.DC.ItemWidthStack.pop_back();
+    let mut window = g.current_window_mut().unwrap();
+    window.dc.ItemWidth = window.dc.ItemWidthStack.last().unwrap().clone();
+    window.dc.ItemWidthStack.pop_back();
 }
 
 // Calculate default item width given value passed to PushItemWidth() or SetNextItemWidth().
 // The SetNextItemWidth() data is generally cleared/consumed by ItemAdd() or NextItemData.ClearFlags()CalcItemWidth: c_float()
-pub unsafe fn CalcItemWidth() -> c_float {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+pub fn CalcItemWidth(g: &mut ImguiContext) -> f32 {
+    let mut window = g.current_window_mut().unwrap();
     let mut w: c_float = 0.0;
-    if g.NextItemData.Flags & ImGuiNextItemDataFlags_HasWidth {
-        w = g.NextItemData.Width;
+    if g.next_item_data.flags & ImGuiNextItemDataFlags_HasWidth {
+        w = g.next_item_data.width;
     } else {
-        w = window.DC.ItemWidth;
+        w = window.dc.item_width;
     }
     if (w < 0.0) {
-        let region_max_x: c_float = GetContentRegionMaxAbs().x;
-        w = ImMax(1.0, region_max_x - window.DC.CursorPos.x + w);
+        let region_max_x: c_float = content_region_max_abs(g).x;
+        w = ImMax(1.0, region_max_x - window.dc.cursor_pos.x + w);
     }
     w = IM_FLOOR(w);
     return w;
@@ -667,23 +663,23 @@ pub unsafe fn CalcItemWidth() -> c_float {
 // CalcItemSize: ImVec2(size: ImVec2,default_w: c_float,default_h: c_float)
 pub unsafe fn CalcItemSize(mut size: ImVec2, default_w: c_float, default_h: c_float) -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut window  = &g.CurrentWindow;
+    let mut window = g.current_window_mut().unwrap();
 
     let mut region_max = ImVec2::default();
     if size.x < 0.0 || size.y < 0.0 {
-        region_max = GetContentRegionMaxAbs();
+        region_max = content_region_max_abs(g);
     }
 
     if size.x == 0.0 {
         size.x = default_w;
     } else if size.x < 0.0 {
-        size.x = ImMax(4.0, region_max.x - window.DC.CursorPos.x + size.x);
+        size.x = ImMax(4.0, region_max.x - window.dc.cursor_pos.x + size.x);
     }
 
     if size.y == 0.0 {
         size.y = default_h;
     } else if size.y < 0.0 {
-        size.y = ImMax(4.0, region_max.y - window.DC.CursorPos.y + size.y);
+        size.y = ImMax(4.0, region_max.y - window.dc.cursor_pos.y + size.y);
     }
 
     return size.clone();

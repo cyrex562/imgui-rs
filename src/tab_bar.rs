@@ -4,7 +4,7 @@ use crate::rect::ImRect;
 use crate::tab_bar_flags::ImGuiTabBarFlags;
 use crate::tab_item::ImGuiTabItem;
 use crate::text_buffer::ImGuiTextBuffer;
-use crate::type_defs::ImGuiID;
+use crate::type_defs::ImguiHandle;
 use crate::vec2::ImVec2;
 use libc::{c_char, c_float, c_int};
 use std::borrow::{Borrow, BorrowMut};
@@ -14,13 +14,13 @@ use std::borrow::{Borrow, BorrowMut};
 pub struct ImGuiTabBar {
     pub Tabs: Vec<ImGuiTabItem>,
     pub Flags: ImGuiTabBarFlags,
-    pub ID: ImGuiID,
+    pub ID: ImguiHandle,
     // Zero for tab-bars used by docking
-    pub SelectedTabId: ImGuiID,
+    pub SelectedTabId: ImguiHandle,
     // Selected tab/window
-    pub NextSelectedTabId: ImGuiID,
+    pub NextSelectedTabId: ImguiHandle,
     // Next selected tab/window. Will also trigger a scrolling animation
-    pub VisibleTabId: ImGuiID,
+    pub VisibleTabId: ImguiHandle,
     // Can occasionally be != SelectedTabId (e.g. when previewing contents for CTRL+TAB preview)
     pub CurrFrameVisible: c_int,
     pub PrevFrameVisible: c_int,
@@ -38,7 +38,7 @@ pub struct ImGuiTabBar {
     pub ScrollingSpeed: c_float,
     pub ScrollingRectMinX: c_float,
     pub ScrollingRectMaxX: c_float,
-    pub ReorderRequestTabId: ImGuiID,
+    pub ReorderRequestTabId: ImguiHandle,
     pub ReorderRequestOffset: i16,
     pub BeginCount: i8,
     pub WantLayout: bool,
