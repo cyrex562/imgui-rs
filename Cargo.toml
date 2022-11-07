@@ -8,11 +8,8 @@ edition = "2021"
 [dependencies]
 log = "0.4.17"
 fern = "0.6.1"
-# fasthash = "0.4.0"
-freetype-rs = "0.31.0"
 libc = "0.2"
 
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = {version = "0.36", features = ["Win32_Globalization"]}
-
+windows-sys = {version = "0.42", features = ["Win32_Globalization"]}

@@ -808,7 +808,7 @@ pub unsafe fn BeginDockableDragDropSource(window: &mut ImguiWindow)
     // IM_ASSERT(g.MovingWindow == window);
     // IM_ASSERT(g.CurrentWindow == window);
 
-    g.LastItemData.ID = window.MoveId;
+    g.last_item_data.ID = window.MoveId;
     window = window.RootWindowDockTree;
     // IM_ASSERT((window.Flags & ImGuiWindowFlags_NoDocking) == 0);
     let mut is_drag_docking: bool =  (g.IO.ConfigDockingWithShift) || ImRect(0, 0, window.SizeFull.x, GetFrameHeight()).Contains(g.ActiveIdClickOffset); // FIXME-DOCKING: Need to make this stateful and explicit

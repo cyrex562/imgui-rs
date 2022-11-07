@@ -330,6 +330,7 @@ pub unsafe fn ButtonEx(label: &String, size_arg: Option<ImVec2>, mut flags: ImGu
         pos.y += window.dc.CurrLineTextBaseOffset - style.FramePadding.y;
     }
     let size = CalcItemSize(
+        g,
         size_arg.unwrap(),
         label_size.x + style.FramePadding.x * 2.0,
         label_size.y + style.FramePadding.y * 2.0,
@@ -341,7 +342,7 @@ pub unsafe fn ButtonEx(label: &String, size_arg: Option<ImVec2>, mut flags: ImGu
         return false;
     }
 
-    if flag_set(g.LastItemData.InFlags, ImGuiItemFlags_ButtonRepeat) {
+    if flag_set(g.last_item_data.in_flags, ImGuiItemFlags_ButtonRepeat) {
         flags |= ImGuiButtonFlags_Repeat;
     }
 
@@ -382,7 +383,7 @@ pub unsafe fn ButtonEx(label: &String, size_arg: Option<ImVec2>, mut flags: ImGu
     //if (pressed && flag_clear(flags, ImGuiButtonFlags_DontClosePopups) && (window.Flags & ImGuiWindowFlags_Popup))
     //    CloseCurrentPopup();
 
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, &label, g.LastItemData.StatusFlags);
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, &label, g.last_item_data.StatusFlags);
     return pressed;
 }
 
@@ -421,7 +422,7 @@ pub unsafe fn InvisibleButton(
     // IM_ASSERT(size_arg.x != 0.0 && size_arg.y != 0.0);
 
     let mut id: ImguiHandle = window.id_from_str(str_id, );
-    let size: ImVec2 = CalcItemSize(size_arg, 0.0, 0.0);
+    let size: ImVec2 = CalcItemSize(g, size_arg, 0.0, 0.0);
     let mut bb: ImRect = ImRect::new(window.dc.cursor_pos, window.dc.cursor_pos + size);
     ItemSize(g, &size, 0.0);
     if !ItemAdd(g, &mut bb, id, None, 0) {
@@ -433,7 +434,7 @@ pub unsafe fn InvisibleButton(
     let mut held = false;
     let mut pressed: bool = ButtonBehavior(g, &bb, id, &mut hovered, &mut held, flags);
 
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, str_id, g.LastItemData.StatusFlags);
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, str_id, g.last_item_data.StatusFlags);
     return pressed;
 }
 
@@ -465,7 +466,7 @@ pub unsafe fn ArrowButtonEx(
         return false;
     }
 
-    if flag_set(g.LastItemData.InFlags, ImGuiItemFlags_ButtonRepeat) {
+    if flag_set(g.last_item_data.in_flags, ImGuiItemFlags_ButtonRepeat) {
         flags |= ImGuiButtonFlags_Repeat;
     }
 
@@ -502,7 +503,7 @@ pub unsafe fn ArrowButtonEx(
         0.0,
     );
 
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, str_id, g.LastItemData.StatusFlags);
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, str_id, g.last_item_data.StatusFlags);
     return pressed;
 }
 

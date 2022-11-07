@@ -169,7 +169,7 @@ pub unsafe fn InputScalar(
             // PushId(label) + "" gives us the expected ID from outside point of view
             value_changed = DataTypeApplyFromText(buf.as_str(), data_type, p_data, format);
         }
-        IMGUI_TEST_ENGINE_ITEM_INFO(g.LastItemData.ID, label, g.LastItemData.StatusFlags);
+        IMGUI_TEST_ENGINE_ITEM_INFO(g.last_item_data.ID, label, g.last_item_data.StatusFlags);
 
         // Step buttons
         let backup_frame_padding: ImVec2 = style.FramePadding;
@@ -227,7 +227,7 @@ pub unsafe fn InputScalar(
         }
     }
     if value_changed {
-        MarkItemEdited(g, g.LastItemData.ID);
+        MarkItemEdited(g, g.last_item_data.ID);
     }
 
     return value_changed;

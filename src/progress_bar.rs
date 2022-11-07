@@ -22,7 +22,7 @@ pub unsafe fn ProgressBar(mut fraction: c_float, size_arg: &mut ImVec2, overlay:
     let setyle = &mut g.style;
 
     let pos: ImVec2 = window.dc.cursor_pos;
-    let size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(g), g.FontSize + style.FramePadding.y * 2.0);
+    let size: ImVec2 = CalcItemSize(g, size_arg, CalcItemWidth(g), g.FontSize + style.FramePadding.y * 2.0);
     let mut bb: ImRect = ImRect::new(pos, pos + size);
     ItemSize(g, &size, style.FramePadding.y);
     if !ItemAdd(g, &mut bb, 0, None, 0) { return ; }

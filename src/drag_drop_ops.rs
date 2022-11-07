@@ -67,7 +67,7 @@ pub unsafe fn BeginDragDropSource(flags: ImGuiDragDropFlags) -> bool {
     let mut source_id: ImguiHandle = 0;
     let mut source_parent_id: ImguiHandle = 0;
     if flag_clear(flags, ImGuiDragDropFlags_SourceExtern) {
-        source_id = g.LastItemData.ID;
+        source_id = g.last_item_data.ID;
         if (source_id != 0) {
             // Common path: items with ID
             if (g.ActiveId != source_id) {
@@ -85,7 +85,7 @@ pub unsafe fn BeginDragDropSource(flags: ImGuiDragDropFlags) -> bool {
             if (g.IO.MouseDown[mouse_button] == false || window.skip_items) {
                 return false;
             }
-            if ((g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredRect) == 0
+            if ((g.last_item_data.StatusFlags & ImGuiItemStatusFlags_HoveredRect) == 0
                 && (g.ActiveId == 0 || g.ActiveIdWindow != window))
             {
                 return false;
@@ -103,10 +103,10 @@ pub unsafe fn BeginDragDropSource(flags: ImGuiDragDropFlags) -> bool {
             // THE IDENTIFIER WON'T SURVIVE ANY REPOSITIONING/RESIZINGG OF THE WIDGET, so if your widget moves your dragging operation will be canceled.
             // We don't need to maintain/call ClearActiveID() as releasing the button will early out this function and trigger !ActiveIdIsAlive.
             // Rely on keeping other window.LastItemXXX fields intact.
-            source_id = window.GetIDFromRectangle(&g.LastItemData.Rect);
-            g.LastItemData.ID = window.GetIDFromRectangle(&g.LastItemData.Rect);
+            source_id = window.GetIDFromRectangle(&g.last_item_data.Rect);
+            g.last_item_data.ID = window.GetIDFromRectangle(&g.last_item_data.Rect);
             KeepAliveID(g, source_id);
-            let mut is_hovered: bool = ItemHoverable(&g.LastItemData.Rect, source_id);
+            let mut is_hovered: bool = ItemHoverable(&g.last_item_data.Rect, source_id);
             if (is_hovered && g.IO.MouseClicked[mouse_button]) {
                 SetActiveID(g, source_id, window);
                 FocusWindow(window);
@@ -164,7 +164,7 @@ pub unsafe fn BeginDragDropSource(flags: ImGuiDragDropFlags) -> bool {
         if (flag_clear(flags, ImGuiDragDropFlags_SourceNoDisableHover)
             && flag_clear(flags, ImGuiDragDropFlags_SourceExtern))
         {
-            g.LastItemData.StatusFlags &= !ImGuiItemStatusFlags_HoveredRect;
+            g.last_item_data.StatusFlags &= !ImGuiItemStatusFlags_HoveredRect;
         }
 
         return true;
@@ -272,7 +272,7 @@ pub unsafe fn BeginDragDropTarget() -> bool {
     }
 
     let mut window = g.current_window_mut().unwrap();
-    if (!(g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredRect)) {
+    if (!(g.last_item_data.StatusFlags & ImGuiItemStatusFlags_HoveredRect)) {
         return false;
     }
     let mut hovered_window: &mut ImguiWindow = g.HoveredWindowUnderMovingWindow;
@@ -283,13 +283,13 @@ pub unsafe fn BeginDragDropTarget() -> bool {
         return false;
     }
 
-    let display_rect: &ImRect = if g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HasDisplayRect
+    let display_rect: &ImRect = if g.last_item_data.StatusFlags & ImGuiItemStatusFlags_HasDisplayRect
     {
-        &g.LastItemData.DisplayRect
+        &g.last_item_data.DisplayRect
     } else {
-        &g.LastItemData.Rect
+        &g.last_item_data.Rect
     };
-    let mut id: ImguiHandle = g.LastItemData.ID;
+    let mut id: ImguiHandle = g.last_item_data.ID;
     if (id == 0) {
         id = window.GetIDFromRectangle(display_rect);
         KeepAliveID(g, id);

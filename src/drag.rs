@@ -264,7 +264,7 @@ pub unsafe fn DragBehavior(
     if g.ActiveId != id {
         return false;
     }
-    if flag_set(g.LastItemData.InFlags, ImGuiItemFlags_ReadOnly)
+    if flag_set(g.last_item_data.in_flags, ImGuiItemFlags_ReadOnly)
         || flag_set(flags, ImGuiSliderFlags_ReadOnly)
     {
         return false;
@@ -360,7 +360,7 @@ pub unsafe fn DragScalar<T>(
     if !temp_input_is_active {
         // Tabbing or CTRL-clicking on Drag turns it into an InputText
         let input_requested_by_tabbing: bool = temp_input_allowed
-            && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
+            && (g.last_item_data.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
         let clicked: bool = (hovered && g.IO.MouseClicked[0]);
         let double_clicked: bool = (hovered && g.IO.MouseClickedCount[0] == 2);
         let make_active: bool = (input_requested_by_tabbing
@@ -504,7 +504,7 @@ pub unsafe fn DragScalar<T>(
         );
     }
 
-    // IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+    // IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.last_item_data.StatusFlags);
     return value_changed;
 }
 

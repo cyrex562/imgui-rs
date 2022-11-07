@@ -64,7 +64,7 @@ pub unsafe fn RadioButton(label: String, active: bool) -> bool
         RenderText(label_pos, label, false, g);
     }
 
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.last_item_data.StatusFlags);
     return pressed;
 }
 

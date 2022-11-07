@@ -59,7 +59,7 @@ pub unsafe fn SplitterBehavior(
         ImGuiButtonFlags_FlattenChildren | ImGuiButtonFlags_AllowItemOverlap,
     );
     if (hovered) {
-        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredRect;
+        g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_HoveredRect;
     } // for IsItemHovered(), because bb_interact is larger than bb
     if (g.ActiveId != id) {
         SetItemAllowOverlap();

@@ -340,7 +340,7 @@ pub unsafe fn SliderBehavior(
 
     // Those are the things we can do easily outside the SliderBehaviorT<> template, saves code generation.
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if flag_set(g.LastItemData.InFlags, ImGuiItemFlags_ReadOnly)
+    if flag_set(g.last_item_data.in_flags, ImGuiItemFlags_ReadOnly)
         || flag_set(flags, ImGuiSliderFlags_ReadOnly)
     {
         return false;
@@ -459,7 +459,7 @@ pub unsafe fn SliderScalar(
     if !temp_input_is_active {
         // Tabbing or CTRL-clicking on Slider turns it into an input box
         let input_requested_by_tabbing: bool = temp_input_allowed
-            && (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
+            && (g.last_item_data.StatusFlags & ImGuiItemStatusFlags_FocusedByTabbing) != 0;
         let clicked: bool = (hovered && g.IO.MouseClicked[0]);
         let make_active: bool = (input_requested_by_tabbing
             || clicked
@@ -586,7 +586,7 @@ pub unsafe fn SliderScalar(
         );
     }
 
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.last_item_data.StatusFlags);
     return value_changed;
 }
 

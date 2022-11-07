@@ -462,7 +462,7 @@ pub unsafe fn OpenPopupOnItemClick(str_id: &str, popup_flags: ImGuiPopupFlags) {
         let mut id: ImguiHandle = if str_id {
             window.id_from_str(str_id, null())
         } else {
-            g.LastItemData.ID
+            g.last_item_data.ID
         }; // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
            // IM_ASSERT(id != 0);                                             // You cannot pass a NULL str_id if the last item has no identifier (e.g. a Text() item)
         OpenPopupEx(g, id, popup_flags);
@@ -494,7 +494,7 @@ pub unsafe fn BeginPopupContextItem(str_id: *const c_char, popup_flags: ImGuiPop
     let mut id: ImguiHandle = if str_id {
         window.id_from_str(str_id, null())
     } else {
-        g.LastItemData.ID
+        g.last_item_data.ID
     }; // If user hasn't passed an ID, we can use the LastItemID. Using LastItemID as a Popup ID won't conflict!
        // IM_ASSERT(id != 0);                                             // You cannot pass a NULL str_id if the last item has no identifier (e.g. a Text() item)
     let mouse_button: c_int = (popup_flags & ImGuiPopupFlags_MouseButtonMask_);

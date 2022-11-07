@@ -379,29 +379,28 @@ pub unsafe fn TableFindByID(id: ImguiHandle) -> *mut ImGuiTable
 }
 
 // Read about "TABLE SIZING" at the top of this file.
-pub unsafe fn BeginTable(str_id: &str, columns_count: usize, flags: ImGuiTableFlags, outer_size: Option<&mut ImVec2>, inner_width: c_float) -> bool {
+pub fn BeginTable(str_id: &str, columns_count: usize, flags: ImGuiTableFlags, outer_size: Option<&mut ImVec2>, inner_width: c_float) -> bool {
     let mut id: ImguiHandle = id_from_str(str_id);
-    return BeginTableEx(str_id, id, columns_count, flags, outer_size, inner_width);
+    return BeginTableEx(g, str_id, id, columns_count, flags, outer_size, inner_width);
 }
 
-pub unsafe fn  BeginTableEx(name: &str, id: ImguiHandle, columns_count: usize, mut flags: ImGuiTableFlags, outer_size: &mut ImVec2, inner_width: c_float) -> bool
+pub fn  BeginTableEx(g: &mut ImguiContext, name: &String, id: ImguiHandle, columns_count: usize, mut flags: ImGuiTableFlags, outer_size: &mut ImVec2, inner_width: c_float) -> bool
 {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let outer_window = GetCurrentWindow();
+    let outer_window = g.current_window_mut().unwrap();
     if outer_window.skip_items {// Consistent with other tables + beneficial side effect that assert on miscalling EndTable() will be more visible.
         return false;
     }
 
     // Sanity checks
     // IM_ASSERT(columns_count > 0 && columns_count <= IMGUI_TABLE_MAX_COLUMNS && "Only 1..64 columns allowed!");
-    if flags & ImGuiTableFlags_ScrollX {
+    if flag_set(flags , ImGuiTableFlags_ScrollX) {
         // IM_ASSERT(inner_width >= 0.0);
     }
 
     // If an outer size is specified ahead we will be able to early out when not visible. Exact clipping rules may evolve.
     let use_child_window: bool = (flags & (ImGuiTableFlags_ScrollX | ImGuiTableFlags_ScrollY)) != 0;
     let avail_size: ImVec2 = content_region_avail(g);
-    let actual_outer_size: ImVec2 = CalcItemSize(outer_size, avail_size.x.max(1.0), if use_child_window { avail_size.y.max(1.0) } else { 0.0 });
+    let actual_outer_size: ImVec2 = CalcItemSize(g, outer_size, avail_size.x.max(1.0), if use_child_window { avail_size.y.max(1.0) } else { 0.0 });
     let mut outer_rect: ImRect = ImRect::new(outer_window.dc.cursor_pos, outer_window.dc.cursor_pos + actual_outer_size);
     if use_child_window && IsClippedEx(&mut outer_rect, 0)
     {
@@ -2017,8 +2016,8 @@ pub unsafe fn TableBeginCell(table: *mut ImGuiTable, column_n: c_int)
     if (column.IsSkipItems)
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        g.LastItemData.ID = 0;
-        g.LastItemData.StatusFlags = 0;
+        g.last_item_data.ID = 0;
+        g.last_item_data.StatusFlags = 0;
     }
 
     if flag_set(table.Flags, ImGuiTableFlags_NoClip)

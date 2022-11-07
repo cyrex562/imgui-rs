@@ -752,7 +752,7 @@ pub unsafe fn ColorEdit4(
                 g.ColorPickerRef = col_v4;
                 OpenPopup("picker", 0);
                 SetNextWindowPos(,
-                                 g.LastItemData.Rect.GetBL() + ImVec2::from_floats(0.0, style.ItemSpacing.y),
+                                 g.last_item_data.Rect.GetBL() + ImVec2::from_floats(0.0, style.ItemSpacing.y),
                                  0,
                                  &Default::default(),
                 );
@@ -824,7 +824,7 @@ pub unsafe fn ColorEdit4(
 
     // Drag and Drop Target
     // NB: The flag test is merely an optional micro-optimization, BeginDragDropTarget() does the same test.
-    if flag_set(g.LastItemData.StatusFlags, ImGuiItemStatusFlags_HoveredRect)
+    if flag_set(g.last_item_data.StatusFlags, ImGuiItemStatusFlags_HoveredRect)
         && flag_clear(flags, ImGuiColorEditFlags_NoDragDrop)
         && BeginDragDropTarget()
     {
@@ -858,11 +858,11 @@ pub unsafe fn ColorEdit4(
 
     // When picker is being actively used, use its active id so IsItemActive() will function on ColorEdit4().
     if picker_active_window && g.ActiveId != 0 && g.ActiveIdWindow == picker_active_window {
-        g.LastItemData.ID = g.ActiveId;
+        g.last_item_data.ID = g.ActiveId;
     }
 
     if value_changed {
-        MarkItemEdited(g, g.LastItemData.ID);
+        MarkItemEdited(g, g.last_item_data.ID);
     }
 
     return value_changed;
@@ -1542,7 +1542,7 @@ pub unsafe fn ColorPicker4(
         value_changed = false;
     }
     if value_changed {
-        MarkItemEdited(g, g.LastItemData.ID);
+        MarkItemEdited(g, g.last_item_data.ID);
     }
 
     pop_win_id_from_stack(g);
@@ -2197,17 +2197,17 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
     }
 
     let mut item_add: bool = ItemAdd(g, &mut interact_bb, id, None, 0);
-    g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HasDisplayRect;
-    g.LastItemData.DisplayRect = frame_bb;
+    g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_HasDisplayRect;
+    g.last_item_data.DisplayRect = frame_bb;
 
     if !item_add {
         if is_open && flag_clear(flags, ImGuiTreeNodeFlags_NoTreePushOnOpen) {
             TreePushOverrideID(id);
         }
         IMGUI_TEST_ENGINE_ITEM_INFO(
-            g.LastItemData.ID,
+            g.last_item_data.ID,
             label,
-            g.LastItemData.StatusFlags
+            g.last_item_data.StatusFlags
                 | (if is_leaf {
                     0
                 } else {
@@ -2309,7 +2309,7 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
                 .DC
                 .StateStorage
                 .SetInt(id, if is_open { 1 } else { 0 });
-            g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledOpen;
+            g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_ToggledOpen;
         }
     }
     if flags & ImGuiTreeNodeFlags_AllowItemOverlap {
@@ -2319,7 +2319,7 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
     // In this branch, TreeNodeBehavior() cannot toggle the selection so this will never trigger.
     if selected != was_selected {
         //-V547
-        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
+        g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
     }
 
     // Render
@@ -2442,7 +2442,7 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
     IMGUI_TEST_ENGINE_ITEM_INFO(
         id,
         label,
-        g.LastItemData.StatusFlags
+        g.last_item_data.StatusFlags
             | (if is_leaf {
                 0
             } else {
@@ -2567,18 +2567,18 @@ pub unsafe fn CollapsingHeader2(
         // FIXME: We can evolve this into user accessible helpers to add extra buttons on title bars, headers, etc.
         // FIXME: CloseButton can overlap into text, need find a way to clip the text somehow.
         let g = GImGui; // ImGuiContext& g = *GImGui;
-        last_item_backup: ImGuiLastItemData = g.LastItemData;
+        last_item_backup: ImGuiLastItemData = g.last_item_data;
         let button_size: c_float = g.FontSize;
         let button_x: c_float = ImMax(
-            g.LastItemData.Rect.Min.x,
-            g.LastItemData.Rect.Max.x - g.style.FramePadding.x * 2.0 - button_size,
+            g.last_item_data.Rect.Min.x,
+            g.last_item_data.Rect.Max.x - g.style.FramePadding.x * 2.0 - button_size,
         );
-        let button_y: c_float = g.LastItemData.Rect.Min.y;
+        let button_y: c_float = g.last_item_data.Rect.Min.y;
         let mut close_button_id: ImguiHandle = GetIDWithSeed("#CLOSE", id);
         if button_ops::CloseButton(close_button_id, ImVec2::new(button_x, button_y)) {
             *p_visible = false;
         }
-        g.LastItemData = last_item_backup;
+        g.last_item_data = last_item_backup;
     }
 
     return is_open;
@@ -2777,7 +2777,7 @@ pub fn Selectable(
     // In this branch, Selectable() cannot toggle the selection so this will never trigger.
     if selected != was_selected {
         //-V547
-        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
+        g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_ToggledSelection;
     }
 
     // Render
@@ -2825,7 +2825,7 @@ pub fn Selectable(
         && flag_set(window.Flags, ImGuiWindowFlags_Popup)
         && flag_clear(flags, ImGuiSelectableFlags_DontClosePopups)
         && flag_clear(
-            g.LastItemData.InFlags,
+            g.last_item_data.in_flags,
             ImGuiItemFlags_SelectableDontClosePopup,
         )
     {
@@ -2836,7 +2836,7 @@ pub fn Selectable(
         EndDisabled();
     }
 
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.last_item_data.StatusFlags);
     return pressed; //-V1020
 }
 
@@ -2877,6 +2877,7 @@ pub unsafe fn BeginListBox(label: String, size_arg: &mut ImVec2) -> bool {
     // Size default to hold ~7.25 items.
     // Fractional number of items helps seeing that we can scroll down/up without looking at scrollbar.
     let size: ImVec2 = ImFloor(CalcItemSize(
+        g,
         size_arg,
         CalcItemWidth(g),
         GetTextLineHeightWithSpacing() * 7.25 + style.FramePadding.y * 2.0,
@@ -3017,7 +3018,7 @@ pub unsafe fn ListBox2(
     EndListBox();
 
     if value_changed {
-        MarkItemEdited(g, g.LastItemData.ID);
+        MarkItemEdited(g, g.last_item_data.ID);
     }
 
     return value_changed;
@@ -3872,7 +3873,7 @@ pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
     IMGUI_TEST_ENGINE_ITEM_INFO(
         id,
         label,
-        g.LastItemData.StatusFlags
+        g.last_item_data.StatusFlags
             | ImGuiItemStatusFlags_Openable
             | (if menu_is_open {
                 ImGuiItemStatusFlags_Opened
@@ -4037,9 +4038,9 @@ pub unsafe fn MenuItemEx(
         }
     }
     IMGUI_TEST_ENGINE_ITEM_INFO(
-        g.LastItemData.ID,
+        g.last_item_data.ID,
         label,
-        g.LastItemData.StatusFlags
+        g.last_item_data.StatusFlags
             | ImGuiItemStatusFlags_Checkable
             | (if selected {
                 ImGuiItemStatusFlags_Checked
@@ -5187,7 +5188,7 @@ pub unsafe fn TabItemEx(
 
     // If the user called us with *p_open == false, we early out and don't render.
     // We make a call to ItemAdd() so that attempts to use a contextual popup menu with an implicit ID won't use an older ID.
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.last_item_data.StatusFlags);
     if p_open.is_some() && (p_open.unwrap() == false) {
         ItemAdd(
             g,
@@ -5521,7 +5522,7 @@ pub unsafe fn TabItemEx(
     // Forward Hovered state so IsItemHovered() after Begin() can work (even though we are technically hovering our parent)
     // That state is copied to window.DockTabItemStatusFlags by our caller.
     if docked_window.is_null() == false && (hovered || g.HoveredId == close_button_id) {
-        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow;
+        g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow;
     }
 
     // Restore main window position so user can draw there
@@ -5742,13 +5743,13 @@ pub unsafe fn TabItemLabelAndCloseButton(
         && (button_pos.x + button_sz <= bb.max.x);
 
     if (close_button_visible) {
-        last_item_backup: ImGuiLastItemData = g.LastItemData;
+        last_item_backup: ImGuiLastItemData = g.last_item_data;
         PushStyleVar(ImGuiStyleVar_FramePadding, frame_padding);
         if button_ops::CloseButton(close_button_id, &button_pos) {
             close_button_pressed = true;
         }
         PopStyleVar();
-        g.LastItemData = last_item_backup;
+        g.last_item_data = last_item_backup;
 
         // Close with middle mouse button
         if flag_clear(flags, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton)

@@ -48,7 +48,7 @@ pub unsafe fn Checkbox(label: &String, v: &mut bool) -> bool {
         IMGUI_TEST_ENGINE_ITEM_INFO(
             id,
             label,
-            g.LastItemData.StatusFlags
+            g.last_item_data.StatusFlags
                 | ImGuiItemStatusFlags_Checkable
                 | (if *v { ImGuiItemStatusFlags_Checked } else { 0 }),
         );
@@ -85,7 +85,7 @@ pub unsafe fn Checkbox(label: &String, v: &mut bool) -> bool {
         style.FrameRounding,
     );
     check_col: u32 = GetColorU32(ImGuiCol_CheckMark, 0.0);
-    let mut mixed_value: bool = (g.LastItemData.InFlags & ImGuiItemFlags_MixedValue) != 0;
+    let mut mixed_value: bool = (g.last_item_data.in_flags & ImGuiItemFlags_MixedValue) != 0;
     if mixed_value {
         // Undocumented tristate/mixed/indeterminate checkbox (#2644)
         // This may seem awkwardly designed because the aim is to make ImGuiItemFlags_MixedValue supported by all widgets (not just checkbox)
@@ -124,7 +124,7 @@ pub unsafe fn Checkbox(label: &String, v: &mut bool) -> bool {
     IMGUI_TEST_ENGINE_ITEM_INFO(
         id,
         label,
-        g.LastItemData.StatusFlags
+        g.last_item_data.StatusFlags
             | ImGuiItemStatusFlags_Checkable
             | (if *v { ImGuiItemStatusFlags_Checked } else { 0 }),
     );

@@ -57,14 +57,14 @@ pub fn MarkItemEdited(g: &mut ImguiContext, id: ImguiHandle) {
 // IsItemFocused: bool()
 pub unsafe fn IsItemFocused() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if g.NavId != g.LastItemData.ID || g.NavId == 0 {
+    if g.NavId != g.last_item_data.ID || g.NavId == 0 {
         return false;
     }
 
     // Special handling for the dummy item after Begin() which represent the title bar or tab.
     // When the window is collapsed (SkipItems==true) that last item will never be overwritten so we need to detect the case.
     let mut window = g.current_window_mut().unwrap();
-    if g.LastItemData.ID == window.ID && window.WriteAccessed {
+    if g.last_item_data.ID == window.ID && window.WriteAccessed {
         return false;
     }
 
@@ -82,7 +82,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
         && !g.NavDisableHighlight
         && flag_clear(flags, ImGuiHoveredFlags_NoNavOverride)
     {
-        if flag_set(g.LastItemData.InFlags, ImGuiItemFlags_Disabled)
+        if flag_set(g.last_item_data.in_flags, ImGuiItemFlags_Disabled)
             && flag_clear(flags, ImGuiHoveredFlags_AllowWhenDisabled)
         {
             return false;
@@ -92,7 +92,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
         }
     } else {
         // Test for bounding box overlap, as updated as ItemAdd()
-        let mut status_flags: ImGuiItemStatusFlags = g.LastItemData.StatusFlags;
+        let mut status_flags: ImGuiItemStatusFlags = g.last_item_data.StatusFlags;
         if !(status_flags & ImGuiItemStatusFlags_HoveredRect) {
             return false;
         }
@@ -111,7 +111,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
 
         // Test if another item is active (e.g. being dragged)
         if flag_clear(flags, ImGuiHoveredFlags_AllowWhenBlockedByActiveItem) {
-            if g.ActiveId != 0 && g.ActiveId != g.LastItemData.ID && !g.ActiveIdAllowOverlap {
+            if g.ActiveId != 0 && g.ActiveId != g.last_item_data.ID && !g.ActiveIdAllowOverlap {
                 if g.ActiveId != window.MoveId && g.ActiveId != window.TabId {
                     return false;
                 }
@@ -125,7 +125,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
         }
 
         // Test if the item is disabled
-        if flag_set(g.LastItemData.InFlags, ImGuiItemFlags_Disabled)
+        if flag_set(g.last_item_data.in_flags, ImGuiItemFlags_Disabled)
             && flag_clear(flags, ImGuiHoveredFlags_AllowWhenDisabled)
         {
             return false;
@@ -134,7 +134,7 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
         // Special handling for calling after Begin() which represent the title bar or tab.
         // When the window is skipped/collapsed (SkipItems==true) that last item (always ->MoveId submitted by Begin)
         // will never be overwritten so we need to detect the case.
-        if g.LastItemData.ID == window.MoveId && window.WriteAccessed {
+        if g.last_item_data.ID == window.MoveId && window.WriteAccessed {
             return false;
         }
     }
@@ -150,10 +150,10 @@ pub unsafe fn IsItemHovered(flags: ImGuiHoveredFlags) -> bool {
         delay = 0.0;
     }
     if delay > 0.0 {
-        let mut hover_delay_id: ImguiHandle = if g.LastItemData.ID != 0 {
-            g.LastItemData.ID
+        let mut hover_delay_id: ImguiHandle = if g.last_item_data.ID != 0 {
+            g.last_item_data.ID
         } else {
-            window.GetIDFromRectangle(&g.LastItemData.Rect)
+            window.GetIDFromRectangle(&g.last_item_data.Rect)
         };
         if flag_set(flags, ImGuiHoveredFlags_NoSharedDelay)
             && (g.HoverDelayIdPreviousFrame != hover_delay_id)
@@ -197,8 +197,8 @@ pub unsafe fn ItemHoverable(bb: &ImRect, id: ImguiHandle) -> bool {
     }
 
     // When disabled we'll return false but still set HoveredId
-    let mut item_flags: ImGuiItemFlags = if g.LastItemData.ID == id {
-        g.LastItemData.InFlags
+    let mut item_flags: ImGuiItemFlags = if g.last_item_data.ID == id {
+        g.last_item_data.in_flags
     } else {
         g.CurrentItemFlags
     };
@@ -289,7 +289,7 @@ pub fn calc_width_for_pos(g: &mut ImguiContext, pos: &ImVec2, mut wrap_pos_x: f3
 pub unsafe fn IsItemActive() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.ActiveId {
-        return g.ActiveId == g.LastItemData.ID;
+        return g.ActiveId == g.last_item_data.ID;
     }
     return false;
 }
@@ -298,7 +298,7 @@ pub unsafe fn IsItemActive() -> bool {
 pub unsafe fn IsItemActivated() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.ActiveId {
-        if g.ActiveId == g.LastItemData.ID && g.ActiveIdPreviousFrame != g.LastItemData.ID {
+        if g.ActiveId == g.last_item_data.ID && g.ActiveIdPreviousFrame != g.last_item_data.ID {
             return true;
         }
     }
@@ -308,12 +308,12 @@ pub unsafe fn IsItemActivated() -> bool {
 // IsItemDeactivated: bool()
 pub unsafe fn IsItemDeactivated() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    if g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HasDeactivated {
-        return (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Deactivated) != 0;
+    if g.last_item_data.StatusFlags & ImGuiItemStatusFlags_HasDeactivated {
+        return (g.last_item_data.StatusFlags & ImGuiItemStatusFlags_Deactivated) != 0;
     }
-    return g.ActiveIdPreviousFrame == g.LastItemData.ID
+    return g.ActiveIdPreviousFrame == g.last_item_data.ID
         && g.ActiveIdPreviousFrame != 0
-        && g.ActiveId != g.LastItemData.ID;
+        && g.ActiveId != g.last_item_data.ID;
 }
 
 // IsItemDeactivatedAfterEdit: bool()
@@ -334,14 +334,14 @@ pub unsafe fn IsItemClicked(mouse_button: ImGuiMouseButton) -> bool {
 // IsItemToggledOpen: bool()
 pub unsafe fn IsItemToggledOpen() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return flag_set(g.LastItemData.StatusFlags, ImGuiItemStatusFlags_ToggledOpen);
+    return flag_set(g.last_item_data.StatusFlags, ImGuiItemStatusFlags_ToggledOpen);
 }
 
 // IsItemToggledSelection: bool()
 pub unsafe fn IsItemToggledSelectionm() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return flag_set(
-        g.LastItemData.StatusFlags,
+        g.last_item_data.StatusFlags,
         ImGuiItemStatusFlags_ToggledSelection,
     );
 }
@@ -367,13 +367,13 @@ pub unsafe fn IsAnyItemFocused() -> bool {
 // IsItemVisible: bool()
 pub unsafe fn IsAnyItemVisible() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.Currentwindow.ClipRect.Overlaps(&g.LastItemData.Rect);
+    return g.Currentwindow.ClipRect.Overlaps(&g.last_item_data.Rect);
 }
 
 // IsItemEdited: bool()
 pub unsafe fn IsItemEdited() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_Edited) != 0;
+    return (g.last_item_data.StatusFlags & ImGuiItemStatusFlags_Edited) != 0;
 }
 
 // Allow last item to be overlapped by a subsequent item. Both may be activated during the same frame before the later one takes priority.
@@ -381,7 +381,7 @@ pub unsafe fn IsItemEdited() -> bool {
 // c_void SetItemAllowOverlap()
 pub unsafe fn SetItemAllowedOverlap() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut id: ImguiHandle = g.LastItemData.ID;
+    let mut id: ImguiHandle = g.last_item_data.ID;
     if g.HoveredId == id {
         g.HoveredIdAllowOverlap = true;
     }
@@ -393,7 +393,7 @@ pub unsafe fn SetItemAllowedOverlap() {
 // c_void SetItemUsingMouseWheel()
 pub unsafe fn SetItemUsingMouseWheel() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut id: ImguiHandle = g.LastItemData.ID;
+    let mut id: ImguiHandle = g.last_item_data.ID;
     if g.HoveredId == id {
         g.HoveredIdUsingMouseWheel = true;
     }
@@ -406,19 +406,19 @@ pub unsafe fn SetItemUsingMouseWheel() {
 // GetItemRectMin: ImVec2()
 pub unsafe fn GetItemRectMin() -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.LastItemData.Rect.Min.clone();
+    return g.last_item_data.Rect.Min.clone();
 }
 
 // GetItemRectMax: ImVec2()
 pub unsafe fn GetItemRectMax() -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.LastItemData.Rect.Max.clone();
+    return g.last_item_data.Rect.Max.clone();
 }
 
 // GetItemRectSize: ImVec2()
 pub unsafe fn GetItemRectSize() -> ImVec2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    return g.LastItemData.Rect.GetSize();
+    return g.last_item_data.Rect.GetSize();
 }
 
 // Declare item bounding box for clipping and interaction.
@@ -463,7 +463,7 @@ pub fn ItemAdd(
                         ImGuiWindowFlags_NavFlattened,
                     )
                 {
-                    NavProcessItem();
+                    NavProcessItem(g);
                 }
             }
         }
@@ -648,7 +648,7 @@ pub fn CalcItemWidth(g: &mut ImguiContext) -> f32 {
     } else {
         w = window.dc.item_width;
     }
-    if (w < 0.0) {
+    if w < 0.0 {
         let region_max_x: c_float = content_region_max_abs(g).x;
         w = ImMax(1.0, region_max_x - window.dc.cursor_pos.x + w);
     }
@@ -661,8 +661,7 @@ pub fn CalcItemWidth(g: &mut ImguiContext) -> f32 {
 // Note that only CalcItemWidth() is publicly exposed.
 // The 4.0 here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
 // CalcItemSize: ImVec2(size: ImVec2,default_w: c_float,default_h: c_float)
-pub unsafe fn CalcItemSize(mut size: ImVec2, default_w: c_float, default_h: c_float) -> ImVec2 {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
+pub fn CalcItemSize(g: &mut ImguiContext, mut size: ImVec2, default_w: c_float, default_h: c_float) -> ImVec2 {
     let mut window = g.current_window_mut().unwrap();
 
     let mut region_max = ImVec2::default();

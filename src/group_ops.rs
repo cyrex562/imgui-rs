@@ -94,28 +94,28 @@ pub unsafe fn EndGroup() {
         == false)
         && (g.ActiveIdPreviousFrameIsAlive == true);
     if group_contains_curr_active_id {
-        g.LastItemData.ID = g.ActiveId;
+        g.last_item_data.ID = g.ActiveId;
     } else if group_contains_prev_active_id {
-        g.LastItemData.ID = g.ActiveIdPreviousFrame;
+        g.last_item_data.ID = g.ActiveIdPreviousFrame;
     }
-    g.LastItemData.Rect = group_bb;
+    g.last_item_data.Rect = group_bb;
 
     // Forward Hovered flag
     let group_contains_curr_hovered_id: bool =
         (group_data.BackupHoveredIdIsAlive == false) && g.HoveredId != 0;
     if group_contains_curr_hovered_id {
-        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow;
+        g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow;
     }
 
     // Forward Edited flag
     if group_contains_curr_active_id && g.ActiveIdHasBeenEditedThisFrame {
-        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Edited;
+        g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_Edited;
     }
 
     // Forward Deactivated flag
-    g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HasDeactivated;
+    g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_HasDeactivated;
     if group_contains_prev_active_id && g.ActiveId != g.ActiveIdPreviousFrame {
-        g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_Deactivated;
+        g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_Deactivated;
     }
 
     g.GroupStack.pop_back();

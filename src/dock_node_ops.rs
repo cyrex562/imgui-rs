@@ -1068,8 +1068,8 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: &mut I
             }
 
             // Store last item data so it can be queried with IsItemXXX functions after the user Begin() call
-            window.DockTabItemStatusFlags = g.LastItemData.StatusFlags;
-            window.DockTabItemRect = g.LastItemData.Rect;
+            window.DockTabItemStatusFlags = g.last_item_data.StatusFlags;
+            window.DockTabItemRect = g.last_item_data.Rect;
 
             // Update navigation ID on menu layer
             if g.NavWindow.is_null() == false && g.NavWindow.RootWindow == window && (window.dc.NavLayersActiveMask & (1 << ImGuiNavLayer_Menu)) == 0 {
@@ -1125,7 +1125,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: &mut I
         if g.HoveredId == title_bar_id {
             // ImGuiButtonFlags_AllowItemOverlap + SetItemAllowOverlap() required for appending into dock node tab bar,
             // otherwise dragging window will steal HoveredId and amended tabs cannot get them.
-            g.LastItemData.ID = title_bar_id;
+            g.last_item_data.ID = title_bar_id;
             SetItemAllowOverlap();
         }
         if held {

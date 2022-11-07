@@ -393,7 +393,7 @@ pub unsafe fn InputTextEx(label: String,
     }
     let mut id: ImguiHandle =  window.GetID(label);
     let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
-    let frame_size: ImVec2 = CalcItemSize(size_arg, CalcItemWidth(g), (if is_multiline { g.FontSize * 8.0} else {label_size.y}) + style.FramePadding.y * 2.0); // Arbitrary default of 8 lines high for multi-line
+    let frame_size: ImVec2 = CalcItemSize(g, size_arg, CalcItemWidth(g), (if is_multiline { g.FontSize * 8.0} else {label_size.y}) + style.FramePadding.y * 2.0); // Arbitrary default of 8 lines high for multi-line
     let total_size: ImVec2 = ImVec2::new(frame_size.x + (if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x} else {0.0}), frame_size.y);
 
     let mut frame_bb: ImRect = ImRect::new(window.dc.cursor_pos, window.dc.cursor_pos + frame_size);
@@ -412,8 +412,8 @@ pub unsafe fn InputTextEx(label: String,
             EndGroup();
             return false;
         }
-        item_status_flags = g.LastItemData.StatusFlags;
-        item_data_backup = g.LastItemData;
+        item_status_flags = g.last_item_data.StatusFlags;
+        item_data_backup = g.last_item_data;
         window.dc.cursor_pos = backup_pos;
 
         // We reproduce the contents of BeginChildFrame() in order to provide 'label' so our window internal data are easier to read/debug.
@@ -443,7 +443,7 @@ pub unsafe fn InputTextEx(label: String,
         if flag_clear(flags, ImGuiInputTextFlags_MergedItem) {
             if !ItemAdd(g, &mut total_bb, id, &frame_bb, ImGuiItemFlags_Inputable) { return false; }
         }
-        item_status_flags = g.LastItemData.StatusFlags;
+        item_status_flags = g.last_item_data.StatusFlags;
     }
     let hovered: bool = ItemHoverable(&frame_bb, id);
     if hovered{
@@ -1279,17 +1279,17 @@ pub unsafe fn InputTextEx(label: String,
         let mut backup_item_flags: ImGuiItemFlags =  g.CurrentItemFlags;
         g.CurrentItemFlags |= ImGuiItemFlags_Inputable | ImGuiItemFlags_NoTabStop;
         EndChild();
-        item_data_backup.status_flags |= (g.LastItemData.StatusFlags & ImGuiItemStatusFlags_HoveredWindow);
+        item_data_backup.status_flags |= (g.last_item_data.StatusFlags & ImGuiItemStatusFlags_HoveredWindow);
         g.CurrentItemFlags = backup_item_flags;
 
         // ...and then we need to undo the group overriding last item data, which gets a bit messy as EndGroup() tries to forward scrollbar being active...
         // FIXME: This quite messy/tricky, should attempt to get rid of the child window.
         EndGroup();
-        if g.LastItemData.ID == 0
+        if g.last_item_data.ID == 0
         {
-            g.LastItemData.ID = id;
-            g.LastItemData.InFlags = item_data_backup.in_flags;
-            g.LastItemData.StatusFlags = item_data_backup.status_flags;
+            g.last_item_data.ID = id;
+            g.last_item_data.in_flags = item_data_backup.in_flags;
+            g.last_item_data.StatusFlags = item_data_backup.status_flags;
         }
     }
 
@@ -1308,7 +1308,7 @@ pub unsafe fn InputTextEx(label: String,
         MarkItemEdited(g, id);
     }
 
-    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.LastItemData.StatusFlags);
+    IMGUI_TEST_ENGINE_ITEM_INFO(id, label, g.last_item_data.StatusFlags);
     if flag_set(flags, ImGuiInputTextFlags_EnterReturnsTrue) { return  validated; }
     else {
         return value_changed;

@@ -196,7 +196,7 @@ pub unsafe fn EndChild() {
             ItemAdd(g, &mut bb, 0, None, 0);
         }
         if g.HoveredWindow == window {
-            g.LastItemData.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow;
+            g.last_item_data.StatusFlags |= ImGuiItemStatusFlags_HoveredWindow;
         }
     }
     g.WithinEndChild = false;

@@ -100,7 +100,7 @@ pub fn CalcNextScrollFromScrollTargetAndClamp(window: &mut ImguiWindow) -> ImVec
 pub unsafe fn ScrollToItem(flags: ImGuiScrollFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.current_window_mut().unwrap();
-    ScrollToRectEx(window, &mut g.LastItemData.NavRect, flags);
+    ScrollToRectEx(window, &mut g.last_item_data.NavRect, flags);
 }
 
 pub unsafe fn ScrollToRect(
@@ -323,8 +323,8 @@ pub unsafe fn SetScrollHereX(center_x_ratio: c_float) {
     let mut window = g.current_window_mut().unwrap();
     let spacing_x: c_float = ImMax(window.WindowPadding.x, g.style.ItemSpacing.x);
     let target_pos_x: c_float = ImLerp(
-        g.LastItemData.Rect.Min.x - spacing_x,
-        g.LastItemData.Rect.Max.x + spacing_x,
+        g.last_item_data.Rect.Min.x - spacing_x,
+        g.last_item_data.Rect.Max.x + spacing_x,
         center_x_ratio,
     );
     SetScrollFromPosX(window, target_pos_x - window.position.x, center_x_ratio); // Convert from absolute to local pos

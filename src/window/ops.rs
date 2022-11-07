@@ -1642,7 +1642,7 @@ pub unsafe fn End()
     }
 
     // Pop from window stack
-    g.LastItemData = g.CurrentWindowStack.last().unwrap().ParentLastItemDataBackup;
+    g.last_item_data = g.CurrentWindowStack.last().unwrap().ParentLastItemDataBackup;
     if (window.Flags & ImGuiWindowFlags_ChildMenu) {
         g.BeginMenuCount -= 1;
     }

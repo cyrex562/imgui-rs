@@ -47,12 +47,11 @@ use crate::window::window_flags::{ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindow
 
 // We get there when either NavId == id, or when g.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
 // This is called after LastItemData is set.
-pub unsafe fn NavProcessItem() {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
+pub fn NavProcessItem(g: &mut ImguiContext) {
     let mut window  = g.current_window_mut().unwrap();
-    let mut id: ImguiHandle = g.LastItemData.ID;
-    let nav_bb: ImRect = g.LastItemData.NavRect;
-    let mut item_flags: ImGuiItemFlags = g.LastItemData.InFlags;
+    let mut id: ImguiHandle = g.last_item_data.id;
+    let nav_bb: ImRect = g.last_item_data.NavRect;
+    let mut item_flags: ImGuiItemFlags = g.last_item_data.in_flags;
 
     // Process Init Request
     if g.NavInitRequest && g.NavLayer == window.dc.NavLayerCurrent && (item_flags & ImGuiItemFlags_Disabled) == 0 {
@@ -155,8 +154,8 @@ pub unsafe fn SetFocusID(id: ImguiHandle, window: &mut ImguiWindow)
     g.NavLayer = nav_layer;
     g.NavFocusScopeId = window.dc.NavFocusScopeIdCurrent;
     window.NavLastIds[nav_layer] = id;
-    if (g.LastItemData.ID == id) {
-        window.NavRectRel[nav_layer] = window_rect_abs_to_rel(window, &g.LastItemData.NavRect);
+    if (g.last_item_data.ID == id) {
+        window.NavRectRel[nav_layer] = window_rect_abs_to_rel(window, &g.last_item_data.NavRect);
     }
 
     if (g.ActiveIdSource == ImGuiInputSource_Nav) {
@@ -212,7 +211,7 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
     }
 
     // FIXME: Those are not good variables names
-    let mut cand: ImRect =  g.LastItemData.NavRect;   // Current item nav rectangle
+    let mut cand: ImRect =  g.last_item_data.NavRect;   // Current item nav rectangle
     let curr: ImRect =  g.NavScoringRect;   // Current modified source rect (NB: we've applied Max.x = Min.x in NavUpdate() to inhibit the effect of having varied item width)
     g.NavScoringDebugCount+= 1;
 
@@ -270,7 +269,7 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
     else
     {
         // Degenerate case: two overlapping buttons with same center, break ties arbitrarily (note that LastItemId here is really the _previous_ item order, but it doesn't matter)
-        quadrant = if g.LastItemData.ID < g.NavId { ImGuiDir_Left } else { ImGuiDir_Right };
+        quadrant = if g.last_item_data.ID < g.NavId { ImGuiDir_Left } else { ImGuiDir_Right };
     }
 
 // #if IMGUI_DEBUG_NAV_SCORING
@@ -350,10 +349,10 @@ pub unsafe fn NavApplyItemToResult(result: *mut ImGuiNavItemData)
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window  = g.current_window_mut().unwrap();
     result.Window = window;
-    result.ID = g.LastItemData.ID;
+    result.ID = g.last_item_data.ID;
     result.FocusScopeId = window.dc.NavFocusScopeIdCurrent;
-    result.InFlags = g.LastItemData.InFlags;
-    result.RectRel = window_rect_abs_to_rel(window, &g.LastItemData.NavRect);
+    result.InFlags = g.last_item_data.in_flags;
+    result.RectRel = window_rect_abs_to_rel(window, &g.last_item_data.NavRect);
 }
 
 // Handle "scoring" of an item for a tabbing/focusing request initiated by NavUpdateCreateTabbingRequest().

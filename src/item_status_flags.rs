@@ -11,7 +11,7 @@ pub type ImGuiItemStatusFlags = c_int;
 // {
     pub const ImGuiItemStatusFlags_None: ImGuiItemStatusFlags =  0;
     pub const ImGuiItemStatusFlags_HoveredRect: ImGuiItemStatusFlags =  1 << 0;   // Mouse position is within item rectangle (does NOT mean that the window is in correct z-order and can be hovered!; this is only one part of the most-common IsItemHovered test)
-    pub const ImGuiItemStatusFlags_HasDisplayRect: ImGuiItemStatusFlags =  1 << 1;   // g.LastItemData.DisplayRect is valid
+    pub const ImGuiItemStatusFlags_HasDisplayRect: ImGuiItemStatusFlags =  1 << 1;   // g.last_item_data.DisplayRect is valid
     pub const ImGuiItemStatusFlags_Edited: ImGuiItemStatusFlags =  1 << 2;   // Value exposed by item was edited in the current frame (should match the return: bool value of most widgets)
     pub const ImGuiItemStatusFlags_ToggledSelection: ImGuiItemStatusFlags =  1 << 3;   // Set when Selectable(); TreeNode() reports toggling a selection. We can't report "Selected"; only state changes; in order to easily handle clipping with less issues.
     pub const ImGuiItemStatusFlags_ToggledOpen: ImGuiItemStatusFlags =  1 << 4;   // Set when TreeNode() reports toggling their open state.
