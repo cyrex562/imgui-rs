@@ -18,8 +18,8 @@ pub unsafe fn staticCalcScrollEdgeSnap(
     return target;
 }
 
-use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
-use crate::button_flags::ImGuiButtonFlags_NoNavFocus;
+use crate::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
+use crate::widgets::button_flags::ImGuiButtonFlags_NoNavFocus;
 use crate::color::{
     ImGuiCol_ScrollbarBg, ImGuiCol_ScrollbarGrab, ImGuiCol_ScrollbarGrabActive,
     ImGuiCol_ScrollbarGrabHovered,
@@ -350,7 +350,7 @@ pub unsafe fn SetScrollHereY(center_y_ratio: c_float) {
 }
 
 pub unsafe fn GetWindowScrollbarID(window: &mut ImguiWindow, axis: ImGuiAxis) -> ImguiHandle {
-    return window.id_by_string(if axis == ImGuiAxis_X {
+    return window.id_by_string(if axis == IM_GUI_AXIS_X {
         "#SCROLLX"
     } else {
         "#SCROLLY"
@@ -364,7 +364,7 @@ pub unsafe fn GetWindowScrollbarRect(window: &mut ImguiWindow, axis: ImGuiAxis) 
     let border_size: c_float = window.WindowBorderSize;
     let scrollbar_size: c_float = window.scrollbarSizes[axis ^ 1]; // (ScrollbarSizes.x = width of Y scrollbar; ScrollbarSizes.y = height of X scrollbar)
                                                                    // IM_ASSERT(scrollbar_size > 0.0);
-    if (axis == ImGuiAxis_X) {
+    if (axis == IM_GUI_AXIS_X) {
         return ImRect(
             inner_rect.min.x,
             ImMax(
@@ -395,7 +395,7 @@ pub unsafe fn Scrollbar(axis: ImGuiAxis) {
     // Calculate scrollbar bounding box
     let mut bb: ImRect = GetWindowScrollbarRect(window, axis);
     rounding_corners: ImDrawFlags = ImDrawFlags_RoundCornersNone;
-    if axis == ImGuiAxis_X {
+    if axis == IM_GUI_AXIS_X {
         rounding_corners |= ImDrawFlags_RoundCornersBottomLeft;
         if !window.scrollbarY {
             rounding_corners |= ImDrawFlags_RoundCornersBottomRight;
@@ -456,7 +456,7 @@ pub unsafe fn ScrollbarEx(
 
     // When we are too small, start hiding and disabling the grab (this reduce visual noise on very small window and facilitate using the window resize grab)
     let mut alpha: c_float = 1.0;
-    if (axis == ImGuiAxis_Y) && bb_frame_height < g.FontSize + g.style.FramePadding.y * 2.0 {
+    if (axis == IM_GUI_AXIS_Y) && bb_frame_height < g.FontSize + g.style.FramePadding.y * 2.0 {
         alpha = ImSaturate((bb_frame_height - g.FontSize) / (g.style.FramePadding.y * 2.0));
     }
     if alpha <= 0.0 {
@@ -473,7 +473,7 @@ pub unsafe fn ScrollbarEx(
     ));
 
     // V denote the main, longer axis of the scrollbar (= height for a vertical scrollbar)
-    let scrollbar_size_v: c_float = if (axis == ImGuiAxis_X) {
+    let scrollbar_size_v: c_float = if (axis == IM_GUI_AXIS_X) {
         bb.GetWidth()
     } else {
         bb.GetHeight()
@@ -568,7 +568,7 @@ pub unsafe fn ScrollbarEx(
         flags,
     );
     let mut grab_rect: ImRect = ImRect::default();
-    if (axis == ImGuiAxis_X) {
+    if (axis == IM_GUI_AXIS_X) {
         grab_rect = ImRect(
             ImLerp(bb.min.x, bb.max.x, grab_v_norm),
             bb.min.y,

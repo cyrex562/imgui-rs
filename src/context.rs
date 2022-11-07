@@ -1,4 +1,4 @@
-use crate::activate_flags::{ImGuiActivateFlags, ImGuiActivateFlags_None};
+use crate::activate_flags::{ImGuiActivateFlags, IM_GUI_ACTIVATE_FLAGS_NONE};
 use crate::chunk_stream::ImChunkStream;
 use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_DefaultOptions_};
 use crate::color_mod::ImGuiColorMod;
@@ -7,9 +7,9 @@ use crate::config_flags::{ImGuiConfigFlags_None, ImguiConfigFlags};
 use crate::context_hook::ImGuiContextHook;
 use crate::debug_log_flags::{ImGuiDebugLogFlags, IM_GUI_DEBUG_LOG_FLAGS_OUTPUT_TO_TTY};
 use crate::direction::{ImGuiDir, ImGuiDir_None};
-use crate::dock_context::ImGuiDockContext;
-use crate::dock_node::ImGuiDockNode;
-use crate::drag_drop_flags::{ImGuiDragDropFlags, ImGuiDragDropFlags_None};
+use crate::docking::dock_context::ImGuiDockContext;
+use crate::docking::dock_node::ImGuiDockNode;
+use crate::drag_drop::drag_drop_flags::{ImGuiDragDropFlags, ImGuiDragDropFlags_None};
 use crate::draw_channel::ImDrawChannel;
 use crate::draw_list_shared_data::Imgui_DrawListSharedData;
 use crate::font::ImFont;
@@ -595,8 +595,8 @@ impl ImguiContext {
             NavJustMovedToId: 0,
             NavJustMovedToFocusScopeId: 0,
             NavNextActivateId: 0,
-            NavActivateFlags: ImGuiActivateFlags_None,
-            NavNextActivateFlags: ImGuiActivateFlags_None,
+            NavActivateFlags: IM_GUI_ACTIVATE_FLAGS_NONE,
+            NavNextActivateFlags: IM_GUI_ACTIVATE_FLAGS_NONE,
             NavJustMovedToKeyMods: ImGuiModFlags_None,
             NavInputSource: ImGuiInputSource_None,
             NavLayer: ImGuiNavLayer_Main,

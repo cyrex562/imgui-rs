@@ -1,4 +1,4 @@
-use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
+use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::color::{ImGuiCol_ChildBg, ImGuiCol_FrameBg};
 use crate::condition::ImGuiCond_None;
 use crate::content_ops::content_region_avail;
@@ -64,11 +64,11 @@ pub unsafe fn BeginChildEx(
     let content_avail: ImVec2 = content_region_avail(g);
     let mut size: ImVec2 = ImFloor(size_arg);
     let auto_fit_axises: c_int = (if size.x == 0.0 {
-        (1 << ImGuiAxis_X)
+        (1 << IM_GUI_AXIS_X)
     } else {
         0x00
     }) | (if size.y == 0.0 {
-        (1 << ImGuiAxis_Y)
+        (1 << IM_GUI_AXIS_Y)
     } else {
         0x00
     });
@@ -161,11 +161,11 @@ pub unsafe fn EndChild() {
         End(0);
     } else {
         let mut sz: ImVec2 = window.Size;
-        if window.AutoFitChildAxises & (1 << ImGuiAxis_X) {
+        if window.AutoFitChildAxises & (1 << IM_GUI_AXIS_X) {
             // Arbitrary minimum zero-ish child size of 4.0 causes less trouble than a 0.0
             sz.x = ImMax(4.0, sz.x);
         }
-        if window.AutoFitChildAxises & (1 << ImGuiAxis_Y) {
+        if window.AutoFitChildAxises & (1 << IM_GUI_AXIS_Y) {
             sz.y = ImMax(4.0, sz.y);
         }
         End(0);

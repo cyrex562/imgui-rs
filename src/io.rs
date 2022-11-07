@@ -96,7 +96,7 @@ pub struct ImguiIo {
     pub ConfigDragClickToInputText: bool,
     // = false          // [BETA] Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.
     pub ConfigWindowsResizeFromEdges: bool,
-    // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
+    // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_MOUSE_CURSORS) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
     pub ConfigWindowsMoveFromTitleBarOnly: bool,
     // = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
     pub ConfigMemoryCompactTimer: c_float,       // = 60f32          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0 to disable.
@@ -197,7 +197,7 @@ pub struct ImguiIo {
     pub MouseWheelH: c_float,
     // Mouse wheel Horizontal. Most users don't have a mouse with an horizontal wheel, may not be filled by all backends.
     pub MouseHoveredViewport: ImguiHandle,
-    // (Optional) Modify using io.AddMouseViewportEvent(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ImGuiViewportFlags_NoInputs flag is much better (few backends can handle that). Set io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows).
+    // (Optional) Modify using io.AddMouseViewportEvent(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ImGuiViewportFlags_NoInputs flag is much better (few backends can handle that). Set io.BackendFlags |= IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows).
     pub KeyCtrl: bool,
     // Keyboard modifier down: Control
     pub KeyShift: bool,
@@ -628,7 +628,7 @@ impl ImguiIo {
     {
         let g = GImGui; // ImGuiContext& g = *GImGui;
         // IM_ASSERT(&g.IO == this && "Can only add events to current context.");
-        // IM_ASSERT(g.IO.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport);
+        // IM_ASSERT(g.IO.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT);
 
         // ImGuiInputEvent e;
         let mut e = ImguiInputEvent::new();
@@ -664,7 +664,7 @@ impl ImguiIo {
 
     // void  AddMouseViewportEvent(ImguiHandle id);                      // Queue a mouse hovered viewport. Requires backend to set
 
-    // ImGuiBackendFlags_HasMouseHoveredViewport to call this (for multi-viewport support).
+    // IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT to call this (for multi-viewport support).
 
     // void  AddFocusEvent(focused: bool);                            // Queue a gain/loss of focus for the application (generally based on OS/platform focus of your window)
 

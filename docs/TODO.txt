@@ -363,8 +363,8 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - viewport: store per-viewport/monitor DPI in .ini file so an application reload or main window changing DPI on reload can be properly patched for.
  - viewport: implicit/fallback Debug window can hog a zombie viewport (harmless, noisy?) > could at least clear out the reference on a per session basis?
  - viewport: need to clarify how to use GetMousePos() from a user point of view.
- - platform: glfw: no support for ImGuiBackendFlags_HasMouseHoveredViewport.
- - platform: sdl: no support for ImGuiBackendFlags_HasMouseHoveredViewport. maybe we could use SDL_GetMouseFocus() / SDL_WINDOW_MOUSE_FOCUS if imgui could fallback on its heuristic when NoInputs is set
+ - platform: glfw: no support for IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT.
+ - platform: sdl: no support for IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT. maybe we could use SDL_GetMouseFocus() / SDL_WINDOW_MOUSE_FOCUS if imgui could fallback on its heuristic when NoInputs is set
  - platform: sdl: no refresh of monitor/display (SDL doesn't seem to have an event for it).
  - platform: sdl: multi-viewport + minimized window seems to break mouse wheel events (at least under Win32).
 

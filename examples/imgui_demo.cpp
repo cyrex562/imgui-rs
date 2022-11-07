@@ -595,7 +595,7 @@ void ImGui::ShowDemoWindow(bool *p_open) {
                            ImGuiConfigFlags_NavEnableGamepad);
       ImGui::SameLine();
       HelpMarker("Enable gamepad controls. Require backend to set "
-                 "io.backend_flags |= ImGuiBackendFlags_HasGamepad.\n\nRead "
+                 "io.backend_flags |= IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD.\n\nRead "
                  "instructions in imgui.cpp for details.");
       ImGui::CheckboxFlags("io.config_flags: NavEnableSetMousePos",
                            &io.ConfigFlags,
@@ -718,7 +718,7 @@ void ImGui::ShowDemoWindow(bool *p_open) {
       ImGui::SameLine();
       HelpMarker("Enable resizing of windows from their edges and from the "
                  "lower-left corner.\nThis requires (io.backend_flags & "
-                 "ImGuiBackendFlags_HasMouseCursors) because it needs mouse "
+                 "IM_GUI_BACKEND_FLAGS_HAS_MOUSE_CURSORS) because it needs mouse "
                  "cursor feedback.");
       ImGui::Checkbox("io.config_windows_move_from_title_bar_only",
                       &io.ConfigWindowsMoveFromTitleBarOnly);

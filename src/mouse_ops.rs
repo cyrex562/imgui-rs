@@ -7,8 +7,8 @@ use crate::config_flags::{
 };
 use crate::constants::{WINDOWS_HOVER_PADDING, WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER};
 use crate::dock_context_ops::DockContextQueueUndockNode;
-use crate::dock_node::ImGuiDockNode;
-use crate::drag_drop_flags::ImGuiDragDropFlags_SourceExtern;
+use crate::docking::dock_node::ImGuiDockNode;
+use crate::drag_drop::drag_drop_flags::ImGuiDragDropFlags_SourceExtern;
 use crate::drag_drop_ops::IsDragDropPayloadBeingAccepted;
 use crate::id_ops::{ClearActiveID, KeepAliveID, SetActiveID};
 use crate::imgui::GImGui;

@@ -263,7 +263,7 @@ use crate::context_ops::GetFrameCount;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::{AddSettingsHandler, GImGui, SettingsHandler, hash_string};
 use crate::bit_array::ImBitArray;
-use crate::button_flags::{ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_FlattenChildren, ImGuiButtonFlags_NoNavFocus, ImGuiButtonFlags_PressedOnClick, ImGuiButtonFlags_PressedOnDoubleClick};
+use crate::widgets::button_flags::{ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_FlattenChildren, ImGuiButtonFlags_NoNavFocus, ImGuiButtonFlags_PressedOnClick, ImGuiButtonFlags_PressedOnDoubleClick};
 use crate::child_ops::{BeginChildEx, EndChild};
 use crate::content_ops::content_region_avail;
 use crate::context::ImguiContext;

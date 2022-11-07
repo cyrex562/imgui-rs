@@ -3,11 +3,11 @@ use std::ptr::null_mut;
 use std::env::args;
 use crate::child_ops::{BeginChildEx, BeginChildFrame, EndChild, EndChildFrame};
 use crate::color::{color_u32_from_rgba, IM_COL32_A_MASK, ImGuiCol_ChildBg, ImGuiCol_FrameBg, ImGuiCol_Header, ImGuiCol_HeaderActive, ImGuiCol_HeaderHovered, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TextSelectedBg};
-use crate::{button_ops, checkbox_ops, drag, GImGui, input_num_ops, layout_ops, radio_button, scrolling_ops, separator, stb, text_ops};
-use crate::activate_flags::ImGuiActivateFlags_TryToPreserveState;
-use crate::axis::ImGuiAxis_Y;
-use crate::backend_flags::ImGuiBackendFlags_HasGamepad;
-use crate::button_flags::{ImGuiButtonFlags, ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_NoHoldingActiveId, ImGuiButtonFlags_NoKeyModifiers, ImGuiButtonFlags_PressedOnClick, ImGuiButtonFlags_PressedOnClickRelease, ImGuiButtonFlags_PressedOnDoubleClick, ImGuiButtonFlags_PressedOnDragDropHold, ImGuiButtonFlags_PressedOnRelease};
+use crate::{button_ops, drag, GImGui, input_num_ops, layout_ops, radio_button, scrolling_ops, separator, stb, text_ops};
+use crate::activate_flags::IM_GUI_ACTIVATE_FLAGS_TRY_TO_PRESERVE_STATE;
+use crate::axis::IM_GUI_AXIS_Y;
+use crate::backend_flags::IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD;
+use crate::widgets::button_flags::{ImGuiButtonFlags, ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_NoHoldingActiveId, ImGuiButtonFlags_NoKeyModifiers, ImGuiButtonFlags_PressedOnClick, ImGuiButtonFlags_PressedOnClickRelease, ImGuiButtonFlags_PressedOnDoubleClick, ImGuiButtonFlags_PressedOnDragDropHold, ImGuiButtonFlags_PressedOnRelease};
 use crate::clipboard_ops::{GetClipboardText, SetClipboardText};
 use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_AlphaBar, ImGuiColorEditFlags_AlphaPreview, ImGuiColorEditFlags_AlphaPreviewHalf, ImGuiColorEditFlags_DataTypeMask_, ImGuiColorEditFlags_DefaultOptions_, ImGuiColorEditFlags_DisplayHex, ImGuiColorEditFlags_DisplayHSV, ImGuiColorEditFlags_DisplayMask_, ImGuiColorEditFlags_DisplayRGB, ImGuiColorEditFlags_Float, ImGuiColorEditFlags_HDR, ImGuiColorEditFlags_InputHSV, ImGuiColorEditFlags_InputMask_, ImGuiColorEditFlags_InputRGB, ImGuiColorEditFlags_NoAlpha, ImGuiColorEditFlags_NoBorder, ImGuiColorEditFlags_NoDragDrop, ImGuiColorEditFlags_NoInputs, ImGuiColorEditFlags_NoLabel, ImGuiColorEditFlags_NoOptions, ImGuiColorEditFlags_NoPicker, ImGuiColorEditFlags_NoSidePreview, ImGuiColorEditFlags_NoSmallPreview, ImGuiColorEditFlags_NoTooltip, ImGuiColorEditFlags_PickerHueBar, ImGuiColorEditFlags_PickerHueWheel, ImGuiColorEditFlags_PickerMask_, ImGuiColorEditFlags_Uint8};
 use crate::color_ops::{ColorConvertFloat4ToU32, ColorConvertHSVtoRGB, ColorConvertRGBtoHSV};
@@ -36,7 +36,7 @@ use crate::key::{ImGuiKey, ImGuiKey_A, ImGuiKey_Backspace, ImGuiKey_C, ImGuiKey_
 use crate::last_item_data::ImGuiLastItemData;
 use crate::layout_ops::same_line;
 use crate::logging_ops::LogSetNextTextDecoration;
-use crate::math_ops::{ImAtan2, char_is_blank, ImClamp, ImCos, ImFmod, ImLerp, ImMax, ImMin, ImRotate, ImSin, ImSwap};
+use crate::math_ops::{char_is_blank, ImAtan2, ImClamp, ImCos, ImFmod, ImLerp, ImMax, ImMin, ImRotate, ImSin, ImSwap};
 use crate::mod_flags::{ImGuiModFlags_Ctrl, ImGuiModFlags_Shift, ImGuiModFlags_Super};
 use crate::mouse_cursor::ImGuiMouseCursor_TextInput;
 use crate::nav_highlight_flags::{ImGuiNavHighlightFlags_NoRounding, ImGuiNavHighlightFlags_TypeThin};
@@ -62,6 +62,7 @@ use crate::type_defs::{ImguiHandle, ImGuiInputTextCallback, ImWchar};
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
+use crate::widgets::checkbox_ops;
 use crate::window::focus::FocusWindow;
 use crate::window::ImguiWindow;
 use crate::window::ops::{BeginDisabled, EndDisabled, GetCurrentWindow};
@@ -456,8 +457,8 @@ pub unsafe fn InputTextEx(label: String,
     let input_requested_by_nav: bool = (g.ActiveId != id) && ((g.NavActivateInputId == id) || (g.NavActivateId == id && g.NavInputSource == ImGuiInputSource_Keyboard));
 
     let user_clicked: bool = hovered && io.MouseClicked[0];
-    let user_scroll_finish: bool = is_multiline && state != None && g.ActiveId == 0 && g.ActiveIdPreviousFrame == scrolling_ops::GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
-    let user_scroll_active: bool = is_multiline && state != None && g.ActiveId == scrolling_ops::GetWindowScrollbarID(draw_window, ImGuiAxis_Y);
+    let user_scroll_finish: bool = is_multiline && state != None && g.ActiveId == 0 && g.ActiveIdPreviousFrame == scrolling_ops::GetWindowScrollbarID(draw_window, IM_GUI_AXIS_Y);
+    let user_scroll_active: bool = is_multiline && state != None && g.ActiveId == scrolling_ops::GetWindowScrollbarID(draw_window, IM_GUI_AXIS_Y);
     let mut clear_active_id: bool =  false;
     let mut select_all: bool =  false;
 
@@ -510,7 +511,7 @@ pub unsafe fn InputTextEx(label: String,
         {
             if flags & ImGuiInputTextFlags_AutoSelectAll {
                 select_all = true;}
-            if input_requested_by_nav && (!recycle_state || flag_clear(g.NavActivateFlags , ImGuiActivateFlags_TryToPreserveState)) {
+            if input_requested_by_nav && (!recycle_state || flag_clear(g.NavActivateFlags, IM_GUI_ACTIVATE_FLAGS_TRY_TO_PRESERVE_STATE)) {
                 select_all = true;}
             if input_requested_by_tabbing || (user_clicked && io.KeyCtrl) {
                 select_all = true;}
@@ -740,7 +741,7 @@ pub unsafe fn InputTextEx(label: String,
         let is_select_all: bool = is_shortcut_key && IsKeyPressed(ImGuiKey_A, false);
 
         // We allow validate/cancel with Nav source (gamepad) to makes it easier to undo an accidental NavInput press with no keyboard wired, but otherwise it isn't very useful.
-        let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
+        let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD) != 0;
         let is_enter_pressed: bool = IsKeyPressed(ImGuiKey_Enter, true) || IsKeyPressed(ImGuiKey_KeypadEnter, true);
         let is_gamepad_validate: bool = nav_gamepad_active && (IsKeyPressed(ImGuiKey_NavGamepadActivate, false) || IsKeyPressed(ImGuiKey_NavGamepadInput, false));
         let is_cancel: bool = IsKeyPressed(ImGuiKey_Escape, false) || (nav_gamepad_active && IsKeyPressed(ImGuiKey_NavGamepadCancel, false));

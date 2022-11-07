@@ -1,18 +1,18 @@
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int, size_t};
-use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
+use crate::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::color::{ImGuiCol_DockingEmptyBg, ImGuiCol_DockingPreview, ImGuiCol_NavWindowingHighlight, ImGuiCol_Separator, ImGuiCol_Text, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_TitleBgCollapsed, ImGuiCol_WindowBg};
 use crate::condition::ImGuiCond_Always;
 use crate::constants::{DOCKING_SPLITTER_SIZE, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
-use crate::dock_node::ImGuiDockNode;
-use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_AutoHideTabBar, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_KeepAliveOnly, ImGuiDockNodeFlags_LocalFlagsTransferMask_, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingInCentralNode, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_None, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoWindowMenuButton, ImGuiDockNodeFlags_PassthruCentralNode, ImGuiDockNodeFlags_SharedFlagsInheritMask_};
+use crate::docking::dock_node::ImGuiDockNode;
+use crate::docking::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_AutoHideTabBar, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_KeepAliveOnly, ImGuiDockNodeFlags_LocalFlagsTransferMask_, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingInCentralNode, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_None, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoWindowMenuButton, ImGuiDockNodeFlags_PassthruCentralNode, ImGuiDockNodeFlags_SharedFlagsInheritMask_};
 use crate::data_authority::{IM_GUI_DATA_AUTHORITY_AUTO, IM_GUI_DATA_AUTHORITY_DOCK_NODE, IM_GUI_DATA_AUTHORITY_WINDOW};
 
 use crate::direction::{ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
 use crate::dock_context_ops::{DockContextAddNode, DockContextRemoveNode};
-use crate::dock_node_state::{ImGuiDockNodeState_HostWindowHiddenBecauseSingleWindow, ImGuiDockNodeState_HostWindowHiddenBecauseWindowsAreResizing};
-use crate::dock_node_tree_info::ImGuiDockNodeTreeInfo;
-use crate::dock_preview_data::ImGuiDockPreviewData;
+use crate::docking::dock_node_state::{ImGuiDockNodeState_HostWindowHiddenBecauseSingleWindow, ImGuiDockNodeState_HostWindowHiddenBecauseWindowsAreResizing};
+use crate::docking::dock_node_tree_info::ImGuiDockNodeTreeInfo;
+use crate::docking::dock_preview_data::ImGuiDockPreviewData;
 use crate::drag_drop_ops::GetDragDropPayload;
 use crate::draw_flags::ImDrawFlags;
 use crate::draw_list::ImDrawList;
@@ -1121,7 +1121,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: &mut I
     let mut title_bar_id: ImguiHandle = host_window.id_by_string(null(), str_to_const_c_char_ptr("#TITLEBAR"));
     if g.HoveredId == 0 || g.HoveredId == title_bar_id || g.ActiveId == title_bar_id {
         held: bool;
-        ButtonBehavior(title_bar_rect, title_bar_id, None, &held, crate::button_flags::ImGuiButtonFlags_AllowItemOverlap);
+        ButtonBehavior(title_bar_rect, title_bar_id, None, &held, crate::widgets::button_flags::ImGuiButtonFlags_AllowItemOverlap);
         if g.HoveredId == title_bar_id {
             // ImGuiButtonFlags_AllowItemOverlap + SetItemAllowOverlap() required for appending into dock node tab bar,
             // otherwise dragging window will steal HoveredId and amended tabs cannot get them.
@@ -1276,7 +1276,7 @@ pub unsafe fn DockNodeCalcTabBarLayout(
 pub unsafe fn DockNodeCalcSplitRects(pos_old: &mut ImVec2, size_old: &mut ImVec2, pos_new: &mut ImVec2, size_new: &mut ImVec2, dir: ImGuiDir, size_new_desired: ImVec2) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let dock_spacing: c_float = g.style.ItemInnerSpacing.x;
-    const axis: ImGuiAxis = if dir == ImGuiDir_Left || dir == ImGuiDir_Right { ImGuiAxis_X } else { ImGuiAxis_Y };
+    const axis: ImGuiAxis = if dir == ImGuiDir_Left || dir == ImGuiDir_Right { IM_GUI_AXIS_X } else { IM_GUI_AXIS_Y };
     pos_new[axis ^ 1] = pos_old[axis ^ 1];
     size_new[axis ^ 1] = size_old[axis ^ 1];
 
@@ -1438,7 +1438,7 @@ pub unsafe fn DockNodePreviewDockSetup(
     data.SplitRatio = 0.0;
     if data.SplitDir != ImGuiDir_None {
         split_dir: ImGuiDir = data.SplitDir;
-        split_axis: ImGuiAxis = if split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Right { ImGuiAxis_X } else { ImGuiAxis_Y };
+        split_axis: ImGuiAxis = if split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Right { IM_GUI_AXIS_X } else { IM_GUI_AXIS_Y };
         // pos_new: ImVec2, pos_old = data.FutureNode.Pos;
         let mut pos_new = data.FutureNode.Pos.clone();
         let mut pos_old = data.FutureNode.Pos.clone();
@@ -1601,7 +1601,7 @@ pub unsafe fn DockNodePreviewDockRender(
 
 pub unsafe fn DockNodeTreeSplit(ctx: *mut crate::context::ImguiContext, parent_node: *mut ImGuiDockNode, split_axis: ImGuiAxis, split_inheritor_child_idx: c_int, split_ratio: c_float, new_node: *mut ImGuiDockNode) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    // IM_ASSERT(split_axis != ImGuiAxis_None);
+    // IM_ASSERT(split_axis != IM_GUI_AXIS_NONE);
 
     let child_0: *mut ImGuiDockNode = if new_node.is_null() == false && split_inheritor_child_idx != 0 { new_node } else { DockContextAddNode(ctx, 0) };
     child_0.ParentNode = parent_node;
@@ -1817,7 +1817,7 @@ pub unsafe fn DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode) {
     if child_0.IsVisible && child_1.IsVisible {
         // Bounding box of the splitter cover the space between both nodes (w = Spacing, h = Size[xy^1] for when splitting horizontally)
         let axis = node.SplitAxis;
-        // IM_ASSERT(axis != ImGuiAxis_None);
+        // IM_ASSERT(axis != IM_GUI_AXIS_NONE);
         let mut bb: ImRect = ImRect::default();
         bb.min = child_0.Pos;
         bb.max = child_1.Pos;
@@ -1826,7 +1826,7 @@ pub unsafe fn DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode) {
         //if (g.IO.KeyCtrl) GetForegroundDrawList(g.Currentwindow.Viewport).AddRect(bb.Min, bb.Max, IM_COL32(255,0,255,255));
 
         let merged_flags = child_0.MergedFlags | child_1.MergedFlags; // Merged flags for BOTH childs
-        let no_resize_axis_flag = if axis == ImGuiAxis_X { ImGuiDockNodeFlags_NoResizeX } else { ImGuiDockNodeFlags_NoResizeY };
+        let no_resize_axis_flag = if axis == IM_GUI_AXIS_X { ImGuiDockNodeFlags_NoResizeX } else { ImGuiDockNodeFlags_NoResizeY };
         if (merged_flags & ImGuiDockNodeFlags_NoResize) || (merged_flags & no_resize_axis_flag) {
             let mut window  = g.current_window_mut().unwrap();
             window.DrawList.AddRectFilled(&bb.min, &bb.max, GetColorU32(ImGuiCol_Separator, 0.0), g.style.FrameRounding, 0);
@@ -1864,7 +1864,7 @@ pub unsafe fn DockNodeTreeUpdateSplitter(node: *mut ImGuiDockNode) {
                 {
                     for (int touching_node_n = 0; touching_node_n < touching_nodes[n].Size; touching_node_n++)
                         draw_list.AddRect(touching_nodes[n][touching_node_n].Pos, touching_nodes[n][touching_node_n].Pos + touching_nodes[n][touching_node_n].Size, IM_COL32(0, 255, 0, 255));
-                    if (axis == ImGuiAxis_X)
+                    if (axis == IM_GUI_AXIS_X)
                         draw_list.AddLine(ImVec2::new(resize_limits[n], node->ChildNodes[n].Pos.y), ImVec2::new(resize_limits[n], node->ChildNodes[n].Pos.y + node->ChildNodes[n].Size.y), IM_COL32(255, 0, 255, 255), 3.0);
                     else
                         draw_list.AddLine(ImVec2::new(node->ChildNodes[n].Pos.x, resize_limits[n]), ImVec2::new(node->ChildNodes[n].Pos.x + node->ChildNodes[n].Size.x, resize_limits[n]), IM_COL32(255, 0, 255, 255), 3.0);

@@ -4,7 +4,7 @@ use std::borrow::BorrowMut;
 use std::ptr::null_mut;
 use libc::{c_void, memcmp};
 use crate::{type_defs::ImguiHandle, viewport::ImguiViewport, imgui::GImGui, window::{ImguiWindow, window_flags::{ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_Tooltip, ImGuiWindowFlags_Popup, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground}}, rect::ImRect, vec2::ImVec2, config_flags::{ImGuiConfigFlags_ViewportsEnable, ImGuiConfigFlags_DpiEnableScaleViewports}, viewport_flags::{ImGuiViewportFlags_NoInputs, ImGuiViewportFlags_Minimized, ImGuiViewportFlags_OwnedByApp, ImGuiViewportFlags_CanHostOtherWindows, ImGuiViewportFlags_NoFocusOnAppearing, ImGuiViewportFlags_IsPlatformWindow, ImGuiViewportFlags_TopMost, ImGuiViewportFlags_NoDecoration, ImGuiViewportFlags_NoTaskBarIcon, ImGuiViewportFlags_NoRendererClear, ImGuiViewportFlags_NoFocusOnClick}, hash_string};
-use crate::backend_flags::ImGuiBackendFlags_HasMouseHoveredViewport;
+use crate::backend_flags::IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT;
 use crate::context_ops::GetPlatformIO;
 use crate::draw_list::ImDrawList;
 use crate::input_ops::{IsAnyMouseDown, IsMousePosValid};
@@ -402,7 +402,7 @@ pub unsafe fn UpdateViewportsNewFrame()
     // Mouse handling: decide on the actual mouse viewport for this frame between the active/focused viewport and the hovered viewport.
     // Note that 'viewport_hovered' should skip over any viewport that has the ImGuiViewportFlags_NoInputs flags set.
     let mut viewport_hovered: *mut ImguiViewport =  None;
-    if (g.IO.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)
+    if (g.IO.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT)
     {
         viewport_hovered = if g.IO.MouseHoveredViewport { FindViewportByID(g.IO.MouseHoveredViewport)} else {None};
         if (viewport_hovered && (viewport_hovered.Flags & ImGuiViewportFlags_NoInputs)){
@@ -433,7 +433,7 @@ pub unsafe fn UpdateViewportsNewFrame()
     // - when releasing a moving window we will revert to aiming behind (at viewport_hovered)
     // - when we are between viewports, our dragged preview will tend to show in the last viewport _even_ if we don't have tooltips in their viewports (when lacking monitor info)
     // - consider the case of holding on a menu item to browse child menus: even thou a mouse button is held, there's no active id because menu items only react on mouse release.
-    // FIXME-VIEWPORT: This is essentially broken, when ImGuiBackendFlags_HasMouseHoveredViewport is set we want to trust when viewport_hovered==NULL and use that.
+    // FIXME-VIEWPORT: This is essentially broken, when IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT is set we want to trust when viewport_hovered==NULL and use that.
     let is_mouse_dragging_with_an_expected_destination: bool = g.DragDropActive;
     if (is_mouse_dragging_with_an_expected_destination && viewport_hovered == null_mut()){
         viewport_hovered = g.MouseLastHoveredViewport;}

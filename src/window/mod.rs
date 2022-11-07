@@ -7,7 +7,7 @@ use crate::context::ImguiContext;
 use crate::data_type::{IM_GUI_DATA_TYPE_POINTER, IM_GUI_DATA_TYPE_S32, IM_GUI_DATA_TYPE_STRING};
 use crate::debug_ops::DebugHookIdInfo;
 use crate::direction::{ImGuiDir, ImGuiDir_None};
-use crate::dock_node::ImGuiDockNode;
+use crate::docking::dock_node::ImGuiDockNode;
 use crate::draw_list::ImDrawList;
 use crate::hash_ops::{hash_data, hash_string};
 use crate::id_ops::id_from_str;

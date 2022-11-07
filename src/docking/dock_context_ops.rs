@@ -1,6 +1,7 @@
-use crate::{a_imgui_cpp::{DockSettingsHandler_ClearAll, DockSettingsHandler_ReadLine, DockSettingsHandler_ApplyAll, DockSettingsHandler_WriteAll}, utils::is_not_null, config_flags::ImGuiConfigFlags_DockingEnable, dock_request_type::{ImGuiDockRequestType_Undock, ImGuiDockRequestType_Dock, ImGuiDockRequestType_None}, direction::{ImGuiDir_Left, ImGuiDir_Right, ImGuiDir_None, ImGuiDir_Up}, axis::{ImGuiAxis_X, ImGuiAxis_Y}};
+use crate::{a_imgui_cpp::{DockSettingsHandler_ApplyAll, DockSettingsHandler_ClearAll, DockSettingsHandler_ReadLine, DockSettingsHandler_WriteAll}, axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y}, config_flags::ImGuiConfigFlags_DockingEnable, direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up}, utils::is_not_null};
 use crate::context::ImguiContext;
-use crate::dock_node::ImGuiDockNode;
+use crate::docking::dock_node::ImGuiDockNode;
+use crate::docking::dock_request_type::{ImGuiDockRequestType_Dock, ImGuiDockRequestType_None, ImGuiDockRequestType_Undock};
 use crate::docking_ops::{DockBuilderRemoveNodeChildNodes, DockBuilderRemoveNodeDockedWindows, DockSettingsHandler_ApplyAll, DockSettingsHandler_ClearAll, DockSettingsHandler_ReadLine, DockSettingsHandler_WriteAll};
 use crate::hash_ops::hash_string;
 use crate::settings_handler::SettingsHandler;
@@ -489,7 +490,7 @@ pub unsafe fn DockContextProcessDock(g: &mut ImguiContext, req: *mut ImGuiDockRe
     if (split_dir != ImGuiDir_None)
     {
         // Split into two, one side will be our payload node unless we are dropping a loose window
-        let split_axis: ImGuiAxis = if split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Right { ImGuiAxis_X} else { ImGuiAxis_Y};
+        let split_axis: ImGuiAxis = if split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Right { IM_GUI_AXIS_X } else { IM_GUI_AXIS_Y };
         let split_inheritor_child_idx: c_int = if split_dir == ImGuiDir_Left || split_dir == ImGuiDir_Up { 1} else { 0}; // Current contents will be moved to the opposite side
         let split_ratio: c_float =  req.DockSplitRatio;
         DockNodeTreeSplit(ctx, node, split_axis, split_inheritor_child_idx, split_ratio, payload_node);  // payload_node may be NULL here!
@@ -579,7 +580,7 @@ pub unsafe fn DockContextProcessDock(g: &mut ImguiContext, req: *mut ImGuiDockRe
 //   Undocking a large (~full screen) window would leave it so large that the bottom right sizing corner would more
 //   than likely be off the screen and the window would be hard to resize to fit on screen. This can be particularly problematic
 //   with 'ConfigWindowsMoveFromTitleBarOnly=true' and/or with 'ConfigWindowsResizeFromEdges=false' as well (the later can be
-//   due to missing ImGuiBackendFlags_HasMouseCursors backend flag).
+//   due to missing IM_GUI_BACKEND_FLAGS_HAS_MOUSE_CURSORS backend flag).
 // Solution:
 //   When undocking a window we currently force its maximum size to 90% of the host viewport or monitor.
 // Reevaluate this when we implement preserving docked/undocked size ("docking_wip/undocked_size" branch).

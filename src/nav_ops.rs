@@ -1,12 +1,12 @@
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int, INT_MAX};
-use crate::activate_flags::{ImGuiActivateFlags_None, ImGuiActivateFlags_PreferInput, ImGuiActivateFlags_PreferTweak, ImGuiActivateFlags_TryToPreserveState};
+use crate::activate_flags::{IM_GUI_ACTIVATE_FLAGS_NONE, IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT, IM_GUI_ACTIVATE_FLAGS_PREFER_TWEAK, IM_GUI_ACTIVATE_FLAGS_TRY_TO_PRESERVE_STATE};
 use crate::config_flags::{ImGuiConfigFlags_NavEnableGamepad, ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_NavEnableSetMousePos};
 use crate::constants::{NAV_WINDOWING_HIGHLIGHT_DELAY, NAV_WINDOWING_LIST_APPEAR_DELAY};
 use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
 use crate::{GImGui, ImguiViewport};
-use crate::axis::{ImGuiAxis, ImGuiAxis_X};
-use crate::backend_flags::{ImGuiBackendFlags_HasGamepad, ImGuiBackendFlags_HasSetMousePos};
+use crate::axis::{ImGuiAxis, IM_GUI_AXIS_X};
+use crate::backend_flags::{IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD, IM_GUI_BACKEND_FLAGS_HAS_SET_MOUSE_POS};
 use crate::color::color_u32_from_rgba;
 use crate::condition::ImGuiCond_Always;
 use crate::draw_list::ImDrawList;
@@ -620,13 +620,13 @@ pub unsafe fn GetNavTweakPressedAmount(axis: ImGuiAxis) -> c_int
     let mut key_more = ImGuiKey_None;
     if g.NavInputSource == ImGuiInputSource_Gamepad
     {
-        key_less = if axis == ImGuiAxis_X { ImGuiKey_GamepadDpadLeft } else { ImGuiKey_GamepadDpadUp };
-        key_more = if axis == ImGuiAxis_X { ImGuiKey_GamepadDpadRight} else { ImGuiKey_GamepadDpadDown};
+        key_less = if axis == IM_GUI_AXIS_X { ImGuiKey_GamepadDpadLeft } else { ImGuiKey_GamepadDpadUp };
+        key_more = if axis == IM_GUI_AXIS_X { ImGuiKey_GamepadDpadRight} else { ImGuiKey_GamepadDpadDown};
     }
     else
     {
-        key_less = if axis == ImGuiAxis_X { ImGuiKey_LeftArrow} else { ImGuiKey_UpArrow};
-        key_more = if axis == ImGuiAxis_X { ImGuiKey_RightArrow} else { ImGuiKey_DownArrow};
+        key_less = if axis == IM_GUI_AXIS_X { ImGuiKey_LeftArrow} else { ImGuiKey_UpArrow};
+        key_more = if axis == IM_GUI_AXIS_X { ImGuiKey_RightArrow} else { ImGuiKey_DownArrow};
     }
     let mut amount =  GetKeyPressedAmount(key_more, repeat_delay, repeat_rate) - GetKeyPressedAmount(key_less, repeat_delay, repeat_rate);
     if amount != 0 && IsKeyDown(key_less) && IsKeyDown(key_more) { // Cancel when opposite directions are held, regardless of repeat phase
@@ -645,7 +645,7 @@ pub unsafe fn NavUpdate()
 
     // Set input source based on which keys are last pressed (as some features differs when used with Gamepad vs Keyboard)
     // FIXME-NAV: Now that keys are separated maybe we can get rid of NavInputSource?
-    let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
+    let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD) != 0;
     let nav_gamepad_keys_to_change_source:[ImGuiKey;8] = [ ImGuiKey_GamepadFaceRight, ImGuiKey_GamepadFaceLeft, ImGuiKey_GamepadFaceUp, ImGuiKey_GamepadFaceDown, ImGuiKey_GamepadDpadRight, ImGuiKey_GamepadDpadLeft, ImGuiKey_GamepadDpadUp, ImGuiKey_GamepadDpadDown ];
     if nav_gamepad_active {
         // for (ImGuiKey key : nav_gamepad_keys_to_change_source)
@@ -718,7 +718,7 @@ pub unsafe fn NavUpdate()
     g.NavActivateDownId = 0;
     g.NavActivatePressedId = 0;
     g.NavActivateInputId = 0;
-    g.NavActivateFlags = ImGuiActivateFlags_None;
+    g.NavActivateFlags = IM_GUI_ACTIVATE_FLAGS_NONE;
     if g.NavId != 0 && !g.NavDisableHighlight && is_null(g.NavWindowingTarget) && is_not_null(g.NavWindow) && flag_clear(g.NavWindow.Flags, ImGuiWindowFlags_NoNavInputs)
     {
         let activate_down: bool = (nav_keyboard_active && IsKeyDown(ImGuiKey_Space)) || (nav_gamepad_active && IsKeyDown(ImGuiKey_NavGamepadActivate));
@@ -728,12 +728,12 @@ pub unsafe fn NavUpdate()
         if g.ActiveId == 0 && activate_pressed
         {
             g.NavActivateId = g.NavId;
-            g.NavActivateFlags = ImGuiActivateFlags_PreferTweak;
+            g.NavActivateFlags = IM_GUI_ACTIVATE_FLAGS_PREFER_TWEAK;
         }
         if (g.ActiveId == 0 || g.ActiveId == g.NavId) && input_pressed
         {
             g.NavActivateInputId = g.NavId;
-            g.NavActivateFlags = ImGuiActivateFlags_PreferInput;
+            g.NavActivateFlags = IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT;
         }
         if (g.ActiveId == 0 || g.ActiveId == g.NavId) && activate_down {
             g.NavActivateDownId = g.NavId;
@@ -752,7 +752,7 @@ pub unsafe fn NavUpdate()
     // FIXME-NAV: Those should eventually be queued (unlike focus they don't cancel each others)
     if (g.NavNextActivateId != 0)
     {
-        if (g.NavNextActivateFlags & ImGuiActivateFlags_PreferInput) {
+        if (g.NavNextActivateFlags & IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT) {
             g.NavActivateInputId = g.NavNextActivateId;
         }
         else {
@@ -815,7 +815,7 @@ pub unsafe fn NavUpdate()
 
     // Update mouse position if requested
     // (This will take into account the possibility that a Scroll was queued in the window to offset our absolute mouse position before scroll has been applied)
-    if (set_mouse_pos && flag_set(io.ConfigFlags, ImGuiConfigFlags_NavEnableSetMousePos) && flag_set(io.BackendFlags, ImGuiBackendFlags_HasSetMousePos))
+    if (set_mouse_pos && flag_set(io.ConfigFlags, ImGuiConfigFlags_NavEnableSetMousePos) && flag_set(io.BackendFlags, IM_GUI_BACKEND_FLAGS_HAS_SET_MOUSE_POS))
     {
         io.MousePos = NavCalcPreferredRefPos(g);io.MousePosPrev = NavCalcPreferredRefPos(g);
         io.WantSetMousePos = true;
@@ -869,7 +869,7 @@ pub unsafe fn NavUpdateCreateMoveRequest()
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let io = &mut g.IO;
     let mut window: &mut ImguiWindow =  g.NavWindow;
-    let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
+    let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD) != 0;
     let nav_keyboard_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard) != 0;
 
     if (g.NavMoveForwardToNextFrame && window != null_mut())
@@ -1101,7 +1101,7 @@ pub unsafe fn NavMoveRequestApplyResult()
     if ((g.NavMoveFlags & ImGuiNavMoveFlags_Tabbing) && (result.InFlags & ImGuiItemFlags_Inputable))
     {
         g.NavNextActivateId = result.ID;
-        g.NavNextActivateFlags = ImGuiActivateFlags_PreferInput | ImGuiActivateFlags_TryToPreserveState;
+        g.NavNextActivateFlags = IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT | IM_GUI_ACTIVATE_FLAGS_TRY_TO_PRESERVE_STATE;
         g.NavMoveFlags |= ImGuiNavMoveFlags_DontSetNavHighlight;
     }
 
@@ -1109,7 +1109,7 @@ pub unsafe fn NavMoveRequestApplyResult()
     if (g.NavMoveFlags & ImGuiNavMoveFlags_Activate)
     {
         g.NavNextActivateId = result.ID;
-        g.NavNextActivateFlags = ImGuiActivateFlags_None;
+        g.NavNextActivateFlags = IM_GUI_ACTIVATE_FLAGS_NONE;
     }
 
     // Enable nav highlight
@@ -1125,7 +1125,7 @@ pub unsafe fn NavMoveRequestApplyResult()
 pub unsafe fn NavUpdateCancelRequest()
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let nav_gamepad_active: bool = (g.IO.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (g.IO.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
+    let nav_gamepad_active: bool = (g.IO.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (g.IO.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD) != 0;
     let nav_keyboard_active: bool = (g.IO.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard) != 0;
     if !(nav_keyboard_active && IsKeyPressed(ImGuiKey_Escape, false)) && !(nav_gamepad_active && IsKeyPressed(ImGuiKey_NavGamepadCancel, false)) {
         return;
@@ -1410,7 +1410,7 @@ pub unsafe fn NavUpdateWindowing()
     }
 
     // Start CTRL+Tab or Square+L/R window selection
-    let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
+    let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD) != 0;
     let nav_keyboard_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableKeyboard) != 0;
     let start_windowing_with_gamepad: bool = allow_windowing && nav_gamepad_active && is_null(g.NavWindowingTarget) && IsKeyPressed(ImGuiKey_NavGamepadMenu, false);
     let start_windowing_with_keyboard: bool = allow_windowing && is_null(g.NavWindowingTarget) && io.KeyCtrl && IsKeyPressed(ImGuiKey_Tab, false); // Note: enabled even without NavEnableKeyboard!

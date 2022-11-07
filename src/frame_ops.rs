@@ -6,7 +6,7 @@ use crate::context_hook::{
     IM_GUI_CONTEXT_HOOK_TYPE_NEW_FRAME_POST, IM_GUI_CONTEXT_HOOK_TYPE_NEW_FRAME_PRE,
     IM_GUI_CONTEXT_HOOK_TYPE_PENDING_REMOVAL,
 };
-use crate::drag_drop_flags::{
+use crate::drag_drop::drag_drop_flags::{
     ImGuiDragDropFlags_SourceAutoExpirePayload, ImGuiDragDropFlags_SourceNoPreviewTooltip,
 };
 use crate::draw_list_flags::{
@@ -22,7 +22,7 @@ use libc::{c_float, c_int};
 use std::ptr::null_mut;
 
 use crate::a_imgui_cpp::{UpdateDebugToolItemPicker, UpdateDebugToolStackQueries};
-use crate::backend_flags::ImGuiBackendFlags_RendererHasVtxOffset;
+use crate::backend_flags::IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET;
 use crate::context::ImguiContext;
 use crate::dock_context_ops::{
     DockContextEndFrame, DockContextNewFrameUpdateDocking, DockContextNewFrameUpdateUndocking,
@@ -131,7 +131,7 @@ pub fn NewFrame(g: &mut ImguiContext) {
     if g.style.AntiAliasedFill {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedFill;
     }
-    if g.IO.BackendFlags & ImGuiBackendFlags_RendererHasVtxOffset {
+    if g.IO.BackendFlags & IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AllowVtxOffset;
     }
 

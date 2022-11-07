@@ -1,15 +1,15 @@
 #![allow(non_snake_case)]
 
-use crate::axis::{ImGuiAxis, ImGuiAxis_None};
+use crate::axis::{ImGuiAxis, IM_GUI_AXIS_NONE};
 use crate::color::IM_COL32_WHITE;
 use crate::data_authority::{
     ImGuiDataAuthority, IM_GUI_DATA_AUTHORITY_AUTO, IM_GUI_DATA_AUTHORITY_DOCK_NODE,
 };
-use crate::dock_node_flags::{
+use crate::docking::dock_node_flags::{
     ImGuiDockNodeFlags, ImGuiDockNodeFlags_CentralNode, ImGuiDockNodeFlags_DockSpace,
     ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_NoTabBar, ImGuiDockNodeFlags_None,
 };
-use crate::dock_node_state::{ImGuiDockNodeState, ImGuiDockNodeState_Unknown};
+use crate::docking::dock_node_state::{ImGuiDockNodeState, ImGuiDockNodeState_Unknown};
 use crate::tab_bar::ImGuiTabBar;
 use crate::type_defs::ImguiHandle;
 use crate::vec2::ImVec2;
@@ -80,7 +80,7 @@ impl ImGuiDockNode {
         out.ParentNode = None;
         out.ChildNodes = [None; 2];
         out.TabBar = None;
-        out.SplitAxis = ImGuiAxis_None;
+        out.SplitAxis = IM_GUI_AXIS_NONE;
         out.State = ImGuiDockNodeState_Unknown;
         out.LastBgColor = IM_COL32_WHITE;
         out.HostWindow = None;

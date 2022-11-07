@@ -1,7 +1,7 @@
 use crate::color::ImGuiCol_DragDropTarget;
 use crate::condition::{ImGuiCond, ImGuiCond_Always};
 use crate::data_type::ImGuiPayloadType;
-use crate::drag_drop_flags::{
+use crate::drag_drop::drag_drop_flags::{
     ImGuiDragDropFlags, ImGuiDragDropFlags_AcceptBeforeDelivery,
     ImGuiDragDropFlags_AcceptNoDrawDefaultRect, ImGuiDragDropFlags_AcceptNoPreviewTooltip,
     ImGuiDragDropFlags_None, ImGuiDragDropFlags_SourceAllowNullID, ImGuiDragDropFlags_SourceExtern,

@@ -9,6 +9,7 @@ edition = "2021"
 log = "0.4.17"
 fern = "0.6.1"
 libc = "0.2"
+bitfield = "0.14"
 
 
 [target.'cfg(windows)'.dependencies]

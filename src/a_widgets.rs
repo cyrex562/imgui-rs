@@ -91,11 +91,11 @@ Index of this file:
 //-------------------------------------------------------------------------
 
 use crate::activate_flags::{
-    ImGuiActivateFlags_PreferInput, ImGuiActivateFlags_TryToPreserveState,
+    IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT, IM_GUI_ACTIVATE_FLAGS_TRY_TO_PRESERVE_STATE,
 };
-use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
-use crate::backend_flags::ImGuiBackendFlags_HasGamepad;
-use crate::button_flags::{
+use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y, ImGuiAxis};
+use crate::backend_flags::IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD;
+use crate::widgets::button_flags::{
     ImGuiButtonFlags, ImGuiButtonFlags_AlignTextBaseLine, ImGuiButtonFlags_AllowItemOverlap,
     ImGuiButtonFlags_DontClosePopups, ImGuiButtonFlags_FlattenChildren,
     ImGuiButtonFlags_MouseButtonDefault_, ImGuiButtonFlags_MouseButtonLeft,
@@ -109,26 +109,26 @@ use crate::button_flags::{
     ImGuiButtonFlags_PressedOnRelease, ImGuiButtonFlags_Repeat,
 };
 use crate::button_ops::{ArrowButtonEx, ButtonBehavior, ButtonEx, InvisibleButton};
-use crate::checkbox_ops::CheckboxFlags;
+use crate::widgets::checkbox_ops::CheckboxFlags;
 use crate::child_ops::{BeginChild, BeginChildEx, BeginChildFrame, EndChild, EndChildFrame};
 use crate::clipboard_ops::{GetClipboardText, SetClipboardText};
 use crate::color::{
-    ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_Button, ImGuiCol_ButtonActive,
-    ImGuiCol_ButtonHovered, ImGuiCol_CheckMark, ImGuiCol_ChildBg, ImGuiCol_FrameBg,
-    ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered, ImGuiCol_Header, ImGuiCol_HeaderActive,
-    ImGuiCol_HeaderHovered, ImGuiCol_PlotHistogram, ImGuiCol_PlotHistogramHovered,
-    ImGuiCol_PlotLines, ImGuiCol_PlotLinesHovered, ImGuiCol_ScrollbarBg, ImGuiCol_ScrollbarGrab,
-    ImGuiCol_ScrollbarGrabActive, ImGuiCol_ScrollbarGrabHovered, ImGuiCol_Separator,
-    ImGuiCol_SeparatorActive, ImGuiCol_SeparatorHovered, ImGuiCol_SliderGrab,
-    ImGuiCol_SliderGrabActive, ImGuiCol_Tab, ImGuiCol_TabActive, ImGuiCol_TabHovered,
-    ImGuiCol_TabUnfocused, ImGuiCol_TabUnfocusedActive, ImGuiCol_Text, ImGuiCol_TextDisabled,
-    ImGuiCol_TextSelectedBg, ImGuiCol_TitleBgActive, color_u32_from_rgba, IM_COL32_A_MASK,
+    color_u32_from_rgba, IM_COL32_A_MASK, ImGuiCol_Border, ImGuiCol_BorderShadow,
+    ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_CheckMark,
+    ImGuiCol_ChildBg, ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered,
+    ImGuiCol_Header, ImGuiCol_HeaderActive, ImGuiCol_HeaderHovered,
+    ImGuiCol_PlotHistogram, ImGuiCol_PlotHistogramHovered, ImGuiCol_PlotLines, ImGuiCol_PlotLinesHovered,
+    ImGuiCol_ScrollbarBg, ImGuiCol_ScrollbarGrab, ImGuiCol_ScrollbarGrabActive,
+    ImGuiCol_ScrollbarGrabHovered, ImGuiCol_Separator, ImGuiCol_SeparatorActive,
+    ImGuiCol_SeparatorHovered, ImGuiCol_SliderGrab, ImGuiCol_SliderGrabActive, ImGuiCol_Tab,
+    ImGuiCol_TabActive, ImGuiCol_TabHovered, ImGuiCol_TabUnfocused, ImGuiCol_TabUnfocusedActive,
+    ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TextSelectedBg, ImGuiCol_TitleBgActive,
 };
 use crate::color_edit_flags::{
     ImGuiColorEditFlags, ImGuiColorEditFlags_AlphaBar, ImGuiColorEditFlags_AlphaPreview,
     ImGuiColorEditFlags_AlphaPreviewHalf, ImGuiColorEditFlags_DataTypeMask_,
-    ImGuiColorEditFlags_DefaultOptions_, ImGuiColorEditFlags_DisplayHSV,
-    ImGuiColorEditFlags_DisplayHex, ImGuiColorEditFlags_DisplayMask_,
+    ImGuiColorEditFlags_DefaultOptions_, ImGuiColorEditFlags_DisplayHex,
+    ImGuiColorEditFlags_DisplayHSV, ImGuiColorEditFlags_DisplayMask_,
     ImGuiColorEditFlags_DisplayRGB, ImGuiColorEditFlags_Float, ImGuiColorEditFlags_HDR,
     ImGuiColorEditFlags_InputHSV, ImGuiColorEditFlags_InputMask_, ImGuiColorEditFlags_InputRGB,
     ImGuiColorEditFlags_NoAlpha, ImGuiColorEditFlags_NoBorder, ImGuiColorEditFlags_NoDragDrop,
@@ -143,8 +143,8 @@ use crate::combo_box::{BeginCombo, EndCombo, Items_ArrayGetter};
 use crate::combo_flags::{
     ImGuiComboFlags, ImGuiComboFlags_CustomPreview, ImGuiComboFlags_HeightLarge,
     ImGuiComboFlags_HeightLargest, ImGuiComboFlags_HeightMask_, ImGuiComboFlags_HeightRegular,
-    ImGuiComboFlags_HeightSmall, ImGuiComboFlags_NoArrowButton, ImGuiComboFlags_NoPreview,
-    ImGuiComboFlags_None, ImGuiComboFlags_PopupAlignLeft,
+    ImGuiComboFlags_HeightSmall, ImGuiComboFlags_NoArrowButton, ImGuiComboFlags_None,
+    ImGuiComboFlags_NoPreview, ImGuiComboFlags_PopupAlignLeft,
 };
 use crate::combo_preview_data::ImGuiComboPreviewData;
 use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_None, ImGuiCond_Once};
@@ -152,20 +152,20 @@ use crate::config_flags::ImGuiConfigFlags_NavEnableGamepad;
 use crate::content_ops::content_region_avail;
 use crate::cursor_ops::{cursor_screen_pos, indent, set_cursor_screen_pos, unindent};
 use crate::data_type::{
-    ImGuiDataType, IM_GUI_DATA_TYPE_COUNT, IM_GUI_DATA_TYPE_DOUBLE, IM_GUI_DATA_TYPE_FLOAT,
-    IM_GUI_DATA_TYPE_S16, IM_GUI_DATA_TYPE_S32, IM_GUI_DATA_TYPE_S64, IM_GUI_DATA_TYPE_S8, IM_GUI_DATA_TYPE_U16,
-    IM_GUI_DATA_TYPE_U32, IM_GUI_DATA_TYPE_U64, IM_GUI_DATA_TYPE_U8,
+    IM_GUI_DATA_TYPE_COUNT, IM_GUI_DATA_TYPE_DOUBLE, IM_GUI_DATA_TYPE_FLOAT, IM_GUI_DATA_TYPE_S16,
+    IM_GUI_DATA_TYPE_S32, IM_GUI_DATA_TYPE_S64, IM_GUI_DATA_TYPE_S8, IM_GUI_DATA_TYPE_U16, IM_GUI_DATA_TYPE_U32,
+    IM_GUI_DATA_TYPE_U64, IM_GUI_DATA_TYPE_U8, ImGuiDataType,
 };
 use crate::data_type_info::{GDATA_TYPE_INFO, ImGuiDataTypeInfo};
 use crate::data_type_ops::{
-    DataTypeApplyFromText, DataTypeApplyOp, DataTypeFormatString, DATA_TYPE_OPERATION_ADD,
-    DATA_TYPE_OPERATION_SUB,
+    DATA_TYPE_OPERATION_ADD, DATA_TYPE_OPERATION_SUB, DataTypeApplyFromText, DataTypeApplyOp,
+    DataTypeFormatString,
 };
 use crate::data_type_temp_storage::ImGuiDataTypeTempStorage;
 use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_Right, ImGuiDir_Up};
 use crate::dock_context_ops::DockContextQueueUndockWindow;
-use crate::dock_node::ImGuiDockNode;
-use crate::drag_drop_flags::{
+use crate::docking::dock_node::ImGuiDockNode;
+use crate::drag_drop::drag_drop_flags::{
     ImGuiDragDropFlags_SourceNoDisableHover, ImGuiDragDropFlags_SourceNoHoldToOpenOthers,
 };
 use crate::drag_drop_ops::{
@@ -192,13 +192,13 @@ use crate::hovered_flags::{
     ImGuiHoveredFlags_DelayNormal,
 };
 use crate::id_ops::{
-    push_int_id, push_str_id, ClearActiveID, GetIDWithSeed, KeepAliveID, pop_win_id_from_stack, PushID,
+    ClearActiveID, GetIDWithSeed, KeepAliveID, pop_win_id_from_stack, push_int_id, push_str_id, PushID,
     PushOverrideID, SetActiveID, SetHoveredID,
 };
 use crate::input_num_ops::InputText;
 use crate::input_ops::{
     CalcTypematicRepeatAmount, GetKeyData, IsKeyDown, IsKeyPressed, IsMouseClicked,
-    IsMouseDragPastThreshold, IsMouseDragging, IsMousePosValid, SetMouseCursor,
+    IsMouseDragging, IsMouseDragPastThreshold, IsMousePosValid, SetMouseCursor,
 };
 use crate::input_source::{
     ImGuiInputSource, ImGuiInputSource_Clipboard, ImGuiInputSource_Gamepad,
@@ -216,7 +216,7 @@ use crate::input_text_flags::{
     ImGuiInputTextFlags_CtrlEnterForNewLine, ImGuiInputTextFlags_EnterReturnsTrue,
     ImGuiInputTextFlags_MergedItem, ImGuiInputTextFlags_Multiline,
     ImGuiInputTextFlags_NoHorizontalScroll, ImGuiInputTextFlags_NoMarkEdited,
-    ImGuiInputTextFlags_NoUndoRedo, ImGuiInputTextFlags_None, ImGuiInputTextFlags_Password,
+    ImGuiInputTextFlags_None, ImGuiInputTextFlags_NoUndoRedo, ImGuiInputTextFlags_Password,
     ImGuiInputTextFlags_ReadOnly,
 };
 use crate::input_text_state::ImGuiInputTextState;
@@ -225,11 +225,11 @@ use crate::io_ops::GetIO;
 use crate::item_flags::{
     ImGuiItemFlags, ImGuiItemFlags_ButtonRepeat, ImGuiItemFlags_Disabled, ImGuiItemFlags_Inputable,
     ImGuiItemFlags_MixedValue, ImGuiItemFlags_NoNav, ImGuiItemFlags_NoNavDefaultFocus,
-    ImGuiItemFlags_NoTabStop, ImGuiItemFlags_None, ImGuiItemFlags_ReadOnly,
+    ImGuiItemFlags_None, ImGuiItemFlags_NoTabStop, ImGuiItemFlags_ReadOnly,
     ImGuiItemFlags_SelectableDontClosePopup,
 };
 use crate::item_ops::{
-    CalcItemSize, CalcItemWidth, calc_width_for_pos, IsClippedEx, IsItemActive, IsItemHovered,
+    calc_width_for_pos, CalcItemSize, CalcItemWidth, IsClippedEx, IsItemActive, IsItemHovered,
     ItemAdd, ItemHoverable, ItemSize, MarkItemEdited, PopItemFlag, PopItemWidth, PushItemFlag,
     PushItemWidth, PushMultiItemsWidths, SetNextItemWidth,
 };
@@ -323,17 +323,17 @@ use crate::slider_flags::{
 use crate::stb::stb_text_edit_row::StbTexteditRow;
 use crate::stb::stb_text_edit_state::STB_TexteditState;
 use crate::stb::stb_textedit::{
-    stb_text_createundo, stb_text_makeundo_replace, stb_textedit_click, stb_textedit_cut,
-    stb_textedit_drag, stb_textedit_initialize_state, stb_textedit_paste, STB_TEXTEDIT_CHARTYPE,
+    stb_text_createundo, stb_text_makeundo_replace, STB_TEXTEDIT_CHARTYPE, stb_textedit_click,
+    stb_textedit_cut, stb_textedit_drag, stb_textedit_initialize_state, stb_textedit_paste,
     STB_TEXTEDIT_STRING,
 };
 use crate::stb::stb_undo_record::StbUndoRecord;
 use crate::stb::stb_undo_state::StbUndoState;
 use crate::storage::ImGuiStorage;
 use crate::string_ops::{
-    str_to_const_c_char_ptr, ImFormatString, ImFormatStringToTempBufferV, ImStrTrimBlanks,
-    ImStrbolW, ImStrncpy, ImTextCharFromUtf8, ImTextCountCharsFromUtf8,
-    ImTextCountUtf8BytesFromStr, ImTextStrFromUtf8, ImTextStrToUtf8,
+    ImFormatString, ImFormatStringToTempBufferV, ImStrbolW, ImStrncpy,
+    ImStrTrimBlanks, ImTextCharFromUtf8, ImTextCountCharsFromUtf8, ImTextCountUtf8BytesFromStr,
+    ImTextStrFromUtf8, ImTextStrToUtf8, str_to_const_c_char_ptr,
 };
 use crate::style::ImguiStyle;
 use crate::style_ops::{
@@ -368,7 +368,7 @@ use crate::tables::{
     TablePushBackgroundChannel,
 };
 use crate::text_flags::{
-    ImGuiTextFlags, ImGuiTextFlags_NoWidthForLargeClippedText, ImGuiTextFlags_None,
+    ImGuiTextFlags, ImGuiTextFlags_None, ImGuiTextFlags_NoWidthForLargeClippedText,
 };
 use crate::text_ops::{CalcTextSize, GetTextLineHeightWithSpacing, Text, TextEx};
 use crate::tooltip_flags::ImGuiTooltipFlags_OverridePreviousTooltip;
@@ -376,9 +376,9 @@ use crate::tooltip_ops::{BeginTooltipEx, EndTooltip};
 use crate::tree_node_flags::{
     ImGuiTreeNodeFlags, ImGuiTreeNodeFlags_AllowItemOverlap, ImGuiTreeNodeFlags_Bullet,
     ImGuiTreeNodeFlags_ClipLabelForTrailingButton, ImGuiTreeNodeFlags_CollapsingHeader,
-    ImGuiTreeNodeFlags_DefaultOpen, ImGuiTreeNodeFlags_FramePadding, ImGuiTreeNodeFlags_Framed,
+    ImGuiTreeNodeFlags_DefaultOpen, ImGuiTreeNodeFlags_Framed, ImGuiTreeNodeFlags_FramePadding,
     ImGuiTreeNodeFlags_NavLeftJumpsBackHere, ImGuiTreeNodeFlags_NoAutoOpenOnLog,
-    ImGuiTreeNodeFlags_NoTreePushOnOpen, ImGuiTreeNodeFlags_None, ImGuiTreeNodeFlags_OpenOnArrow,
+    ImGuiTreeNodeFlags_None, ImGuiTreeNodeFlags_NoTreePushOnOpen, ImGuiTreeNodeFlags_OpenOnArrow,
     ImGuiTreeNodeFlags_OpenOnDoubleClick, ImGuiTreeNodeFlags_Selected,
     ImGuiTreeNodeFlags_SpanAvailWidth, ImGuiTreeNodeFlags_SpanFullWidth,
 };
@@ -401,24 +401,25 @@ use crate::window::rect::{PopClipRect, PushClipRect, window_rect_abs_to_rel};
 use crate::window::window_flags::{
     ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_ChildMenu,
     ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_NoDocking,
-    ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoNavFocus, ImGuiWindowFlags_NoResize,
-    ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoTitleBar,
-    ImGuiWindowFlags_None, ImGuiWindowFlags_Popup,
+    ImGuiWindowFlags_NoMove, ImGuiWindowFlags_NoNavFocus, ImGuiWindowFlags_None,
+    ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar,
+    ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup,
 };
 use crate::window::ImguiWindow;
 use crate::{
-    button_ops, checkbox_ops, data_type_ops, drag, input_num_ops, layout_ops, popup_ops,
-    radio_button, scrolling_ops, separator, stb, text_ops, GImGui, ImguiViewport, hash_string,
+    button_ops, data_type_ops, drag, GImGui, hash_string, ImguiViewport,
+    input_num_ops, layout_ops, popup_ops, radio_button, scrolling_ops, separator, stb, text_ops,
 };
 use crate::{CalcTextSize, GetTextLineHeight, GetTextLineHeightWithSpacing, Text};
 use libc::{
-    c_char, c_double, c_float, c_int, c_uint, c_void, memcmp, memcpy, memmove, memset, size_t,
-    strcmp, strlen, strncmp, INT_MAX, INT_MIN,
+    c_char, c_double, c_float, c_int, c_uint, c_void, INT_MAX, INT_MIN, memcmp, memcpy, memmove,
+    memset, size_t, strcmp, strlen, strncmp,
 };
 use std::borrow::Borrow;
 use std::env::args;
 use std::ops::Index;
-use std::ptr::{null, null_mut}; // Time for drag-hold to activate items accepting the ImGuiButtonFlags_PressedOnDragDropHold button behavior.
+use std::ptr::{null, null_mut};
+use crate::widgets::checkbox_ops; // Time for drag-hold to activate items accepting the ImGuiButtonFlags_PressedOnDragDropHold button behavior.
 
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: InputText, InputTextMultiline, InputTextWithHint
@@ -3527,9 +3528,9 @@ pub unsafe fn BeginViewportSideBar(
         // Calculate and set window size/position
         let mut avail_rect: ImRect = viewport.GetBuildWorkRect();
         axis: ImGuiAxis = if dir == ImGuiDir_Up || dir == ImGuiDir_Down {
-            ImGuiAxis_Y
+            IM_GUI_AXIS_Y
         } else {
-            ImGuiAxis_X
+            IM_GUI_AXIS_X
         };
         let pos: ImVec2 = avail_rect.min;
         if dir == ImGuiDir_Right || dir == ImGuiDir_Down {

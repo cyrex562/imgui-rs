@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::activate_flags::ImGuiActivateFlags_None;
+use crate::activate_flags::IM_GUI_ACTIVATE_FLAGS_NONE;
 use crate::color::color_u32_from_rgba;
 use crate::content_ops::content_region_max_abs;
 use crate::context::ImguiContext;
@@ -583,7 +583,7 @@ pub unsafe fn PopItemFlag() {
 pub unsafe fn ActivateItem(id: ImguiHandle) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NavNextActivateId = id;
-    g.NavNextActivateFlags = ImGuiActivateFlags_None;
+    g.NavNextActivateFlags = IM_GUI_ACTIVATE_FLAGS_NONE;
 }
 
 // Affect large frame+labels widgets only.

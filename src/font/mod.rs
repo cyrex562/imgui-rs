@@ -20,6 +20,9 @@ use std::os::raw::c_void;
 use std::ptr::null_mut;
 use std::str::pattern::Pattern;
 
+mod fallback_font_data;
+mod a_font;
+
 // Font runtime data and rendering
 // ImFontAtlas automatically loads a default embedded font for you when you call GetTexDataAsAlpha8() or GetTexDataAsRGBA32().
 #[derive(Default, Debug, Clone, Copy)]

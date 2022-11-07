@@ -3,7 +3,7 @@ use libc::{c_char, c_float, c_int};
 use crate::color::{IM_COL32_A_MASK, IM_COL32_A_SHIFT, ImGuiCol_Border, ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_MenuBarBg, ImGuiCol_ModalWindowDimBg, ImGuiCol_NavWindowingDimBg, ImGuiCol_NavWindowingHighlight, ImGuiCol_SeparatorActive, ImGuiCol_Text, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_TitleBgCollapsed};
 use crate::direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right};
 use crate::{GImGui, ImguiViewport};
-use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
+use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::draw_flags::{ImDrawFlags_None, ImDrawFlags_RoundCornersBottom, ImDrawFlags_RoundCornersTop};
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
@@ -464,10 +464,10 @@ pub unsafe fn RenderWindowDecorations(window: &mut ImguiWindow, title_bar_rect: 
 
         // Scrollbars
         if window.scrollbarX {
-            Scrollbar(ImGuiAxis_X);
+            Scrollbar(IM_GUI_AXIS_X);
         }
         if window.scrollbarY {
-            Scrollbar(ImGuiAxis_Y);
+            Scrollbar(IM_GUI_AXIS_Y);
         }
 
         // Render resize grips (after their input handling so we don't have a frame of latency)

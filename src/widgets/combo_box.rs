@@ -57,6 +57,8 @@ use crate::{button_ops, hash_string, popup_ops, GImGui};
 use libc::{c_char, c_float, c_int, strlen};
 use std::borrow::BorrowMut;
 use std::ptr::{null, null_mut};
+use crate::a_widgets::Selectable;
+use crate::widgets::button_ops::ButtonBehavior;
 
 pub fn BeginCombo(
     g: &mut ImguiContext,

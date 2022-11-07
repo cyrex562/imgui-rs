@@ -1,5 +1,5 @@
-use crate::activate_flags::ImGuiActivateFlags_PreferInput;
-use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
+use crate::activate_flags::IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT;
+use crate::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::color::{ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered};
 use crate::data_type::{
     ImGuiDataType, IM_GUI_DATA_TYPE_DOUBLE, IM_GUI_DATA_TYPE_FLOAT, IM_GUI_DATA_TYPE_S32,
@@ -63,9 +63,9 @@ pub unsafe fn DragBehaviorT<T, U>(
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     const axis: ImGuiAxis = if flag_set(flags, ImGuiSliderFlags_Vertical) {
-        ImGuiAxis_Y
+            IM_GUI_AXIS_Y
     } else {
-        ImGuiAxis_X
+            IM_GUI_AXIS_X
     };
     let is_clamped: bool = (v_min < v_max);
     let is_logarithmic: bool = flag_set(flags, ImGuiSliderFlags_Logarithmic);
@@ -124,7 +124,7 @@ pub unsafe fn DragBehaviorT<T, U>(
     adjust_delta *= v_speed;
 
     // For vertical drag we currently assume that Up=higher value (like we do with vertical sliders). This may become a parameter.
-    if axis == ImGuiAxis_Y {
+    if axis == IM_GUI_AXIS_Y {
         adjust_delta = -adjust_delta;
     }
 
@@ -390,7 +390,7 @@ pub unsafe fn DragScalar<T>(
             {
                 g.NavActivateId = id;
                 g.NavActivateInputId = id;
-                g.NavActivateFlags = ImGuiActivateFlags_PreferInput;
+                g.NavActivateFlags = IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT;
                 temp_input_is_active = true;
             }
         }

@@ -2,9 +2,9 @@ use std::env::args;
 use std::ffi::CStr;
 use std::ptr::null_mut;
 use libc::{c_char, c_float, c_int, c_uint, c_void, open, size_t};
-use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
+use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::button_ops::SmallButton;
-use crate::checkbox_ops::{Checkbox, CheckboxFlags};
+use crate::widgets::checkbox_ops::{Checkbox, CheckboxFlags};
 use crate::child_ops::{BeginChild, EndChild};
 use crate::clipboard_ops::SetClipboardText;
 use crate::color::{color_u32_from_rgba, ImGuiCol_Border, ImGuiCol_Header, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_WindowBg};
@@ -16,8 +16,8 @@ use crate::cursor_ops::{cursor_screen_pos, indent, unindent};
 use crate::data_type::{ImGuiDataType, IM_GUI_DATA_TYPE_STRING};
 use crate::debug_log_flags::{IM_GUI_DEBUG_LOG_FLAGS_EVENT_ACTIVE_ID, IM_GUI_DEBUG_LOG_FLAGS_EVENT_CLIPPER, IM_GUI_DEBUG_LOG_FLAGS_EVENT_DOCKING, IM_GUI_DEBUG_LOG_FLAGS_EVENT_FOCUS, IM_GUI_DEBUG_LOG_FLAGS_EVENT_IO, IM_GUI_DEBUG_LOG_FLAGS_EVENT_MASK, IM_GUI_DEBUG_LOG_FLAGS_EVENT_NAV, IM_GUI_DEBUG_LOG_FLAGS_EVENT_POPUP, IM_GUI_DEBUG_LOG_FLAGS_EVENT_VIEWPORT, IM_GUI_DEBUG_LOG_FLAGS_OUTPUT_TO_TTY};
 use crate::dock_context_ops::clear_dock_context_nodes;
-use crate::dock_node::ImGuiDockNode;
-use crate::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoTabBar, ImGuiDockNodeFlags_NoWindowMenuButton};
+use crate::docking::dock_node::ImGuiDockNode;
+use crate::docking::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoTabBar, ImGuiDockNodeFlags_NoWindowMenuButton};
 use crate::drag::DragFloat;
 use crate::draw_cmd::ImDrawCmd;
 use crate::draw_flags::ImDrawFlags_Closed;
@@ -1084,8 +1084,8 @@ pub unsafe fn DebugNodeDockNode(node:&mut ImGuiDockNode, label: String)
         open = TreeNodeEx2(node.ID.to_string(), tree_node_flags, format!("{} {}{}: {} windows (vis: '{}')", label, node.ID, if node.IsVisible {""}else { " (hidden)" }, node.Windows.len(), if node.VisibleWindow { node.Visiblewindow.Name } else { "NULL" }));
     }
     else {
-        open = TreeNodeEx2(node.ID.to_string(), tree_node_flags, format!("{} {}{}: {} split (vis: '{}')", label, node.ID, if node.IsVisible? {""}else { " (hidden)" }, if node.SplitAxis == ImGuiAxis_X { "horizontal" } else {
-            if node.SplitAxis == ImGuiAxis_Y {
+        open = TreeNodeEx2(node.ID.to_string(), tree_node_flags, format!("{} {}{}: {} split (vis: '{}')", label, node.ID, if node.IsVisible? {""}else { " (hidden)" }, if node.SplitAxis == IM_GUI_AXIS_X { "horizontal" } else {
+            if node.SplitAxis == IM_GUI_AXIS_Y {
                 "vertical"
             } else { "n/a" }
         }, if node.VisibleWindow { node.Visiblewindow.Name } else { "NULL" }));

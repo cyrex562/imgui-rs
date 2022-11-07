@@ -1,4 +1,4 @@
-use crate::button_flags::{
+use crate::widgets::button_flags::{
     ImGuiButtonFlags, ImGuiButtonFlags_DontClosePopups, ImGuiButtonFlags_Repeat,
 };
 use crate::button_ops::ButtonEx;

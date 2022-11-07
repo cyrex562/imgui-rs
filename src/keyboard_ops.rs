@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use libc::c_float;
-use crate::backend_flags::ImGuiBackendFlags_HasGamepad;
+use crate::backend_flags::IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD;
 use crate::imgui::GImGui;
 use crate::input_ops::GetKeyData;
 use crate::key::{ImGuiKey, ImGuiKey_Gamepad_BEGIN, ImGuiKey_Gamepad_END, ImGuiKey_Keyboard_BEGIN, ImGuiKey_Keyboard_END, ImGuiKey_KeysData_OFFSET, ImGuiKey_LegacyNativeKey_BEGIN, ImGuiKey_LegacyNativeKey_END, ImGuiKey_ModAlt, ImGuiKey_ModCtrl, ImGuiKey_ModShift, ImGuiKey_ModSuper, ImGuiKey_MouseWheelX, ImGuiKey_MouseWheelY, ImGuiKey_NamedKey_BEGIN, ImGuiKey_NamedKey_END};
@@ -69,7 +69,7 @@ pub unsafe fn UpdateKeyboardInputs()
     }
 
 // #ifndef IMGUI_DISABLE_OBSOLETE_KEYIO
-//     let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & ImGuiBackendFlags_HasGamepad) != 0;
+//     let nav_gamepad_active: bool = (io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) != 0 && (io.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD) != 0;
 //     if io.BackendUsingLegacyNavInputArray && nav_gamepad_active
 //     {
 //         #define MAP_LEGACY_NAV_INPUT_TO_KEY1(_KEY, _NAV1)           do { io.KeysData[_KEY].Down = (io.NavInputs[_NAV1] > 0.0); io.KeysData[_KEY].AnalogValue = io.NavInputs[_NAV1]; } while (0)
@@ -105,7 +105,7 @@ pub unsafe fn UpdateKeyboardInputs()
     UpdateAliasKey(ImGuiKey_MouseWheelY, io.MouseWheel != 0.0, io.MouseWheel);
 
     // Clear gamepad data if disabled
-    if (io.BackendFlags & ImGuiBackendFlags_HasGamepad) == 0 {
+    if (io.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD) == 0 {
         // for (let i: c_int = ImGuiKey_Gamepad_BEGIN; i < ImGuiKey_Gamepad_END; i+ +)
         for i in ImGuiKey_Gamepad_BEGIN .. ImGuiKey_Gamepad_END
         {

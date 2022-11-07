@@ -1,6 +1,6 @@
 use crate::backend_flags::{
-    ImGuiBackendFlags_HasMouseCursors, ImGuiBackendFlags_PlatformHasViewports,
-    ImGuiBackendFlags_RendererHasViewports,
+    IM_GUI_BACKEND_FLAGS_HAS_MOUSE_CURSORS, IM_GUI_BACKEND_FLAGS_PLATFORM_HAS_VIEWPORTS,
+    IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VIEWPORTS,
 };
 use crate::child_ops::EndChild;
 use crate::config_flags::{
@@ -59,9 +59,9 @@ pub unsafe fn ErrorCheckNewFrameSanityChecks() {
     // IM_ASSERT(g.IO.KeyMap[ImGuiKey_Space] != -1 && "ImGuiKey_Space is not mapped, required for keyboard navigation.");
     // #endif
 
-    // Check: the io.ConfigWindowsResizeFromEdges option requires backend to honor mouse cursor changes and set the ImGuiBackendFlags_HasMouseCursors flag accordingly.
+    // Check: the io.ConfigWindowsResizeFromEdges option requires backend to honor mouse cursor changes and set the IM_GUI_BACKEND_FLAGS_HAS_MOUSE_CURSORS flag accordingly.
     if (g.IO.ConfigWindowsResizeFromEdges
-        && flag_clear(g.IO.BackendFlags, ImGuiBackendFlags_HasMouseCursors))
+        && flag_clear(g.IO.BackendFlags, IM_GUI_BACKEND_FLAGS_HAS_MOUSE_CURSORS))
     {
         g.IO.ConfigWindowsResizeFromEdges = false;
     }
@@ -80,8 +80,8 @@ pub unsafe fn ErrorCheckNewFrameSanityChecks() {
 
     // Perform simple checks: multi-viewport and platform windows support
     if (g.IO.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-        if ((g.IO.BackendFlags & ImGuiBackendFlags_PlatformHasViewports)
-            && (g.IO.BackendFlags & ImGuiBackendFlags_RendererHasViewports))
+        if ((g.IO.BackendFlags & IM_GUI_BACKEND_FLAGS_PLATFORM_HAS_VIEWPORTS)
+            && (g.IO.BackendFlags & IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VIEWPORTS))
         {
             // IM_ASSERT((g.FrameCount == 0 || g.FrameCount == g.FrameCountPlatformEnded) && "Forgot to call UpdatePlatformWindows() in main loop after EndFrame()? Check examples/ applications for reference.");
             // IM_ASSERT(g.PlatformIO.Platform_CreateWindow  != NULL && "Platform init didn't install handlers?");

@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
 use crate::direction::{ImGuiDir, ImGuiDir_None};
-use crate::dock_node::ImGuiDockNode;
-use crate::dock_request_type::{ImGuiDockRequestType, ImGuiDockRequestType_None};
+use crate::docking::dock_node::ImGuiDockNode;
+use crate::docking::dock_request_type::{ImGuiDockRequestType, ImGuiDockRequestType_None};
 use crate::window::ImguiWindow;
 use libc::c_float;
 use std::ptr::null_mut;

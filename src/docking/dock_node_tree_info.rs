@@ -1,4 +1,4 @@
-use crate::dock_node::ImGuiDockNode;
+use crate::docking::dock_node::ImGuiDockNode;
 use crate::window::window_class::ImGuiWindowClass;
 use libc::size_t;
 

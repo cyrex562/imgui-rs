@@ -1,5 +1,5 @@
-use crate::axis::{ImGuiAxis, ImGuiAxis_None};
-use crate::dock_node_flags::ImGuiDockNodeFlags;
+use crate::axis::{ImGuiAxis, IM_GUI_AXIS_NONE};
+use crate::docking::dock_node_flags::ImGuiDockNodeFlags;
 use crate::type_defs::ImguiHandle;
 use crate::vec2::ImVec2ih;
 use libc::c_char;
@@ -21,9 +21,9 @@ pub struct ImGuiDockNodeSettings {
 
 impl ImGuiDockNodeSettings {
     pub fn new() -> Self {
-        // ImGuiDockNodeSettings() { memset(this, 0, sizeof(*this)); SplitAxis = ImGuiAxis_None; }
+        // ImGuiDockNodeSettings() { memset(this, 0, sizeof(*this)); SplitAxis = IM_GUI_AXIS_NONE; }
         Self {
-            SplitAxis: ImGuiAxis_None,
+            SplitAxis: IM_GUI_AXIS_NONE,
             ..Default::default()
         }
     }

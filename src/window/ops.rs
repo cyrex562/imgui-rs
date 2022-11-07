@@ -21,12 +21,12 @@ use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, I
 use crate::{ImguiViewport, hash_string};
 use libc::{c_char, c_float, c_int, c_short, c_void, size_t, strcmp};
 use std::ptr::{null, null_mut};
-use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
+use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::config_flags::{ImGuiConfigFlags_DockingEnable, ImGuiConfigFlags_DpiEnableScaleFonts};
 use crate::constants::{WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
 use crate::cursor_ops::ErrorCheckUsingSetCursorPosToExtendParentBoundaries;
 use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
-use crate::dock_node::ImGuiDockNode;
+use crate::docking::dock_node::ImGuiDockNode;
 use crate::garbage_collection::GcAwakeTransientWindowBuffers;
 use crate::hash_ops::hash_data;
 use {ClearActiveID, KeepAliveID};
@@ -582,7 +582,7 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
     for border_n in 0 .. resize_border_count
     {
         let def = resize_border_def[border_n];
-        let axis = if border_n == ImGuiDir_Left || border_n == ImGuiDir_Right { ImGuiAxis_X } else { ImGuiAxis_Y };
+        let axis = if border_n == ImGuiDir_Left || border_n == ImGuiDir_Right { IM_GUI_AXIS_X } else { IM_GUI_AXIS_Y };
 
         // hovered: bool, held;
         let mut hovered = false;
@@ -594,7 +594,7 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
         //GetForegroundDrawLists(window).AddRect(border_rect.Min, border_rect.Max, IM_COL32(255, 255, 0, 255));
         if (hovered && g.HoveredIdTimer > WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER) || held
         {
-            g.MouseCursor = if axis == ImGuiAxis_X { ImGuiMouseCursor_ResizeEW } else { ImGuiMouseCursor_ResizeNS };
+            g.MouseCursor = if axis == IM_GUI_AXIS_X { ImGuiMouseCursor_ResizeEW } else { ImGuiMouseCursor_ResizeNS };
             if held {
                 *border_held = border_n.clone();
             }

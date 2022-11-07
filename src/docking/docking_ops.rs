@@ -11,15 +11,15 @@ use std::ptr::null_mut;
 use libc::{c_char, c_int, strlen};
 use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_Once};
 use crate::context::ImguiContext;
-use crate::dock_node::ImGuiDockNode;
+use crate::docking::dock_node::ImGuiDockNode;
 use crate::{GImGui, SettingsHandler, hash_string};
-use crate::axis::{ImGuiAxis_X, ImGuiAxis_Y};
+use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::color_ops::ColorConvertFloat4ToU32;
 use crate::config_flags::ImGuiConfigFlags_DockingEnable;
-use crate::dock_context::ImGuiDockContext;
+use crate::docking::dock_context::ImGuiDockContext;
 use crate::dock_context_ops::DockContextFindNodeByID;
-use crate::dock_node_flags::ImGuiDockNodeFlags_CentralNode;
-use crate::drag_drop_flags::{ImGuiDragDropFlags_AcceptBeforeDelivery, ImGuiDragDropFlags_AcceptNoDrawDefaultRect, ImGuiDragDropFlags_SourceAutoExpirePayload, ImGuiDragDropFlags_SourceNoHoldToOpenOthers, ImGuiDragDropFlags_SourceNoPreviewTooltip};
+use crate::docking::dock_node_flags::ImGuiDockNodeFlags_CentralNode;
+use crate::drag_drop::drag_drop_flags::{ImGuiDragDropFlags_AcceptBeforeDelivery, ImGuiDragDropFlags_AcceptNoDrawDefaultRect, ImGuiDragDropFlags_SourceAutoExpirePayload, ImGuiDragDropFlags_SourceNoHoldToOpenOthers, ImGuiDragDropFlags_SourceNoPreviewTooltip};
 use crate::frame_ops::GetFrameHeight;
 use crate::input_ops::IsMouseHoveringRect;
 use crate::math_ops::ImMax;
@@ -1013,7 +1013,7 @@ pub unsafe fn DockSettingsHandler_ReadLine(g: &mut ImguiContext, SettingsHandler
     {
         if (sscanf(line, " SizeRef=%i,%i%n", &x, &y, &r) == 2)      { line += r; node.SizeRef = ImVec2ih(x, y); }
     }
-    if (sscanf(line, " Split={}%n", &c, &r) == 1)                   { line += r; if (c == 'X') node.SplitAxis = ImGuiAxis_X; else if (c == 'Y') node.SplitAxis = ImGuiAxis_Y; }
+    if (sscanf(line, " Split={}%n", &c, &r) == 1)                   { line += r; if (c == 'X') node.SplitAxis = IM_GUI_AXIS_X; else if (c == 'Y') node.SplitAxis = IM_GUI_AXIS_Y; }
     if (sscanf(line, " NoResize={}%n", &x, &r) == 1)                { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoResize; }
     if (sscanf(line, " CentralNode={}%n", &x, &r) == 1)             { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_CentralNode; }
     if (sscanf(line, " NoTabBar={}%n", &x, &r) == 1)                { line += r; if (x != 0) node.Flags |= ImGuiDockNodeFlags_NoTabBar; }
@@ -1086,7 +1086,7 @@ pub unsafe fn DockSettingsHandler_WriteAll(g: &mut ImguiContext, SettingsHandler
             buf->appendf(" Pos={},{} Size={},{}", node_settings.Pos.x, node_settings.Pos.y, node_settings.Size.x, node_settings.Size.y);
         }
         if (node_settings->SplitAxis != ImGuiAxis_None)
-            buf->appendf(" Split={}", (node_settings->SplitAxis == ImGuiAxis_X) ? 'X' : 'Y');
+            buf->appendf(" Split={}", (node_settings->SplitAxis == IM_GUI_AXIS_X) ? 'X' : 'Y');
         if flag_set(node_settings.Flags, ImGuiDockNodeFlags_NoResize)
             buf->appendf(" NoResize=1");
         if flag_set(node_settings.Flags, ImGuiDockNodeFlags_CentralNode)

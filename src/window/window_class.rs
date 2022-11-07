@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::dock_node_flags::ImGuiDockNodeFlags;
+use crate::docking::dock_node_flags::ImGuiDockNodeFlags;
 use crate::next_window_data_flags::ImGuiNextWindowDataFlags_HasWindowClass;
 use crate::tab_item_flags::ImGuiTabItemFlags;
 use crate::type_defs::ImguiHandle;

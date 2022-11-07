@@ -1,6 +1,6 @@
 use crate::context::ImguiContext;
 use crate::direction::{ImGuiDir_Down, ImGuiDir_None, ImGuiDir_Up};
-use crate::dock_node::ImGuiDockNode;
+use crate::docking::dock_node::ImGuiDockNode;
 use crate::nav_layer::ImGuiNavLayer_Main;
 use crate::nav_move_flags::{ImGuiNavMoveFlags_FocusApi, ImGuiNavMoveFlags_Tabbing};
 use crate::nav_ops::SetNavWindow;

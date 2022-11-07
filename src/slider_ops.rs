@@ -1,4 +1,4 @@
-use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
+use crate::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::color::{
     ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered, ImGuiCol_SliderGrab,
     ImGuiCol_SliderGrabActive,
@@ -66,9 +66,9 @@ pub unsafe fn SliderBehaviorT(
     let style = &mut g.style;
 
     const axis: ImGuiAxis = if flags & ImGuiSliderFlags_Vertical {
-        ImGuiAxis_Y
+        IM_GUI_AXIS_Y
     } else {
-        ImGuiAxis_X
+        IM_GUI_AXIS_X
     };
     let is_logarithmic: bool = flag_set(flags, ImGuiSliderFlags_Logarithmic);
     let is_floating_point: bool =
@@ -125,7 +125,7 @@ pub unsafe fn SliderBehaviorT(
                         logarithmic_zero_epsilon,
                         zero_deadzone_halfsize,
                     );
-                    if axis == ImGuiAxis_Y {
+                    if axis == IM_GUI_AXIS_Y {
                         grab_t = 1.0 - grab_t;
                     }
                     let grab_pos: c_float =
@@ -145,7 +145,7 @@ pub unsafe fn SliderBehaviorT(
                             / slider_usable_sz,
                     );
                 }
-                if axis == ImGuiAxis_Y {
+                if axis == IM_GUI_AXIS_Y {
                     clicked_t = 1.0 - clicked_t;
                 }
                 set_new_value = true;
@@ -156,7 +156,7 @@ pub unsafe fn SliderBehaviorT(
                 g.SliderCurrentAccumDirty = false;
             }
 
-            let mut input_delta: c_float = if axis == ImGuiAxis_X {
+            let mut input_delta: c_float = if axis == IM_GUI_AXIS_X {
                 GetNavTweakPressedAmount(axis) as c_float
             } else {
                 -GetNavTweakPressedAmount(axis) as c_float
@@ -297,11 +297,11 @@ pub unsafe fn SliderBehaviorT(
             logarithmic_zero_epsilon,
             zero_deadzone_halfsize,
         );
-        if axis == ImGuiAxis_Y {
+        if axis == IM_GUI_AXIS_Y {
             grab_t = 1.0 - grab_t;
         }
         let grab_pos: c_float = ImLerp(slider_usable_pos_min, slider_usable_pos_max, grab_t);
-        if axis == ImGuiAxis_X {
+        if axis == IM_GUI_AXIS_X {
             *out_grab_bb = ImRect::from_floats(
                 grab_pos - grab_sz * 0.5,
                 bb.min.y + grab_padding,

@@ -12,7 +12,7 @@ pub const ImGuiConfigFlags_None: ImguiConfigFlags = 0;
 pub const ImGuiConfigFlags_NavEnableKeyboard: ImguiConfigFlags = 1 << 0;
 // Master keyboard navigation enable flag.
 pub const ImGuiConfigFlags_NavEnableGamepad: ImguiConfigFlags = 1 << 1;
-// Master gamepad navigation enable flag. Backend also needs to set ImGuiBackendFlags_HasGamepad.
+// Master gamepad navigation enable flag. Backend also needs to set IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD.
 pub const ImGuiConfigFlags_NavEnableSetMousePos: ImguiConfigFlags = 1 << 2;
 // Instruct navigation to move the mouse cursor. May be useful on TV/console systems where moving a virtual mouse is awkward. Will update io.MousePos and set io.WantSetMousePos=true. If enabled you MUST honor io.WantSetMousePos requests in your backend; otherwise ImGui will react as if the mouse is jumping around back and forth.
 pub const ImGuiConfigFlags_NavNoCaptureKeyboard: ImguiConfigFlags = 1 << 3;
@@ -27,7 +27,7 @@ pub const ImGuiConfigFlags_DockingEnable: ImguiConfigFlags = 1 << 6; // Docking 
 // [BETA] Viewports
 // When using viewports it is recommended that your default value for ImGuiCol_WindowBg is opaque (Alpha=1.0) so transition to a viewport won't be noticeable.
 pub const ImGuiConfigFlags_ViewportsEnable: ImguiConfigFlags = 1 << 10;
-// Viewport enable flags (require both ImGuiBackendFlags_PlatformHasViewports + ImGuiBackendFlags_RendererHasViewports set by the respective backends)
+// Viewport enable flags (require both IM_GUI_BACKEND_FLAGS_PLATFORM_HAS_VIEWPORTS + IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VIEWPORTS set by the respective backends)
 pub const ImGuiConfigFlags_DpiEnableScaleViewports: ImguiConfigFlags = 1 << 14;
 // [BETA: Don't use] FIXME-DPI: Reposition and resize imgui windows when the DpiScale of a viewport changed (mostly useful for the main viewport hosting other window). Note that resizing the main window itself is up to your application.
 pub const ImGuiConfigFlags_DpiEnableScaleFonts: ImguiConfigFlags = 1 << 15; // [BETA: Don't use] FIXME-DPI: Request bitmap-scaled fonts to match DpiScale. This is a very low-quality workaround. The correct way to handle DPI is _currently_ to replace the atlas and/or fonts in the Platform_OnChangedViewport callback; but this is all early work in progress.

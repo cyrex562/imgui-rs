@@ -1,5 +1,5 @@
-use crate::axis::{ImGuiAxis, ImGuiAxis_X, ImGuiAxis_Y};
-use crate::button_flags::{ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_FlattenChildren};
+use crate::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
+use crate::widgets::button_flags::{ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_FlattenChildren};
 use crate::color::{
     ImGuiCol_Separator, ImGuiCol_SeparatorActive, ImGuiCol_SeparatorHovered, IM_COL32_A_MASK,
 };
@@ -45,7 +45,7 @@ pub unsafe fn SplitterBehavior(
     let mut hovered = false;
     let mut held = false;
     let mut bb_interact: ImRect = bb.clone();
-    bb_interact.expand_from_vec(if axis == ImGuiAxis_Y {
+    bb_interact.expand_from_vec(if axis == IM_GUI_AXIS_Y {
         &mVec2::from_floats(0.0, hover_extend)
     } else {
         &ImVec2::from_floats(hover_extend, 0.0)
@@ -68,7 +68,7 @@ pub unsafe fn SplitterBehavior(
     if held
         || (hovered && g.HoveredIdPreviousFrame == id && g.HoveredIdTimer >= hover_visibility_delay)
     {
-        SetMouseCursor(if axis == ImGuiAxis_Y {
+        SetMouseCursor(if axis == IM_GUI_AXIS_Y {
             ImGuiMouseCursor_ResizeNS
         } else {
             ImGuiMouseCursor_ResizeEW
@@ -78,7 +78,7 @@ pub unsafe fn SplitterBehavior(
     let mut bb_render: ImRect = bb.clone();
     if (held) {
         let mouse_delta_2d: ImVec2 = g.IO.MousePos - g.ActiveIdClickOffset - bb_interact.min;
-        let mut mouse_delta: c_float = if (axis == ImGuiAxis_Y) {
+        let mut mouse_delta: c_float = if (axis == IM_GUI_AXIS_Y) {
             mouse_delta_2d.y
         } else {
             mouse_delta_2d.x
@@ -102,7 +102,7 @@ pub unsafe fn SplitterBehavior(
             // IM_ASSERT(*size2 - mouse_delta >= min_size2);
             *size1 += mouse_delta;
             *size2 -= mouse_delta;
-            bb_render.Translate(if axis == ImGuiAxis_X {
+            bb_render.Translate(if axis == IM_GUI_AXIS_X {
                 &ImVec2::from_floats(mouse_delta, 0.0)
             } else {
                 &ImVec2::from_floats(0.0, mouse_delta)

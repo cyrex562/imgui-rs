@@ -397,9 +397,9 @@ bool ImGui_ImplOSX_Init(NSView* view)
 
     // Setup backend capabilities flags
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;           // We can honor GetMouseCursor() values (optional)
-    //io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;          // We can honor io.WantSetMousePos requests (optional, rarely used)
+    //io.BackendFlags |= IM_GUI_BACKEND_FLAGS_HAS_SET_MOUSE_POS;          // We can honor io.WantSetMousePos requests (optional, rarely used)
     io.BackendFlags |= ImGuiBackendFlags_PlatformHasViewports;      // We can create multi-viewports on the Platform side (optional)
-    //io.BackendFlags |= ImGuiBackendFlags_HasMouseHoveredViewport; // We can call io.AddMouseViewportEvent() with correct data (optional)
+    //io.BackendFlags |= IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT; // We can call io.AddMouseViewportEvent() with correct data (optional)
     io.BackendPlatformName = "imgui_impl_osx";
 
     bd->Observer = [ImGuiObserver new];

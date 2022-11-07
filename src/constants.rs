@@ -6,7 +6,7 @@ use libc::size_t;
 pub const NAV_WINDOWING_HIGHLIGHT_DELAY: f32 = 0.20;
 // static const float NAV_WINDOWING_LIST_APPEAR_DELAY          = 0.15f32;    // Time before the window list starts to appear
 pub const NAV_WINDOWING_LIST_APPEAR_DELAY: f32 = 0.15;
-// Window resizing from edges (when io.ConfigWindowsResizeFromEdges = true and ImGuiBackendFlags_HasMouseCursors is set in io.BackendFlags by backend)
+// Window resizing from edges (when io.ConfigWindowsResizeFromEdges = true and IM_GUI_BACKEND_FLAGS_HAS_MOUSE_CURSORS is set in io.BackendFlags by backend)
 // static const float WINDOWS_HOVER_PADDING                    = 4.0;     // Extend outside window for hovering/resizing (maxxed with TouchPadding) and inside windows for borders. Affect FindHoveredWindow().
 pub const WINDOWS_HOVER_PADDING: f32 = 4.0;
 // static const float WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER = 0.04f;    // Reduce visual noise by only highlighting the border after a certain time.

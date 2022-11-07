@@ -89,8 +89,8 @@ Other changes:
 - Added io.config_viewports_no_task_bar_icon option.
 - Added io.config_viewports_no_decoration option.
 - Added io.config_viewports_no_default_parent option.
-- Added ImGuiBackendFlags_PlatformHasViewports, ImGuiBackendFlags_RendererHasViewports, ImGuiBackendFlags_HasMouseHoveredViewport backend flags.
-- Added io.add_mouse_viewport_event() (optional _even_ for multi-viewport support, tied to ImGuiBackendFlags_HasMouseHoveredViewport flag).
+- Added IM_GUI_BACKEND_FLAGS_PLATFORM_HAS_VIEWPORTS, IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VIEWPORTS, IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT backend flags.
+- Added io.add_mouse_viewport_event() (optional _even_ for multi-viewport support, tied to IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT flag).
 - Expanded ImGuiViewport structure, ImGuiViewportFlags flags.
 - Added ImGuiWindowClass and SetNextWindowClass() for passing viewport related hints to the OS/platform back-end.
 - Examples: Renderer: OpenGL2, OpenGL3, DirectX9, DirectX10, DirectX11, DirectX12, Vulkan: Added support for multi-viewports.
@@ -398,7 +398,7 @@ Docking+viewports Branch:
 - Docking: Fixed size constraints not working on single window holding on a dock id (still doesn't work on docked windows).
 - Docking: Fixed CTRL+TAB back into a docked window not selecting menu layer when no item are on main layer.
 - viewports, io: Added io.add_mouse_viewport_event() function to queue hovered viewport change (when known by backend).
-- viewports: Relaxed specs for backend supporting ImGuiBackendFlags_HasMouseHoveredViewport: it is now _optional_
+- viewports: Relaxed specs for backend supporting IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT: it is now _optional_
   for the backend to have to ignore viewports with the _NoInputs flag when call io.add_mouse_viewport_event(). It is
   much better if they can (Win32 and GLFW 3.3+ backends can, SDL and GLFW 3.2 backends cannot, they are lacking data).
   A concrete example is: when dragging a viewport for docking, the viewport is marked with _NoInputs to allow us
@@ -409,7 +409,7 @@ Docking+viewports Branch:
 - viewports: Fixed a CTRL+TAB crash with viewports enabled when the window list needs to appears in
   its own viewport (regression from 1.86). (#4023, #787)
 - viewports: Fixed active InputText() from preventing viewports to merge. (#4212)
-- Backends: SDL: Added support for ImGuiBackendFlags_HasMouseHoveredViewport now that its specs have been lowered.
+- Backends: SDL: Added support for IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT now that its specs have been lowered.
 - (Breaking) Removed ImGuiPlatformIO::Platform_SetImeInputPos() in favor of newly standardized
   io.SetPlatformImeDataFn() function. Should not affect more than default backends.
 
@@ -501,7 +501,7 @@ Other Changes:
 - Backends: Win32: Store left/right variants of Ctrl/Shift/Alt mods in KeysDown[] array. (#2625) [@thedmd]
 - Backends: DX12: Fixed DRAW_EMPTY_SCISSOR_RECTANGLE warnings. (#4775)
 - Backends: SDL_Renderer: Added support for large meshes (64k+ vertices) with 16-bit indices,
-  enabling 'ImGuiBackendFlags_RendererHasVtxOffset' in the backend. (#3926) [@rokups]
+  enabling 'IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET' in the backend. (#3926) [@rokups]
 - Backends: SDL_Renderer: Fix for SDL 2.0.19+ RenderGeometryRaw() API signature change. (#4819) [@sridenour]
 - Backends: OSX: Generally fix keyboard support. Keyboard arrays indexed using kVK_* codes, e.g.
   ImGui::IsKeyPressed(kVK_Space). Don't set mouse cursor shape unconditionally. Handle two fingers scroll
@@ -999,7 +999,7 @@ Docking+viewports Branch:
 
 - viewports: Fix setting of ImGuiViewportFlags_NoRendererClear. (#3213)
 - viewports: Added GetViewportplatform_monitor() with a safety net to keep code portable.
-- viewports, Backends: SDL: Fix missing ImGuiBackendFlags_HasSetMousePos flag in docking branch.
+- viewports, Backends: SDL: Fix missing IM_GUI_BACKEND_FLAGS_HAS_SET_MOUSE_POS flag in docking branch.
 - viewports, Backends: GLFW: Fix application of want_set_mouse_pos. (#1542, #787)
 
 
@@ -1607,7 +1607,7 @@ Other Changes:
   SDL+Metal example, building imgui_freetype.cpp, more compile-time imconfig.h settings: disabling
   obsolete functions, enabling 32-bit ImDrawIdx, enabling 32-bit ImWchar, disabling demo. [@rokups]
 - Backends: OpenGL3: Fixed version check mistakenly testing for GL 4.0+ instead of 3.2+ to enable
-  ImGuiBackendFlags_RendererHasVtxOffset, leaving 3.2 contexts without it. (#3119, #2866) [@wolfpld]
+  IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET, leaving 3.2 contexts without it. (#3119, #2866) [@wolfpld]
 - Backends: OpenGL3: Added include support for older glbinding 2.x loader. (#3061) [@DonKult]
 - Backends: Win32: Added ImGui_ImplWin32_EnableDpiAwareness(), ImGui_ImplWin32_GetDpiScaleForHwnd(),
   ImGui_ImplWin32_GetDpiScaleForMonitor() helpers functions (backported from the docking branch).
@@ -1822,7 +1822,7 @@ Other Changes:
 - Backends: OpenGL2: Explicitly backup, setup and restore GL_TEXTURE_ENV to increase compatibility with
   legacy OpenGL applications. (#3000)
 - Backends: OpenGL3: Fix building with pre-3.2 GL loaders which do not expose glDrawElementsBaseVertex(),
-  using runtime GL version to decide if we set ImGuiBackendFlags_RendererHasVtxOffset. (#2866, #2852) [@dpilawa]
+  using runtime GL version to decide if we set IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET. (#2866, #2852) [@dpilawa]
 - Backends: OSX: Fix using Backspace key. (#2578, #2817, #2818) [@DiligentGraphics]
 - Backends: GLFW: Previously installed user callbacks are now restored on shutdown. (#2836) [@malte-v]
 - CI: Set up a bunch of continuous-integration tests using GitHub Actions. We now compile many of the example
@@ -2103,7 +2103,7 @@ Other Changes:
 - style: Made window close button cross slightly smaller.
 - Log/Capture: Fixed BeginTabItem() label not being included in a text log/capture.
 - ImDrawList: Added ImDrawCmd::vtx_offset value to support large meshes (64k+ vertices) using 16-bit indices.
-  The renderer backend needs to set 'io.backend_flags |= ImGuiBackendFlags_RendererHasVtxOffset' to enable
+  The renderer backend needs to set 'io.backend_flags |= IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET' to enable
   this, and honor the ImDrawCmd::vtx_offset field. Otherwise the value will always be zero. (#2591)
   This has the advantage of preserving smaller index buffers and allowing to execute on hardware that do not
   support 32-bit indices. Most examples backends have been modified to support the vtx_offset field.
@@ -2120,7 +2120,7 @@ Other Changes:
   dealing with Win32, and to facilitate integration in custom engines. (#2546) [@andrewwillmott]
 - Backends: OSX: imgui_impl_osx: Added mouse cursor support. (#2585, #1873) [@actboy168]
 - Examples/Backends: DirectX9/10/11/12, Metal, Vulkan, OpenGL3 (Desktop GL only): Added support for large meshes
-  (64k+ vertices) with 16-bit indices, enable 'ImGuiBackendFlags_RendererHasVtxOffset' in those backends. (#2591)
+  (64k+ vertices) with 16-bit indices, enable 'IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET' in those backends. (#2591)
 - Examples/Backends: Don't filter characters under 0x10000 before calling io.add_input_character(),
   the filtering is done in io.add_input_character() itself. This is in prevision for fuller Unicode
   support. (#2538, #2541)
@@ -2397,7 +2397,7 @@ Other Changes:
 - window: Contents size is preserved while a window collapsed. Fix auto-resizing window losing their size for one frame when uncollapsed.
 - window: Contents size is preserved while a window contents is hidden (unless it is hidden for resizing purpose).
 - window: Resizing windows from edge is now enabled by default (io.config_windows_resize_from_edges=true). Note that
-  it only works _if_ the backend sets ImGuiBackendFlags_HasMouseCursors, which the standard backends do.
+  it only works _if_ the backend sets IM_GUI_BACKEND_FLAGS_HAS_MOUSE_CURSORS, which the standard backends do.
 - window: Added io.config_windows_move_from_title_bar_only option. This is ignored by window with no title bars (often popups).
   This affects clamping window within the visible area: with this option enabled title bars need to be visible. (#899)
 - window: Fixed using SetNextWindowPos() on a child window (which wasn't really documented) position the cursor as expected
@@ -2854,7 +2854,7 @@ Other Changes:
   The initial focus was to support game controllers, but keyboard is becoming increasingly and decently usable.
 - To use Gamepad Navigation:
   - Set io.config_flags |= ImGuiConfigFlags_NavEnableGamepad to enable.
-  - Backend: Set io.backend_flags |= ImGuiBackendFlags_HasGamepad + fill the io.nav_inputs[] fields before calling NewFrame(). Read imgui.cpp for more details.
+  - Backend: Set io.backend_flags |= IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD + fill the io.nav_inputs[] fields before calling NewFrame(). Read imgui.cpp for more details.
   - See https://github.com/ocornut/imgui/issues/1599 for recommended gamepad mapping or download PNG/PSD at http://goo.gl/9LgVZW
   - See 'enum ImGuiNavInput_' in imgui.h for a description of inputs. Read imgui.cpp for more details.
 - To use Keyboard Navigation:
@@ -2875,7 +2875,7 @@ Other Changes:
 - Context: Added IMGUI_DISABLE_DEFAULT_ALLOCATORS to disable linking with malloc/free. (#1565, #586, #992, #1007, #1558)
 - io: Added io.config_flags for user application to store settings for imgui and for the backend:
   - ImGuiConfigFlags_NavEnableKeyboard: Enable keyboard navigation.
-  - ImGuiConfigFlags_NavEnableGamepad: Enable gamepad navigation (provided ImGuiBackendFlags_HasGamepad is also set by backend).
+  - ImGuiConfigFlags_NavEnableGamepad: Enable gamepad navigation (provided IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD is also set by backend).
   - ImGuiConfigFlags_NavEnableSetMousePos: Instruct navigation to move the mouse cursor. May be useful on TV/console systems where moving a virtual mouse is awkward.
   - ImGuiConfigFlags_NoMouseCursorChange: Instruct backend to not alter mouse cursor shape and visibility (by default the example backend use mouse cursor API of the platform when available)
   - ImGuiConfigFlags_NoMouse: Instruct imgui to clear mouse position/buttons in NewFrame(). This allows ignoring the mouse information passed by the backend.
@@ -3996,4 +3996,3 @@ Other Changes:
 -----------------------------------------------------------------------
 
 For older version, see https://github.com/ocornut/imgui/releases
-

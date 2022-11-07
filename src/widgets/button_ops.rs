@@ -1,5 +1,5 @@
 use std::borrow::BorrowMut;
-use crate::button_flags::{
+use crate::widgets::button_flags::{
     ImGuiButtonFlags, ImGuiButtonFlags_AlignTextBaseLine, ImGuiButtonFlags_AllowItemOverlap,
     ImGuiButtonFlags_FlattenChildren, ImGuiButtonFlags_MouseButtonDefault_,
     ImGuiButtonFlags_MouseButtonLeft, ImGuiButtonFlags_MouseButtonMask_,
@@ -13,8 +13,8 @@ use crate::button_flags::{
 };
 use crate::color::{ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_Text};
 use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Right};
-use crate::dock_node::ImGuiDockNode;
-use crate::drag_drop_flags::{
+use crate::docking::dock_node::ImGuiDockNode;
+use crate::drag_drop::drag_drop_flags::{
     ImGuiDragDropFlags_SourceNoDisableHover, ImGuiDragDropFlags_SourceNoHoldToOpenOthers,
 };
 use crate::frame_ops::GetFrameHeight;

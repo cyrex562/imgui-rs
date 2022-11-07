@@ -1,6 +1,7 @@
 use std::ptr::null_mut;
 use libc::c_float;
-use crate::{rect::ImRect, direction::{ImGuiDir_COUNT, ImGuiDir, ImGuiDir_None}, dock_node::ImGuiDockNode};
+use crate::{direction::{ImGuiDir, ImGuiDir_COUNT, ImGuiDir_None}, rect::ImRect};
+use crate::docking::dock_node::ImGuiDockNode;
 
 #[derive(Default,Debug,Clone, Copy)]
 pub struct ImGuiDockPreviewData
