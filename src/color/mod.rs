@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
-use crate::vec4::ImVec4;
+use crate::core::vec4::ImVec4;
 use libc::{c_float, c_int};
 
 pub mod color_edit_flags;

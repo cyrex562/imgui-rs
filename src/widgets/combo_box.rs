@@ -6,35 +6,35 @@ use crate::color::{
 };
 use crate::core::context::ImguiContext;
 use crate::core::condition::ImGuiCond_None;
-use crate::direction::{ImGuiDir_Down, ImGuiDir_Left};
-use crate::draw_flags::{
+use crate::core::direction::{ImGuiDir_Down, ImGuiDir_Left};
+use crate::drawing::draw_flags::{
     ImDrawFlags_RoundCornersAll, ImDrawFlags_RoundCornersLeft, ImDrawFlags_RoundCornersRight,
 };
-use crate::draw_list::ImDrawList;
+use crate::drawing::draw_list::ImDrawList;
 use crate::frame_ops::GetFrameHeight;
-use crate::id_ops::pop_win_id_from_stack;
-use crate::item_ops::{CalcItemWidth, ItemAdd, ItemSize, MarkItemEdited};
-use crate::layout_type::ImGuiLayoutType_Horizontal;
+use crate::core::id_ops::pop_win_id_from_stack;
+use crate::item::item_ops::{CalcItemWidth, ItemAdd, ItemSize, MarkItemEdited};
+use crate::layout::layout_type::ImGuiLayoutType_Horizontal;
 use crate::logging_ops::LogSetNextTextDecoration;
-use crate::math_ops::ImMax;
-use crate::next_window_data_flags::{
+use crate::core::math_ops::ImMax;
+use crate::window::next_window_data_flags::{
     ImGuiNextWindowDataFlags, ImGuiNextWindowDataFlags_HasSizeConstraint,
 };
 use crate::popup_flags::ImGuiPopupFlags_None;
 use crate::popup_ops::{
     EndPopup, FindBestWindowPosForPopupEx, GetPopupAllowedExtentRect, IsPopupOpen, OpenPopupEx,
 };
-use crate::popup_position_policy::ImGuiPopupPositionPolicy_ComboBox;
+use crate::widgets::popup_position_policy::ImGuiPopupPositionPolicy_ComboBox;
 use crate::rect::ImRect;
-use crate::render_ops::{
+use crate::drawing::render_ops::{
     RenderArrow, RenderFrameBorder, RenderNavHighlight, RenderText, RenderTextClipped,
 };
 use crate::style_ops::GetColorU32;
 use crate::style_var::ImGuiStyleVar_WindowPadding;
 use crate::text_ops::CalcTextSize;
-use crate::type_defs::ImguiHandle;
-use crate::utils::{flag_clear, flag_set};
-use crate::vec2::ImVec2;
+use crate::core::type_defs::ImguiHandle;
+use crate::core::utils::{flag_clear, flag_set};
+use crate::core::vec2::ImVec2;
 use crate::widgets::button_ops::ButtonBehavior;
 use crate::widgets::combo_flags::{
     ImGuiComboFlags, ImGuiComboFlags_CustomPreview, ImGuiComboFlags_HeightLarge,

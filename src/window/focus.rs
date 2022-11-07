@@ -1,14 +1,14 @@
 use crate::core::context::ImguiContext;
-use crate::direction::{ImGuiDir_Down, ImGuiDir_None, ImGuiDir_Up};
+use crate::core::direction::{ImGuiDir_Down, ImGuiDir_None, ImGuiDir_Up};
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::nav_layer::ImGuiNavLayer_Main;
 use crate::nav_move_flags::{ImGuiNavMoveFlags_FocusApi, ImGuiNavMoveFlags_Tabbing};
 use crate::nav_ops::SetNavWindow;
-use crate::scroll_flags::{
+use crate::widgets::scroll_flags::{
     ImGuiScrollFlags_AlwaysCenterY, ImGuiScrollFlags_KeepVisibleEdgeX,
     ImGuiScrollFlags_KeepVisibleEdgeY, ImGuiScrollFlags_None,
 };
-use crate::utils::{flag_set, is_not_null};
+use crate::core::utils::{flag_set, is_not_null};
 use crate::window::rect::window_rect_abs_to_rel;
 use crate::window::window_flags::{
     ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_NoBringToFrontOnFocus,

@@ -304,8 +304,8 @@ use crate::stb_tt_packed_range::stbtt_pack_range;
 use crate::stb_tt_shapes::{STBTT_vcubic, STBTT_vcurve, STBTT_vline, STBTT_vmove};
 use crate::stb_tt_types::stbtt_vertex_type;
 use crate::stb_tt_vertex::stbtt_vertex;
-use crate::string_ops::str_to_const_c_char_ptr;
-use crate::utils::flag_clear;
+use crate::core::string_ops::str_to_const_c_char_ptr;
+use crate::core::utils::flag_clear;
 
 // c_uchar ttf_buffer[1<<20];
 pub static ttf_buffer: [c_uchar;1<<20] = [0;1<<20];

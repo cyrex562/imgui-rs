@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::drawing::draw_cmd::ImDrawCmd;
-use crate::type_defs::ImDrawIdx;
+use crate::core::type_defs::ImDrawIdx;
 
 // [Internal] For use by ImDrawListSplitter
 #[derive(Default, Debug, Clone, Copy)]

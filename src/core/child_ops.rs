@@ -2,16 +2,16 @@ use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::color::{ImGuiCol_ChildBg, ImGuiCol_FrameBg};
 use crate::core::condition::ImGuiCond_None;
 use crate::content_ops::content_region_avail;
-use crate::id_ops::SetActiveID;
-use crate::input_source::ImGuiInputSource_Nav;
-use crate::item_ops::{ItemAdd, ItemSize};
-use crate::item_status_flags::ImGuiItemStatusFlags_HoveredWindow;
-use crate::math_ops::ImMax;
+use crate::core::id_ops::SetActiveID;
+use crate::io::input_source::ImGuiInputSource_Nav;
+use crate::item::item_ops::{ItemAdd, ItemSize};
+use crate::item::item_status_flags::ImGuiItemStatusFlags_HoveredWindow;
+use crate::core::math_ops::ImMax;
 use crate::nav_highlight_flags::ImGuiNavHighlightFlags_TypeThin;
 use crate::nav_ops::NavInitWindow;
 use crate::rect::ImRect;
-use crate::render_ops::RenderNavHighlight;
-use crate::string_ops::ImFormatStringToTempBuffer;
+use crate::drawing::render_ops::RenderNavHighlight;
+use crate::core::string_ops::ImFormatStringToTempBuffer;
 use crate::style_ops::{PopStyleColor, PushStyleColor};
 use crate::style_var::{
     ImGuiStyleVar_ChildBorderSize, ImGuiStyleVar_ChildRounding, ImGuiStyleVar_WindowPadding,
@@ -19,9 +19,9 @@ use crate::style_var::{
 use crate::style_var_ops::{
     PopStyleVar, PopStyleVarInt, PushStyleVar, PushStyleVarFloat, PushStyleVarVec2,
 };
-use crate::type_defs::ImguiHandle;
-use crate::utils::flag_clear;
-use crate::vec2::ImVec2;
+use crate::core::type_defs::ImguiHandle;
+use crate::core::utils::flag_clear;
+use crate::core::vec2::ImVec2;
 use crate::window::focus::FocusWindow;
 use crate::window::ops::{Begin, GetCurrentWindow, SetNextWindowSize};
 use crate::window::window_flags::{

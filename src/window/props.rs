@@ -3,15 +3,15 @@ use crate::core::condition::{
     ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_None,
     ImGuiCond_Once,
 };
-use crate::draw_list::ImDrawList;
-use crate::focused_flags::ImGuiFocusedFlags;
+use crate::drawing::draw_list::ImDrawList;
+use crate::core::focused_flags::ImGuiFocusedFlags;
 use crate::font::ImFont;
-use crate::hovered_flags::{
+use crate::widgets::hovered_flags::{
     ImGuiHoveredFlags, ImGuiHoveredFlags_AllowWhenBlockedByActiveItem, ImGuiHoveredFlags_AnyWindow,
     ImGuiHoveredFlags_ChildWindows, ImGuiHoveredFlags_DockHierarchy,
     ImGuiHoveredFlags_NoPopupHierarchy, ImGuiHoveredFlags_RootWindow,
 };
-use crate::next_window_data_flags::{
+use crate::window::next_window_data_flags::{
     ImGuiNextWindowDataFlags_HasBgAlpha, ImGuiNextWindowDataFlags_HasCollapsed,
     ImGuiNextWindowDataFlags_HasContentSize, ImGuiNextWindowDataFlags_HasDock,
     ImGuiNextWindowDataFlags_HasFocus, ImGuiNextWindowDataFlags_HasPos,
@@ -19,9 +19,9 @@ use crate::next_window_data_flags::{
     ImGuiNextWindowDataFlags_HasViewport,
 };
 use crate::rect::ImRect;
-use crate::type_defs::ImguiHandle;
-use crate::utils::{flag_clear, flag_set, is_not_null};
-use crate::vec2::{ImVec2, ImVec2ih};
+use crate::core::type_defs::ImguiHandle;
+use crate::core::utils::{flag_clear, flag_set, is_not_null};
+use crate::core::vec2::{ImVec2, ImVec2ih};
 use crate::window::find::{FindWindowByName, GetCombinedRootWindow, IsWindowChildOf};
 use crate::window::focus::FocusWindow;
 use crate::window::ops::{GetCurrentWindow, IsWindowContentHoverable};

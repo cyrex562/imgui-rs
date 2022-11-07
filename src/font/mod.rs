@@ -1,17 +1,17 @@
 #![allow(non_snake_case)]
 
 use crate::color::IM_COL32_A_MASK;
-use crate::draw_list::ImDrawList;
-use crate::draw_vert::ImDrawVert;
+use crate::drawing::draw_list::ImDrawList;
+use crate::drawing::draw_vert::ImDrawVert;
 use crate::font_atlas::ImFontAtlas;
-use crate::font_config::ImFontConfig;
-use crate::font_glyph::ImFontGlyph;
-use crate::font_ops::FindFirstExistingGlyph;
-use crate::math_ops::{char_is_blank, ImCharIsBlankA, ImClamp, ImMax};
-use crate::string_ops::ImTextCharFromUtf8;
-use crate::type_defs::{ImDrawIdx, ImWchar};
-use crate::vec2::ImVec2;
-use crate::vec4::ImVec4;
+use font_config::ImFontConfig;
+use font_glyph::ImFontGlyph;
+use font_ops::FindFirstExistingGlyph;
+use crate::core::math_ops::{char_is_blank, ImCharIsBlankA, ImClamp, ImMax};
+use crate::core::string_ops::ImTextCharFromUtf8;
+use crate::core::type_defs::{ImDrawIdx, ImWchar};
+use crate::core::vec2::ImVec2;
+use crate::core::vec4::ImVec4;
 use libc::{c_char, c_float, c_int, c_short, c_uint, size_t};
 use std::borrow::BorrowMut;
 use std::ffi::CStr;
@@ -22,6 +22,18 @@ use std::str::pattern::Pattern;
 
 mod fallback_font_data;
 mod a_font;
+pub mod font_atlas;
+pub mod font_atlas_custom_rect;
+mod font_atlas_ops;
+pub mod font_atlas_default_tex_data;
+pub mod font_atlas_flags;
+pub mod font_build_dst_data;
+pub mod font_build_src_data;
+mod font_builder_io;
+pub mod font_config;
+pub mod font_glyph;
+mod font_glyph_ranges_builder;
+pub mod font_ops;
 
 // Font runtime data and rendering
 // ImFontAtlas automatically loads a default embedded font for you when you call GetTexDataAsAlpha8() or GetTexDataAsRGBA32().

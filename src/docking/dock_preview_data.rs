@@ -1,6 +1,7 @@
 use std::ptr::null_mut;
 use libc::c_float;
-use crate::{direction::{ImGuiDir, ImGuiDir_COUNT, ImGuiDir_None}, rect::ImRect};
+use crate::rect::ImRect;
+use crate::core::direction::{ImGuiDir, ImGuiDir_COUNT, ImGuiDir_None};
 use crate::docking::dock_node::ImGuiDockNode;
 
 #[derive(Default,Debug,Clone, Copy)]

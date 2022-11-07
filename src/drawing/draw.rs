@@ -21,42 +21,42 @@ use crate::color::{
     ImGuiCol_WindowBg, IM_COL32_A_MASK, IM_COL32_A_SHIFT, IM_COL32_BLACK_TRANS, IM_COL32_B_SHIFT,
     IM_COL32_G_SHIFT, IM_COL32_R_SHIFT, IM_COL32_WHITE,
 };
-use crate::direction::{
+use crate::core::direction::{
     ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right,
     ImGuiDir_Up,
 };
-use crate::draw_flags::{
+use crate::drawing::draw_flags::{
     ImDrawFlags, ImDrawFlags_RoundCornersBottomLeft, ImDrawFlags_RoundCornersBottomRight,
     ImDrawFlags_RoundCornersDefault_, ImDrawFlags_RoundCornersMask_, ImDrawFlags_RoundCornersNone,
     ImDrawFlags_RoundCornersTopLeft, ImDrawFlags_RoundCornersTopRight,
 };
-use crate::draw_list::ImDrawList;
-use crate::draw_vert::ImDrawVert;
+use crate::drawing::draw_list::ImDrawList;
+use crate::drawing::draw_vert::ImDrawVert;
 use crate::drawing::draw_cmd::ImDrawCmd;
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
-use crate::font_atlas_custom_rect::ImFontAtlasCustomRect;
-use crate::font_atlas_default_tex_data::{
+use crate::font::font_atlas_custom_rect::ImFontAtlasCustomRect;
+use crate::font::font_atlas_default_tex_data::{
     FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_const_char_ptr,
     FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS_as_vec, FONT_ATLAS_DEFAULT_TEX_DATA_H,
     FONT_ATLAS_DEFAULT_TEX_DATA_PIXELS, FONT_ATLAS_DEFAULT_TEX_DATA_W,
 };
-use crate::font_atlas_flags::{
+use crate::font::font_atlas_flags::{
     ImFontAtlasFlags_NoBakedLines, ImFontAtlasFlags_NoMouseCursors,
     ImFontAtlasFlags_NoPowerOfTwoHeight,
 };
-use crate::font_build_dst_data::ImFontBuildDstData;
-use crate::font_build_src_data::ImFontBuildSrcData;
-use crate::font_config::ImFontConfig;
-use crate::math_ops::{ImAcos, ImAcosX, ImClamp, ImLerp, ImMax, ImMin, ImMul, ImSqrt, ImSwap};
-use crate::mouse_cursor::ImGuiMouseCursor_COUNT;
+use crate::font::font_build_dst_data::ImFontBuildDstData;
+use crate::font::font_build_src_data::ImFontBuildSrcData;
+use crate::font::font_config::ImFontConfig;
+use crate::core::math_ops::{ImAcos, ImAcosX, ImClamp, ImLerp, ImMax, ImMin, ImMul, ImSqrt, ImSwap};
+use crate::io::mouse_cursor::ImGuiMouseCursor_COUNT;
 use crate::rect::ImRect;
 use crate::style::ImguiStyle;
 use crate::style_ops::{GetColorU32, GetStyle};
-use crate::type_defs::ImWchar;
-use crate::utils::{flag_clear, is_not_null};
-use crate::vec2::ImVec2;
-use crate::vec4::ImVec4;
+use crate::core::type_defs::ImWchar;
+use crate::core::utils::{flag_clear, is_not_null};
+use crate::core::vec2::ImVec2;
+use crate::core::vec4::ImVec4;
 use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_ushort, c_void, size_t};
 use std::ffi::CStr;
 use std::mem::swap;

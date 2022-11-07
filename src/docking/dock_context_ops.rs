@@ -1,13 +1,15 @@
-use crate::{a_imgui_cpp::{DockSettingsHandler_ApplyAll, DockSettingsHandler_ClearAll, DockSettingsHandler_ReadLine, DockSettingsHandler_WriteAll}, direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up}, utils::is_not_null};
+use crate::{a_imgui_cpp::{DockSettingsHandler_ApplyAll, DockSettingsHandler_ClearAll, DockSettingsHandler_ReadLine, DockSettingsHandler_WriteAll}};
 use crate::core::context::ImguiContext;
 use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::core::config_flags::ImGuiConfigFlags_DockingEnable;
+use crate::core::direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::docking::dock_request_type::{ImGuiDockRequestType_Dock, ImGuiDockRequestType_None, ImGuiDockRequestType_Undock};
 use crate::docking_ops::{DockBuilderRemoveNodeChildNodes, DockBuilderRemoveNodeDockedWindows, DockSettingsHandler_ApplyAll, DockSettingsHandler_ClearAll, DockSettingsHandler_ReadLine, DockSettingsHandler_WriteAll};
-use crate::hash_ops::hash_string;
-use crate::settings_handler::SettingsHandler;
-use crate::type_defs::ImguiHandle;
+use crate::core::hash_ops::hash_string;
+use crate::core::settings_handler::SettingsHandler;
+use crate::core::utils::is_not_null;
+use crate::core::type_defs::ImguiHandle;
 
 
 pub fn init_dock_context(g: &mut ImguiContext)

@@ -1,10 +1,10 @@
 #![allow(non_snake_case)]
 
 use crate::docking::dock_node_flags::ImGuiDockNodeFlags;
-use crate::next_window_data_flags::ImGuiNextWindowDataFlags_HasWindowClass;
-use crate::tab_item_flags::ImGuiTabItemFlags;
-use crate::type_defs::ImguiHandle;
-use crate::viewport_flags::ImGuiViewportFlags;
+use crate::window::next_window_data_flags::ImGuiNextWindowDataFlags_HasWindowClass;
+use crate::widgets::tab_item_flags::ImGuiTabItemFlags;
+use crate::core::type_defs::ImguiHandle;
+use crate::viewport::viewport_flags::ImGuiViewportFlags;
 use crate::GImGui;
 
 // [ALPHA] Rarely used / very advanced uses only. Use with SetNextWindowClass() and DockSpace() functions.

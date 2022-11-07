@@ -7,21 +7,21 @@ use crate::drag_drop::drag_drop_flags::{
     ImGuiDragDropFlags_None, ImGuiDragDropFlags_SourceAllowNullID, ImGuiDragDropFlags_SourceExtern,
     ImGuiDragDropFlags_SourceNoDisableHover, ImGuiDragDropFlags_SourceNoPreviewTooltip,
 };
-use crate::id_ops::{KeepAliveID, SetActiveID};
+use crate::core::id_ops::{KeepAliveID, SetActiveID};
 use crate::input_ops::{IsMouseDown, IsMouseDragging, IsMouseHoveringRect};
-use crate::item_ops::ItemHoverable;
-use crate::item_status_flags::{
+use crate::item::item_ops::ItemHoverable;
+use crate::item::item_status_flags::{
     ImGuiItemStatusFlags_HasDisplayRect, ImGuiItemStatusFlags_HoveredRect,
 };
-use crate::mouse_button::{ImGuiMouseButton, ImGuiMouseButton_Left};
-use crate::payload::ImGuiPayload;
+use crate::io::mouse_button::{ImGuiMouseButton, ImGuiMouseButton_Left};
+use crate::drag_drop::payload::ImGuiPayload;
 use crate::rect::ImRect;
-use crate::string_ops::{str_to_const_c_char_ptr, ImStrncpy};
+use crate::core::string_ops::{str_to_const_c_char_ptr, ImStrncpy};
 use crate::style_ops::GetColorU32;
-use crate::tooltip_ops::{BeginTooltip, EndTooltip};
-use crate::type_defs::ImguiHandle;
-use crate::utils::flag_clear;
-use crate::vec2::ImVec2;
+use crate::widgets::tooltip_ops::{BeginTooltip, EndTooltip};
+use crate::core::type_defs::ImguiHandle;
+use crate::core::utils::flag_clear;
+use crate::core::vec2::ImVec2;
 use crate::window::focus::FocusWindow;
 use crate::window::ImguiWindow;
 use crate::{hash_string, GImGui};

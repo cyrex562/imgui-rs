@@ -3,8 +3,8 @@
 // Because we never destroy or rename ImGuiWindowSettings, we can store the names in a separate buffer easily.
 // (this is designed to be stored in a ImChunkStream buffer, with the variable-length Name following our structure)
 
-use crate::type_defs::ImguiHandle;
-use crate::vec2::ImVec2ih;
+use crate::core::type_defs::ImguiHandle;
+use crate::core::vec2::ImVec2ih;
 use libc::{c_char, c_short};
 
 #[derive(Default, Debug, Clone)]

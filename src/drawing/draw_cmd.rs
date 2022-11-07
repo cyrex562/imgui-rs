@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
 use crate::drawing::draw::ImDrawCallback;
-use crate::type_defs::ImTextureID;
-use crate::vec4::ImVec4;
+use crate::core::type_defs::ImTextureID;
+use crate::core::vec4::ImVec4;
 use libc::{c_uint, c_void, size_t};
 
 // Typically, 1 command = 1 GPU draw call (unless command is a callback)

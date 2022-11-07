@@ -1,16 +1,16 @@
 use crate::input_text_flags::ImGuiInputTextFlags_CallbackResize;
 use crate::input_text_state::ImGuiInputTextState;
-use crate::io_ops::GetIO;
-use crate::math_ops::{ImClamp, ImMax};
+use crate::io::io_ops::GetIO;
+use crate::core::math_ops::{ImClamp, ImMax};
 use crate::stb::stb_text_edit_row::StbTexteditRow;
 use crate::stb::stb_text_edit_state::STB_TexteditState;
 use crate::stb::stb_textedit::{
     stb_text_makeundo_replace, STB_TEXTEDIT_CHARTYPE, STB_TEXTEDIT_STRING,
 };
-use crate::string_ops::ImTextCountUtf8BytesFromStr;
-use crate::type_defs::ImWchar;
-use crate::utils::flag_set;
-use crate::vec2::ImVec2;
+use crate::core::string_ops::ImTextCountUtf8BytesFromStr;
+use crate::core::type_defs::ImWchar;
+use crate::core::utils::flag_set;
+use crate::core::vec2::ImVec2;
 use crate::{input_text, widgets, GImGui};
 use libc::{c_float, c_int};
 

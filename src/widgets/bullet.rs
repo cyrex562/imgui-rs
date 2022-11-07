@@ -1,10 +1,10 @@
 use crate::color::ImGuiCol_Text;
-use crate::item_ops::{ItemAdd, ItemSize};
-use crate::layout_ops::same_line;
+use crate::item::item_ops::{ItemAdd, ItemSize};
+use crate::layout::layout_ops::same_line;
 use crate::rect::ImRect;
-use crate::render_ops::RenderBullet;
+use crate::drawing::render_ops::RenderBullet;
 use crate::style_ops::GetColorU32;
-use crate::vec2::ImVec2;
+use crate::core::vec2::ImVec2;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
 use crate::GImGui;

@@ -4,7 +4,7 @@ use crate::data_type::{
     IM_GUI_DATA_TYPE_U16, IM_GUI_DATA_TYPE_U32, IM_GUI_DATA_TYPE_U64, IM_GUI_DATA_TYPE_U8,
 };
 use crate::data_type_info::{ImGuiDataTypeInfo, GDATA_TYPE_INFO};
-use crate::math_ops::{ImAddClampOverflow, ImSubClampOverflow};
+use crate::core::math_ops::{ImAddClampOverflow, ImSubClampOverflow};
 use libc::{c_float, c_int};
 
 pub fn data_type_info(data_type: ImGuiDataType) -> ImGuiDataTypeInfo {

@@ -1,9 +1,14 @@
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
 [package]
 name = "imgui-rs"
 version = "0.1.0"
 edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+authors = ["azrael cyrex562@gmail.com"]
+description = "full port of the Dear ImGui library to rust"
+keywords = ["gui","ffi"]
+license = "MIT 2.0"
+readme = "README.md"
 
 [dependencies]
 log = "0.4.17"
@@ -11,6 +16,19 @@ fern = "0.6.1"
 libc = "0.2"
 bitfield = "0.14"
 
+[dependencies.windows]
+version = "0.40"
+features = [
+    "Win32_Graphics_Direct3D",
+    "Win32_Graphics_Direct3D9",
+    "Win32_Foundation",
+    "Win32_System_SystemServices",
+    "Graphics",
+    "System",
+    "Gaming",
+    "UI",
+    "Win32",
+]
 
-[target.'cfg(windows)'.dependencies]
-windows-sys = {version = "0.42", features = ["Win32_Globalization"]}
+[lib]
+path = "src/lib.rs"

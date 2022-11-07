@@ -1,8 +1,8 @@
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::docking::dock_node_settings::ImGuiDockNodeSettings;
 use crate::docking::dock_request::ImGuiDockRequest;
-use crate::storage::ImGuiStorage;
-use crate::type_defs::ImguiHandle;
+use crate::core::storage::ImGuiStorage;
+use crate::core::type_defs::ImguiHandle;
 use std::collections::HashMap;
 
 #[derive(Default, Debug, Clone, Copy)]

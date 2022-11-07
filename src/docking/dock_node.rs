@@ -2,7 +2,7 @@
 
 use crate::color::IM_COL32_WHITE;
 use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_NONE};
-use crate::data_authority::{
+use crate::core::data_authority::{
     ImGuiDataAuthority, IM_GUI_DATA_AUTHORITY_AUTO, IM_GUI_DATA_AUTHORITY_DOCK_NODE,
 };
 use crate::docking::dock_node_flags::{
@@ -10,9 +10,9 @@ use crate::docking::dock_node_flags::{
     ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_NoTabBar, ImGuiDockNodeFlags_None,
 };
 use crate::docking::dock_node_state::{ImGuiDockNodeState, ImGuiDockNodeState_Unknown};
-use crate::tab_bar::ImGuiTabBar;
-use crate::type_defs::ImguiHandle;
-use crate::vec2::ImVec2;
+use crate::widgets::tab_bar::ImGuiTabBar;
+use crate::core::type_defs::ImguiHandle;
+use crate::core::vec2::ImVec2;
 use crate::window::window_class::ImGuiWindowClass;
 use crate::window::ImguiWindow;
 use crate::window_class::ImGuiWindowClass;

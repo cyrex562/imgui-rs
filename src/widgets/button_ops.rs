@@ -12,34 +12,34 @@ use crate::widgets::button_flags::{
     ImGuiButtonFlags_PressedOnMask_, ImGuiButtonFlags_PressedOnRelease, ImGuiButtonFlags_Repeat,
 };
 use crate::color::{ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_Text};
-use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Right};
+use crate::core::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Right};
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::drag_drop::drag_drop_flags::{
     ImGuiDragDropFlags_SourceNoDisableHover, ImGuiDragDropFlags_SourceNoHoldToOpenOthers,
 };
 use crate::frame_ops::GetFrameHeight;
-use crate::hovered_flags::ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
-use crate::id_ops::{ClearActiveID, SetActiveID, SetHoveredID};
+use crate::widgets::hovered_flags::ImGuiHoveredFlags_AllowWhenBlockedByActiveItem;
+use crate::core::id_ops::{ClearActiveID, SetActiveID, SetHoveredID};
 use crate::input_ops::{CalcTypematicRepeatAmount, GetKeyData, IsMouseClicked, IsMouseDragging};
-use crate::input_source::{ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
-use crate::item_flags::ImGuiItemFlags_ButtonRepeat;
-use crate::item_ops::{
+use crate::io::input_source::{ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
+use crate::item::item_flags::ImGuiItemFlags_ButtonRepeat;
+use crate::item::item_ops::{
     CalcItemSize, IsItemActive, IsItemHovered, ItemAdd, ItemHoverable, ItemSize,
 };
-use crate::key::{ImGuiKey_NavGamepadActivate, ImGuiKey_Space};
+use crate::io::key::{ImGuiKey_NavGamepadActivate, ImGuiKey_Space};
 use crate::logging_ops::LogSetNextTextDecoration;
-use crate::math_ops::ImMax;
-use crate::mouse_ops::StartMouseMovingWindowOrNode;
+use crate::core::math_ops::ImMax;
+use crate::io::mouse_ops::StartMouseMovingWindowOrNode;
 use crate::nav_ops::SetFocusID;
 use crate::rect::ImRect;
-use crate::render_ops::{
+use crate::drawing::render_ops::{
     RenderArrow, RenderArrowDockMenu, RenderFrame, RenderNavHighlight, RenderTextClipped,
 };
 use crate::style_ops::GetColorU32;
 use crate::text_ops::CalcTextSize;
-use crate::type_defs::ImguiHandle;
-use crate::utils::{flag_clear, flag_set};
-use crate::vec2::ImVec2;
+use crate::core::type_defs::ImguiHandle;
+use crate::core::utils::{flag_clear, flag_set};
+use crate::core::vec2::ImVec2;
 use crate::widgets::DRAGDROP_HOLD_TO_OPEN_TIMER;
 use crate::window::focus::FocusWindow;
 use crate::window::ops::GetCurrentWindow;

@@ -11,3 +11,4 @@ mod dock_preview_data;
 mod dock_request;
 mod dock_request_type;
 mod docking_ops;
+pub mod win_dock_style;

@@ -5,8 +5,8 @@
 //-----------------------------------------------------------------------------
 
 use crate::color::{color_u32_from_rgba, IM_COL32_A_SHIFT, IM_COL32_B_SHIFT, IM_COL32_G_SHIFT, IM_COL32_R_SHIFT};
-use crate::math_ops::{ImFabs, ImFmod, ImLerp, ImSwap};
-use crate::vec4::ImVec4;
+use crate::core::math_ops::{ImFabs, ImFmod, ImLerp, ImSwap};
+use crate::core::vec4::ImVec4;
 
 // IMGUI_API ImAlphaBlendColors: u32(col_a: u32, col_b: u32)
 pub fn ImALphaBlendColors(col_a: u32, col_b: u32) -> u32

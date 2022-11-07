@@ -1,8 +1,8 @@
 #![allow(non_snake_case)]
 
-use crate::draw_list_splitter::ImDrawListSplitter;
+use crate::drawing::draw_list_splitter::ImDrawListSplitter;
 use crate::rect::ImRect;
-use crate::span::ImSpan;
+use crate::widgets::span::ImSpan;
 use crate::table_cell_data::ImGuiTableCellData;
 use crate::table_column::ImGuiTableColumn;
 use crate::table_column_sort_specs::ImGuiTableColumnSortSpecs;
@@ -12,9 +12,27 @@ use crate::table_row_flags::ImGuiTableRowFlags;
 use crate::table_sort_specs::ImGuiTableSortSpecs;
 use crate::table_temp_data::ImGuiTableTempData;
 use crate::text_buffer::ImGuiTextBuffer;
-use crate::type_defs::{ImGuiTableColumnIdx, ImGuiTableDrawChannelIdx, ImguiHandle};
+use crate::core::type_defs::{ImguiHandle, ImGuiTableColumnIdx, ImGuiTableDrawChannelIdx};
 use crate::window::ImguiWindow;
 use libc::{c_float, c_int, c_void};
+
+pub mod old_column_data;
+pub mod old_column_flags;
+pub mod old_columns;
+pub mod table_bg_target;
+mod table_cell_data;
+pub mod table_column;
+pub mod table_column_flags;
+mod table_column_settings;
+mod table_column_sort_specs;
+pub mod table_flags;
+mod table_instance_data;
+pub mod table_ops;
+mod table_row_flags;
+pub mod table_settings;
+mod table_sort_specs;
+pub mod table_temp_data;
+pub mod tables;
 
 // FIXME-TABLE: more transient data could be stored in a per-stacked table structure: DrawSplitter, SortSpecs, incoming RowData
 #[derive(Default, Debug, Clone)]

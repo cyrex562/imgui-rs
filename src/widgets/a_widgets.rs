@@ -90,7 +90,7 @@ Index of this file:
 // Data
 //-------------------------------------------------------------------------
 
-use crate::activate_flags::{
+use crate::widgets::activate_flags::{
     IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT, IM_GUI_ACTIVATE_FLAGS_TRY_TO_PRESERVE_STATE,
 };
 use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y, ImGuiAxis};
@@ -162,7 +162,7 @@ use crate::data_type_ops::{
     DataTypeFormatString,
 };
 use crate::data_type_temp_storage::ImGuiDataTypeTempStorage;
-use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_Right, ImGuiDir_Up};
+use crate::core::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_Right, ImGuiDir_Up};
 use crate::dock_context_ops::DockContextQueueUndockWindow;
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::drag_drop::drag_drop_flags::{
@@ -172,26 +172,26 @@ use crate::drag_drop_ops::{
     AcceptDragDropPayload, BeginDragDropSource, BeginDragDropTarget, EndDragDropSource,
     EndDragDropTarget, SetDragDropPayload,
 };
-use crate::draw_flags::{
+use crate::drawing::draw_flags::{
     ImDrawFlags, ImDrawFlags_RoundCornersAll, ImDrawFlags_RoundCornersBottomLeft,
     ImDrawFlags_RoundCornersBottomRight, ImDrawFlags_RoundCornersLeft,
     ImDrawFlags_RoundCornersNone, ImDrawFlags_RoundCornersRight, ImDrawFlags_RoundCornersTopRight,
 };
-use crate::draw_list::ImDrawList;
+use crate::drawing::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::font::ImFont;
-use crate::font_glyph::ImFontGlyph;
-use crate::font_ops::{PopFont, PushFont};
+use crate::font::font_glyph::ImFontGlyph;
+use crate::font::font_ops::{PopFont, PushFont};
 use crate::frame_ops::GetFrameHeight;
-use crate::geometry_ops::{
+use crate::drawing::geometry_ops::{
     ImTriangleBarycentricCoords, ImTriangleClosestPoint, ImTriangleContainsPoint,
 };
-use crate::group_ops::{BeginGroup, EndGroup};
-use crate::hovered_flags::{
+use crate::widgets::group_ops::{BeginGroup, EndGroup};
+use crate::widgets::hovered_flags::{
     ImGuiHoveredFlags_AllowWhenBlockedByActiveItem, ImGuiHoveredFlags_AllowWhenBlockedByPopup,
     ImGuiHoveredFlags_DelayNormal,
 };
-use crate::id_ops::{
+use crate::core::id_ops::{
     ClearActiveID, GetIDWithSeed, KeepAliveID, pop_win_id_from_stack, push_int_id, push_str_id, PushID,
     PushOverrideID, SetActiveID, SetHoveredID,
 };
@@ -200,7 +200,7 @@ use crate::input_ops::{
     CalcTypematicRepeatAmount, GetKeyData, IsKeyDown, IsKeyPressed, IsMouseClicked,
     IsMouseDragging, IsMouseDragPastThreshold, IsMousePosValid, SetMouseCursor,
 };
-use crate::input_source::{
+use crate::io::input_source::{
     ImGuiInputSource, ImGuiInputSource_Clipboard, ImGuiInputSource_Gamepad,
     ImGuiInputSource_Keyboard, ImGuiInputSource_Mouse, ImGuiInputSource_Nav,
 };
@@ -221,26 +221,26 @@ use crate::input_text_flags::{
 };
 use crate::input_text_state::ImGuiInputTextState;
 use crate::io::ImguiIo;
-use crate::io_ops::GetIO;
-use crate::item_flags::{
+use crate::io::io_ops::GetIO;
+use crate::item::item_flags::{
     ImGuiItemFlags, ImGuiItemFlags_ButtonRepeat, ImGuiItemFlags_Disabled, ImGuiItemFlags_Inputable,
     ImGuiItemFlags_MixedValue, ImGuiItemFlags_NoNav, ImGuiItemFlags_NoNavDefaultFocus,
     ImGuiItemFlags_None, ImGuiItemFlags_NoTabStop, ImGuiItemFlags_ReadOnly,
     ImGuiItemFlags_SelectableDontClosePopup,
 };
-use crate::item_ops::{
+use crate::item::item_ops::{
     calc_width_for_pos, CalcItemSize, CalcItemWidth, IsClippedEx, IsItemActive, IsItemHovered,
     ItemAdd, ItemHoverable, ItemSize, MarkItemEdited, PopItemFlag, PopItemWidth, PushItemFlag,
     PushItemWidth, PushMultiItemsWidths, SetNextItemWidth,
 };
-use crate::item_status_flags::{
+use crate::item::item_status_flags::{
     ImGuiItemStatusFlags, ImGuiItemStatusFlags_Checkable, ImGuiItemStatusFlags_Checked,
     ImGuiItemStatusFlags_FocusedByTabbing, ImGuiItemStatusFlags_HasDisplayRect,
     ImGuiItemStatusFlags_HoveredRect, ImGuiItemStatusFlags_HoveredWindow,
     ImGuiItemStatusFlags_Openable, ImGuiItemStatusFlags_Opened, ImGuiItemStatusFlags_ToggledOpen,
     ImGuiItemStatusFlags_ToggledSelection,
 };
-use crate::key::{
+use crate::io::key::{
     ImGuiKey, ImGuiKey_A, ImGuiKey_Backspace, ImGuiKey_C, ImGuiKey_Delete, ImGuiKey_DownArrow,
     ImGuiKey_End, ImGuiKey_Enter, ImGuiKey_Escape, ImGuiKey_Home, ImGuiKey_Insert,
     ImGuiKey_KeypadEnter, ImGuiKey_LeftArrow, ImGuiKey_NavGamepadActivate,
@@ -249,21 +249,21 @@ use crate::key::{
     ImGuiKey_None, ImGuiKey_PageDown, ImGuiKey_PageUp, ImGuiKey_RightArrow, ImGuiKey_Space,
     ImGuiKey_Tab, ImGuiKey_UpArrow, ImGuiKey_V, ImGuiKey_X, ImGuiKey_Y, ImGuiKey_Z,
 };
-use crate::last_item_data::ImGuiLastItemData;
-use crate::layout_ops::{same_line, ShrinkWidths, spacing};
-use crate::layout_type::{ImGuiLayoutType, ImGuiLayoutType_Horizontal, ImGuiLayoutType_Vertical};
+use crate::item::last_item_data::ImGuiLastItemData;
+use crate::layout::layout_ops::{same_line, ShrinkWidths, spacing};
+use crate::layout::layout_type::{ImGuiLayoutType, ImGuiLayoutType_Horizontal, ImGuiLayoutType_Vertical};
 use crate::list_clipper::ImGuiListClipper;
 use crate::logging_ops::{LogRenderedText, LogSetNextTextDecoration};
-use crate::math_ops::{
+use crate::core::math_ops::{
     char_is_blank, ImAddClampOverflow, ImAtan2, ImCharIsBlankA, ImClamp, ImCos, ImFabs, ImFmod,
     ImLerp, ImLerpVec22, ImLinearSweep, ImMax, ImMin, ImRotate, ImSaturateFloat, ImSin,
     ImSubClampOverflow, ImSwap,
 };
-use crate::mod_flags::{ImGuiModFlags_Ctrl, ImGuiModFlags_Shift, ImGuiModFlags_Super};
-use crate::mouse_cursor::{
+use crate::io::mod_flags::{ImGuiModFlags_Ctrl, ImGuiModFlags_Shift, ImGuiModFlags_Super};
+use crate::io::mouse_cursor::{
     ImGuiMouseCursor_ResizeEW, ImGuiMouseCursor_ResizeNS, ImGuiMouseCursor_TextInput,
 };
-use crate::mouse_ops::{StartMouseMovingWindow, StartMouseMovingWindowOrNode};
+use crate::io::mouse_ops::{StartMouseMovingWindow, StartMouseMovingWindowOrNode};
 use crate::nav_highlight_flags::{
     ImGuiNavHighlightFlags, ImGuiNavHighlightFlags_NoRounding, ImGuiNavHighlightFlags_TypeThin,
 };
@@ -273,15 +273,15 @@ use crate::nav_ops::{
     GetNavTweakPressedAmount, NavMoveRequestButNoResultYet, NavMoveRequestCancel,
     NavMoveRequestForward, SetFocusID, SetNavID,
 };
-use crate::next_item_data_flags::{
+use crate::item::next_item_data_flags::{
     ImGuiNextItemDataFlags_HasOpen, ImGuiNextItemDataFlags_HasWidth,
 };
-use crate::next_window_data_flags::{
+use crate::window::next_window_data_flags::{
     ImGuiNextWindowDataFlags, ImGuiNextWindowDataFlags_HasSizeConstraint,
 };
-use crate::old_columns::ImGuiOldColumns;
-use crate::plot_array_getter_data::ImGuiPlotArrayGetterData;
-use crate::plot_type::{ImGuiPlotType, ImGuiPlotType_Histogram, ImGuiPlotType_Lines};
+use crate::table::old_columns::ImGuiOldColumns;
+use crate::widgets::plot_array_getter_data::ImGuiPlotArrayGetterData;
+use crate::widgets::plot_type::{ImGuiPlotType, ImGuiPlotType_Histogram, ImGuiPlotType_Lines};
 use crate::popup_data::ImGuiPopupData;
 use crate::popup_flags::{ImGuiPopupFlags_MouseButtonRight, ImGuiPopupFlags_None};
 use crate::popup_ops::{
@@ -289,17 +289,16 @@ use crate::popup_ops::{
     FindBestWindowPosForPopupEx, GetPopupAllowedExtentRect, IsPopupOpen, OpenPopup, OpenPopupEx,
     OpenPopupOnItemClick,
 };
-use crate::popup_position_policy::ImGuiPopupPositionPolicy_ComboBox;
-use crate::ptr_or_index::ImGuiPtrOrIndex;
+use crate::widgets::popup_position_policy::ImGuiPopupPositionPolicy_ComboBox;
 use crate::rect::{ImRect, IsRectVisible, IsRectVisible2};
-use crate::render_ops::{
+use crate::drawing::render_ops::{
     FindRenderedTextEnd, RenderArrow, RenderArrowDockMenu, RenderArrowPointingAt, RenderBullet,
     RenderCheckMark, RenderColorRectWithAlphaCheckerboard, RenderFrame, RenderFrameBorder,
     RenderNavHighlight, RenderRectFilledRangeH, RenderText, RenderTextClipped, RenderTextEllipsis,
     RenderTextWrapped,
 };
-use crate::scrolling_ops::{GetScrollMaxY, SetScrollY};
-use crate::selectable_flags::{
+use crate::widgets::scrolling_ops::{GetScrollMaxY, SetScrollY};
+use crate::widgets::selectable_flags::{
     ImGuiSelectableFlags, ImGuiSelectableFlags_AllowDoubleClick,
     ImGuiSelectableFlags_AllowItemOverlap, ImGuiSelectableFlags_Disabled,
     ImGuiSelectableFlags_DontClosePopups, ImGuiSelectableFlags_DrawHoveredWhenHeld,
@@ -308,13 +307,13 @@ use crate::selectable_flags::{
     ImGuiSelectableFlags_SelectOnRelease, ImGuiSelectableFlags_SetNavIdOnHover,
     ImGuiSelectableFlags_SpanAllColumns, ImGuiSelectableFlags_SpanAvailWidth,
 };
-use crate::separator_flags::{
+use crate::widgets::separator_flags::{
     ImGuiSeparatorFlags, ImGuiSeparatorFlags_Horizontal, ImGuiSeparatorFlags_SpanAllColumns,
     ImGuiSeparatorFlags_Vertical,
 };
 use crate::settings_ops::MarkIniSettingsDirty;
-use crate::shade_verts_ops::ShadeVertsLinearColorGradientKeepAlpha;
-use crate::shrink_width_item::ImGuiShrinkWidthItem;
+use crate::drawing::shade_verts_ops::ShadeVertsLinearColorGradientKeepAlpha;
+use crate::widgets::shrink_width_item::ImGuiShrinkWidthItem;
 use crate::slider_flags::{
     ImGuiSliderFlags, ImGuiSliderFlags_AlwaysClamp, ImGuiSliderFlags_Logarithmic,
     ImGuiSliderFlags_NoInput, ImGuiSliderFlags_NoRoundToFormat, ImGuiSliderFlags_ReadOnly,
@@ -329,8 +328,8 @@ use crate::stb::stb_textedit::{
 };
 use crate::stb::stb_undo_record::StbUndoRecord;
 use crate::stb::stb_undo_state::StbUndoState;
-use crate::storage::ImGuiStorage;
-use crate::string_ops::{
+use crate::core::storage::ImGuiStorage;
+use crate::core::string_ops::{
     ImFormatString, ImFormatStringToTempBufferV, ImStrbolW, ImStrncpy,
     ImStrTrimBlanks, ImTextCharFromUtf8, ImTextCountCharsFromUtf8, ImTextCountUtf8BytesFromStr,
     ImTextStrFromUtf8, ImTextStrToUtf8, str_to_const_c_char_ptr,
@@ -344,8 +343,8 @@ use crate::style_var::{
     ImGuiStyleVar_ItemSpacing, ImGuiStyleVar_WindowMinSize, ImGuiStyleVar_WindowPadding,
     ImGuiStyleVar_WindowRounding,
 };
-use crate::tab_bar::ImGuiTabBar;
-use crate::tab_bar_flags::{
+use crate::widgets::tab_bar::ImGuiTabBar;
+use crate::widgets::tab_bar_flags::{
     ImGuiTabBarFlags, ImGuiTabBarFlags_AutoSelectNewTabs, ImGuiTabBarFlags_DockNode,
     ImGuiTabBarFlags_FittingPolicyMask_, ImGuiTabBarFlags_FittingPolicyResizeDown,
     ImGuiTabBarFlags_FittingPolicyScroll, ImGuiTabBarFlags_IsFocused,
@@ -353,9 +352,9 @@ use crate::tab_bar_flags::{
     ImGuiTabBarFlags_NoTooltip, ImGuiTabBarFlags_Reorderable, ImGuiTabBarFlags_SaveSettings,
     ImGuiTabBarFlags_TabListPopupButton,
 };
-use crate::tab_bar_section::ImGuiTabBarSection;
-use crate::tab_item::ImGuiTabItem;
-use crate::tab_item_flags::{
+use crate::widgets::tab_bar_section::ImGuiTabBarSection;
+use crate::widgets::tab_item::ImGuiTabItem;
+use crate::widgets::tab_item_flags::{
     ImGuiTabItemFlags, ImGuiTabItemFlags_Button, ImGuiTabItemFlags_Leading,
     ImGuiTabItemFlags_NoCloseButton, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton,
     ImGuiTabItemFlags_NoPushId, ImGuiTabItemFlags_NoReorder, ImGuiTabItemFlags_NoTooltip,
@@ -371,9 +370,9 @@ use crate::text_flags::{
     ImGuiTextFlags, ImGuiTextFlags_None, ImGuiTextFlags_NoWidthForLargeClippedText,
 };
 use crate::text_ops::{CalcTextSize, GetTextLineHeightWithSpacing, Text, TextEx};
-use crate::tooltip_flags::ImGuiTooltipFlags_OverridePreviousTooltip;
-use crate::tooltip_ops::{BeginTooltipEx, EndTooltip};
-use crate::tree_node_flags::{
+use crate::widgets::tooltip_flags::ImGuiTooltipFlags_OverridePreviousTooltip;
+use crate::widgets::tooltip_ops::{BeginTooltipEx, EndTooltip};
+use crate::widgets::tree_node_flags::{
     ImGuiTreeNodeFlags, ImGuiTreeNodeFlags_AllowItemOverlap, ImGuiTreeNodeFlags_Bullet,
     ImGuiTreeNodeFlags_ClipLabelForTrailingButton, ImGuiTreeNodeFlags_CollapsingHeader,
     ImGuiTreeNodeFlags_DefaultOpen, ImGuiTreeNodeFlags_Framed, ImGuiTreeNodeFlags_FramePadding,
@@ -382,12 +381,12 @@ use crate::tree_node_flags::{
     ImGuiTreeNodeFlags_OpenOnDoubleClick, ImGuiTreeNodeFlags_Selected,
     ImGuiTreeNodeFlags_SpanAvailWidth, ImGuiTreeNodeFlags_SpanFullWidth,
 };
-use crate::type_defs::{ImguiHandle, ImGuiInputTextCallback, ImTextureID, ImWchar};
-use crate::utils::{flag_clear, flag_set, ImQsort};
-use crate::vec2::ImVec2;
-use crate::vec4::ImVec4;
-use crate::viewport_ops::{GetMainViewport, SetCurrentViewport};
-use crate::widget_ops::{PopTextWrapPos, PushTextWrapPos};
+use crate::core::type_defs::{ImguiHandle, ImGuiInputTextCallback, ImTextureID, ImWchar};
+use crate::core::utils::{flag_clear, flag_set, ImQsort};
+use crate::core::vec2::ImVec2;
+use crate::core::vec4::ImVec4;
+use crate::viewport::viewport_ops::{GetMainViewport, SetCurrentViewport};
+use crate::viewport::widget_ops::{PopTextWrapPos, PushTextWrapPos};
 use crate::window::find::FindWindowByName;
 use crate::window::focus::{FocusTopMostWindowUnderOne, FocusWindow, SetItemDefaultFocus};
 use crate::window::ops::{
@@ -408,7 +407,7 @@ use crate::window::window_flags::{
 use crate::window::ImguiWindow;
 use crate::{
     button_ops, data_type_ops, drag, GImGui, hash_string, ImguiViewport,
-    input_num_ops, layout_ops, popup_ops, radio_button, scrolling_ops, separator, stb, text_ops,
+    input_num_ops, popup_ops, stb, text_ops,
 };
 use crate::{CalcTextSize, GetTextLineHeight, GetTextLineHeightWithSpacing, Text};
 use libc::{
@@ -419,7 +418,8 @@ use std::borrow::Borrow;
 use std::env::args;
 use std::ops::Index;
 use std::ptr::{null, null_mut};
-use crate::widgets::checkbox_ops; // Time for drag-hold to activate items accepting the ImGuiButtonFlags_PressedOnDragDropHold button behavior.
+use crate::layout::layout_ops;
+use crate::widgets::{checkbox_ops, radio_button, scrolling_ops, separator}; // Time for drag-hold to activate items accepting the ImGuiButtonFlags_PressedOnDragDropHold button behavior.
 
 //-------------------------------------------------------------------------
 // [SECTION] Widgets: InputText, InputTextMultiline, InputTextWithHint

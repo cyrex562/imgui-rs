@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::direction::{ImGuiDir, ImGuiDir_None};
+use crate::core::direction::{ImGuiDir, ImGuiDir_None};
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::docking::dock_request_type::{ImGuiDockRequestType, ImGuiDockRequestType_None};
 use crate::window::ImguiWindow;

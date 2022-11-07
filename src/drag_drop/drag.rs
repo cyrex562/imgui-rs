@@ -1,4 +1,4 @@
-use crate::activate_flags::IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT;
+use crate::widgets::activate_flags::IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT;
 use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::color::{ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered};
 use crate::data_type::{
@@ -6,26 +6,26 @@ use crate::data_type::{
 };
 use crate::data_type_info::GDATA_TYPE_INFO;
 use crate::data_type_ops::DataTypeCompare;
-use crate::direction::{ImGuiDir_Left, ImGuiDir_Right};
-use crate::group_ops::{BeginGroup, EndGroup};
-use crate::id_ops::{push_int_id, push_str_id, ClearActiveID, pop_win_id_from_stack, SetActiveID};
+use crate::core::direction::{ImGuiDir_Left, ImGuiDir_Right};
+use crate::widgets::group_ops::{BeginGroup, EndGroup};
+use crate::core::id_ops::{push_int_id, push_str_id, ClearActiveID, pop_win_id_from_stack, SetActiveID};
 use crate::input_ops::{IsKeyDown, IsMouseDragPastThreshold, IsMousePosValid};
-use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
-use crate::item_flags::{ImGuiItemFlags_Inputable, ImGuiItemFlags_ReadOnly};
-use crate::item_ops::{
+use crate::io::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Mouse, ImGuiInputSource_Nav};
+use crate::item::item_flags::{ImGuiItemFlags_Inputable, ImGuiItemFlags_ReadOnly};
+use crate::item::item_ops::{
     CalcItemWidth, ItemAdd, ItemHoverable, ItemSize, MarkItemEdited, PopItemWidth,
     PushMultiItemsWidths,
 };
-use crate::item_status_flags::ImGuiItemStatusFlags_FocusedByTabbing;
-use crate::key::{
+use crate::item::item_status_flags::ImGuiItemStatusFlags_FocusedByTabbing;
+use crate::io::key::{
     ImGuiKey_NavGamepadTweakFast, ImGuiKey_NavGamepadTweakSlow, ImGuiKey_NavKeyboardTweakFast,
     ImGuiKey_NavKeyboardTweakSlow,
 };
-use crate::layout_ops::same_line;
-use crate::math_ops::{ImMax, ImMin};
+use crate::layout::layout_ops::same_line;
+use crate::core::math_ops::{ImMax, ImMin};
 use crate::nav_ops::{GetNavTweakPressedAmount, SetFocusID};
 use crate::rect::ImRect;
-use crate::render_ops::{
+use crate::drawing::render_ops::{
     FindRenderedTextEnd, RenderFrame, RenderNavHighlight, RenderText, RenderTextClipped,
 };
 use crate::slider_flags::{
@@ -37,9 +37,9 @@ use crate::slider_ops::ScaleRatioFromValueT;
 use crate::style_ops::GetColorU32;
 use crate::text_flags::ImGuiTextFlags_None;
 use crate::text_ops::CalcTextSize;
-use crate::type_defs::ImguiHandle;
-use crate::utils::{flag_clear, flag_set};
-use crate::vec2::ImVec2;
+use crate::core::type_defs::ImguiHandle;
+use crate::core::utils::{flag_clear, flag_set};
+use crate::core::vec2::ImVec2;
 use crate::window::focus::FocusWindow;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;

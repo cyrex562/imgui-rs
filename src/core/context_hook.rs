@@ -1,5 +1,5 @@
 use crate::core::context::ImguiContext;
-use crate::type_defs::ImguiHandle;
+use crate::core::type_defs::ImguiHandle;
 use libc::{c_int, c_void};
 
 pub type ImguiContextHookType = c_int;

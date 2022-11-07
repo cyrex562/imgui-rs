@@ -1,8 +1,8 @@
 use crate::a_imgui_cpp::GImGui;
 use crate::core::context::ImguiContext;
 use crate::imgui::GImGui;
-use crate::math_ops::ImMax;
-use crate::vec2::ImVec2;
+use crate::core::math_ops::ImMax;
+use crate::core::vec2::ImVec2;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
 use libc::c_float;

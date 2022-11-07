@@ -1,10 +1,10 @@
-use crate::imvec1::ImVec1;
-use crate::layout_type::ImGuiLayoutType;
+use crate::core::imvec1::ImVec1;
+use crate::layout::layout_type::ImGuiLayoutType;
 use crate::nav_layer::ImGuiNavLayer;
-use crate::old_columns::ImGuiOldColumns;
-use crate::storage::ImGuiStorage;
-use crate::type_defs::ImguiHandle;
-use crate::vec2::ImVec2;
+use crate::table::old_columns::ImGuiOldColumns;
+use crate::core::storage::ImGuiStorage;
+use crate::core::type_defs::ImguiHandle;
+use crate::core::vec2::ImVec2;
 use crate::window::ImguiWindow;
 use libc::{c_float, c_int, c_short};
 

@@ -2,8 +2,8 @@
 
 use libc::c_float;
 use crate::rect::ImRect;
-use crate::layout_type::ImGuiLayoutType;
-use crate::vec2::ImVec2;
+use crate::layout::layout_type::ImGuiLayoutType;
+use crate::core::vec2::ImVec2;
 
 // Storage data for BeginComboPreview()/EndComboPreview()
 #[derive(Default, Debug, Clone, Copy)]

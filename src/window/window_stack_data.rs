@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
-use crate::last_item_data::ImGuiLastItemData;
-use crate::stack_sizes::ImGuiStackSizes;
+use crate::item::last_item_data::ImGuiLastItemData;
+use crate::core::stack_sizes::ImGuiStackSizes;
 use crate::window::ImguiWindow;
 
 // Data saved for each window pushed into the stack

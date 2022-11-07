@@ -6,42 +6,42 @@ use crate::core::condition::ImGuiCond_Always;
 use crate::core::constants::{DOCKING_SPLITTER_SIZE, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::docking::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_AutoHideTabBar, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_KeepAliveOnly, ImGuiDockNodeFlags_LocalFlagsTransferMask_, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingInCentralNode, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_None, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoWindowMenuButton, ImGuiDockNodeFlags_PassthruCentralNode, ImGuiDockNodeFlags_SharedFlagsInheritMask_};
-use crate::data_authority::{IM_GUI_DATA_AUTHORITY_AUTO, IM_GUI_DATA_AUTHORITY_DOCK_NODE, IM_GUI_DATA_AUTHORITY_WINDOW};
+use crate::core::data_authority::{IM_GUI_DATA_AUTHORITY_AUTO, IM_GUI_DATA_AUTHORITY_DOCK_NODE, IM_GUI_DATA_AUTHORITY_WINDOW};
 
-use crate::direction::{ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
+use crate::core::direction::{ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
 use crate::dock_context_ops::{DockContextAddNode, DockContextRemoveNode};
 use crate::docking::dock_node_state::{ImGuiDockNodeState_HostWindowHiddenBecauseSingleWindow, ImGuiDockNodeState_HostWindowHiddenBecauseWindowsAreResizing};
 use crate::docking::dock_node_tree_info::ImGuiDockNodeTreeInfo;
 use crate::docking::dock_preview_data::ImGuiDockPreviewData;
 use crate::drag_drop_ops::GetDragDropPayload;
-use crate::draw_flags::ImDrawFlags;
-use crate::draw_list::ImDrawList;
+use crate::drawing::draw_flags::ImDrawFlags;
+use crate::drawing::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::frame_ops::GetFrameHeight;
 use crate::GImGui;
-use crate::id_ops::{id_from_str, pop_win_id_from_stack, push_str_id, push_int_id, PushOverrideID};
+use crate::core::id_ops::{id_from_str, pop_win_id_from_stack, push_str_id, push_int_id, PushOverrideID};
 use crate::a_imgui_cpp::{BeginDockableDragDropTarget, DockSettingsRenameNodeReferences};
-use crate::item_ops::{IsItemActive, PopItemFlag, PushItemFlag};
-use crate::layout_ops::same_line;
+use crate::item::item_ops::{IsItemActive, PopItemFlag, PushItemFlag};
+use crate::layout::layout_ops::same_line;
 use crate::popup_ops::{BeginPopup, EndPopup, IsPopupOpen, IsPopupOpenWithStrId, OpenPopup};
 use crate::rect::ImRect;
-use crate::render_ops::{CalcRoundingFlagsForRectInRect, RenderRectFilledWithHole};
-use crate::string_ops::str_to_const_c_char_ptr;
+use crate::drawing::render_ops::{CalcRoundingFlagsForRectInRect, RenderRectFilledWithHole};
+use crate::core::string_ops::str_to_const_c_char_ptr;
 use crate::style_ops::{GetColorU32, PopStyleColor, PushStyleColor};
-use crate::tab_bar::ImGuiTabBar;
-use crate::tab_item_flags::{ImGuiTabItemFlags, ImGuiTabItemFlags_Button, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton, ImGuiTabItemFlags_None, ImGuiTabItemFlags_Preview, ImGuiTabItemFlags_UnsavedDocument, ImGuiTabItemFlags_Unsorted};
-use crate::type_defs::{ImguiHandle, INVALID_IMGUI_HANDLE};
+use crate::widgets::tab_bar::ImGuiTabBar;
+use crate::widgets::tab_item_flags::{ImGuiTabItemFlags, ImGuiTabItemFlags_Button, ImGuiTabItemFlags_NoCloseWithMiddleMouseButton, ImGuiTabItemFlags_None, ImGuiTabItemFlags_Preview, ImGuiTabItemFlags_UnsavedDocument, ImGuiTabItemFlags_Unsorted};
+use crate::core::type_defs::{ImguiHandle, INVALID_IMGUI_HANDLE};
 use crate::input_ops::IsMouseClicked;
-use crate::math_ops::{ImMax, ImMin};
-use crate::mouse_ops::{StartMouseMovingWindow, StartMouseMovingWindowOrNode};
+use crate::core::math_ops::{ImMax, ImMin};
+use crate::io::mouse_ops::{StartMouseMovingWindow, StartMouseMovingWindowOrNode};
 use crate::nav_layer::{ImGuiNavLayer_Main, ImGuiNavLayer_Menu};
 use crate::nav_ops::{ImGetDirQuadrantFromDelta, NavInitWindow};
 use crate::settings_ops::MarkIniSettingsDirty;
-use crate::tab_bar_flags::{ImGuiTabBarFlags_AutoSelectNewTabs, ImGuiTabBarFlags_DockNode, ImGuiTabBarFlags_IsFocused, ImGuiTabBarFlags_NoCloseWithMiddleMouseButton, ImGuiTabBarFlags_Reorderable, ImGuiTabBarFlags_SaveSettings};
-use crate::tab_item::ImGuiTabItem;
-use crate::utils::{flag_clear, flag_set, ImQsort, is_not_null};
-use crate::vec2::ImVec2;
-use crate::vec4::ImVec4;
+use crate::widgets::tab_bar_flags::{ImGuiTabBarFlags_AutoSelectNewTabs, ImGuiTabBarFlags_DockNode, ImGuiTabBarFlags_IsFocused, ImGuiTabBarFlags_NoCloseWithMiddleMouseButton, ImGuiTabBarFlags_Reorderable, ImGuiTabBarFlags_SaveSettings};
+use crate::widgets::tab_item::ImGuiTabItem;
+use crate::core::utils::{flag_clear, flag_set, ImQsort, is_not_null};
+use crate::core::vec2::ImVec2;
+use crate::core::vec4::ImVec4;
 use crate::window::find::IsWindowWithinBeginStackOf;
 use crate::window::focus::FocusWindow;
 use crate::window::ImguiWindow;
@@ -214,7 +214,7 @@ pub unsafe fn DockNodeMoveChildNodes(dst_node: *mut ImGuiDockNode, src_node: *mu
 pub unsafe fn DockNodeMoveWindows(dst_node: *mut ImGuiDockNode, src_node: *mut ImGuiDockNode) {
     // Insert tabs in the same orders as currently ordered (node.Windows isn't ordered)
     // IM_ASSERT(src_node && dst_node && dst_node != src_node);
-    crate::tab_bar::ImGuiTabBar * src_tab_bar = src_node.TabBar;
+    crate::widgets::tab_bar::ImGuiTabBar * src_tab_bar = src_node.TabBar;
     if src_tab_bar != None {}
     // IM_ASSERT(src_node.Windows.Size <= src_node.TabBar.Tabs.Size);
 
@@ -917,7 +917,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: &mut I
     // This is to facilitate computing those ID from the outside, and will affect more or less only the ID of the collapse button, popup and tabs,
     // as docked windows themselves will override the stack with their own root ID.
     PushOverrideID(g, node.ID);
-    crate::tab_bar::ImGuiTabBar * tab_bar = node.TabBar;
+    crate::widgets::tab_bar::ImGuiTabBar * tab_bar = node.TabBar;
     let mut tab_bar_is_recreated: bool = (tab_bar == null_mut()); // Tab bar are automatically destroyed when a node gets hidden
     if tab_bar == None {
         DockNodeAddTabBar(node);
@@ -1098,7 +1098,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: &mut I
     //let close_button_is_visible: bool = close_button_is_enabled; // Most people would expect this behavior of not even showing the button (leaving a hole since we can't claim that space as other windows in the tba bar have one)
     if close_button_is_visible {
         if !close_button_is_enabled {
-            PushItemFlag(crate::item_flags::ImGuiItemFlags_Disabled, true);
+            PushItemFlag(crate::item::item_flags::ImGuiItemFlags_Disabled, true);
             PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_Text] * ImVec4(1.0, 1.0, 1.0, 0.40f32));
         }
         if CloseButton(host_window.id_by_string(null(), str_to_const_c_char_ptr("#CLOSE")), close_button_pos) {
@@ -1174,7 +1174,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: &mut I
 
 pub unsafe fn DockNodeAddTabBar(node: *mut ImGuiDockNode) {
     // IM_ASSERT(node.TabBar == NULL);
-    node.TabBar = IM_NEW(crate::tab_bar::ImGuiTabBar);
+    node.TabBar = IM_NEW(crate::widgets::tab_bar::ImGuiTabBar);
 }
 
 pub unsafe fn DockNodeRemoveTabBar(node: *mut ImGuiDockNode) {

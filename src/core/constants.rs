@@ -1,4 +1,4 @@
-use crate::type_defs::ImguiHandle;
+use crate::core::type_defs::ImguiHandle;
 use libc::size_t;
 
 // When using CTRL+TAB (or Gamepad Square+L/R) we delay the visual a little in order to reduce visual noise doing a fast switch.

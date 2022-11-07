@@ -1,9 +1,9 @@
 use crate::core::context::ImguiContext;
 use crate::frame_ops::GetFrameHeight;
-use crate::math_ops::ImClamp;
+use crate::core::math_ops::ImClamp;
 use crate::rect::ImRect;
-use crate::utils::{flag_clear, is_not_null};
-use crate::vec2::ImVec2;
+use crate::core::utils::{flag_clear, is_not_null};
+use crate::core::vec2::ImVec2;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::window_flags::ImGuiWindowFlags_NoTitleBar;
 use crate::window::ImguiWindow;

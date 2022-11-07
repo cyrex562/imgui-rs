@@ -2,16 +2,16 @@ use crate::color::{
     ImGuiCol_CheckMark, ImGuiCol_FrameBg, ImGuiCol_FrameBgActive, ImGuiCol_FrameBgHovered,
 };
 use crate::frame_ops::GetFrameHeight;
-use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_MixedValue};
-use crate::item_ops::{ItemAdd, ItemSize, MarkItemEdited};
-use crate::item_status_flags::{ImGuiItemStatusFlags_Checkable, ImGuiItemStatusFlags_Checked};
-use crate::math_ops::ImMax;
+use crate::item::item_flags::{ImGuiItemFlags, ImGuiItemFlags_MixedValue};
+use crate::item::item_ops::{ItemAdd, ItemSize, MarkItemEdited};
+use crate::item::item_status_flags::{ImGuiItemStatusFlags_Checkable, ImGuiItemStatusFlags_Checked};
+use crate::core::math_ops::ImMax;
 use crate::rect::ImRect;
-use crate::render_ops::{RenderCheckMark, RenderFrame, RenderNavHighlight, RenderText};
+use crate::drawing::render_ops::{RenderCheckMark, RenderFrame, RenderNavHighlight, RenderText};
 use crate::style_ops::GetColorU32;
 use crate::text_ops::CalcTextSize;
-use crate::type_defs::ImguiHandle;
-use crate::vec2::ImVec2;
+use crate::core::type_defs::ImguiHandle;
+use crate::core::vec2::ImVec2;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
 use crate::{button_ops, GImGui};

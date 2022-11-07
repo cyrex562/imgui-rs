@@ -1,7 +1,7 @@
 use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_NONE};
 use crate::docking::dock_node_flags::ImGuiDockNodeFlags;
-use crate::type_defs::ImguiHandle;
-use crate::vec2::ImVec2ih;
+use crate::core::type_defs::ImguiHandle;
+use crate::core::vec2::ImVec2ih;
 use libc::c_char;
 
 // Persistent Settings data, stored contiguously in SettingsNodes (sizeof() ~32 bytes)

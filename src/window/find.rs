@@ -1,8 +1,8 @@
 use crate::core::context::ImguiContext;
 use crate::rect::ImRect;
-use crate::type_defs::ImguiHandle;
-use crate::utils::{flag_clear, is_not_null};
-use crate::vec2::ImVec2;
+use crate::core::type_defs::ImguiHandle;
+use crate::core::utils::{flag_clear, is_not_null};
+use crate::core::vec2::ImVec2;
 use crate::window::ops::GetWindowDisplayLayer;
 use crate::window::window_flags::{
     ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_Modal,
