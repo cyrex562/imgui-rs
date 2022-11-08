@@ -44,8 +44,8 @@ pub struct ImguiViewport {
     pub DrawListsLastFrame: [c_int; 2],
     // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.MouseDrawCursor is set and to draw most debug overlays.
     pub DrawLists: [ImguiHandle; 2],
-    pub DrawDataP: ImDrawData,
-    pub DrawDataBuilder: ImDrawDataBuilder,
+    // pub DrawDataP: ImDrawData,
+    // pub DrawDataBuilder: ImDrawDataBuilder,
     pub LastPlatformPos: ImVec2,
     pub LastPlatformSize: ImVec2,
     pub LastRendererSize: ImVec2,

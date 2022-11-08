@@ -15,6 +15,8 @@ log = "0.4.17"
 fern = "0.6.1"
 libc = "0.2"
 bitfield = "0.14"
+ron = "0.8"
+#serde = "1.0.147"
 
 [dependencies.windows]
 version = "0.40"
@@ -28,6 +30,12 @@ features = [
     "Gaming",
     "UI",
     "Win32",
+]
+
+[dependencies.serde]
+version = "1.0.147"
+features = [
+    "derive"
 ]
 
 [lib]

@@ -152,7 +152,7 @@ static ImGuiKey ImGui_ImplAndroid_KeyCodeToImGuiKey(int32_t key_code)
 
 int32_t ImGui_ImplAndroid_HandleInputEvent(AInputEvent* input_event)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     int32_t event_type = AInputEvent_getType(input_event);
     switch (event_type)
     {
@@ -243,7 +243,7 @@ bool ImGui_ImplAndroid_Init(ANativeWindow* window)
     g_Time = 0.0;
 
     // Setup backend capabilities flags
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     io.BackendPlatformName = "imgui_impl_android";
 
     return true;
@@ -255,7 +255,7 @@ void ImGui_ImplAndroid_Shutdown()
 
 void ImGui_ImplAndroid_NewFrame()
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
 
     // Setup display size (every frame to accommodate for window resizing)
     int32_t window_width = ANativeWindow_getWidth(g_Window);

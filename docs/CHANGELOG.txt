@@ -13,7 +13,7 @@ WIKI                    https://github.com/ocornut/imgui/wiki
 
 WHEN TO UPDATE?
 
-- Keeping your copy of Dear ImGui updated regularly is recommended.
+- Keeping your copy of Dear Imgui updated regularly is recommended.
 - It is generally safe to sync to the latest commit in master or docking branches
   The library is fairly stable and regressions tends to be fixed fast when reported.
 
@@ -26,7 +26,7 @@ HOW TO UPDATE?
 - If you are dropping this repository in your codebase, please leave the demo and text files in there, they will be useful.
 - You may diff your previous Changelog with the one you just copied and read that diff.
 - You may enable `IMGUI_DISABLE_OBSOLETE_FUNCTIONS` in imconfig.h to forcefully disable legacy names and symbols.
-  Doing it every once in a while is a good way to make sure you are not using obsolete symbols. Dear ImGui is in active development,
+  Doing it every once in a while is a good way to make sure you are not using obsolete symbols. Dear Imgui is in active development,
   and API updates have been a little more frequent lately. They are documented below and in imgui.cpp and should not affect all users.
 - Please report any issue!
 
@@ -262,7 +262,7 @@ Breaking Changes:
   - Added io.add_mouse_pos_event(), io.add_mouse_button_event(), io.add_mouse_wheel_event() functions,
     obsoleting writing directly to io.mouse_pos, io.mouse_down[], io.mouse_wheel, etc.
   - This enable input queue trickling to support low framerates. (#2787, #1992, #3383, #2525, #1320)
-  - For all calls to io new functions, the Dear ImGui context should be bound/current.
+  - For all calls to io new functions, the Dear Imgui context should be bound/current.
 - Reworked io keyboard input API: (#4921, #2625, #3724) [@thedmd, @ocornut]
   - Added io.add_key_event() function, obsoleting writing directly to io.KeyMap[], io.KeysDown[] arrays.
   - For keyboard modifiers, you can call io.add_key_event() with ImGuiKey_ModXXX values,
@@ -309,13 +309,13 @@ Breaking Changes:
 - Backends: SDL: Added SDL_Renderer* parameter to ImGui_ImplSDL2_InitForSDLRenderer(), so backend can call
   SDL_GetRendererOutputSize() to obtain framebuffer size valid for hi-dpi. (#4927) [@Clownacy]
 - Commented out redirecting functions/enums names that were marked obsolete in 1.69, 1.70, 1.71, 1.72 (March-July 2019)
-  - ImGui::SetNextTreeNodeOpen()        -> use ImGui::SetNextItemOpen()
-  - ImGui::GetContentRegionAvailWidth() -> use ImGui::GetContentRegionAvail().x
-  - ImGui::TreeAdvanceToLabelPos()      -> use ImGui::SetCursorPosX(ImGui::GetCursorPosX() + ImGui::GetTreeNodeToLabelSpacing());
+  - Imgui::SetNextTreeNodeOpen()        -> use Imgui::SetNextItemOpen()
+  - Imgui::GetContentRegionAvailWidth() -> use Imgui::GetContentRegionAvail().x
+  - Imgui::TreeAdvanceToLabelPos()      -> use Imgui::SetCursorPosX(Imgui::GetCursorPosX() + Imgui::GetTreeNodeToLabelSpacing());
   - ImFontAtlas::CustomRect             -> use ImFontAtlasCustomRect
   - ImGuiColorEditFlags_RGB/HSV/HEX     -> use ImGuiColorEditFlags_DisplayRGB/HSV/Hex
 - Removed io.ImeSetInputScreenPosFn() in favor of more flexible io.SetPlatformImeDataFn() for IME support.
-  Because this field was mostly only ever used by Dear ImGui internally, not by backends nor the vast majority
+  Because this field was mostly only ever used by Dear Imgui internally, not by backends nor the vast majority
   of user code, this should only affect a very small fraction for users who are already very IME-aware.
 - Obsoleted 'void* io.ime_window_handle' in favor of writing to 'void* ImGuiViewport::platform_handle_raw'.
   This removes an incompatibility between 'master' and 'multi-viewports' backends and toward enabling
@@ -359,13 +359,13 @@ Other Changes:
 - Backends: Win32: Submit keys and key mods using io.add_key_event(). (#2625, #4921)
 - Backends: Win32: Retrieve mouse position using WM_MOUSEMOVE/WM_MOUSELEAVE + fallback when focused but not hovered/captured.
 - Backends: Win32: Submit mouse data using io.add_mouse_pos_event(), add_mouse_button_event(), add_mouse_wheel_event() functions. (#4921)
-- Backends: Win32: Maintain a MouseButtonsDown mask instead of using ImGui::IsAnyMouseDown() which will be obsoleted.
+- Backends: Win32: Maintain a MouseButtonsDown mask instead of using Imgui::IsAnyMouseDown() which will be obsoleted.
 - Backends: Win32: Submit gamepad data using io.add_key_event/add_key_analog_event() functions, stopped writing to io.nav_inputs[]. (#4921)
 - Backends: SDL: Pass localized keys (matching keyboard layout). Fix e.g. CTRL+A, CTRL+Z, CTRL+Y shortcuts. (#456, #2625)
 - Backends: SDL: Submit key data using io.add_key_event(). Submit keymods using io.AddKeyModsEvent() at the same time. (#2625)
 - Backends: SDL: Retrieve mouse position using SDL_MOUSEMOTION/SDL_WINDOWEVENT_LEAVE + fallback when focused but not hovered/captured.
 - Backends: SDL: Submit mouse data using io.add_mouse_pos_event(), add_mouse_button_event(), add_mouse_wheel_event() functions. (#4921)
-- Backends: SDL: Maintain a MouseButtonsDown mask instead of using ImGui::IsAnyMouseDown() which will be obsoleted.
+- Backends: SDL: Maintain a MouseButtonsDown mask instead of using Imgui::IsAnyMouseDown() which will be obsoleted.
 - Backends: SDL: Submit gamepad data using io.add_key_event/add_key_analog_event() functions, stopped writing to io.nav_inputs[]. (#4921)
 - Backends: Allegro5: Submit keys using io.add_key_event(). Submit keymods using io.AddKeyModsEvent() at the same time. (#2625)
 - Backends: Allegro5: Submit mouse data using io.add_mouse_pos_event(), add_mouse_button_event(), add_mouse_wheel_event() functions. (#4921)
@@ -375,7 +375,7 @@ Other Changes:
 - Backends: OSX: Added basic Platform IME support. (#3108, #2598) [@liuliu]
 - Backends: OSX: Fix Game Controller nav mapping to use shoulder for both focusing and tweak speed. (#4759)
 - Backends: OSX: Fix building with old Xcode versions that are missing gamepad features. [@rokups]
-- Backends: OSX: Forward keyDown/keyUp events to OS when unused by Dear ImGui.
+- Backends: OSX: Forward keyDown/keyUp events to OS when unused by Dear Imgui.
 - Backends: Android, GLUT: Submit keys using io.add_key_event(). Submit keymods using io.AddKeyModsEvent() at the same time. (#2625)
 - Backends: Android, GLUT: Submit mouse data using io.add_mouse_pos_event(), add_mouse_button_event(), add_mouse_wheel_event() functions. (#4858)
 - Backends: OpenGL3: Fixed a buffer overflow in imgui_impl_opengl3_loader.h init (added in 1.86). (#4468, #4830) [@dymk]
@@ -403,7 +403,7 @@ Docking+viewports Branch:
   much better if they can (Win32 and GLFW 3.3+ backends can, SDL and GLFW 3.2 backends cannot, they are lacking data).
   A concrete example is: when dragging a viewport for docking, the viewport is marked with _NoInputs to allow us
   to pick the target viewports for docking. If the backend reports a viewport with _NoInputs when calling the
-  io.add_mouse_viewport_event() function, then Dear ImGui will revert to its flawed heuristic to find the viewport under.
+  io.add_mouse_viewport_event() function, then Dear Imgui will revert to its flawed heuristic to find the viewport under.
   By lowering those specs, we allow the SDL and more backend to support this, only relying on the heuristic in a few
   drag and drop situations rather that relying on it everywhere.
 - viewports: Fixed a CTRL+TAB crash with viewports enabled when the window list needs to appears in
@@ -504,7 +504,7 @@ Other Changes:
   enabling 'IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET' in the backend. (#3926) [@rokups]
 - Backends: SDL_Renderer: Fix for SDL 2.0.19+ RenderGeometryRaw() API signature change. (#4819) [@sridenour]
 - Backends: OSX: Generally fix keyboard support. Keyboard arrays indexed using kVK_* codes, e.g.
-  ImGui::IsKeyPressed(kVK_Space). Don't set mouse cursor shape unconditionally. Handle two fingers scroll
+  Imgui::IsKeyPressed(kVK_Space). Don't set mouse cursor shape unconditionally. Handle two fingers scroll
   cancel event. (#4759, #4253, #1873) [@stuartcarnie]
 - Backends: OSX: Add Game Controller support (need linking GameController framework) (#4759) [@stuartcarnie]
 - Backends: WebGPU: Passing explicit buffer sizes to wgpuRenderPassEncoderSetVertexBuffer() and
@@ -677,7 +677,7 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 Breaking Changes:
 
 - Commented out redirecting functions/enums names that were marked obsolete in 1.67 and 1.69 (March 2019):
-  - ImGui::GetOverlayDrawList() -> use ImGui::GetForegroundDrawList()
+  - Imgui::GetOverlayDrawList() -> use Imgui::GetForegroundDrawList()
   - ImFont::GlyphRangesBuilder  -> use ImFontGlyphRangesBuilder
 - Backends: OpenGL3: added a third source file "imgui_impl_opengl3_loader.h". [@rokups]
 - Backends: GLFW: backend now uses glfwSetCursorEnterCallback(). (#3751, #4377, #2445)
@@ -744,9 +744,9 @@ Other Changes:
   implying that the file is required.
 - Metrics: Fixed a crash when inspecting the individual draw command of a foreground drawlist. [@rokups]
 - Backends: Reorganized most backends (Win32, SDL, GLFW, OpenGL2/3, DX9/10/11/12, Vulkan, Allegro) to pull their
-  data from a single structure stored inside the main Dear ImGui context. This facilitate/allow usage of standard
+  data from a single structure stored inside the main Dear Imgui context. This facilitate/allow usage of standard
   backends with multiple-contexts BUT is only partially tested and not well supported. It is generally advised to
-  instead use the multi-viewports feature of docking branch where a single Dear ImGui context can be used across
+  instead use the multi-viewports feature of docking branch where a single Dear Imgui context can be used across
   multiple windows. (#586, #1851, #2004, #3012, #3934, #4141)
 - Backends: Win32: Rework to handle certain windows 8.1/10 features without a manifest. (#4200, #4191)
   - ImGui_ImplWin32_GetDpiScaleForMonitor() will handle per-monitor DPI on windows 10 without a manifest.
@@ -910,7 +910,7 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 Breaking Changes:
 
 - Removed redirecting functions/enums names that were marked obsolete in 1.66 (September 2018):
-    - ImGui::SetScrollHere() --> use ImGui::SetScrollHereY()
+    - Imgui::SetScrollHere() --> use Imgui::SetScrollHereY()
 - ImDrawList: upgraded add_polyline()/PathStroke()'s "bool closed" parameter to use "ImDrawFlags flags".
     - bool closed = false    --> use ImDrawFlags_None, or 0
     - bool closed = true     --> use ImDrawFlags_Closed
@@ -1026,7 +1026,7 @@ Breaking Changes:
 
 Other Changes:
 
-- viewports Added ImGui::GetMainViewport() as a way to get the bounds and work area of the host display. (#3789, #1542)
+- viewports Added Imgui::GetMainViewport() as a way to get the bounds and work area of the host display. (#3789, #1542)
   - In 'master' branch or without multi-viewports feature enabled:
     - GetMainViewport()->pos is always == (0,0)
     - GetMainViewport()->size is always == io.display_size
@@ -1108,16 +1108,16 @@ Breaking Changes:
 - Renamed ImDrawList::AddBezierCurve() to ImDrawList::add_bezier_cubic(). Kept inline redirection function (will obsolete).
 - Renamed ImDrawList::PathBezierCurveTo() to ImDrawList::PathBezierCubicCurveTo(). Kept inline redirection function (will obsolete).
 - Removed redirecting functions/enums names that were marked obsolete in 1.60 (April 2018):
-  - io.RenderDrawListsFn pointer                -> use ImGui::GetDrawData() value and call the render function of your backend
-  - ImGui::IsAnyWindowFocused()                 -> use ImGui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)
-  - ImGui::IsAnyWindowHovered()                 -> use ImGui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
+  - io.RenderDrawListsFn pointer                -> use Imgui::GetDrawData() value and call the render function of your backend
+  - Imgui::IsAnyWindowFocused()                 -> use Imgui::IsWindowFocused(ImGuiFocusedFlags_AnyWindow)
+  - Imgui::IsAnyWindowHovered()                 -> use Imgui::IsWindowHovered(ImGuiHoveredFlags_AnyWindow)
   - ImGuiStyleVar_Count_                        -> use ImGuiStyleVar_COUNT
   - ImGuiMouseCursor_Count_                     -> use ImGuiMouseCursor_COUNT
 - Removed redirecting functions/enums names that were marked obsolete in 1.61 (May 2018):
   - InputFloat (... int decimal_precision ...)  -> use InputFloat (... const char* format ...) with format = "%.Xf" where x was value for decimal_precision.
   - same for InputFloat2()/InputFloat3()/InputFloat4() variants taking a `int decimal_precision` parameter.
 - Removed redirecting functions/enums names that were marked obsolete in 1.63 (August 2018):
-  - ImGui::IsItemDeactivatedAfterChange()       -> use ImGui::IsItemDeactivatedAfterEdit().
+  - Imgui::IsItemDeactivatedAfterChange()       -> use Imgui::IsItemDeactivatedAfterEdit().
   - ImGuiCol_ModalWindowDarkening               -> use ImGuiCol_ModalWindowDimBg
   - ImGuiInputTextCallback                      -> use ImGuiTextEditCallback
   - ImGuiInputTextCallbackData                  -> use ImGuiTextEditCallbackData
@@ -1171,7 +1171,7 @@ Other Changes:
   It's essentially been always the case but it doesn't make much sense. Instead we will aim at exposing
   feedback and control of keyboard/gamepad navigation highlight and mouse hover disable flag. (#787, #2048)
 - Metrics: Fixed mishandling of ImDrawCmd::vtx_offset in wireframe mesh renderer.
-- Metrics: Rebranded as "Dear ImGui Metrics/Debugger" to clarify its purpose.
+- Metrics: Rebranded as "Dear Imgui Metrics/Debugger" to clarify its purpose.
 - ImDrawList: Added ImDrawList::AddQuadBezierCurve(), ImDrawList::PathQuadBezierCurveTo() quadratic bezier
   helpers. (#3127, #3664, #3665) [@aiekick]
 - fonts: Updated get_glyph_ranges_japanese() to include a larger 2999 ideograms selection of Joyo/Jinmeiyo
@@ -1206,7 +1206,7 @@ Other Changes:
 - Examples: Apple+Metal: Forward events down so OS key combination like Cmd+Q can work. (#3554) [@rokups]
 - Examples: Emscripten: Renamed example_emscripten/ to example_emscripten_opengl3/. (#3632)
 - Examples: Emscripten: Added 'make serve' helper to spawn a web-server on localhost. (#3705) [@Horki]
-- Examples: DirectX12: Move ImGui::Render() call above the first barrier to clarify its lack of effect on the graphics pipe.
+- Examples: DirectX12: Move Imgui::Render() call above the first barrier to clarify its lack of effect on the graphics pipe.
 - CI: Fix testing for windows DLL builds. (#3603, #3601) [@iboB]
 - Docs: Improved the wiki and added a https://github.com/ocornut/imgui/wiki/Useful-Widgets page. [@Xipiryon]
   [2021/05/20: moved to https://github.com/ocornut/imgui/wiki/Useful-Extensions]
@@ -1392,7 +1392,7 @@ Other Changes:
 - InputText, ImDrawList: Fixed assert triggering when drawing single line of text with more
   than ~16 KB characters. (Note that current code is going to show corrupted display if after
   clipping, more than 16 KB characters are visible in the same low-level ImDrawList::render_text()
-  call. ImGui-level functions such as TextUnformatted() are not affected. This is quite rare
+  call. Imgui-level functions such as TextUnformatted() are not affected. This is quite rare
   but it will be addressed later). (#3349)
 - Selectable: Fixed highlight/hit extent when used with horizontal scrolling (in or outside columns).
   Also fixed related text clipping when used in a column after the first one. (#3187, #3386)
@@ -1964,8 +1964,8 @@ Other Changes:
 - Scrolling: Made it possible for mouse wheel and navigation-triggered scrolling to override a call to
   SetScrollX()/SetScrollY(), making it possible to use a simpler stateless pattern for auto-scrolling:
      // (Submit items..)
-     if (ImGui::GetScrollY() >= ImGui::GetScrollMaxY())  // If scrolling at the already at the bottom..
-         ImGui::SetScrollHereY(1.0);                    // ..make last item fully visible
+     if (Imgui::GetScrollY() >= Imgui::GetScrollMaxY())  // If scrolling at the already at the bottom..
+         Imgui::SetScrollHereY(1.0);                    // ..make last item fully visible
 - Scrolling: Added SetScrollHereX(), SetScrollFromPosX() for completeness. (#1580) [@kevreco]
 - Scrolling: Mouse wheel scrolling while hovering a child window is automatically forwarded to parent window
   if scroll_max is zero on the scrolling axis.
@@ -2115,7 +2115,7 @@ Other Changes:
   with RasterizerFlags::MonoHinting for best results. (#2545) [@HolyBlackCat]
 - ImFontGlyphRangesBuilder: Fixed unnecessarily over-sized buffer, which incidentally was also not
   fully cleared. Fixed edge-case overflow when adding character 0xFFFF. (#2568). [@NIKE3500]
-- Demo: Added full "Dear ImGui" prefix to the title of "Dear ImGui Demo" and "Dear ImGui Metrics" windows.
+- Demo: Added full "Dear Imgui" prefix to the title of "Dear Imgui Demo" and "Dear Imgui Metrics" windows.
 - Backends: Add native Mac clipboard copy/paste default implementation in core library to match what we are
   dealing with Win32, and to facilitate integration in custom engines. (#2546) [@andrewwillmott]
 - Backends: OSX: imgui_impl_osx: Added mouse cursor support. (#2585, #1873) [@actboy168]
@@ -2193,7 +2193,7 @@ Other Changes:
 - ImDrawList: Improved algorithm for mitre joints on thick lines, preserving correct thickness up to 90 degrees
   angles, also faster to output. (#2518) [@rmitton]
 - Misc: Added IM_MALLOC/IM_FREE macros mimicking IM_NEW/IM_DELETE so user doesn't need to revert
-  to using the ImGui::MemAlloc()/MemFree() calls directly.
+  to using the Imgui::MemAlloc()/MemFree() calls directly.
 - Misc: Made IMGUI_CHECKVERSION() macro also check for matching size of ImDrawIdx.
 - Metrics: Added "Show windows rectangles" tool to visualize the different rectangles.
 - Demo: Improved trees in columns demo.
@@ -2337,7 +2337,7 @@ Other Changes:
   small window, as well as reducing visual noise/overlap.
 - ListBox: Better optimized when clipped / non-visible.
 - InputTextMultiline: Better optimized when clipped / non-visible.
-- font: Fixed high-level ImGui::CalcTextSize() used by most widgets from erroneously subtracting 1.0*scale to
+- font: Fixed high-level Imgui::CalcTextSize() used by most widgets from erroneously subtracting 1.0*scale to
   calculated text width. Among noticeable side-effects, it would make sequences of repeated Text/SameLine calls
   not align the same as a single call, and create mismatch between high-level size calculation and those performed
   with the lower-level ImDrawList api. (#792) [@SlNPacifist]
@@ -2571,7 +2571,7 @@ Breaking Changes:
 
 - style: Renamed ImGuiCol_ModalWindowDarkening to ImGuiCol_ModalWindowDimBg for consistency with other features.
   Kept redirection enum (will obsolete).
-- Changed ImGui::GetTime() return value from float to double to avoid accumulating floating point imprecision over time.
+- Changed Imgui::GetTime() return value from float to double to avoid accumulating floating point imprecision over time.
 - Removed per-window ImGuiWindowFlags_ResizeFromAnySide Beta flag in favor `io.ConfigResizeWindowsFromEdges=true` to
   enable the feature globally. (#1495)
   The feature is not currently enabled by default because it is not satisfying enough, but will eventually be.
@@ -2689,7 +2689,7 @@ Other Changes:
   - This change was motivated by the fact that adding support for the upcoming multi-viewport feature requires more work
     from the Platform and Renderer backends, and the amount of redundancy across files was becoming too difficult to
     maintain. If you use default backends, you'll benefit from an easy update path to support multi-viewports later
-    (for future ImGui 1.7x).
+    (for future Imgui 1.7x).
   - This is not strictly a breaking change if you keep your old backends, but when you'll want to fully update your backends,
     expect to have to reshuffle a few things.
   - Each example still has its own main.cpp which you may refer you to understand how to initialize and glue everything together.
@@ -2824,10 +2824,10 @@ Various internal refactoring have also been done, as part of the navigation work
 
 Breaking Changes:
 
-- Obsoleted the io.RenderDrawListsFn callback, you can call your graphics engine render function after ImGui::Render().
-  e.g. with example backends, call ImDrawData* draw_data = ImGui::GetDrawData(); ImGui_ImplXXXX_RenderDrawData(draw_data).
+- Obsoleted the io.RenderDrawListsFn callback, you can call your graphics engine render function after Imgui::Render().
+  e.g. with example backends, call ImDrawData* draw_data = Imgui::GetDrawData(); ImGui_ImplXXXX_RenderDrawData(draw_data).
 - Reorganized context handling to be more explicit: (#1599)
-  - YOU NOW NEED TO CALL ImGui::CreateContext() AT THE BEGINNING OF YOUR APP, AND CALL ImGui::DestroyContext() AT THE END.
+  - YOU NOW NEED TO CALL Imgui::CreateContext() AT THE BEGINNING OF YOUR APP, AND CALL Imgui::DestroyContext() AT THE END.
   - removed shutdown() function, as DestroyContext() serve this purpose. If you are using an old backend from the examples/ folder, remove the line that calls shutdown().
   - you may pass a ImFontAtlas* pointer to CreateContext() to share a font atlas between contexts. Otherwise CreateContext() will create its own font atlas instance.
   - removed allocator parameters from CreateContext(), they are now setup with SetAllocatorFunctions(), and shared by all contexts.
@@ -2869,7 +2869,7 @@ Other Changes:
 - Navigation: TreeNode: Added ImGuiTreeNodeFlags_NavLeftJumpsBackHere flag to allow Nav Left direction to jump back to parent tree node from any of its child. (#1079)
 - Navigation: io: Added io.config_flags (input), io.nav_active (output), io.nav_visible (output). (#787)
 - Context: Removed the default global context and font atlas instances, which caused various problems to users of multiple contexts and DLL users. (#1565, #1599)
-  YOU NOW NEED TO CALL ImGui::CreateContext() AT THE BEGINNING OF YOUR APP, AND CALL ImGui::DestroyContext() AT THE END. Existing apps will assert/crash without it.
+  YOU NOW NEED TO CALL Imgui::CreateContext() AT THE BEGINNING OF YOUR APP, AND CALL Imgui::DestroyContext() AT THE END. Existing apps will assert/crash without it.
 - Context: Added SetAllocatorFunctions() to rewire memory allocators (as a replacement to previous parameters to CreateContext()). Allocators are shared by all contexts and imgui helpers. (#1565, #586, #992, #1007, #1558)
 - Context: You may pass a ImFontAtlas to CreateContext() to specify a font atlas to share. Shared font atlas are not owned by the context and not destroyed along with it. (#1599)
 - Context: Added IMGUI_DISABLE_DEFAULT_ALLOCATORS to disable linking with malloc/free. (#1565, #586, #992, #1007, #1558)
@@ -2928,7 +2928,7 @@ Other Changes:
 - fonts: Moved extra_fonts/ to misc/fonts/.
 - ImFontAtlas: Fixed cfg.merge_mode not reusing existing glyphs if available (always overwrote).
 - ImFontAtlas: Handle stb_truetype stbtt_InitFont() and stbtt_PackBegin() possible failures more gracefully, GetTexDataAsRGBA32() won't crash during conversion. (#1527)
-- ImFontAtlas: Moved mouse cursor data out of ImGuiContext, fix drawing them with multiple contexts. Also remove the last remaining undesirable dependency on ImGui in imgui_draw.cpp. (#939)
+- ImFontAtlas: Moved mouse cursor data out of ImGuiContext, fix drawing them with multiple contexts. Also remove the last remaining undesirable dependency on Imgui in imgui_draw.cpp. (#939)
 - ImFontAtlas: Added ImFontAtlasFlags_NoPowerOfTwoHeight flag to disable padding font height to nearest power of two. (#1613)
 - ImFontAtlas: Added ImFontAtlasFlags_NoMouseCursors flag to disable baking software mouse cursors, mostly to save texture memory on very low end hardware. (#1613)
 - ImDrawList: Fixed add_rect() with anti-aliasing disabled (lower-right corner pixel was often missing, rounding looks a little better.) (#1646)
@@ -2943,7 +2943,7 @@ Other Changes:
 - Misc: Added IMGUI_USER_CONFIG to define a custom configuration filename. (#255, #1573, #1144, #41)
 - Misc: Added IMGUI_STB_TRUETYPE_FILENAME and IMGUI_STB_RECT_PACK_FILENAME compile time directives to use another version of the stb_ files.
 - Misc: Updated stb_rect_pack from 0.10 to 0.11 (minor changes).
-  (Those flags are not used by ImGui itself, they only exists to make it easy for the engine/backend to pass information to the application in a standard manner.)
+  (Those flags are not used by Imgui itself, they only exists to make it easy for the engine/backend to pass information to the application in a standard manner.)
 - Metrics: Added display of columns state.
 - Demo: Improved Selectable() examples. (#1528)
 - Demo: Tweaked the Child demos, added a menu bar to the second child to test some navigation functions.
@@ -2997,7 +2997,7 @@ Breaking Changes:
 - ImDrawList: Removed 'bool anti_aliased = true' final parameter of `ImDrawList::add_polyline()` and `ImDrawList::add_convex_poly_filled()`. Prefer manipulating ImDrawList::flags if you need to toggle them during the frame.
 - style, ImDrawList: Renamed `style.AntiAliasedShapes` to `style.AntiAliasedFill` for consistency and as a way to explicitly break code that manipulate those flag at runtime. You can now manipulate ImDrawList::flags.
 - style, Begin: Removed `ImGuiWindowFlags_ShowBorders` window flag. Borders are now fully set up in the ImGuiStyle structure (see e.g. `style.frame_border_size`, `style.window_border_size`, `style.popup_border_size`).
-  Use `ImGui::ShowStyleEditor()` to look them up.
+  Use `Imgui::ShowStyleEditor()` to look them up.
   Please note that the style system will keep evolving (hopefully stabilizing in Q1 2018), and so custom styles will probably subtly break over time.
   It is recommended that you use the `StyleColorsClassic()`, `StyleColorsDark()`, `StyleColorsLight()` functions. Also see `ShowStyleSelector()`.
 - style: Removed `ImGuiCol_ComboBg` in favor of combo boxes using `ImGuiCol_PopupBg` for consistency. Combo are normal pop-ups.
@@ -3023,7 +3023,7 @@ Other Changes:
 - style: Added StyleColorsLight() style. Best used with frame borders + thicker font than the default font. (#707)
 - style: Added style.popup_rounding setting. (#1112)
 - style: Added style.frame_border_size, style.window_border_size, style.popup_border_size. Removed ImGuiWindowFlags_ShowBorders window flag!
-  Borders are now fully set up in the ImGuiStyle structure. Use ImGui::ShowStyleEditor() to look them up. (#707, fix #819, #1031)
+  Borders are now fully set up in the ImGuiStyle structure. Use Imgui::ShowStyleEditor() to look them up. (#707, fix #819, #1031)
 - style: Various small changes to the classic style (most noticeably, buttons are now using blue shades). (#707)
 - style: Renamed ImGuiCol_ChildWindowBg to ImGuiCol_ChildBg.
 - style: Renamed style.ChildWindowRounding to style.child_rounding, ImGuiStyleVar_ChildWindowRounding to ImGuiStyleVar_ChildRounding.
@@ -3084,7 +3084,7 @@ Other Changes:
 - ImFontAtlas: Added missing Thai punctuation in the get_glyph_ranges_thai() ranges. (#1396) [@nProtect]
 - ImDrawList: Removed 'bool anti_aliased = true' final parameter of ImDrawList::add_polyline() and ImDrawList::add_convex_poly_filled(). Anti-aliasing is controlled via the regular style.AntiAliased flags.
 - ImDrawList: Added ImDrawList::add_image_rounded() helper. (#845) [@thedmd]
-- ImDrawList: Refactored to make ImDrawList independent of ImGui. Removed static variable in PathArcToFast() which caused linking issues to some.
+- ImDrawList: Refactored to make ImDrawList independent of Imgui. Removed static variable in PathArcToFast() which caused linking issues to some.
 - ImDrawList: Exposed ImDrawCornerFlags, replaced occurrences of ~0 with an explicit ImDrawCornerFlags_All. NB: Inversed BotLeft (prev 1<<3, now 1<<2) and BotRight (prev 1<<2, now 1<<3).
 - ImVector: Added ImVector::push_front() helper.
 - ImVector: Added ImVector::contains() helper.
@@ -3257,7 +3257,7 @@ Other Changes:
 - Added user-facing `IsPopupOpen()` function. (#891) [@mkeeter]
 - Added `GetColorU32(u32)` variant that perform the style alpha multiply without a floating-point round trip, and helps makes code more consistent when using ImDrawList APIs.
 - Added `PushStyleColor(ImGuiColor idx, ImU32 col)` overload.
-- Added `GetStyleColorVec4(ImGuiColor idx)` which is equivalent to accessing `ImGui::GetStyle().colors[idx]` (aka return the raw style color without alpha alteration).
+- Added `GetStyleColorVec4(ImGuiColor idx)` which is equivalent to accessing `Imgui::GetStyle().colors[idx]` (aka return the raw style color without alpha alteration).
 - ImFontAtlas: Added `GlyphRangesBuilder` helper class, which makes it easier to build custom glyph ranges from your app/game localization data, or add into existing glyph ranges.
 - ImFontAtlas: Added `tex_glyph_padding` option. (#1282) [@jadwallis]
 - ImFontAtlas: Made it possible to override size of add_font_default() (even if it isn't really recommended!).
@@ -3394,7 +3394,7 @@ Breaking Changes:
 - Renamed `SetNextTreeNodeOpened()` to `SetNextTreeNodeOpen()` for consistency, no redirection.
 - Removed confusing set of `GetInternalState()`, `GetInternalStateSize()`, `SetInternalState()` functions. Now using `CreateContext()`, `DestroyContext()`, `GetCurrentContext()`, `SetCurrentContext()`. If you were using multiple contexts the change should be obvious and trivial.
 - Obsoleted old signature of `CollapsingHeader(const char* label, const char* str_id = None, bool display_frame = true, bool default_open = false)`, as extra parameters were badly designed and rarely used. Most uses were using 1 parameter and shouldn't affect you. You can replace the "default_open = true" flag in new API with `CollapsingHeader(label, ImGuiTreeNodeFlags_DefaultOpen)`.
-- Changed `ImDrawList::push_clip_rect(Vector4D rect)` to `ImDraw::push_clip_rect(Vector2D min,Vector2D max,bool intersect_with_current_clip_rect=false)`. Note that higher-level `ImGui::push_clip_rect()` is preferable because it will clip at logic/widget level, whereas `ImDrawList::push_clip_rect()` only affect your renderer.
+- Changed `ImDrawList::push_clip_rect(Vector4D rect)` to `ImDraw::push_clip_rect(Vector2D min,Vector2D max,bool intersect_with_current_clip_rect=false)`. Note that higher-level `Imgui::push_clip_rect()` is preferable because it will clip at logic/widget level, whereas `ImDrawList::push_clip_rect()` only affect your renderer.
 - Title bar (using ImGuiCol_TitleBg/ImGuiCol_TitleBgActive colors) isn't rendered over a window background (ImGuiCol_WindowBg color) anymore (see #655). If your TitleBg/TitleBgActive alpha was 1.0 or you are using the default theme it will not affect you. However if your TitleBg/TitleBgActive alpha was <1.0 you need to tweak your custom theme to readjust for the fact that we don't draw a WindowBg background behind the title bar.
   This helper function will convert an old TitleBg/TitleBgActive color into a new one with the same visual output, given the OLD color and the OLD WindowBg color. (Or If this is confusing, just pick the RGB value from title bar from an old screenshot and apply this as TitleBg/TitleBgActive. Or you may just create TitleBgActive from a tweaked TitleBg color.)
 
@@ -3539,7 +3539,7 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 
 Changes:
 
-- Rebranding "ImGui" -> "dear imgui" as an optional first name to reduce ambiguity with IMGUI term. (#21)
+- Rebranding "Imgui" -> "dear imgui" as an optional first name to reduce ambiguity with IMGUI term. (#21)
 - Added ProgressBar(). (#333)
 - InputText(): Added ImGuiInputTextFlags_Password mode: hide display, disable logging/copying to clipboard. (#237, #363, #374)
 - Added GetColorU32() helper to retrieve color given enum with global alpha and extra applied.
@@ -3659,7 +3659,7 @@ Other Changes:
 - Added GetScrollX(), GetScrollX(), GetScrollMaxX() apis (#246).
 - Added SetNextWindowContentSize(), SetNextWindowContentWidth() to explicitly set the content size of a window, which
   define the range of scrollbar. When set explicitly it also define the base value from which widget width are derived.
-- Added io.want_text_input telling when ImGui is expecting text input, so that e.g. OS on-screen keyboard can be enabled.
+- Added io.want_text_input telling when Imgui is expecting text input, so that e.g. OS on-screen keyboard can be enabled.
 - Added printf attribute to printf-like text formatting functions (Clang/GCC).
 - Added GetMousePosOnOpeningCurrentPopup() helper.
 - Added GetContentRegionAvailWidth() helper.
@@ -3710,10 +3710,10 @@ Breaking Changes:
 Other Changes:
 
 - Internal data structure and several useful functions are now exposed in imgui_internal.h. This should make it easier
-  and more natural to extend ImGui. However please note that none of the content in imgui_internal.h is guaranteed
+  and more natural to extend Imgui. However please note that none of the content in imgui_internal.h is guaranteed
   for forward-compatibility and code using those types/functions may occasionally break. (#219)
 - All sample code is in imgui_demo.cpp. Please keep this file in your project and consider allowing your code to call
-  the ShowTestWindow() function as de-facto guide to ImGui features. It will be stripped out by the linker when unused.
+  the ShowTestWindow() function as de-facto guide to Imgui features. It will be stripped out by the linker when unused.
 - Added GetContentRegionAvail() helper (basically GetContentRegionMax() - get_cursor_pos()).
 - Added ImGuiWindowFlags_NoInputs for totally input-passthru window.
 - Button(): honor negative size consistently with other widgets that do so (width -100 to align the button 100 pixels
@@ -3749,7 +3749,7 @@ Decorated log and release notes: https://github.com/ocornut/imgui/releases/tag/v
 Breaking Changes:
 
 - This is a rather important release and we unfortunately had to break the rendering API.
-  ImGui now requires you to render indexed vertices instead of non-indexed ones. The fix should be very easy.
+  Imgui now requires you to render indexed vertices instead of non-indexed ones. The fix should be very easy.
   Sorry for that! This change is saving a fair amount of CPU/GPU and enables us to get anti-aliasing for a marginal cost.
   Each ImDrawList now contains both a vertex buffer and an index buffer. For each command, render elem_count/3 triangles
   using indices from the index buffer.
@@ -3775,7 +3775,7 @@ Other Changes:
 
 - Added anti-aliasing on lines and shapes based on primitives by @MikkoMononen (#133).
   Between the use of indexed-rendering and the fact that the entire rendering codebase has been optimized and massaged
-  enough, with anti-aliasing enabled ImGui 1.43 is now running FASTER than 1.41.
+  enough, with anti-aliasing enabled Imgui 1.43 is now running FASTER than 1.41.
   Made some extra effort in making the code run faster in your typical Debug build.
 - Anti-aliasing can be disabled in the ImGuiStyle structure via the AntiAliasedLines/AntiAliasedShapes fields for further gains.
 - ImDrawList: Added add_polyline(), add_convex_poly_filled() with optional anti-aliasing.
@@ -3978,7 +3978,7 @@ Other Changes:
 - ImFontAtlas: Fixed appending new fonts without clearing existing fonts. Clearing input data left to application. (#224)
 - ImDrawList: merge draw command better, cases of multiple Begin/End gets merged properly.
 - Store common stacked settings contiguously in memory to avoid heap allocation for unused features, and reduce cache misses.
-- shutdown() tests for g.io.fonts not being None to ease use of multiple ImGui contexts. (#207)
+- shutdown() tests for g.io.fonts not being None to ease use of multiple Imgui contexts. (#207)
 - Added IMGUI_DISABLE_OBSOLETE_FUNCTIONS define to disable the functions that are meant to be removed.
 - Examples: Added ? marks with tooltips next to various widgets. Added more comments in the demo window.
 - Examples: Added Menu-bar example.
@@ -3986,7 +3986,7 @@ Other Changes:
 - Examples: AutoResize demo doesn't use TextWrapped().
 - Examples: Console example uses standard malloc/free, makes more sense as a copy & pastable example.
 - Examples: DirectX9/11: Fixed key mapping for down arrow.
-- Examples: DirectX9/11: hide OS cursor if ImGui is drawing it. (#155)
+- Examples: DirectX9/11: hide OS cursor if Imgui is drawing it. (#155)
 - Examples: DirectX11: explicitly set rasterizer state.
 - Examples: OpenGL3: Add conditional compilation of forward compat as required by glfw on OSX. (#229)
 - Fixed build with Visual Studio 2008 (possibly earlier versions as well).

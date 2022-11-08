@@ -66,15 +66,15 @@ int main(int, char**)
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
+    Imgui::CreateContext();
+    ImGuiIO& io = Imgui::GetIO();
     (void)io;
 
     ImNodes::CreateContext();
     example::NodeEditorInitialize();
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    Imgui::StyleColorsDark();
     // ImGui::StyleColorsClassic();
     ImNodes::StyleColorsDark();
 
@@ -102,12 +102,12 @@ int main(int, char**)
         // Start the Dear ImGui frame
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplSDL2_NewFrame();
-        ImGui::NewFrame();
+        Imgui::NewFrame();
 
         example::NodeEditorShow();
 
         // Rendering
-        ImGui::Render();
+        Imgui::Render();
         glViewport(0, 0, io.DisplaySize.x, io.DisplaySize.y);
         glClearColor(
             clear_color.x * clear_color.w,
@@ -115,7 +115,7 @@ int main(int, char**)
             clear_color.z * clear_color.w,
             clear_color.w);
         glClear(GL_COLOR_BUFFER_BIT);
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        ImGui_ImplOpenGL3_RenderDrawData(Imgui::GetDrawData());
         SDL_GL_SwapWindow(window);
     }
 
@@ -124,7 +124,7 @@ int main(int, char**)
     ImGui_ImplSDL2_Shutdown();
     example::NodeEditorShutdown();
     ImNodes::DestroyContext();
-    ImGui::DestroyContext();
+    Imgui::DestroyContext();
 
     SDL_GL_DeleteContext(gl_context);
     SDL_DestroyWindow(window);

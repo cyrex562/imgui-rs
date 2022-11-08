@@ -1,13 +1,13 @@
 _(You may browse this at https://github.com/ocornut/imgui/blob/master/docs/EXAMPLES.md or view this file with any Markdown viewer)_
 
-## Dear ImGui: Examples
+## Dear Imgui: Examples
 
 **The [examples/](https://github.com/ocornut/imgui/blob/master/examples) folder example applications (standalone, ready-to-build) for variety of
 platforms and graphics APIs.** They all use standard backends from the [backends/](https://github.com/ocornut/imgui/blob/master/backends) folder (see [BACKENDS.md](https://github.com/ocornut/imgui/blob/master/docs/BACKENDS.md)).
 
-The purpose of Examples is to showcase integration with backends, let you try Dear ImGui, and guide you toward
-integrating Dear ImGui in your own application/game/engine.
-**Once Dear ImGui is setup and running, run and refer to `ImGui::ShowDemoWindow()` in imgui_demo.cpp for usage of the end-user API.**
+The purpose of Examples is to showcase integration with backends, let you try Dear Imgui, and guide you toward
+integrating Dear Imgui in your own application/game/engine.
+**Once Dear Imgui is setup and running, run and refer to `Imgui::ShowDemoWindow()` in imgui_demo.cpp for usage of the end-user API.**
 
 You can find windows binaries for some of those example applications at:
   http://www.dearimgui.org/binaries
@@ -72,7 +72,7 @@ ImGui_ImplWin32_Shutdown();
 ImGui::DestroyContext();
 ```
 
-Please read 'PROGRAMMER GUIDE' in imgui.cpp for notes on how to setup Dear ImGui in your codebase.
+Please read 'PROGRAMMER GUIDE' in imgui.cpp for notes on how to setup Dear Imgui in your codebase.
 Please read the comments and instruction at the top of each file.
 Please read FAQ at http://www.dearimgui.org/faq
 
@@ -122,7 +122,7 @@ GLFW (Mac) + Metal example. <BR>
 GLFW + OpenGL2 example (legacy, fixed pipeline). <BR>
 = main.cpp + imgui_impl_glfw.cpp + imgui_impl_opengl2.cpp <BR>
 **DO NOT USE THIS IF YOUR CODE/ENGINE IS USING MODERN OPENGL (SHADERS, VBO, VAO, etc.)** <BR>
-This code is mostly provided as a reference to learn about Dear ImGui integration, because it is shorter.
+This code is mostly provided as a reference to learn about Dear Imgui integration, because it is shorter.
 If your code is using GL3+ context or any semi modern OpenGL calls, using this renderer is likely to
 make things more complicated, will require your code to reset many OpenGL attributes to their initial
 state, and might confuse your GPU driver. One star, not recommended.
@@ -164,7 +164,7 @@ SDL2 (Mac) + Metal example. <BR>
 SDL2 (Win32, Mac, Linux etc.) + OpenGL example (legacy, fixed pipeline). <BR>
 = main.cpp + imgui_impl_sdl.cpp + imgui_impl_opengl2.cpp <BR>
 **DO NOT USE OPENGL2 CODE IF YOUR CODE/ENGINE IS USING MODERN OPENGL (SHADERS, VBO, VAO, etc.)** <BR>
-This code is mostly provided as a reference to learn about Dear ImGui integration, because it is shorter.
+This code is mostly provided as a reference to learn about Dear Imgui integration, because it is shorter.
 If your code is using GL3+ context or any semi modern OpenGL calls, using this renderer is likely to
 make things more complicated, will require your code to reset many OpenGL attributes to their initial
 state, and might confuse your GPU driver. One star, not recommended.
@@ -225,15 +225,15 @@ If you are interested in using Cmake to build and links examples, see:
 
 **About mouse cursor latency**
 
-Dear ImGui has no particular extra lag for most behaviors,
+Dear Imgui has no particular extra lag for most behaviors,
 e.g. the last value passed to 'io.add_mouse_pos_event()' before NewFrame() will result in windows being moved
 to the right spot at the time of EndFrame()/Render(). At 60 FPS your experience should be pleasant.
 
 However, consider that OS mouse cursors are typically drawn through a very specific hardware accelerated
 path and will feel smoother than the majority of contents rendered via regular graphics API (including,
-but not limited to Dear ImGui windows). Because UI rendering and interaction happens on the same plane
+but not limited to Dear Imgui windows). Because UI rendering and interaction happens on the same plane
 as the mouse, that disconnect may be jarring to particularly sensitive users.
-You may experiment with enabling the io.mouse_draw_cursor flag to request Dear ImGui to draw a mouse cursor
+You may experiment with enabling the io.mouse_draw_cursor flag to request Dear Imgui to draw a mouse cursor
 using the regular graphics API, to help you visualize the difference between a "hardware" cursor and a
 regularly rendered software cursor.
 However, rendering a mouse cursor at 60 FPS will feel sluggish so you likely won't want to enable that at

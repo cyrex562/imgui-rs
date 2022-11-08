@@ -73,7 +73,7 @@ struct VERTEX_CONSTANT_BUFFER_DX10
 // It is STRONGLY preferred that you use docking branch with multi-viewports (== single Dear ImGui context + multiple windows) instead of multiple Dear ImGui contexts.
 static ImGui_ImplDX10_Data* ImGui_ImplDX10_GetBackendData()
 {
-    return ImGui::GetCurrentContext() ? (ImGui_ImplDX10_Data*)ImGui::GetIO().BackendRendererUserData : NULL;
+    return Imgui::GetCurrentContext() ? (ImGui_ImplDX10_Data*)Imgui::GetIO().BackendRendererUserData : NULL;
 }
 
 // Forward Declarations
@@ -301,7 +301,7 @@ static void ImGui_ImplDX10_CreateFontsTexture()
 {
     // Build texture atlas
     ImGui_ImplDX10_Data* bd = ImGui_ImplDX10_GetBackendData();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     unsigned char* pixels;
     int width, height;
     io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height);
@@ -520,7 +520,7 @@ void    ImGui_ImplDX10_InvalidateDeviceObjects()
         return;
 
     if (bd->pFontSampler)           { bd->pFontSampler->Release(); bd->pFontSampler = NULL; }
-    if (bd->pFontTextureView)       { bd->pFontTextureView->Release(); bd->pFontTextureView = NULL; ImGui::GetIO().Fonts->SetTexID(NULL); } // We copied bd->pFontTextureView to io.Fonts->TexID so let's clear that as well.
+    if (bd->pFontTextureView)       { bd->pFontTextureView->Release(); bd->pFontTextureView = NULL; Imgui::GetIO().Fonts->SetTexID(NULL); } // We copied bd->pFontTextureView to io.Fonts->TexID so let's clear that as well.
     if (bd->pIB)                    { bd->pIB->Release(); bd->pIB = NULL; }
     if (bd->pVB)                    { bd->pVB->Release(); bd->pVB = NULL; }
     if (bd->pBlendState)            { bd->pBlendState->Release(); bd->pBlendState = NULL; }
@@ -534,15 +534,15 @@ void    ImGui_ImplDX10_InvalidateDeviceObjects()
 
 bool    ImGui_ImplDX10_Init(ID3D10Device* device)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     IM_ASSERT(io.BackendRendererUserData == NULL && "Already initialized a renderer backend!");
 
     // Setup backend capabilities flags
     ImGui_ImplDX10_Data* bd = IM_NEW(ImGui_ImplDX10_Data)();
     io.BackendRendererUserData = (void*)bd;
     io.BackendRendererName = "imgui_impl_dx10";
-    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
-    io.BackendFlags |= ImGuiBackendFlags_RendererHasViewports;  // We can create multi-viewports on the Renderer side (optional)
+    io.BackendFlags |= IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
+    io.BackendFlags |= IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VIEWPORTS;  // We can create multi-viewports on the Renderer side (optional)
 
     // Get factory from device
     IDXGIDevice* pDXGIDevice = NULL;
@@ -568,7 +568,7 @@ void ImGui_ImplDX10_Shutdown()
 {
     ImGui_ImplDX10_Data* bd = ImGui_ImplDX10_GetBackendData();
     IM_ASSERT(bd != NULL && "No renderer backend to shutdown, or already shutdown?");
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
 
     ImGui_ImplDX10_ShutdownPlatformInterface();
     ImGui_ImplDX10_InvalidateDeviceObjects();
@@ -698,7 +698,7 @@ static void ImGui_ImplDX10_SwapBuffers(ImGuiViewport* viewport, void*)
 
 void ImGui_ImplDX10_InitPlatformInterface()
 {
-    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    ImGuiPlatformIO& platform_io = Imgui::GetPlatformIO();
     platform_io.Renderer_CreateWindow = ImGui_ImplDX10_CreateWindow;
     platform_io.Renderer_DestroyWindow = ImGui_ImplDX10_DestroyWindow;
     platform_io.Renderer_SetWindowSize = ImGui_ImplDX10_SetWindowSize;
@@ -708,5 +708,5 @@ void ImGui_ImplDX10_InitPlatformInterface()
 
 void ImGui_ImplDX10_ShutdownPlatformInterface()
 {
-    ImGui::DestroyPlatformWindows();
+    Imgui::DestroyPlatformWindows();
 }

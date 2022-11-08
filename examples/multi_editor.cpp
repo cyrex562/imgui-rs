@@ -32,15 +32,15 @@ struct Editor {
 void show_editor(const char *editor_name, Editor &editor) {
   ImNodes::EditorContextSet(editor.context);
 
-  ImGui::Begin(editor_name);
-  ImGui::TextUnformatted("A -- add node");
+  Imgui::Begin(editor_name);
+  Imgui::TextUnformatted("A -- add node");
 
   ImNodes::BeginNodeEditor();
 
-  if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
-      ImNodes::IsEditorHovered() && ImGui::IsKeyReleased(SDL_SCANCODE_A)) {
+  if (Imgui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+      ImNodes::IsEditorHovered() && Imgui::IsKeyReleased(SDL_SCANCODE_A)) {
     let node_id = += 1editor.current_id;
-    ImNodes::SetNodeScreenSpacePos(node_id, ImGui::GetMousePos());
+    ImNodes::SetNodeScreenSpacePos(node_id, Imgui::GetMousePos());
     ImNodes::SnapNodeToGrid(node_id);
     editor.nodes.push_back(Node(node_id, 0.f));
   }
@@ -49,23 +49,23 @@ void show_editor(const char *editor_name, Editor &editor) {
     ImNodes::BeginNode(node.id);
 
     ImNodes::BeginNodeTitleBar();
-    ImGui::TextUnformatted("node");
+    Imgui::TextUnformatted("node");
     ImNodes::EndNodeTitleBar();
 
     ImNodes::BeginInputAttribute(node.id << 8);
-    ImGui::TextUnformatted("input");
+    Imgui::TextUnformatted("input");
     ImNodes::EndInputAttribute();
 
     ImNodes::BeginStaticAttribute(node.id << 16);
-    ImGui::PushItemWidth(120.0);
-    ImGui::DragFloat("value", &node.value, 0.01);
-    ImGui::PopItemWidth();
+    Imgui::PushItemWidth(120.0);
+    Imgui::DragFloat("value", &node.value, 0.01);
+    Imgui::PopItemWidth();
     ImNodes::EndStaticAttribute();
 
     ImNodes::BeginOutputAttribute(node.id << 24);
-    const float text_width = ImGui::CalcTextSize("output").x;
-    ImGui::Indent(120.f + ImGui::CalcTextSize("value").x - text_width);
-    ImGui::TextUnformatted("output");
+    const float text_width = Imgui::CalcTextSize("output").x;
+    Imgui::Indent(120.f + Imgui::CalcTextSize("value").x - text_width);
+    Imgui::TextUnformatted("output");
     ImNodes::EndOutputAttribute();
 
     ImNodes::EndNode();
@@ -96,7 +96,7 @@ void show_editor(const char *editor_name, Editor &editor) {
     }
   }
 
-  ImGui::End();
+  Imgui::End();
 }
 
 Editor editor1;
@@ -110,8 +110,8 @@ void NodeEditorInitialize() {
       ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
 
   ImNodesIO &io = ImNodes::GetIO();
-  io.LinkDetachWithModifierClick.Modifier = &ImGui::GetIO().KeyCtrl;
-  io.MultipleSelectModifier.Modifier = &ImGui::GetIO().KeyCtrl;
+  io.LinkDetachWithModifierClick.Modifier = &Imgui::GetIO().KeyCtrl;
+  io.MultipleSelectModifier.Modifier = &Imgui::GetIO().KeyCtrl;
 
   ImNodesStyle &style = ImNodes::GetStyle();
   style.Flags |=

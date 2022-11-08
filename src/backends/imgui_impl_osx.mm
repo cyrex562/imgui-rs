@@ -76,7 +76,7 @@ struct ImGui_ImplOSX_Data
 };
 
 static ImGui_ImplOSX_Data*      ImGui_ImplOSX_CreateBackendData()   { return IM_NEW(ImGui_ImplOSX_Data)(); }
-static ImGui_ImplOSX_Data*      ImGui_ImplOSX_GetBackendData()      { return (ImGui_ImplOSX_Data*)ImGui::GetIO().BackendPlatformUserData; }
+static ImGui_ImplOSX_Data*      ImGui_ImplOSX_GetBackendData()      { return (ImGui_ImplOSX_Data*)Imgui::GetIO().BackendPlatformUserData; }
 static void                     ImGui_ImplOSX_DestroyBackendData()  { IM_DELETE(ImGui_ImplOSX_GetBackendData()); }
 
 static inline CFTimeInterval    GetMachAbsoluteTimeInSeconds()      { return (CFTimeInterval)(double)(clock_gettime_nsec_np(CLOCK_UPTIME_RAW) / 1e9); }
@@ -159,7 +159,7 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view);
 
 - (void)insertText:(id)aString replacementRange:(NSRange)replacementRange
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
 
     NSString* characters;
     if ([aString isKindOfClass:[NSAttributedString class]])
@@ -236,13 +236,13 @@ static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view);
 
 - (void)onApplicationBecomeActive:(NSNotification*)aNotification
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     io.AddFocusEvent(true);
 }
 
 - (void)onApplicationBecomeInactive:(NSNotification*)aNotification
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     io.AddFocusEvent(false);
 }
 
@@ -391,7 +391,7 @@ IMGUI_IMPL_API void ImGui_ImplOSX_NewFrame(void* _Nullable view) {
 
 bool ImGui_ImplOSX_Init(NSView* view)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_CreateBackendData();
     io.BackendPlatformUserData = (void*)bd;
 
@@ -404,7 +404,7 @@ bool ImGui_ImplOSX_Init(NSView* view)
 
     bd->Observer = [ImGuiObserver new];
     bd->Window = view.window ?: NSApp.orderedWindows.firstObject;
-    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGuiViewport* main_viewport = Imgui::GetMainViewport();
     main_viewport->PlatformHandle = main_viewport->PlatformHandleRaw = (__bridge_retained void*)bd->Window;
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         ImGui_ImplOSX_InitPlatformInterface();
@@ -494,11 +494,11 @@ void ImGui_ImplOSX_Shutdown()
 static void ImGui_ImplOSX_UpdateMouseCursor()
 {
     ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     if (io.ConfigFlags & ImGuiConfigFlags_NoMouseCursorChange)
         return;
 
-    ImGuiMouseCursor imgui_cursor = ImGui::GetMouseCursor();
+    ImGuiMouseCursor imgui_cursor = Imgui::GetMouseCursor();
     if (io.MouseDrawCursor || imgui_cursor == ImGuiMouseCursor_None)
     {
         // Hide OS mouse cursor if imgui is drawing it or if it wants no cursor
@@ -526,7 +526,7 @@ static void ImGui_ImplOSX_UpdateMouseCursor()
 
 static void ImGui_ImplOSX_UpdateGamepads()
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     memset(io.NavInputs, 0, sizeof(io.NavInputs));
     if ((io.ConfigFlags & ImGuiConfigFlags_NavEnableGamepad) == 0) // FIXME: Technically feeding gamepad shouldn't depend on this now that they are regular inputs.
         return;
@@ -586,7 +586,7 @@ static void ImGui_ImplOSX_UpdateGamepads()
 static void ImGui_ImplOSX_UpdateImePosWithView(NSView* view)
 {
     ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     if (io.WantTextInput)
         [bd->KeyEventResponder updateImePosWithView:view];
 }
@@ -594,7 +594,7 @@ static void ImGui_ImplOSX_UpdateImePosWithView(NSView* view)
 void ImGui_ImplOSX_NewFrame(NSView* view)
 {
     ImGui_ImplOSX_Data* bd = ImGui_ImplOSX_GetBackendData();
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
 
     // Setup display size
     if (view)
@@ -619,7 +619,7 @@ void ImGui_ImplOSX_NewFrame(NSView* view)
 
 static bool ImGui_ImplOSX_HandleEvent(NSEvent* event, NSView* view)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
 
     if (event.type == NSEventTypeLeftMouseDown || event.type == NSEventTypeRightMouseDown || event.type == NSEventTypeOtherMouseDown)
     {
@@ -983,7 +983,7 @@ static float ImGui_ImplOSX_GetWindowDpiScale(ImGuiViewport* viewport)
 
 static void ImGui_ImplOSX_UpdateMonitors()
 {
-    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    ImGuiPlatformIO& platform_io = Imgui::GetPlatformIO();
     platform_io.Monitors.resize(0);
 
     for (NSScreen* screen in NSScreen.screens)
@@ -1008,7 +1008,7 @@ static void ImGui_ImplOSX_InitPlatformInterface()
     ImGui_ImplOSX_UpdateMonitors();
 
     // Register platform interface (will be coupled with a renderer interface)
-    ImGuiPlatformIO& platform_io = ImGui::GetPlatformIO();
+    ImGuiPlatformIO& platform_io = Imgui::GetPlatformIO();
     platform_io.Platform_CreateWindow = ImGui_ImplOSX_CreateWindow;
     platform_io.Platform_DestroyWindow = ImGui_ImplOSX_DestroyWindow;
     platform_io.Platform_ShowWindow = ImGui_ImplOSX_ShowWindow;
@@ -1024,7 +1024,7 @@ static void ImGui_ImplOSX_InitPlatformInterface()
     platform_io.Platform_GetWindowDpiScale = ImGui_ImplOSX_GetWindowDpiScale; // FIXME-DPI
 
     // Register main window handle (which is owned by the main application, not by us)
-    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGuiViewport* main_viewport = Imgui::GetMainViewport();
     ImGuiViewportDataOSX* data = IM_NEW(ImGuiViewportDataOSX)();
     data->Window = bd->Window;
     data->WindowOwned = false;
@@ -1051,9 +1051,9 @@ static void ImGui_ImplOSX_ShutdownPlatformInterface()
         bd->Monitor = NULL;
     }
 
-    ImGuiViewport* main_viewport = ImGui::GetMainViewport();
+    ImGuiViewport* main_viewport = Imgui::GetMainViewport();
     ImGuiViewportDataOSX* data = (ImGuiViewportDataOSX*)main_viewport->PlatformUserData;
     IM_DELETE(data);
     main_viewport->PlatformUserData = NULL;
-    ImGui::DestroyPlatformWindows();
+    Imgui::DestroyPlatformWindows();
 }

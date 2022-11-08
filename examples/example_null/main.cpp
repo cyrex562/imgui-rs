@@ -7,8 +7,8 @@
 int main(int, char**)
 {
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
+    Imgui::CreateContext();
+    ImGuiIO& io = Imgui::GetIO();
 
     // build atlas
     unsigned char* tex_pixels = None;
@@ -20,18 +20,18 @@ int main(int, char**)
         printf("NewFrame() %d\n", n);
         io.DisplaySize = DimgVec2D::new(1920, 1080);
         io.DeltaTime = 1.0 / 60.0;
-        ImGui::NewFrame();
+        Imgui::NewFrame();
 
         static float f = 0.0;
-        ImGui::Text("Hello, world!");
-        ImGui::SliderFloat("float", &f, 0.0, 1.0);
-        ImGui::Text("Application average %.3 ms/frame (%.1 FPS)", 1000.0 / io.Framerate, io.Framerate);
-        ImGui::ShowDemoWindow(None);
+        Imgui::Text("Hello, world!");
+        Imgui::SliderFloat("float", &f, 0.0, 1.0);
+        Imgui::Text("Application average %.3 ms/frame (%.1 FPS)", 1000.0 / io.Framerate, io.Framerate);
+        Imgui::ShowDemoWindow(None);
 
-        ImGui::Render();
+        Imgui::Render();
     }
 
     printf("DestroyContext()\n");
-    ImGui::DestroyContext();
+    Imgui::DestroyContext();
     return 0;
 }

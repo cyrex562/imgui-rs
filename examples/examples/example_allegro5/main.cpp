@@ -33,13 +33,13 @@ int main(int, char**)
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    Imgui::CreateContext();
+    ImGuiIO& io = Imgui::GetIO(); (void)io;
     //io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;  // Enable Keyboard Controls
     io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;        // Enable Docking
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    Imgui::StyleColorsDark();
     //ImGui::StyleColorsLight();
 
     // Setup Platform/Renderer backends
@@ -89,55 +89,55 @@ int main(int, char**)
 
         // Start the Dear ImGui frame
         ImGui_ImplAllegro5_NewFrame();
-        ImGui::NewFrame();
+        Imgui::NewFrame();
 
         // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
         if (show_demo_window)
-            ImGui::ShowDemoWindow(&show_demo_window);
+            Imgui::ShowDemoWindow(&show_demo_window);
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
             static float f = 0.0f;
             static int counter = 0;
 
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
+            Imgui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
-            ImGui::Checkbox("Another Window", &show_another_window);
+            Imgui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+            Imgui::Checkbox("Demo Window", &show_demo_window);      // Edit bools storing our window open/close state
+            Imgui::Checkbox("Another Window", &show_another_window);
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+            Imgui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            Imgui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+            if (Imgui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
                 counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            Imgui::SameLine();
+            Imgui::Text("counter = %d", counter);
 
-            ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
+            Imgui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / Imgui::GetIO().Framerate, Imgui::GetIO().Framerate);
+            Imgui::End();
         }
 
         // 3. Show another simple window.
         if (show_another_window)
         {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
+            Imgui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+            Imgui::Text("Hello from another window!");
+            if (Imgui::Button("Close Me"))
                 show_another_window = false;
-            ImGui::End();
+            Imgui::End();
         }
 
         // Rendering
-        ImGui::Render();
+        Imgui::Render();
         al_clear_to_color(al_map_rgba_f(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w));
-        ImGui_ImplAllegro5_RenderDrawData(ImGui::GetDrawData());
+        ImGui_ImplAllegro5_RenderDrawData(Imgui::GetDrawData());
         al_flip_display();
     }
 
     // Cleanup
     ImGui_ImplAllegro5_Shutdown();
-    ImGui::DestroyContext();
+    Imgui::DestroyContext();
     al_destroy_event_queue(queue);
     al_destroy_display(display);
 

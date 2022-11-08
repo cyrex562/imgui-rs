@@ -14,7 +14,7 @@
 - Please read [docs/FAQ.md](https://github.com/ocornut/imgui/blob/master/docs/FAQ.md).
 - Please read [docs/FONTS.md](https://github.com/ocornut/imgui/blob/master/docs/FONTS.md) if your question relates to fonts or text.
 - Please read one of the [examples/](https://github.com/ocornut/imgui/tree/master/examples) application if your question relates to setting up dear imgui.
-- Please run `ImGui::ShowDemoWindow()` to explore the demo and its sources.
+- Please run `Imgui::ShowDemoWindow()` to explore the demo and its sources.
 - Please use the search function of your IDE to search in for comments related to your situation.
 - Please use the search function of GitHub to look for similar issues. You may [browse issues by Labels](https://github.com/ocornut/imgui/labels).
 - Please use a web search engine to look for similar issues.
@@ -24,12 +24,12 @@
 
 If:
 - You cannot build or Link examples.
-- You cannot build or Link or Run Dear ImGui in your application or custom engine.
+- You cannot build or Link or Run Dear Imgui in your application or custom engine.
 - You are failing to load a font.
 
 Then please [use the Discussions forums](https://github.com/ocornut/imgui/discussions) instead of opening an Issue.
 
-If Dear ImGui is successfully showing in your app and you have used Dear ImGui before, you can open an Issue. Any form of discussions is welcome as a nw Issue.
+If Dear Imgui is successfully showing in your app and you have used Dear Imgui before, you can open an Issue. Any form of discussions is welcome as a nw Issue.
 
 ## How to open an Issue
 
@@ -71,7 +71,6 @@ Thank you for reading!
 
 ## Copyright / Contributor License Agreement
 
-Any code you submit will become part of the repository and be distributed under the [Dear ImGui license](https://github.com/ocornut/imgui/blob/master/LICENSE.txt). By submitting code to the project you agree that the code is your own work and that you have the ability to give it to the project.
+Any code you submit will become part of the repository and be distributed under the [Dear Imgui license](https://github.com/ocornut/imgui/blob/master/LICENSE.txt). By submitting code to the project you agree that the code is your own work and that you have the ability to give it to the project.
 
 You also agree by submitting your code that you grant all transferrable rights to the code to the project maintainer, including for example re-licensing the code, modifying the code, distributing in source or binary forms. Specifically this includes a requirement that you assign copyright to the project maintainer. For this reason, do not modify any copyright statements in files in any PRs.
-

@@ -48,8 +48,8 @@ int main(int, char **) {
 
   // Setup Dear ImGui context
   IMGUI_CHECKVERSION();
-  ImGui::CreateContext();
-  ImGuiIO &io = ImGui::GetIO();
+  Imgui::CreateContext();
+  ImGuiIO &io = Imgui::GetIO();
   (void)io;
   io.ConfigFlags |=
       ImGuiConfigFlags_NavEnableKeyboard; // Enable Keyboard Controls
@@ -69,12 +69,12 @@ int main(int, char **) {
   // FIXME-DPI: Experimental.
 
   // Setup Dear ImGui style
-  ImGui::StyleColorsDark();
+  Imgui::StyleColorsDark();
   // ImGui::StyleColorsClassic();
 
   // When viewports are enabled we tweak window_rounding/WindowBg so platform
   // windows can look identical to regular ones.
-  ImGuiStyle &style = ImGui::GetStyle();
+  ImGuiStyle &style = Imgui::GetStyle();
   if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
     style.WindowRounding = 0.0;
     style.Colors[ImGuiCol_WindowBg].w = 1.0;
@@ -132,13 +132,13 @@ int main(int, char **) {
     // Start the Dear ImGui frame
     ImGui_ImplDX11_NewFrame();
     ImGui_ImplWin32_NewFrame();
-    ImGui::NewFrame();
+    Imgui::NewFrame();
 
     // 1. Show the big demo window (Most of the sample code is in
     // ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear
     // ImGui!).
     if (show_demo_window)
-      ImGui::ShowDemoWindow(&show_demo_window);
+      Imgui::ShowDemoWindow(&show_demo_window);
 
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair
     // to created a named window.
@@ -146,60 +146,60 @@ int main(int, char **) {
       static float f = 0.0;
       static int counter = 0;
 
-      ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!"
+      Imgui::Begin("Hello, world!"); // Create a window called "Hello, world!"
                                      // and append into it.
 
-      ImGui::Text("This is some useful text."); // Display some text (you can
+      Imgui::Text("This is some useful text."); // Display some text (you can
                                                 // use a format strings too)
-      ImGui::Checkbox(
+      Imgui::Checkbox(
           "Demo window",
           &show_demo_window); // Edit bools storing our window open/close state
-      ImGui::Checkbox("Another window", &show_another_window);
+      Imgui::Checkbox("Another window", &show_another_window);
 
-      ImGui::SliderFloat("float", &f, 0.0,
+      Imgui::SliderFloat("float", &f, 0.0,
                          1.0); // Edit 1 float using a slider from 0.0 to 1.0
-      ImGui::ColorEdit3(
+      Imgui::ColorEdit3(
           "clear color",
           (float *)&clear_color); // Edit 3 floats representing a color
 
-      if (ImGui::Button("Button")) // Buttons return true when clicked (most
+      if (Imgui::Button("Button")) // Buttons return true when clicked (most
                                    // widgets return true when edited/activated)
         counter += 1;
-      ImGui::SameLine();
-      ImGui::Text("counter = %d", counter);
+      Imgui::SameLine();
+      Imgui::Text("counter = %d", counter);
 
-      ImGui::Text("Application average %.3 ms/frame (%.1 FPS)",
-                  1000.0 / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-      ImGui::End();
+      Imgui::Text("Application average %.3 ms/frame (%.1 FPS)",
+                  1000.0 / Imgui::GetIO().Framerate, Imgui::GetIO().Framerate);
+      Imgui::End();
     }
 
     // 3. Show another simple window.
     if (show_another_window) {
-      ImGui::Begin(
+      Imgui::Begin(
           "Another window",
           &show_another_window); // Pass a pointer to our bool variable (the
                                  // window will have a closing button that will
                                  // clear the bool when clicked)
-      ImGui::Text("Hello from another window!");
-      if (ImGui::Button("Close Me"))
+      Imgui::Text("Hello from another window!");
+      if (Imgui::Button("Close Me"))
         show_another_window = false;
-      ImGui::End();
+      Imgui::End();
     }
 
     // Rendering
-    ImGui::Render();
+    Imgui::Render();
     const float clear_color_with_alpha[4] = {
         clear_color.x * clear_color.w, clear_color.y * clear_color.w,
         clear_color.z * clear_color.w, clear_color.w};
     g_pd3dDeviceContext->OMSetRenderTargets(1, &g_mainRenderTargetView, None);
     g_pd3dDeviceContext->ClearRenderTargetView(g_mainRenderTargetView,
                                                clear_color_with_alpha);
-    ImGui_ImplDX11_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplDX11_RenderDrawData(Imgui::GetDrawData());
 
     // update and Render additional Platform windows
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable) {
-      ImGui::UpdatePlatformWindows();
-      ImGui::RenderPlatformWindowsDefault();
+      Imgui::UpdatePlatformWindows();
+      Imgui::RenderPlatformWindowsDefault();
     }
 
     g_pSwapChain->Present(1, 0); // Present with vsync
@@ -209,7 +209,7 @@ int main(int, char **) {
   // Cleanup
   ImGui_ImplDX11_Shutdown();
   ImGui_ImplWin32_Shutdown();
-  ImGui::DestroyContext();
+  Imgui::DestroyContext();
 
   CleanupDeviceD3D();
   ::DestroyWindow(hwnd);
@@ -326,7 +326,7 @@ LRESULT WINAPI WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     ::PostQuitMessage(0);
     return 0;
   case WM_DPICHANGED:
-    if (ImGui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports) {
+    if (Imgui::GetIO().ConfigFlags & ImGuiConfigFlags_DpiEnableScaleViewports) {
       // let dpi = HIWORD(wParam);
       // printf("WM_DPICHANGED to %d (%.0%%)\n", dpi, (float)dpi / 96.0 *
       // 100.0);

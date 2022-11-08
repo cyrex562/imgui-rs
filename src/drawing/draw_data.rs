@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use std::collections::HashMap;
 use crate::drawing::draw_list::ImDrawList;
 use crate::drawing::draw_vert::ImDrawVert;
 use crate::drawing::draw_cmd::ImDrawCmd;
@@ -8,6 +9,7 @@ use crate::core::vec4::ImVec4;
 use crate::viewport::ImguiViewport;
 use libc::{c_int, size_t};
 use std::ptr::null_mut;
+use crate::core::type_defs::{ImguiHandle, INVALID_IMGUI_HANDLE};
 
 // All draw data to render a Dear ImGui frame
 // (NB: the style and the naming convention here is a little inconsistent, we currently preserve them for backward compatibility purpose,
@@ -22,7 +24,7 @@ pub struct ImDrawData {
     // For convenience, sum of all ImDrawList's IdxBuffer.Size
     pub TotalVtxCount: size_t,
     // For convenience, sum of all ImDrawList's VtxBuffer.Size
-    pub CmdLists: *mut *mut ImDrawList,
+    pub CmdLists: HashMap<ImguiHandle, ImDrawList>,
     // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
     pub DisplayPos: ImVec2,
     // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport().Pos for the main viewport, == (0.0) in most single-viewport applications)
@@ -30,7 +32,7 @@ pub struct ImDrawData {
     // Size of the viewport to render (== GetMainViewport().Size for the main viewport, == io.DisplaySize in most single-viewport applications)
     pub FramebufferScale: ImVec2,
     // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
-    pub OwnerViewport: *mut ImguiViewport, // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
+    pub OwnerViewport: ImguiHandle, // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
 }
 
 impl ImDrawData {
@@ -43,11 +45,11 @@ impl ImDrawData {
         self.CmdListsCount = 0;
         self.TotalIdxCount = 0;
         self.TotalVtxCount = 0;
-        self.CmdLists = None;
+        self.CmdLists = vec![];
         self.DisplayPos = ImVec2::default();
         self.DisplaySize = ImVec2::default();
         self.FramebufferScale = ImVec2::default();
-        self.OwnerViewport = None;
+        self.OwnerViewport = INVALID_IMGUI_HANDLE;
     }
 
     // void  DeIndexAllBuffers();                    // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
@@ -58,7 +60,8 @@ impl ImDrawData {
         self.TotalIdxCount = 0;
         // for (let i: c_int = 0; i < CmdListsCount; i++)
         for i in 0..self.CmdListsCount {
-            let mut cmd_list: *mut ImDrawList = self.CmdLists[i];
+            // let mut cmd_list: *mut ImDrawList = self.CmdLists[i];
+
             if cmd_list.IdxBuffer.empty() {
                 continue;
             }
@@ -91,53 +94,53 @@ impl ImDrawData {
         }
     }
 }
-
-#[derive(Default, Debug, Clone)]
-pub struct ImDrawDataBuilder {
-    // ImVector<ImDrawList*>   Layers[2];           // Global layers for: regular, tooltip
-    pub Layers: [Vec<ImDrawList>; 2],
-}
-
-impl ImDrawDataBuilder {
-    // void Clear()                    { for (n: c_int = 0; n < IM_ARRAYSIZE(Layers); n++) Layers[n].resize(0); }
-    pub fn Clear(&mut self) {
-        self.Layers[0].clear();
-        self.Layers[1].clear();
-    }
-
-    // void ClearFreeMemory()          { for (n: c_int = 0; n < IM_ARRAYSIZE(Layers); n++) Layers[n].clear(); }
-
-    // c_int  GetDrawListCount() const   { count: c_int = 0; for (n: c_int = 0; n < IM_ARRAYSIZE(Layers); n++) count += Layers[n].Size; return count; }
-    pub fn GetDrawListCount(&self) -> c_int {
-        (self.Layers[0].len() + self.Layers[1].len()) as c_int
-    }
-
-    // void FlattenIntoSingleLayer();
-    // pub fn FlattenIntoSingleLayer(&mut self) {
-    //     todo!()
-    // }
-    // c_void ImDrawDataBuilder::FlattenIntoSingleLayer()
-    pub unsafe fn FlattenIntoSingleLayer(&mut self) {
-        let mut n: c_int = self.Layers[0].Size;
-        let mut size: c_int = n;
-        // for (let i: c_int = 1; i < IM_ARRAYSIZE(Layers); i++)
-        for i in 1..self.Layers.len() {
-            size += self.Layers[i].Size;
-        }
-        // self.Layers[0].resize(size);
-        // for (let layer_n: c_int = 1; layer_n < IM_ARRAYSIZE(Layers); layer_n++)
-        for layer_n in 1..self.Layers.len() {
-            let mut layer = self.Layers[layer_n].clone();
-            if layer.empty() {
-                continue;
-            }
-            libc::memcpy(
-                &mut self.Layers[0][n],
-                &layer[0],
-                layer.Size * libc::sizeof(ImDrawList),
-            );
-            n += layer.Size;
-            // layer.resize(0);
-        }
-    }
-}
+//
+// #[derive(Default, Debug, Clone)]
+// pub struct ImDrawDataBuilder {
+//     // ImVector<ImDrawList*>   Layers[2];           // Global layers for: regular, tooltip
+//     pub Layers: [Vec<ImDrawList>; 2],
+// }
+//
+// impl ImDrawDataBuilder {
+//     // void Clear()                    { for (n: c_int = 0; n < IM_ARRAYSIZE(Layers); n++) Layers[n].resize(0); }
+//     pub fn Clear(&mut self) {
+//         self.Layers[0].clear();
+//         self.Layers[1].clear();
+//     }
+//
+//     // void ClearFreeMemory()          { for (n: c_int = 0; n < IM_ARRAYSIZE(Layers); n++) Layers[n].clear(); }
+//
+//     // c_int  GetDrawListCount() const   { count: c_int = 0; for (n: c_int = 0; n < IM_ARRAYSIZE(Layers); n++) count += Layers[n].Size; return count; }
+//     pub fn GetDrawListCount(&self) -> c_int {
+//         (self.Layers[0].len() + self.Layers[1].len()) as c_int
+//     }
+//
+//     // void FlattenIntoSingleLayer();
+//     // pub fn FlattenIntoSingleLayer(&mut self) {
+//     //     todo!()
+//     // }
+//     // c_void ImDrawDataBuilder::FlattenIntoSingleLayer()
+//     pub unsafe fn FlattenIntoSingleLayer(&mut self) {
+//         let mut n: c_int = self.Layers[0].Size;
+//         let mut size: c_int = n;
+//         // for (let i: c_int = 1; i < IM_ARRAYSIZE(Layers); i++)
+//         for i in 1..self.Layers.len() {
+//             size += self.Layers[i].Size;
+//         }
+//         // self.Layers[0].resize(size);
+//         // for (let layer_n: c_int = 1; layer_n < IM_ARRAYSIZE(Layers); layer_n++)
+//         for layer_n in 1..self.Layers.len() {
+//             let mut layer = self.Layers[layer_n].clone();
+//             if layer.empty() {
+//                 continue;
+//             }
+//             libc::memcpy(
+//                 &mut self.Layers[0][n],
+//                 &layer[0],
+//                 layer.Size * libc::sizeof(ImDrawList),
+//             );
+//             n += layer.Size;
+//             // layer.resize(0);
+//         }
+//     }
+// }

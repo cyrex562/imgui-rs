@@ -158,7 +158,7 @@ static ImGuiKey ImGui_ImplGLUT_KeyToImGuiKey(int key)
 
 bool ImGui_ImplGLUT_Init()
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
 
 #ifdef FREEGLUT
     io.BackendPlatformName = "imgui_impl_glut (freeglut)";
@@ -192,7 +192,7 @@ void ImGui_ImplGLUT_Shutdown()
 void ImGui_ImplGLUT_NewFrame()
 {
     // Setup time step
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     int current_time = glutGet(GLUT_ELAPSED_TIME);
     int delta_time_ms = (current_time - g_Time);
     if (delta_time_ms <= 0)
@@ -201,12 +201,12 @@ void ImGui_ImplGLUT_NewFrame()
     g_Time = current_time;
 
     // Start the frame
-    ImGui::NewFrame();
+    Imgui::NewFrame();
 }
 
 static void ImGui_ImplGLUT_UpdateKeyModifiers()
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     int glut_key_mods = glutGetModifiers();
     io.AddKeyEvent(ImGuiKey_ModCtrl, (glut_key_mods & GLUT_ACTIVE_CTRL) != 0);
     io.AddKeyEvent(ImGuiKey_ModShift, (glut_key_mods & GLUT_ACTIVE_SHIFT) != 0);
@@ -215,7 +215,7 @@ static void ImGui_ImplGLUT_UpdateKeyModifiers()
 
 static void ImGui_ImplGLUT_AddKeyEvent(ImGuiKey key, bool down, int native_keycode)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     io.AddKeyEvent(key, down);
     io.SetKeyEventNativeData(key, native_keycode, -1); // To support legacy indexing (<1.87 user code)
 }
@@ -224,7 +224,7 @@ void ImGui_ImplGLUT_KeyboardFunc(unsigned char c, int x, int y)
 {
     // Send character to imgui
     //printf("char_down_func %d '%c'\n", c, c);
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     if (c >= 32)
         io.AddInputCharacter((unsigned int)c);
 
@@ -263,7 +263,7 @@ void ImGui_ImplGLUT_SpecialUpFunc(int key, int x, int y)
 
 void ImGui_ImplGLUT_MouseFunc(int glut_button, int state, int x, int y)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     io.AddMousePosEvent((float)x, (float)y);
     int button = -1;
     if (glut_button == GLUT_LEFT_BUTTON) button = 0;
@@ -276,7 +276,7 @@ void ImGui_ImplGLUT_MouseFunc(int glut_button, int state, int x, int y)
 #ifdef __FREEGLUT_EXT_H__
 void ImGui_ImplGLUT_MouseWheelFunc(int button, int dir, int x, int y)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     io.AddMousePosEvent((float)x, (float)y);
     if (dir != 0)
         io.AddMouseWheelEvent(0.0f, dir > 0 ? 1.0f : -1.0f);
@@ -286,12 +286,12 @@ void ImGui_ImplGLUT_MouseWheelFunc(int button, int dir, int x, int y)
 
 void ImGui_ImplGLUT_ReshapeFunc(int w, int h)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     io.DisplaySize = ImVec2((float)w, (float)h);
 }
 
 void ImGui_ImplGLUT_MotionFunc(int x, int y)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     io.AddMousePosEvent((float)x, (float)y);
 }

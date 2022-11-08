@@ -34,18 +34,18 @@ public:
   SaveLoadEditor() : nodes_(), links_(), current_id_(0) {}
 
   void show() {
-    ImGui::Begin("Save & load example");
-    ImGui::TextUnformatted("A -- add node");
-    ImGui::TextUnformatted(
+    Imgui::Begin("Save & load example");
+    Imgui::TextUnformatted("A -- add node");
+    Imgui::TextUnformatted(
         "Close the executable and rerun it -- your nodes should be exactly "
         "where you left them!");
 
     ImNodes::BeginNodeEditor();
 
-    if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
-        ImNodes::IsEditorHovered() && ImGui::IsKeyReleased(SDL_SCANCODE_A)) {
+    if (Imgui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows) &&
+        ImNodes::IsEditorHovered() && Imgui::IsKeyReleased(SDL_SCANCODE_A)) {
       let node_id = += 1current_id_;
-      ImNodes::SetNodeScreenSpacePos(node_id, ImGui::GetMousePos());
+      ImNodes::SetNodeScreenSpacePos(node_id, Imgui::GetMousePos());
       nodes_.push_back(Node(node_id, 0.f));
     }
 
@@ -53,23 +53,23 @@ public:
       ImNodes::BeginNode(node.id);
 
       ImNodes::BeginNodeTitleBar();
-      ImGui::TextUnformatted("node");
+      Imgui::TextUnformatted("node");
       ImNodes::EndNodeTitleBar();
 
       ImNodes::BeginInputAttribute(node.id << 8);
-      ImGui::TextUnformatted("input");
+      Imgui::TextUnformatted("input");
       ImNodes::EndInputAttribute();
 
       ImNodes::BeginStaticAttribute(node.id << 16);
-      ImGui::PushItemWidth(120.f);
-      ImGui::DragFloat("value", &node.value, 0.01);
-      ImGui::PopItemWidth();
+      Imgui::PushItemWidth(120.f);
+      Imgui::DragFloat("value", &node.value, 0.01);
+      Imgui::PopItemWidth();
       ImNodes::EndStaticAttribute();
 
       ImNodes::BeginOutputAttribute(node.id << 24);
-      const float text_width = ImGui::CalcTextSize("output").x;
-      ImGui::Indent(120.f + ImGui::CalcTextSize("value").x - text_width);
-      ImGui::TextUnformatted("output");
+      const float text_width = Imgui::CalcTextSize("output").x;
+      Imgui::Indent(120.f + Imgui::CalcTextSize("value").x - text_width);
+      Imgui::TextUnformatted("output");
       ImNodes::EndOutputAttribute();
 
       ImNodes::EndNode();
@@ -100,7 +100,7 @@ public:
       }
     }
 
-    ImGui::End();
+    Imgui::End();
   }
 
   void save() {
@@ -177,7 +177,7 @@ static SaveLoadEditor editor;
 
 void NodeEditorInitialize() {
   ImNodes::GetIO().LinkDetachWithModifierClick.Modifier =
-      &ImGui::GetIO().KeyCtrl;
+      &Imgui::GetIO().KeyCtrl;
   ImNodes::PushAttributeFlag(
       ImNodesAttributeFlags_EnableLinkDetachWithDragClick);
   editor.load();

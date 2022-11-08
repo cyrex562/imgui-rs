@@ -67,15 +67,15 @@ void init(struct android_app* app)
 
     // Setup Dear ImGui context
     IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO();
+    Imgui::CreateContext();
+    ImGuiIO& io = Imgui::GetIO();
 
     // Disable loading/saving of .ini file from disk.
     // FIXME: Consider using LoadIniSettingsFromMemory() / SaveIniSettingsToMemory() to save in appropriate location for Android.
     io.IniFilename = None;
 
     // Setup Dear ImGui style
-    ImGui::StyleColorsDark();
+    Imgui::StyleColorsDark();
     //ImGui::StyleColorsClassic();
 
     // Setup Platform/Renderer backends
@@ -117,14 +117,14 @@ void init(struct android_app* app)
 
     // Arbitrary scale-up
     // FIXME: Put some effort into DPI awareness
-    ImGui::GetStyle().ScaleAllSizes(3.0);
+    Imgui::GetStyle().ScaleAllSizes(3.0);
 
     g_Initialized = true;
 }
 
 void tick()
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     if (g_EglDisplay == EGL_NO_DISPLAY)
         return;
 
@@ -146,51 +146,51 @@ void tick()
     // Start the Dear ImGui frame
     ImGui_ImplOpenGL3_NewFrame();
     ImGui_ImplAndroid_NewFrame();
-    ImGui::NewFrame();
+    Imgui::NewFrame();
 
     // 1. Show the big demo window (Most of the sample code is in ImGui::ShowDemoWindow()! You can browse its code to learn more about Dear ImGui!).
     if (show_demo_window)
-        ImGui::ShowDemoWindow(&show_demo_window);
+        Imgui::ShowDemoWindow(&show_demo_window);
 
     // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
     {
         static float f = 0.0;
         static int counter = 0;
 
-        ImGui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
+        Imgui::Begin("Hello, world!"); // Create a window called "Hello, world!" and append into it.
 
-        ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-        ImGui::Checkbox("Demo window", &show_demo_window);      // Edit bools storing our window open/close state
-        ImGui::Checkbox("Another window", &show_another_window);
+        Imgui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+        Imgui::Checkbox("Demo window", &show_demo_window);      // Edit bools storing our window open/close state
+        Imgui::Checkbox("Another window", &show_another_window);
 
-        ImGui::SliderFloat("float", &f, 0.0, 1.0);            // Edit 1 float using a slider from 0.0 to 1.0
-        ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+        Imgui::SliderFloat("float", &f, 0.0, 1.0);            // Edit 1 float using a slider from 0.0 to 1.0
+        Imgui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-        if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
+        if (Imgui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
             counter += 1;
-        ImGui::SameLine();
-        ImGui::Text("counter = %d", counter);
+        Imgui::SameLine();
+        Imgui::Text("counter = %d", counter);
 
-        ImGui::Text("Application average %.3 ms/frame (%.1 FPS)", 1000.0 / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-        ImGui::End();
+        Imgui::Text("Application average %.3 ms/frame (%.1 FPS)", 1000.0 / Imgui::GetIO().Framerate, Imgui::GetIO().Framerate);
+        Imgui::End();
     }
 
     // 3. Show another simple window.
     if (show_another_window)
     {
-        ImGui::Begin("Another window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-        ImGui::Text("Hello from another window!");
-        if (ImGui::Button("Close Me"))
+        Imgui::Begin("Another window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
+        Imgui::Text("Hello from another window!");
+        if (Imgui::Button("Close Me"))
             show_another_window = false;
-        ImGui::End();
+        Imgui::End();
     }
 
     // Rendering
-    ImGui::Render();
+    Imgui::Render();
     glViewport(0, 0, io.DisplaySize.x, io.DisplaySize.y);
     glClearColor(clear_color.x * clear_color.w, clear_color.y * clear_color.w, clear_color.z * clear_color.w, clear_color.w);
     glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+    ImGui_ImplOpenGL3_RenderDrawData(Imgui::GetDrawData());
     eglSwapBuffers(g_EglDisplay, g_EglSurface);
 }
 
@@ -202,7 +202,7 @@ void shutdown()
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
     ImGui_ImplAndroid_Shutdown();
-    ImGui::DestroyContext();
+    Imgui::DestroyContext();
 
     if (g_EglDisplay != EGL_NO_DISPLAY)
     {
@@ -340,7 +340,7 @@ static int PollUnicodeChars()
         return -4;
 
     // Send the actual characters to Dear ImGui
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     jint unicode_character;
     while ((unicode_character = java_env->CallIntMethod(g_App->activity->clazz, method_id)) != 0)
         io.AddInputCharacter(unicode_character);

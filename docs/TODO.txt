@@ -41,7 +41,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - scrolling/style: shadows on scrollable areas to denote that there is more contents (see e.g. DaVinci Resolve ui)
 
  - drawdata: make it easy to deep-copy (or swap?) a full ImDrawData so user can easily save that data if they use threaded rendering. (e.g. #2646)
- ! drawlist: add CalcTextSize() func to facilitate consistent code from user pov (currently need to use ImGui or ImFont alternatives!)
+ ! drawlist: add CalcTextSize() func to facilitate consistent code from user pov (currently need to use Imgui or ImFont alternatives!)
  - drawlist: maintaining bounding box per command would allow to merge draw command when clipping isn't relied on (typical non-scrolling window or non-overflowing column would merge with previous command). (WIP branch)
  - drawlist: primitives/helpers to manipulate vertices post submission, so e.g. a quad/rect can be resized to fit later submitted content, _without_ using the ChannelSplit api
  - drawlist: make it easier to toggle AA per primitive, so we can use e.g. non-AA fill + AA borders more naturally
@@ -102,7 +102,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - input number: holding [-]/[+] buttons could increase the step speed non-linearly (or user-controlled)
  - input number: use mouse wheel to step up/down
 
- - layout: helper or a way to express ImGui::SameLine(ImGui::GetCursorStartPos().x + ImGui::CalcItemWidth() + ImGui::GetStyle().ItemInnerSpacing.x); in a simpler manner.
+ - layout: helper or a way to express Imgui::SameLine(Imgui::GetCursorStartPos().x + Imgui::CalcItemWidth() + Imgui::GetStyle().ItemInnerSpacing.x); in a simpler manner.
  - layout, font: horizontal tab support, A) text mode: forward only tabs (e.g. every 4 characters/N pixels from pos x1), B) manual mode: explicit tab stops acting as mini columns, no clipping (for menu items, many kind of uses, also vaguely relate to #267, #395)
  - layout: horizontal layout helper (#97)
  - layout: horizontal flow until no space left (#404)
@@ -120,7 +120,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - group: merge deactivation/activation within same group (fwd WasEdited flag). (#2550)
 
 !- color: the color conversion helpers/types are a mess and needs sorting out.
- - color: (api breaking) ImGui::ColorConvertXXX functions should be loose ImColorConvertXX to match imgui_internals.h
+ - color: (api breaking) Imgui::ColorConvertXXX functions should be loose ImColorConvertXX to match imgui_internals.h
 
  - plot: full featured plot/graph api w/ scrolling, zooming etc. all bell & whistle. why not!
  - plot: PlotLines() should use the polygon-stroke facilities, less vertices (currently issues with averaging normals)
@@ -319,7 +319,7 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - font/draw: underline, squiggle line rendering helpers.
  - font: optimization: for monospace font (like the default one) we can trim IndexXAdvance as long as trailing value is == FallbackXAdvance (need to make sure TAB is still correct), would save on cache line.
  - font: add support for kerning, probably optional. A) perhaps default to (32..128)^2 matrix ~ 9K entries = 36KB, then hash for non-ascii?. B) or sparse lookup into per-char list?
- - font: add a simpler calc_text_size_a() api? current one ok but not welcome if user needs to call it directly (without going through ImGui::CalcTextSize)
+ - font: add a simpler calc_text_size_a() api? current one ok but not welcome if user needs to call it directly (without going through Imgui::CalcTextSize)
  - font: fix add_remap_char() to work before atlas  has been built.
  - font: (api breaking) remove "TTF" from symbol names. also because it now supports OTF.
  - font/opt: Considering storing standalone advance_x table as 16-bit fixed point integer?
@@ -375,9 +375,9 @@ It's mostly a bunch of personal notes, probably incomplete. Feel free to query i
  - inputs/scrolling: support for smooth scrolling (#2462, #2569)
 
  - misc: idle: expose "woken up" boolean (set by inputs) and/or animation time (for cursor blink) for backend to be able stop refreshing easily.
- - misc: idle: if cursor blink if the _only_ visible animation, core imgui could rewrite vertex alpha to avoid CPU pass on ImGui:: calls.
+ - misc: idle: if cursor blink if the _only_ visible animation, core imgui could rewrite vertex alpha to avoid CPU pass on Imgui:: calls.
  - misc: idle: if cursor blink if the _only_ visible animation, could even expose a dirty rectangle that optionally can be leverage by some app to render in a smaller viewport, getting rid of much pixel shading cost.
- - misc: no way to run a root-most GetID() with ImGui:: api since there's always a Debug window in the stack. (mentioned in #2960)
+ - misc: no way to run a root-most GetID() with Imgui:: api since there's always a Debug window in the stack. (mentioned in #2960)
  - misc: make the ImGuiCond values linear (non-power-of-two). internal storage for ImGuiWindow can use integers to combine into flags (Why?)
  - misc: PushItemFlag(): add a flag to disable keyboard capture when used with mouse? (#1682)
  - misc: use more size_t in public api?

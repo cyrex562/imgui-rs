@@ -11,28 +11,28 @@ class HelloWorldNodeEditor
 public:
     void show()
     {
-        ImGui::Begin("simple node editor");
+        Imgui::Begin("simple node editor");
 
         ImNodes::BeginNodeEditor();
         ImNodes::BeginNode(1);
 
         ImNodes::BeginNodeTitleBar();
-        ImGui::TextUnformatted("simple node :)");
+        Imgui::TextUnformatted("simple node :)");
         ImNodes::EndNodeTitleBar();
 
         ImNodes::BeginInputAttribute(2);
-        ImGui::Text("input");
+        Imgui::Text("input");
         ImNodes::EndInputAttribute();
 
         ImNodes::BeginOutputAttribute(3);
-        ImGui::Indent(40);
-        ImGui::Text("output");
+        Imgui::Indent(40);
+        Imgui::Text("output");
         ImNodes::EndOutputAttribute();
 
         ImNodes::EndNode();
         ImNodes::EndNodeEditor();
 
-        ImGui::End();
+        Imgui::End();
     }
 };
 

@@ -50,13 +50,13 @@ struct ImGui_ImplSDLRenderer_Data
 // It is STRONGLY preferred that you use docking branch with multi-viewports (== single Dear ImGui context + multiple windows) instead of multiple Dear ImGui contexts.
 static ImGui_ImplSDLRenderer_Data* ImGui_ImplSDLRenderer_GetBackendData()
 {
-    return ImGui::GetCurrentContext() ? (ImGui_ImplSDLRenderer_Data*)ImGui::GetIO().BackendRendererUserData : NULL;
+    return Imgui::GetCurrentContext() ? (ImGui_ImplSDLRenderer_Data*)Imgui::GetIO().BackendRendererUserData : NULL;
 }
 
 // Functions
 bool ImGui_ImplSDLRenderer_Init(SDL_Renderer* renderer)
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     IM_ASSERT(io.BackendRendererUserData == NULL && "Already initialized a renderer backend!");
     IM_ASSERT(renderer != NULL && "SDL_Renderer not initialized!");
 
@@ -64,7 +64,7 @@ bool ImGui_ImplSDLRenderer_Init(SDL_Renderer* renderer)
     ImGui_ImplSDLRenderer_Data* bd = IM_NEW(ImGui_ImplSDLRenderer_Data)();
     io.BackendRendererUserData = (void*)bd;
     io.BackendRendererName = "imgui_impl_sdlrenderer";
-    io.BackendFlags |= ImGuiBackendFlags_RendererHasVtxOffset;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
+    io.BackendFlags |= IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
 
     bd->SDLRenderer = renderer;
 
@@ -75,7 +75,7 @@ void ImGui_ImplSDLRenderer_Shutdown()
 {
     ImGui_ImplSDLRenderer_Data* bd = ImGui_ImplSDLRenderer_GetBackendData();
     IM_ASSERT(bd != NULL && "No renderer backend to shutdown, or already shutdown?");
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
 
     ImGui_ImplSDLRenderer_DestroyDeviceObjects();
 
@@ -202,7 +202,7 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
 // Called by Init/NewFrame/shutdown
 bool ImGui_ImplSDLRenderer_CreateFontsTexture()
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     ImGui_ImplSDLRenderer_Data* bd = ImGui_ImplSDLRenderer_GetBackendData();
 
     // Build texture atlas
@@ -230,7 +230,7 @@ bool ImGui_ImplSDLRenderer_CreateFontsTexture()
 
 void ImGui_ImplSDLRenderer_DestroyFontsTexture()
 {
-    ImGuiIO& io = ImGui::GetIO();
+    ImGuiIO& io = Imgui::GetIO();
     ImGui_ImplSDLRenderer_Data* bd = ImGui_ImplSDLRenderer_GetBackendData();
     if (bd->FontTexture)
     {

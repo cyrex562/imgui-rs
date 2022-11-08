@@ -558,8 +558,8 @@ pub unsafe fn ShowDemoWindow(p_open: *mut bool)
             CheckboxFlags("io.BackendFlags: HasSetMousePos",         &backend_flags, ImGuiBackendFlags_HasSetMousePos);
             CheckboxFlags("io.BackendFlags: PlatformHasViewports",   &backend_flags, ImGuiBackendFlags_PlatformHasViewports);
             CheckboxFlags("io.BackendFlags: HasMouseHoveredViewport",&backend_flags, ImGuiBackendFlags_HasMouseHoveredViewport);
-            CheckboxFlags("io.BackendFlags: RendererHasVtxOffset",   &backend_flags, ImGuiBackendFlags_RendererHasVtxOffset);
-            CheckboxFlags("io.BackendFlags: RendererHasViewports",   &backend_flags, ImGuiBackendFlags_RendererHasViewports);
+            CheckboxFlags("io.BackendFlags: RendererHasVtxOffset",   &backend_flags, IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET);
+            CheckboxFlags("io.BackendFlags: RendererHasViewports",   &backend_flags, IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VIEWPORTS);
             TreePop();
             Separator();
         }
@@ -5754,7 +5754,7 @@ pub unsafe fn ShowDemoWindowColumns()
     TreePop();
 }
 
-namespace ImGui { extern *mut ImGuiKeyData GetKeyData(ImGuiKey key); }
+namespace Imgui { extern *mut ImGuiKeyData GetKeyData(ImGuiKey key); }
 
 pub unsafe fn ShowDemoWindowMisc()
 {
@@ -6174,8 +6174,8 @@ pub unsafe fn ShowAboutWindow(p_open: *mut bool)
         if (io.BackendFlags & ImGuiBackendFlags_HasSetMousePos)         Text(" HasSetMousePos");
         if (io.BackendFlags & ImGuiBackendFlags_PlatformHasViewports)   Text(" PlatformHasViewports");
         if (io.BackendFlags & ImGuiBackendFlags_HasMouseHoveredViewport)Text(" HasMouseHoveredViewport");
-        if (io.BackendFlags & ImGuiBackendFlags_RendererHasVtxOffset)   Text(" RendererHasVtxOffset");
-        if (io.BackendFlags & ImGuiBackendFlags_RendererHasViewports)   Text(" RendererHasViewports");
+        if (io.BackendFlags & IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET)   Text(" RendererHasVtxOffset");
+        if (io.BackendFlags & IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VIEWPORTS)   Text(" RendererHasViewports");
         Separator();
         Text("io.Fonts: {} fonts, Flags: 0x{}, TexSize: {},{}", io.Fonts.Fonts.Size, io.Fonts.Flags, io.Fonts.TexWidth, io.Fonts.TexHeight);
         Text("io.DisplaySize: {},{}", io.DisplaySize.x, io.DisplaySize.y);
@@ -6208,7 +6208,7 @@ pub unsafe fn ShowAboutWindow(p_open: *mut bool)
 //-----------------------------------------------------------------------------
 
 // Forward declare ShowFontAtlas() which isn't worth putting in public API yet
-namespace ImGui {  c_void ShowFontAtlas(*mut ImFontAtlas atlas); }
+namespace Imgui {  c_void ShowFontAtlas(*mut ImFontAtlas atlas); }
 
 // Demo helper function to select among loaded fonts.
 // Here we use the regular BeginCombo()/EndCombo() api which is the more flexible one.
