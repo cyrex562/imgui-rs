@@ -3,7 +3,7 @@
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_double, c_float, c_int, c_void};
 use crate::backend_flags::ImGuiBackendFlags;
-use crate::config_flags::{ImguiConfigFlags, ImGuiConfigFlags_None};
+use crate::core::config_flags::{ImguiConfigFlags, ImGuiConfigFlags_None};
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
 use crate::imgui::GImGui;

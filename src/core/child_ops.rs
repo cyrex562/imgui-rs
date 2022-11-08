@@ -1,6 +1,6 @@
-use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
+use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::color::{ImGuiCol_ChildBg, ImGuiCol_FrameBg};
-use crate::condition::ImGuiCond_None;
+use crate::core::condition::ImGuiCond_None;
 use crate::content_ops::content_region_avail;
 use crate::id_ops::SetActiveID;
 use crate::input_source::ImGuiInputSource_Nav;

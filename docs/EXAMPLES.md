@@ -43,7 +43,7 @@ ImGui::CreateContext();
 ImGuiIO& io = ImGui::GetIO();
 io.config_flags |= ImGuiConfigFlags_NavEnableKeyboard; // Enable some options
 
-// Initialize Platform + Renderer backends (here: using imgui_impl_win32.cpp + imgui_impl_dx11.cpp)
+// initialize Platform + Renderer backends (here: using imgui_impl_win32.cpp + imgui_impl_dx11.cpp)
 ImGui_ImplWin32_Init(my_hwnd);
 ImGui_ImplDX11_Init(my_d3d_device, my_d3d_device_context);
 
@@ -66,7 +66,7 @@ while (true)
     g_pSwapChain->Present(1, 0);
 }
 
-// Shutdown
+// shutdown
 ImGui_ImplDX11_Shutdown();
 ImGui_ImplWin32_Shutdown();
 ImGui::DestroyContext();
@@ -243,4 +243,3 @@ when an interactive drag is in progress.
 Note that some setup or GPU drivers are likely to be causing extra display lag depending on their settings.
 If you feel that dragging windows feels laggy and you are not sure what the cause is: try to build a simple
 drawing a flat 2D shape directly under the mouse cursor!
-

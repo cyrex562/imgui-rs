@@ -9,13 +9,13 @@
 
 use std::ptr::null_mut;
 use libc::{c_char, c_int, strlen};
-use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_Once};
-use crate::context::ImguiContext;
+use crate::core::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_Once};
+use crate::core::context::ImguiContext;
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::{GImGui, SettingsHandler, hash_string};
-use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
-use crate::color_ops::ColorConvertFloat4ToU32;
-use crate::config_flags::ImGuiConfigFlags_DockingEnable;
+use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
+use crate::color::color_ops::ColorConvertFloat4ToU32;
+use crate::core::config_flags::ImGuiConfigFlags_DockingEnable;
 use crate::docking::dock_context::ImGuiDockContext;
 use crate::dock_context_ops::DockContextFindNodeByID;
 use crate::docking::dock_node_flags::ImGuiDockNodeFlags_CentralNode;

@@ -1,6 +1,6 @@
 #![allow(non_upper_case_globals)]
 
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 use libc::c_void;
 use std::ptr::null_mut;
 

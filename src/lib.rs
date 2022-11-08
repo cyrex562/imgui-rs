@@ -1,58 +1,35 @@
-#![allow(non_snake_case)]
-extern crate core;
-extern crate freetype;
-
-use crate::context::ImguiContext;
-use crate::context_hook::IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN;
 use crate::context_ops::CallContextHooks;
 use crate::dock_context_ops::{init_dock_context, shutdown_dock_context};
-use crate::file_ops::ImFileClose;
+use crate::docking::dock_context_ops::{init_dock_context, shutdown_dock_context};
+use crate::file_ops::close_file;
 use crate::hash_ops::hash_string;
 use crate::imgui::GImGui;
 use crate::settings_handler::SettingsHandler;
 use crate::settings_ops::{
-    AddSettingsHandler, SaveIniSettingsToDisk, WindowSettingsHandler_ApplyAll,
+    save_ini_settings_to_disk, AddSettingsHandler, WindowSettingsHandler_ApplyAll,
     WindowSettingsHandler_ClearAll, WindowSettingsHandler_ReadLine, WindowSettingsHandler_WriteAll,
 };
 use crate::tables::TableSettingsAddSettingsHandler;
+use crate::type_defs::INVALID_IMGUI_HANDLE;
 use crate::viewport::ImguiViewport;
 use crate::viewport_flags::ImGuiViewportFlags_OwnedByApp;
 use crate::viewport_ops::DestroyPlatformWindows;
+use core::context::ImguiContext;
+use core::context_hook::IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN;
 use std::collections::HashSet;
 use std::io::stdout;
 use std::ptr::null_mut;
 
 mod activate_flags;
-mod axis;
-mod backend_flags;
-mod child_ops;
-mod clipboard_ops;
+mod backends;
 mod color;
-mod color_edit_flags;
-mod color_mod;
-mod color_ops;
-mod combo_flags;
-mod combo_preview_data;
-mod condition;
-mod config;
-mod config_flags;
-mod constants;
-mod content_ops;
-mod context;
-mod context_hook;
-mod context_ops;
-mod cursor_ops;
+mod core;
 mod data_authority;
 mod data_type;
-mod data_type_info;
-mod data_type_ops;
-mod data_type_temp_storage;
-mod debug_log_flags;
-mod debug_ops;
+mod debugging;
 mod direction;
-mod draw;
-mod draw_channel;
-mod draw_cmd;
+mod docking;
+mod drag_drop;
 mod draw_cmd_header;
 mod draw_data;
 mod draw_data_ops;
@@ -63,6 +40,7 @@ mod draw_list_ops;
 mod draw_list_shared_data;
 mod draw_list_splitter;
 mod draw_vert;
+mod drawing;
 mod error_ops;
 mod file_ops;
 mod focused_flags;
@@ -222,16 +200,12 @@ mod viewport;
 mod viewport_flags;
 mod viewport_ops;
 mod widget_ops;
-mod a_widgets;
+mod widgets;
 mod win_dock_style;
 mod window;
-mod widgets;
-mod docking;
-mod drag_drop;
-mod core;
 
-// c_void Initialize()
-pub fn Initialize(g: &mut ImguiContext) {
+// c_void initialize()
+pub fn initialize(g: &mut ImguiContext) {
     // IM_ASSERT(!g.Initialized && !g.SettingsLoaded);
     // Add .ini handle for ImGuiWindow type
     let mut ini_handler = SettingsHandler::new();
@@ -259,7 +233,7 @@ pub fn Initialize(g: &mut ImguiContext) {
     g.PlatformIO.Viewports.push(g.Viewports[0]);
 
     // #ifdef IMGUI_HAS_DOCK
-    // Initialize Docking
+    // initialize Docking
     init_dock_context(g);
     // #endif
 
@@ -267,8 +241,8 @@ pub fn Initialize(g: &mut ImguiContext) {
 }
 
 // This function is merely here to free heap allocations.
-// c_void Shutdown()
-pub fn Shutdown(g: &mut ImguiContext) {
+// c_void shutdown()
+pub fn shutdown(g: &mut ImguiContext) {
     // The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
     if g.IO.Fonts.is_some() && g.FontAtlasOwnedByContext {
         g.IO.Fonts.Locked = false;
@@ -283,13 +257,13 @@ pub fn Shutdown(g: &mut ImguiContext) {
 
     // Save settings (unless we haven't attempted to load them: CreateContext/DestroyContext without a call to NewFrame shouldn't save an empty file)
     if g.SettingsLoaded && g.IO.IniFilename != None {
-        SaveIniSettingsToDisk(g.IO.IniFilename);
+        save_ini_settings_to_disk(g, g.IO.IniFilename);
     }
 
     // Destroy platform windows
-    DestroyPlatformWindows();
+    DestroyPlatformWindows(g);
 
-    // Shutdown extensions
+    // shutdown extensions
     shutdown_dock_context(g);
 
     // CallContextHooks(g, IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN);
@@ -299,24 +273,24 @@ pub fn Shutdown(g: &mut ImguiContext) {
     g.Windows.clear_delete();
     g.WindowsFocusOrder.clear();
     g.WindowsTempSortBuffer.clear();
-    g.CurrentWindow = None;
+    g.CurrentWindow = INVALID_IMGUI_HANDLE;
     g.CurrentWindowStack.clear();
     g.WindowsById.Clear();
-    g.NavWindow = None;
+    g.NavWindow = INVALID_IMGUI_HANDLE;
     g.HoveredWindow = null_Mut();
-    g.HoveredWindowUnderMovingWindow = None;
-    g.ActiveIdWindow = None;
-    g.ActiveIdPreviousFrameWindow = None;
-    g.MovingWindow = None;
+    g.HoveredWindowUnderMovingWindow = INVALID_IMGUI_HANDLE;
+    g.ActiveIdWindow = INVALID_IMGUI_HANDLE;
+    g.ActiveIdPreviousFrameWindow = INVALID_IMGUI_HANDLE;
+    g.MovingWindow = INVALID_IMGUI_HANDLE;
     g.ColorStack.clear();
     g.styleVarStack.clear();
     g.FontStack.clear();
     g.OpenPopupStack.clear();
     g.BeginPopupStack.clear();
 
-    g.CurrentViewport = None;
-    g.MouseViewport = None;
-    g.MouseLastHoveredViewport = None;
+    g.CurrentViewport = INVALID_IMGUI_HANDLE;
+    g.MouseViewport = INVALID_IMGUI_HANDLE;
+    g.MouseLastHoveredViewport = INVALID_IMGUI_HANDLE;
     g.Viewports.clear_delete();
 
     g.TabBars.Clear();
@@ -340,7 +314,7 @@ pub fn Shutdown(g: &mut ImguiContext) {
         // #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
         if g.LogFile != libc::stdout {
             // #endif
-            ImFileClose(g.LogFile);
+            close_file(g.LogFile);
         }
         g.LogFile = None;
     }

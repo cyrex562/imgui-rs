@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
-use crate::axis::{ImGuiAxis, IM_GUI_AXIS_NONE};
 use crate::color::IM_COL32_WHITE;
+use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_NONE};
 use crate::data_authority::{
     ImGuiDataAuthority, IM_GUI_DATA_AUTHORITY_AUTO, IM_GUI_DATA_AUTHORITY_DOCK_NODE,
 };

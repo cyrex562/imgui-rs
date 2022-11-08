@@ -24,7 +24,7 @@ IMGUI_IMPL_API void     ImGui_ImplSDLRenderer_Shutdown();
 IMGUI_IMPL_API void     ImGui_ImplSDLRenderer_NewFrame();
 IMGUI_IMPL_API void     ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data);
 
-// Called by Init/NewFrame/Shutdown
+// Called by Init/NewFrame/shutdown
 IMGUI_IMPL_API bool     ImGui_ImplSDLRenderer_CreateFontsTexture();
 IMGUI_IMPL_API void     ImGui_ImplSDLRenderer_DestroyFontsTexture();
 IMGUI_IMPL_API bool     ImGui_ImplSDLRenderer_CreateDeviceObjects();

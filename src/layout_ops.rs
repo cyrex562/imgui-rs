@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 use crate::item_ops::{ItemAdd, ItemSize};
 use crate::layout_type::{ImGuiLayoutType, ImGuiLayoutType_Vertical};
 use crate::math_ops::ImMax;

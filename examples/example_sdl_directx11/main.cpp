@@ -43,7 +43,7 @@ int main(int, char**)
     SDL_GetWindowWMInfo(window, &wmInfo);
     HWND hwnd = (HWND)wmInfo.info.win.window;
 
-    // Initialize Direct3D
+    // initialize Direct3D
     if (!CreateDeviceD3D(hwnd))
     {
         CleanupDeviceD3D();

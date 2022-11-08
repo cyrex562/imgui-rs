@@ -1,5 +1,7 @@
-use crate::{a_imgui_cpp::{DockSettingsHandler_ApplyAll, DockSettingsHandler_ClearAll, DockSettingsHandler_ReadLine, DockSettingsHandler_WriteAll}, axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y}, config_flags::ImGuiConfigFlags_DockingEnable, direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up}, utils::is_not_null};
-use crate::context::ImguiContext;
+use crate::{a_imgui_cpp::{DockSettingsHandler_ApplyAll, DockSettingsHandler_ClearAll, DockSettingsHandler_ReadLine, DockSettingsHandler_WriteAll}, direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up}, utils::is_not_null};
+use crate::core::context::ImguiContext;
+use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
+use crate::core::config_flags::ImGuiConfigFlags_DockingEnable;
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::docking::dock_request_type::{ImGuiDockRequestType_Dock, ImGuiDockRequestType_None, ImGuiDockRequestType_Undock};
 use crate::docking_ops::{DockBuilderRemoveNodeChildNodes, DockBuilderRemoveNodeDockedWindows, DockSettingsHandler_ApplyAll, DockSettingsHandler_ClearAll, DockSettingsHandler_ReadLine, DockSettingsHandler_WriteAll};

@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::condition::ImGuiCond_Always;
-use crate::config_flags::{
+use crate::core::condition::ImGuiCond_Always;
+use crate::core::config_flags::{
     ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_NavNoCaptureKeyboard,
     ImGuiConfigFlags_NoMouse, ImGuiConfigFlags_ViewportsEnable,
 };
-use crate::constants::{WINDOWS_HOVER_PADDING, WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER};
+use crate::core::constants::{WINDOWS_HOVER_PADDING, WINDOWS_MOUSE_WHEEL_SCROLL_LOCK_TIMER};
 use crate::dock_context_ops::DockContextQueueUndockNode;
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::drag_drop::drag_drop_flags::ImGuiDragDropFlags_SourceExtern;

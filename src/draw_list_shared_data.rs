@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::constants::{IM_DRAWLIST_ARCFAST_SAMPLE_MAX, IM_DRAWLIST_ARCFAST_TABLE_SIZE};
+use crate::core::constants::{IM_DRAWLIST_ARCFAST_SAMPLE_MAX, IM_DRAWLIST_ARCFAST_TABLE_SIZE};
 use crate::draw_list_flags::ImDrawListFlags;
 use crate::font::ImFont;
 use crate::math_ops::{ImCos, ImSin};

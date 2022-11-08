@@ -3,9 +3,10 @@
 use std::borrow::BorrowMut;
 use std::ptr::null_mut;
 use libc::{c_void, memcmp};
-use crate::{type_defs::ImguiHandle, viewport::ImguiViewport, imgui::GImGui, window::{ImguiWindow, window_flags::{ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_Tooltip, ImGuiWindowFlags_Popup, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground}}, rect::ImRect, vec2::ImVec2, config_flags::{ImGuiConfigFlags_ViewportsEnable, ImGuiConfigFlags_DpiEnableScaleViewports}, viewport_flags::{ImGuiViewportFlags_NoInputs, ImGuiViewportFlags_Minimized, ImGuiViewportFlags_OwnedByApp, ImGuiViewportFlags_CanHostOtherWindows, ImGuiViewportFlags_NoFocusOnAppearing, ImGuiViewportFlags_IsPlatformWindow, ImGuiViewportFlags_TopMost, ImGuiViewportFlags_NoDecoration, ImGuiViewportFlags_NoTaskBarIcon, ImGuiViewportFlags_NoRendererClear, ImGuiViewportFlags_NoFocusOnClick}, hash_string};
+use crate::{hash_string, imgui::GImGui, ImguiContext, rect::ImRect, type_defs::ImguiHandle, vec2::ImVec2, viewport::ImguiViewport, viewport_flags::{ImGuiViewportFlags_CanHostOtherWindows, ImGuiViewportFlags_IsPlatformWindow, ImGuiViewportFlags_Minimized, ImGuiViewportFlags_NoDecoration, ImGuiViewportFlags_NoFocusOnAppearing, ImGuiViewportFlags_NoFocusOnClick, ImGuiViewportFlags_NoInputs, ImGuiViewportFlags_NoRendererClear, ImGuiViewportFlags_NoTaskBarIcon, ImGuiViewportFlags_OwnedByApp, ImGuiViewportFlags_TopMost}, window::{ImguiWindow, window_flags::{ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip}}};
 use crate::backend_flags::IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT;
 use crate::context_ops::GetPlatformIO;
+use crate::core::config_flags::{ImGuiConfigFlags_DpiEnableScaleViewports, ImGuiConfigFlags_ViewportsEnable};
 use crate::draw_list::ImDrawList;
 use crate::input_ops::{IsAnyMouseDown, IsMousePosValid};
 use crate::io_ops::GetIO;
@@ -167,7 +168,7 @@ pub unsafe fn UpdateTryMergeWindowIntoHostViewport(window: &mut ImguiWindow, vie
         return false;}
     if ((viewport.Flags & ImGuiViewportFlags_Minimized) != 0){
         return false;}
-    if (!viewport.GetMainRect().Contains(window.Rect())){
+    if (!viewport.get_main_rect().Contains(window.Rect())){
         return false;}
     if (GetWindowAlwaysWantOwnViewport(window)){
         return false;}
@@ -180,7 +181,7 @@ pub unsafe fn UpdateTryMergeWindowIntoHostViewport(window: &mut ImguiWindow, vie
         if (window_behind == window){
             break;}
         if (window_behind.WasActive && windoe_behind.ViewportOwned && flag_clear(window_behind.Flags, ImGuiWindowFlags_ChildWindow)){
-            if (window_behind.Viewport.GetMainRect().Overlaps(window.Rect())){
+            if (window_behind.Viewport.get_main_rect().Overlaps(window.Rect())){
                 return false;}}
     }
 
@@ -259,7 +260,7 @@ pub unsafe fn FindHoveredViewportFromPlatformWindowStack(mouse_platform_pos: &Im
     for n in 0 .. g.Viewports.len()
     {
         let mut viewport: *mut ImguiViewport =  g.Viewports[n];
-        if (!(viewport.Flags & (ImGuiViewportFlags_NoInputs | ImGuiViewportFlags_Minimized)) && viewport.GetMainRect().Contains(mouse_platform_pos)){
+        if (!(viewport.Flags & (ImGuiViewportFlags_NoInputs | ImGuiViewportFlags_Minimized)) && viewport.get_main_rect().Contains(mouse_platform_pos)){
             if (best_candidate == None || best_candidate.last_front_most_stamp_count < viewport.last_front_most_stamp_count){
                 best_candidate = viewport;}}
     }
@@ -548,7 +549,7 @@ pub unsafe fn DestroyViewport(viewport: *mut ImguiViewport)
 
     // Destroy
     // IMGUI_DEBUG_LOG_VIEWPORT("[viewport] Delete Viewport {} '{}'\n", viewport.ID, viewport.Window ? viewport.window.Name : "n/a");
-    DestroyPlatformWindow(viewport); // In most circumstances the platform window will already be destroyed here.
+    destroy_platform_window(g, viewport); // In most circumstances the platform window will already be destroyed here.
     // IM_ASSERT(g.PlatformIO.Viewports.contains(viewport) == false);
     // IM_ASSERT(g.Viewports[viewport.Idx] == viewport);
     g.Viewports.erase(g.Viewports.Data + viewport.Idx);
@@ -802,7 +803,7 @@ pub unsafe fn UpdatePlatformWindows()
         destroy_platform_window |= (viewport.Window && !IsWindowActiveAndVisible(viewport.Window));
         if (destroy_platform_window)
         {
-            DestroyPlatformWindow(viewport);
+            destroy_platform_window(g, viewport);
             continue;
         }
 
@@ -876,7 +877,7 @@ pub unsafe fn UpdatePlatformWindows()
             }
 
         // Clear request flags
-        viewport.ClearRequestFlags();
+        viewport.clear_request_flags();
     }
 
     // Update our implicit z-order knowledge of platform windows, which is used when the backend cannot provide io.MouseHoveredViewport.
@@ -997,45 +998,45 @@ pub unsafe fn FindPlatformMonitorForRect(rect: &ImRect) -> c_int
 // Update monitor from viewport rectangle (we'll use this info to clamp windows and save windows lost in a removed monitor)
 pub unsafe fn UpdateViewportPlatformMonitor(viewport: *mut ImguiViewport)
 {
-    viewport.PlatformMonitor = FindPlatformMonitorForRect(&viewport.GetMainRect());
+    viewport.PlatformMonitor = FindPlatformMonitorForRect(&viewport.get_main_rect());
 }
 
 // Return value is always != NULL, but don't hold on it across frames.
-pub unsafe fn GetViewportPlatformMonitor(viewport_p: *mut ImguiViewport) -> *const ImGuiPlatformMonitor
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut viewport: *mut ImguiViewport =  viewport_p;
-    let monitor_idx: c_int = viewport.PlatformMonitor;
-    if (monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.Size){
-        return &g.PlatformIO.Monitors[monitor_idx];}
-    return &g.FallbackMonitor;
+pub fn viewport_platform_monitor_mut(g: &mut ImguiContext, viewport_p: &mut ImguiViewport) -> &mut ImGuiPlatformMonitor {
+    let mut viewport = viewport_p;
+    let monitor_idx = viewport.PlatformMonitor;
+    if monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.Size {
+        return &mut g.PlatformIO.Monitors[monitor_idx];
+    }
+    return &mut g.FallbackMonitor;
 }
 
-pub unsafe fn DestroyPlatformWindow(viewport: *mut ImguiViewport)
+pub fn destroy_platform_window(g: &mut ImguiContext, viewport: &mut ImguiViewport)
 {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (viewport.PlatformWindowCreated)
+    if viewport.PlatformWindowCreated
     {
-        if (g.PlatformIO.Renderer_DestroyWindow){
+        if g.PlatformIO.Renderer_DestroyWindow {
             g.PlatformIO.Renderer_DestroyWindow(viewport);}
-        if (g.PlatformIO.Platform_DestroyWindow){
+        if g.PlatformIO.Platform_DestroyWindow {
             g.PlatformIO.Platform_DestroyWindow(viewport);}
         // IM_ASSERT(viewport.RendererUserData == NULL && viewport.PlatformUserData == NULL);
 
-        // Don't clear PlatformWindowCreated for the main viewport, as we initially set that up to true in Initialize()
+        // Don't clear PlatformWindowCreated for the main viewport, as we initially set that up to true in initialize()
         // The righter way may be to leave it to the backend to set this flag all-together, and made the flag public.
-        if (viewport.ID != IMGUI_VIEWPORT_DEFAULT_ID){
+        if viewport.ID != IMGUI_VIEWPORT_DEFAULT_ID {
             viewport.PlatformWindowCreated = false;}
     }
     else
     {
         // IM_ASSERT(viewport.RendererUserData == NULL && viewport.PlatformUserData == NULL && viewport.PlatformHandle == NULL);
     }
-    viewport.RendererUserData = viewport.PlatformUserData = viewport.PlatformHandle= None;
-    viewport.ClearRequestFlags();
+    viewport.PlatformHandle= None;
+    viewport.PlatformUserData = viewport.PlatformHandle;
+    viewport.RendererUserData = viewport.PlatformUserData;
+    viewport.clear_request_flags();
 }
 
-pub unsafe fn DestroyPlatformWindows()
+pub fn DestroyPlatformWindows(g: &mut ImguiContext)
 {
     // We call the destroy window on every viewport (including the main viewport, index 0) to give a chance to the backend
     // to clear any data they may have stored in e.g. PlatformUserData, RendererUserData.
@@ -1043,10 +1044,8 @@ pub unsafe fn DestroyPlatformWindows()
     // code to operator a consistent manner.
     // It is expected that the backend can handle calls to Renderer_DestroyWindow/Platform_DestroyWindow without
     // crashing if it doesn't have data stored.
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    // for (let i: c_int = 0; i < g.Viewports.len(); i++)
-    for i in 0 .. g.Viewports.len()
+    for viewport in g.Viewports.values()
     {
-        DestroyPlatformWindow(g.Viewports[i]);
+        destroy_platform_window(g, viewport);
     }
 }

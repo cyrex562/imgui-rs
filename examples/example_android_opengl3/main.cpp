@@ -31,7 +31,7 @@ void init(struct android_app* app)
     g_App = app;
     ANativeWindow_acquire(g_App->window);
 
-    // Initialize EGL
+    // initialize EGL
     // This is mostly boilerplate code for EGL...
     {
         g_EglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);

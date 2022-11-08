@@ -199,7 +199,7 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
     SDL_RenderSetClipRect(bd->SDLRenderer, old.ClipEnabled ? &old.ClipRect : NULL);
 }
 
-// Called by Init/NewFrame/Shutdown
+// Called by Init/NewFrame/shutdown
 bool ImGui_ImplSDLRenderer_CreateFontsTexture()
 {
     ImGuiIO& io = ImGui::GetIO();

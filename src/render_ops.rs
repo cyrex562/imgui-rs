@@ -10,8 +10,8 @@ use crate::color::{
     color_u32_from_rgba, ImGuiCol_Border, ImGuiCol_BorderShadow, ImGuiCol_NavHighlight,
     ImGuiCol_Text, IM_COL32_A_MASK, IM_COL32_A_SHIFT, IM_COL32_BLACK, IM_COL32_WHITE,
 };
-use crate::context::ImguiContext;
-use crate::context_hook::{
+use crate::core::context::ImguiContext;
+use crate::core::context_hook::{
     IM_GUI_CONTEXT_HOOK_TYPE_RENDER_POST, IM_GUI_CONTEXT_HOOK_TYPE_RENDER_PRE,
 };
 use crate::direction::{
@@ -495,7 +495,7 @@ pub unsafe fn RenderMouseCursor(
         let mut viewport: *mut ImguiViewport = g.Viewports[n];
         let pos: ImVec2 = &base_pos - &offset;
         let scale: c_float = base_scale * viewport.DpiScale;
-        if !viewport.GetMainRect().Overlaps(ImRect(
+        if !viewport.get_main_rect().Overlaps(ImRect(
             pos.clone(),
             pos.clone() + ImVec2::from_floats(size.x + 2, size.y + 2) * scale,
         )) {

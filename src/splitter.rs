@@ -1,8 +1,7 @@
-use crate::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
-use crate::widgets::button_flags::{ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_FlattenChildren};
 use crate::color::{
     ImGuiCol_Separator, ImGuiCol_SeparatorActive, ImGuiCol_SeparatorHovered, IM_COL32_A_MASK,
 };
+use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::input_ops::SetMouseCursor;
 use crate::item_flags::{ImGuiItemFlags, ImGuiItemFlags_NoNav, ImGuiItemFlags_NoNavDefaultFocus};
 use crate::item_ops::{ItemAdd, MarkItemEdited};
@@ -13,6 +12,9 @@ use crate::rect::ImRect;
 use crate::style_ops::GetColorU32;
 use crate::type_defs::ImguiHandle;
 use crate::vec2::ImVec2;
+use crate::widgets::button_flags::{
+    ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_FlattenChildren,
+};
 use crate::window::ImguiWindow;
 use crate::{button_ops, GImGui};
 use libc::c_float;

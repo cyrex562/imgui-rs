@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::condition::ImGuiCond;
+use crate::core::condition::ImGuiCond;
 use crate::next_window_data_flags::{ImGuiNextWindowDataFlags, ImGuiNextWindowDataFlags_None};
 use crate::rect::ImRect;
 use crate::type_defs::ImguiHandle;

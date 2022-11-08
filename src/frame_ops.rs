@@ -1,11 +1,11 @@
 #![allow(non_snake_case)]
 
-use crate::condition::ImGuiCond_FirstUseEver;
-use crate::context_hook::{
+use crate::core::context_hook::{
     IM_GUI_CONTEXT_HOOK_TYPE_END_FRAME_POST, IM_GUI_CONTEXT_HOOK_TYPE_END_FRAME_PRE,
     IM_GUI_CONTEXT_HOOK_TYPE_NEW_FRAME_POST, IM_GUI_CONTEXT_HOOK_TYPE_NEW_FRAME_PRE,
     IM_GUI_CONTEXT_HOOK_TYPE_PENDING_REMOVAL,
 };
+use crate::core::condition::ImGuiCond_FirstUseEver;
 use crate::drag_drop::drag_drop_flags::{
     ImGuiDragDropFlags_SourceAutoExpirePayload, ImGuiDragDropFlags_SourceNoPreviewTooltip,
 };
@@ -23,7 +23,7 @@ use std::ptr::null_mut;
 
 use crate::a_imgui_cpp::{UpdateDebugToolItemPicker, UpdateDebugToolStackQueries};
 use crate::backend_flags::IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET;
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 use crate::dock_context_ops::{
     DockContextEndFrame, DockContextNewFrameUpdateDocking, DockContextNewFrameUpdateUndocking,
 };

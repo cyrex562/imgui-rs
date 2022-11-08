@@ -93,7 +93,7 @@ Index of this file:
 use crate::activate_flags::{
     IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT, IM_GUI_ACTIVATE_FLAGS_TRY_TO_PRESERVE_STATE,
 };
-use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y, ImGuiAxis};
+use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y, ImGuiAxis};
 use crate::backend_flags::IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD;
 use crate::widgets::button_flags::{
     ImGuiButtonFlags, ImGuiButtonFlags_AlignTextBaseLine, ImGuiButtonFlags_AllowItemOverlap,
@@ -124,7 +124,7 @@ use crate::color::{
     ImGuiCol_TabActive, ImGuiCol_TabHovered, ImGuiCol_TabUnfocused, ImGuiCol_TabUnfocusedActive,
     ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TextSelectedBg, ImGuiCol_TitleBgActive,
 };
-use crate::color_edit_flags::{
+use crate::color::color_edit_flags::{
     ImGuiColorEditFlags, ImGuiColorEditFlags_AlphaBar, ImGuiColorEditFlags_AlphaPreview,
     ImGuiColorEditFlags_AlphaPreviewHalf, ImGuiColorEditFlags_DataTypeMask_,
     ImGuiColorEditFlags_DefaultOptions_, ImGuiColorEditFlags_DisplayHex,
@@ -138,17 +138,17 @@ use crate::color_edit_flags::{
     ImGuiColorEditFlags_PickerHueBar, ImGuiColorEditFlags_PickerHueWheel,
     ImGuiColorEditFlags_PickerMask_, ImGuiColorEditFlags_Uint8,
 };
-use crate::color_ops::{ColorConvertFloat4ToU32, ColorConvertHSVtoRGB, ColorConvertRGBtoHSV};
+use crate::color::color_ops::{ColorConvertFloat4ToU32, ColorConvertHSVtoRGB, ColorConvertRGBtoHSV};
 use crate::combo_box::{BeginCombo, EndCombo, Items_ArrayGetter};
-use crate::combo_flags::{
+use crate::widgets::combo_flags::{
     ImGuiComboFlags, ImGuiComboFlags_CustomPreview, ImGuiComboFlags_HeightLarge,
     ImGuiComboFlags_HeightLargest, ImGuiComboFlags_HeightMask_, ImGuiComboFlags_HeightRegular,
     ImGuiComboFlags_HeightSmall, ImGuiComboFlags_NoArrowButton, ImGuiComboFlags_None,
     ImGuiComboFlags_NoPreview, ImGuiComboFlags_PopupAlignLeft,
 };
-use crate::combo_preview_data::ImGuiComboPreviewData;
-use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_None, ImGuiCond_Once};
-use crate::config_flags::ImGuiConfigFlags_NavEnableGamepad;
+use crate::widgets::combo_preview_data::ImGuiComboPreviewData;
+use crate::core::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_None, ImGuiCond_Once};
+use crate::core::config_flags::ImGuiConfigFlags_NavEnableGamepad;
 use crate::content_ops::content_region_avail;
 use crate::cursor_ops::{cursor_screen_pos, indent, set_cursor_screen_pos, unindent};
 use crate::data_type::{
@@ -1720,7 +1720,7 @@ pub unsafe fn ColorButton(
     return pressed;
 }
 
-// Initialize/override default color options
+// initialize/override default color options
 pub unsafe fn SetColorEditOptions(mut flags: ImGuiColorEditFlags) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if flag_clear(flags, ImGuiColorEditFlags_DisplayMask_) {
@@ -3526,7 +3526,7 @@ pub unsafe fn BeginViewportSideBar(
     });
     if bar_window == None || bar_window.BeginCount == 0 {
         // Calculate and set window size/position
-        let mut avail_rect: ImRect = viewport.GetBuildWorkRect();
+        let mut avail_rect: ImRect = viewport.get_build_work_rect();
         axis: ImGuiAxis = if dir == ImGuiDir_Up || dir == ImGuiDir_Down {
             IM_GUI_AXIS_Y
         } else {

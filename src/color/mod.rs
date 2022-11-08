@@ -1,9 +1,12 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
-use crate::color_ops::{ColorConvertFloat4ToU32, ColorConvertHSVtoRGB};
 use crate::vec4::ImVec4;
 use libc::{c_float, c_int};
+
+pub mod color_edit_flags;
+pub mod color_mod;
+pub mod color_ops;
 
 //   With Visual Assist installed: ALT+G ("VAssistX.GoToImplementation") can also follow symbols in comments.
 // typedef int ImGuiCol;               // -> enum ImGuiCol_             // Enum: A color identifier for styling

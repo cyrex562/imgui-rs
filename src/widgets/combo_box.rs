@@ -1,17 +1,11 @@
+use crate::a_widgets::Selectable;
 use crate::button_ops::ButtonBehavior;
 use crate::color::{
     ImGuiCol_Button, ImGuiCol_ButtonHovered, ImGuiCol_FrameBg, ImGuiCol_FrameBgHovered,
     ImGuiCol_Text,
 };
-use crate::combo_flags::{
-    ImGuiComboFlags, ImGuiComboFlags_CustomPreview, ImGuiComboFlags_HeightLarge,
-    ImGuiComboFlags_HeightMask_, ImGuiComboFlags_HeightRegular, ImGuiComboFlags_HeightSmall,
-    ImGuiComboFlags_NoArrowButton, ImGuiComboFlags_NoPreview, ImGuiComboFlags_None,
-    ImGuiComboFlags_PopupAlignLeft,
-};
-use crate::combo_preview_data::ImGuiComboPreviewData;
-use crate::condition::ImGuiCond_None;
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
+use crate::core::condition::ImGuiCond_None;
 use crate::direction::{ImGuiDir_Down, ImGuiDir_Left};
 use crate::draw_flags::{
     ImDrawFlags_RoundCornersAll, ImDrawFlags_RoundCornersLeft, ImDrawFlags_RoundCornersRight,
@@ -41,6 +35,14 @@ use crate::text_ops::CalcTextSize;
 use crate::type_defs::ImguiHandle;
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
+use crate::widgets::button_ops::ButtonBehavior;
+use crate::widgets::combo_flags::{
+    ImGuiComboFlags, ImGuiComboFlags_CustomPreview, ImGuiComboFlags_HeightLarge,
+    ImGuiComboFlags_HeightMask_, ImGuiComboFlags_HeightRegular, ImGuiComboFlags_HeightSmall,
+    ImGuiComboFlags_NoArrowButton, ImGuiComboFlags_NoPreview, ImGuiComboFlags_None,
+    ImGuiComboFlags_PopupAlignLeft,
+};
+use crate::widgets::combo_preview_data::ImGuiComboPreviewData;
 use crate::widgets::Selectable;
 use crate::window::find::FindWindowByName;
 use crate::window::focus::SetItemDefaultFocus;
@@ -57,8 +59,6 @@ use crate::{button_ops, hash_string, popup_ops, GImGui};
 use libc::{c_char, c_float, c_int, strlen};
 use std::borrow::BorrowMut;
 use std::ptr::{null, null_mut};
-use crate::a_widgets::Selectable;
-use crate::widgets::button_ops::ButtonBehavior;
 
 pub fn BeginCombo(
     g: &mut ImguiContext,

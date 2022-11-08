@@ -1,4 +1,4 @@
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 use crate::direction::{ImGuiDir_Down, ImGuiDir_None, ImGuiDir_Up};
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::nav_layer::ImGuiNavLayer_Main;

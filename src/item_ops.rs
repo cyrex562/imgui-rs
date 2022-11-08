@@ -3,7 +3,7 @@
 use crate::activate_flags::IM_GUI_ACTIVATE_FLAGS_NONE;
 use crate::color::color_u32_from_rgba;
 use crate::content_ops::content_region_max_abs;
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 use crate::draw_flags::ImDrawFlags_None;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::hovered_flags::{

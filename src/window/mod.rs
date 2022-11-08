@@ -1,9 +1,9 @@
 #![allow(non_snake_case)]
 
-use crate::condition::{
+use crate::core::context::ImguiContext;
+use crate::core::condition::{
     ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_Once,
 };
-use crate::context::ImguiContext;
 use crate::data_type::{IM_GUI_DATA_TYPE_POINTER, IM_GUI_DATA_TYPE_S32, IM_GUI_DATA_TYPE_STRING};
 use crate::debug_ops::DebugHookIdInfo;
 use crate::direction::{ImGuiDir, ImGuiDir_None};

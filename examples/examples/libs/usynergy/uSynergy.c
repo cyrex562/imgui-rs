@@ -565,14 +565,14 @@ static void sUpdateContext(uSynergyContext *context)
 
 
 /**
-@brief Initialize uSynergy context
+@brief initialize uSynergy context
 **/
 void uSynergyInit(uSynergyContext *context)
 {
 	/* Zero memory */
 	memset(context, 0, sizeof(uSynergyContext));
 
-	/* Initialize to default state */
+	/* initialize to default state */
 	sSetDisconnected(context);
 }
 

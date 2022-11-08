@@ -47,7 +47,7 @@ use crate::window::ImguiWindow;
 use crate::GImGui;
 use libc::{c_float, c_int};
 use std::ptr::null;
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 
 pub fn ButtonBehavior(
     g: &mut ImguiContext,

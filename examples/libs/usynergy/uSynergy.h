@@ -366,7 +366,7 @@ typedef struct
 
 
 /**
-@brief Initialize uSynergy context
+@brief initialize uSynergy context
 
 This function initializes @a context for use. Call this function directly after
 creating the context, before filling in any configuration data in it. Not calling

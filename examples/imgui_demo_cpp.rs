@@ -1660,7 +1660,7 @@ pub unsafe fn ShowDemoWindowWidgets()
         {
             static Vec<c_int> active_tabs;
             static let next_tab_id: c_int = 0;
-            if (next_tab_id == 0) // Initialize with some default tabs
+            if (next_tab_id == 0) // initialize with some default tabs
                 for (let i: c_int = 0; i < 3; i++)
                     active_tabs.push(next_tab_id++);
 

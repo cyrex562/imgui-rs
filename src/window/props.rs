@@ -1,8 +1,8 @@
-use crate::condition::{
+use crate::core::context::ImguiContext;
+use crate::core::condition::{
     ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_None,
     ImGuiCond_Once,
 };
-use crate::context::ImguiContext;
 use crate::draw_list::ImDrawList;
 use crate::focused_flags::ImGuiFocusedFlags;
 use crate::font::ImFont;

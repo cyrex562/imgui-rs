@@ -18,9 +18,9 @@
 
 use std::ptr::null_mut;
 use libc::{c_char, memcpy, size_t, sscanf, strlen};
-use crate::{string_ops::str_to_const_c_char_ptr, imgui::GImGui, window::window_settings::ImGuiWindowSettings, type_defs::ImguiHandle, settings_handler::SettingsHandler, ImFileClose, hash_string};
-use crate::context::ImguiContext;
-use crate::file_ops::{ImFileLoadToMemory, ImFileOpen, ImFileWrite};
+use crate::{string_ops::str_to_const_c_char_ptr, imgui::GImGui, window::window_settings::ImGuiWindowSettings, type_defs::ImguiHandle, settings_handler::SettingsHandler, close_file, hash_string};
+use crate::core::context::ImguiContext;
+use crate::file_ops::{ImFileLoadToMemory, open_file, ImFileWrite};
 use crate::string_ops::ImStrchrRange;
 use crate::text_buffer::ImGuiTextBuffer;
 use crate::type_defs::ImFileHandle;
@@ -51,7 +51,7 @@ pub unsafe fn UpdateSettings()
         if (g.SettingsDirtyTimer <= 0.0)
         {
             if (g.IO.IniFilename != null_mut()){
-                SaveIniSettingsToDisk(g.IO.IniFilename);}
+                save_ini_settings_to_disk(g, g.IO.IniFilename);}
             else{
                 g.IO.WantSaveIniSettings = true; } // Let user know they can call SaveIniSettingsToMemory(). user will need to clear io.WantSaveIniSettings themselves.
             g.SettingsDirtyTimer = 0.0;
@@ -238,18 +238,17 @@ pub unsafe fn LoadIniSettingsFromMemory(ini_data: *const c_char, ini_size: size_
             g.SettingsHandlers[handler_n].ApplyAllFn(&g, &g.SettingsHandlers[handler_n]);
 }
 
-pub unsafe fn SaveIniSettingsToDisk(ini_filename: *const c_char)
+pub fn save_ini_settings_to_disk(g: &mut ImguiContext, ini_filename: &String)
 {
-    let g = GImGui; // ImGuiContext& g = *GImGui;
     g.SettingsDirtyTimer = 0.0;
     if !ini_filename { return ; }
 
     ini_data_size: size_t = 0;
     let mut  ini_data: *const c_char = SaveIniSettingsToMemory(&ini_data_size);
-    f: ImFileHandle = ImFileOpen(ini_filename, "wt");
+    f: ImFileHandle = open_file(ini_filename, "wt");
     if !0.0 { return ; }
     ImFileWrite(ini_data, sizeof, ini_data_size, 0.0);
-    ImFileClose(0.0);
+    close_file(0.0);
 }
 
 // Call registered handlers (e.g. SettingsHandlerWindow_WriteAll() + custom handlers) to write their stuff into a text buffer

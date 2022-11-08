@@ -1,7 +1,7 @@
 use crate::a_imgui_cpp::NavMoveRequestTryWrapping;
-use crate::condition::ImGuiCond_FirstUseEver;
-use crate::config_flags::ImGuiConfigFlags_NavEnableSetMousePos;
-use crate::context::ImguiContext;
+use crate::core::condition::ImGuiCond_FirstUseEver;
+use crate::core::config_flags::ImGuiConfigFlags_NavEnableSetMousePos;
+use crate::core::context::ImguiContext;
 use crate::direction::{
     ImGuiDir, ImGuiDir_COUNT, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right,
     ImGuiDir_Up,
@@ -409,7 +409,7 @@ pub unsafe fn BeginPopupModal(
             GetMainViewport()
         }; // FIXME-VIEWPORT: What may be our reference viewport?
         SetNextWindowPos(,
-                         &viewport.GetCenter(),
+                         &viewport.get_center(),
                          ImGuiCond_FirstUseEver,
                          &ImVec2::from_floats(0.5, 0.5),
         );
@@ -709,7 +709,7 @@ pub fn GetPopupAllowedExtentRect(g: &mut ImguiContext, window: &mut ImguiWindow)
         r_screen.max = monitor.WorkPos + monitor.WorkSize;
     } else {
         // Use the full viewport area (not work area) for popups
-        r_screen = window.Viewport.GetMainRect();
+        r_screen = window.Viewport.get_main_rect();
     }
     let padding: ImVec2 = g.style.DisplaySafeAreaPadding;
     r_screen.expand_from_vec(&ImVec2::from_floats(

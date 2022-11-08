@@ -3,7 +3,7 @@
 use std::borrow::BorrowMut;
 use std::mem;
 use crate::color::{IM_COL32_A_MASK, IM_COL32_A_SHIFT, ImGuiCol, ImGuiCol_Border, ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_ChildBg, ImGuiCol_MenuBarBg, ImGuiCol_ModalWindowDimBg, ImGuiCol_NavWindowingDimBg, ImGuiCol_NavWindowingHighlight, ImGuiCol_PopupBg, ImGuiCol_ResizeGrip, ImGuiCol_ResizeGripActive, ImGuiCol_ResizeGripHovered, ImGuiCol_SeparatorActive, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_TitleBgCollapsed, ImGuiCol_WindowBg};
-use crate::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_None, ImGuiCond_Once};
+use crate::core::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_None, ImGuiCond_Once};
 use crate::draw_flags::{ImDrawFlags_None, ImDrawFlags_RoundCornersBottom, ImDrawFlags_RoundCornersTop};
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
@@ -21,16 +21,16 @@ use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, I
 use crate::{ImguiViewport, hash_string};
 use libc::{c_char, c_float, c_int, c_short, c_void, size_t, strcmp};
 use std::ptr::{null, null_mut};
-use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
-use crate::config_flags::{ImGuiConfigFlags_DockingEnable, ImGuiConfigFlags_DpiEnableScaleFonts};
-use crate::constants::{WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
+use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
+use crate::core::config_flags::{ImGuiConfigFlags_DockingEnable, ImGuiConfigFlags_DpiEnableScaleFonts};
+use crate::core::constants::{WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
 use crate::cursor_ops::ErrorCheckUsingSetCursorPosToExtendParentBoundaries;
 use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::garbage_collection::GcAwakeTransientWindowBuffers;
 use crate::hash_ops::hash_data;
 use {ClearActiveID, KeepAliveID};
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 use crate::input_ops::{IsMouseDragging, IsMouseHoveringRect};
 use crate::item_flags::ImGuiItemFlags_Disabled;
 use crate::item_ops::set_last_item_data;
@@ -523,7 +523,7 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
     // We only clip interaction so we overwrite window.ClipRect, cannot call PushClipRect() yet as DrawList is not yet setup.
     let clip_with_viewport_rect: bool = flag_clear(g.IO.BackendFlags.clone() , ImGuiBackendFlags_HasMouseHoveredViewport) || (g.IO.MouseHoveredViewport != window.ViewportId) || flag_clear(window.Viewport.Flags.clone() , ImGuiViewportFlags_NoDecoration);
     if clip_with_viewport_rect {
-        window.ClipRect = window.Viewport.GetMainRect().ToVec4();
+        window.ClipRect = window.Viewport.get_main_rect().ToVec4();
     }
 
     // Resize grips and borders are on layer 1
@@ -874,7 +874,7 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
     // When reusing window again multiple times a frame, just append content (don't need to setup again)
     if first_begin_of_the_frame
     {
-        // Initialize
+        // initialize
         let window_is_child_tooltip: bool = flag_set(flags.clone(), ImGuiWindowFlags_ChildWindow) && flag_set(flags.clone(), ImGuiWindowFlags_Tooltip); // FIXME-WIP: Undocumented behavior of Child+Tooltip for pinned tooltip (#1345)
         let window_just_appearing_after_hidden_for_resize: bool = (window.HiddenFramesCannotSkipItems > 0);
         window.Active = true;

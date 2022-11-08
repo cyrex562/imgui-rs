@@ -1,9 +1,9 @@
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int, size_t};
-use crate::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
+use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::color::{ImGuiCol_DockingEmptyBg, ImGuiCol_DockingPreview, ImGuiCol_NavWindowingHighlight, ImGuiCol_Separator, ImGuiCol_Text, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_TitleBgCollapsed, ImGuiCol_WindowBg};
-use crate::condition::ImGuiCond_Always;
-use crate::constants::{DOCKING_SPLITTER_SIZE, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
+use crate::core::condition::ImGuiCond_Always;
+use crate::core::constants::{DOCKING_SPLITTER_SIZE, WINDOWS_HOVER_PADDING, WINDOWS_RESIZE_FROM_EDGES_FEEDBACK_TIMER};
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::docking::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_AutoHideTabBar, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_KeepAliveOnly, ImGuiDockNodeFlags_LocalFlagsTransferMask_, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingInCentralNode, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_None, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoWindowMenuButton, ImGuiDockNodeFlags_PassthruCentralNode, ImGuiDockNodeFlags_SharedFlagsInheritMask_};
 use crate::data_authority::{IM_GUI_DATA_AUTHORITY_AUTO, IM_GUI_DATA_AUTHORITY_DOCK_NODE, IM_GUI_DATA_AUTHORITY_WINDOW};
@@ -1054,7 +1054,7 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: &mut I
             // Apply stored style overrides for the window
             // for (let color_n: c_int = 0; color_n < ImGuiWindowDockStyleCol_COUNT; color_n++)
             for color_n in 0..ImGuiWindowDockStyleCol_COUNT {
-                g.style.Colors[GWindowDockStyleColors[color_n]] = crate::color_ops::ColorConvertU32ToFloat4(window.DockStyle.Colors[color_n]);
+                g.style.Colors[GWindowDockStyleColors[color_n]] = crate::color::color_ops::ColorConvertU32ToFloat4(window.DockStyle.Colors[color_n]);
             }
 
             // Note that TabItemEx() calls TabBarCalcTabID() so our tab item ID will ignore the current ID stack (rightly so)
@@ -1599,7 +1599,7 @@ pub unsafe fn DockNodePreviewDockRender(
 // - DockNodeTreeFindNodeByPos()
 //-----------------------------------------------------------------------------
 
-pub unsafe fn DockNodeTreeSplit(ctx: *mut crate::context::ImguiContext, parent_node: *mut ImGuiDockNode, split_axis: ImGuiAxis, split_inheritor_child_idx: c_int, split_ratio: c_float, new_node: *mut ImGuiDockNode) {
+pub unsafe fn DockNodeTreeSplit(ctx: *mut crate::core::context::ImguiContext, parent_node: *mut ImGuiDockNode, split_axis: ImGuiAxis, split_inheritor_child_idx: c_int, split_ratio: c_float, new_node: *mut ImGuiDockNode) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_axis != IM_GUI_AXIS_NONE);
 
@@ -1645,7 +1645,7 @@ pub unsafe fn DockNodeTreeSplit(ctx: *mut crate::context::ImguiContext, parent_n
     }
 }
 
-pub unsafe fn DockNodeTreeMerge(ctx: *mut crate::context::ImguiContext, parent_node: *mut ImGuiDockNode, merge_lead_child: *mut ImGuiDockNode) {
+pub unsafe fn DockNodeTreeMerge(ctx: *mut crate::core::context::ImguiContext, parent_node: *mut ImGuiDockNode, merge_lead_child: *mut ImGuiDockNode) {
     // When called from DockContextProcessUndockNode() it is possible that one of the child is NULL.
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let child_0: *mut ImGuiDockNode = parent_node.ChildNodes[0];

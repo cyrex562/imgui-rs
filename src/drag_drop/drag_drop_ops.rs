@@ -1,5 +1,5 @@
 use crate::color::ImGuiCol_DragDropTarget;
-use crate::condition::{ImGuiCond, ImGuiCond_Always};
+use crate::core::condition::{ImGuiCond, ImGuiCond_Always};
 use crate::data_type::ImGuiPayloadType;
 use crate::drag_drop::drag_drop_flags::{
     ImGuiDragDropFlags, ImGuiDragDropFlags_AcceptBeforeDelivery,
@@ -283,12 +283,12 @@ pub unsafe fn BeginDragDropTarget() -> bool {
         return false;
     }
 
-    let display_rect: &ImRect = if g.last_item_data.StatusFlags & ImGuiItemStatusFlags_HasDisplayRect
-    {
-        &g.last_item_data.DisplayRect
-    } else {
-        &g.last_item_data.Rect
-    };
+    let display_rect: &ImRect =
+        if g.last_item_data.StatusFlags & ImGuiItemStatusFlags_HasDisplayRect {
+            &g.last_item_data.DisplayRect
+        } else {
+            &g.last_item_data.Rect
+        };
     let mut id: ImguiHandle = g.last_item_data.ID;
     if (id == 0) {
         id = window.GetIDFromRectangle(display_rect);

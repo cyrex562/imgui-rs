@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::condition::ImGuiCond;
+use crate::core::condition::ImGuiCond;
 use crate::next_item_data_flags::{ImGuiNextItemDataFlags, ImGuiNextItemDataFlags_None};
 use crate::type_defs::ImguiHandle;
 use libc::c_float;

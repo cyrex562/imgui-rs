@@ -1,19 +1,19 @@
 use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int, INT_MAX};
 use crate::activate_flags::{IM_GUI_ACTIVATE_FLAGS_NONE, IM_GUI_ACTIVATE_FLAGS_PREFER_INPUT, IM_GUI_ACTIVATE_FLAGS_PREFER_TWEAK, IM_GUI_ACTIVATE_FLAGS_TRY_TO_PRESERVE_STATE};
-use crate::config_flags::{ImGuiConfigFlags_NavEnableGamepad, ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_NavEnableSetMousePos};
-use crate::constants::{NAV_WINDOWING_HIGHLIGHT_DELAY, NAV_WINDOWING_LIST_APPEAR_DELAY};
+use crate::core::config_flags::{ImGuiConfigFlags_NavEnableGamepad, ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_NavEnableSetMousePos};
+use crate::core::constants::{NAV_WINDOWING_HIGHLIGHT_DELAY, NAV_WINDOWING_LIST_APPEAR_DELAY};
 use crate::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
 use crate::{GImGui, ImguiViewport};
-use crate::axis::{ImGuiAxis, IM_GUI_AXIS_X};
+use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_X};
 use crate::backend_flags::{IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD, IM_GUI_BACKEND_FLAGS_HAS_SET_MOUSE_POS};
 use crate::color::color_u32_from_rgba;
-use crate::condition::ImGuiCond_Always;
+use crate::core::condition::ImGuiCond_Always;
 use crate::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::id_ops::ClearActiveID;
 use crate::a_imgui_cpp::{NavProcessItemForTabbingRequest, SetNavWindow};
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 use crate::input_flags::{ImGuiInputFlags_Repeat, ImGuiInputFlags_RepeatRateNavMove, ImGuiInputFlags_RepeatRateNavTweak};
 use crate::input_ops::{GetKeyPressedAmount, GetTypematicRepeatRate, IsKeyDown, IsKeyPressed, IsKeyPressedEx, IsMouseHoveringRect, IsMousePosValid};
 use crate::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Keyboard, ImGuiInputSource_Nav};
@@ -1629,7 +1629,7 @@ pub unsafe fn NavUpdateWindowingOverlay()
     }
     let viewport: *const ImguiViewport = /*g.NavWindow ? g.Navwindow.Viewport :*/ GetMainViewport();
     SetNextWindowSizeConstraints(, &ImVec2::from_floats(viewport.Size.x * 0.20, viewport.Size.y * 0.200), &ImVec2::from_floats(f32::MAX, f32::MAX), (), null_mut());
-    SetNextWindowPos(, &viewport.GetCenter(), ImGuiCond_Always, &ImVec2::from_floats(0.5, 0.5));
+    SetNextWindowPos(, &viewport.get_center(), ImGuiCond_Always, &ImVec2::from_floats(0.5, 0.5));
     PushStyleVar(ImGuiStyleVar_WindowPadding, g.style.WindowPadding * 2.0);
     Begin(g, str_to_const_c_char_ptr("###NavWindowingList"), null_mut());
     // for (let n: c_int = g.WindowsFocusOrder.Size - 1; n >= 0; n--)

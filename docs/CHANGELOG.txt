@@ -614,7 +614,7 @@ Other Changes:
 - fonts: imgui_freetype: Fixed crash when FT_Render_Glyph() fails to render a glyph and returns None
   (which apparently happens with Freetype 2.11). (#4394, #4145?).
 - fonts: Fixed ImFontAtlas::clear_input_data() marking atlas as not built. (#4455, #3487)
-- Backends: Added more implicit asserts to detect invalid/redundant calls to Shutdown functions. (#4562)
+- Backends: Added more implicit asserts to detect invalid/redundant calls to shutdown functions. (#4562)
 - Backends: OpenGL3: Fixed our custom GL loader conflicting with user using GL3W. (#4445) [@rokups]
 - Backends: WebGPU: Fixed for latest specs. (#4472, #4512) [@Kangz, @bfierz]
 - Backends: SDL_Renderer: Added SDL_Renderer backend compatible with upcoming SDL 2.0.18. (#3926) [@1bsyl]
@@ -1596,7 +1596,7 @@ Other Changes:
 - Misc: Added additional checks in EndFrame() to verify that io.KeyXXX values have not been
   tampered with between NewFrame() and EndFrame().
 - Misc: Made default clipboard handlers for Win32 and OSX use a buffer inside the main context
-  instead of a static buffer, so it can be freed properly on Shutdown. (#3110)
+  instead of a static buffer, so it can be freed properly on shutdown. (#3110)
 - Misc, Freetype: Fixed support for IMGUI_STB_RECT_PACK_FILENAME compile time directive
   in imgui_freetype.cpp (matching support in the regular code path). (#3062) [@DonKult]
 - Metrics: Made Tools section more prominent. Showing wire-frame mesh directly hovering the ImDrawCmd
@@ -2649,7 +2649,7 @@ Other Changes:
 - Examples: OpenGL3: Added error output when shaders fail to compile/link.
 - Examples: OpenGL3: Added support for glew and glad OpenGL loaders out of the box. (#2001, #2002) [@jdumas]
 - Examples: OpenGL2: Disabling/restoring GL_LIGHTING and GL_COLOR_MATERIAL to increase compatibility with legacy OpenGL applications. (#1996)
-- Examples: DirectX10, DirectX11: Fixed unreleased resources in Init and Shutdown functions. (#1944)
+- Examples: DirectX10, DirectX11: Fixed unreleased resources in Init and shutdown functions. (#1944)
 - Examples: DirectX11: Querying for IDXGIFactory instead of IDXGIFactory1 to increase compatibility. (#1989) [@matt77hias]
 - Examples: Vulkan: Fixed handling of VkSurfaceCapabilitiesKHR::maxImageCount = 0 case. Tweaked present mode selections.
 - Examples: Win32, Glfw, SDL: Added support for the ImGuiMouseCursor_Hand cursor.
@@ -2718,7 +2718,7 @@ Other Changes:
 - ImFontAtlas: Added get_glyph_ranges_chinese_simplified_common() helper that returns a list of ~2500 most common Simplified Chinese
   characters. (#1859) [@JX-Master, @ocornut]
 - Examples: OSX: Added imgui_impl_osx.mm backend to be used along with e.g. imgui_impl_opengl2.cpp. (#281, #1870) [@pagghiu, @itamago, @ocornut]
-- Examples: GLFW: Made it possible to Shutdown/Init the backend again (by resetting the time storage properly). (#1827) [@ice1000]
+- Examples: GLFW: Made it possible to shutdown/Init the backend again (by resetting the time storage properly). (#1827) [@ice1000]
 - Examples: Win32: Fixed handling of mouse wheel messages to support sub-unit scrolling messages (typically sent by track-pads). (#1874) [@zx64]
 - Examples: SDL+Vulkan: Added SDL+Vulkan example.
 - Examples: Allegro5: Added support for ImGuiConfigFlags_NoMouseCursorChange flag. Added clipboard support.
@@ -2828,7 +2828,7 @@ Breaking Changes:
   e.g. with example backends, call ImDrawData* draw_data = ImGui::GetDrawData(); ImGui_ImplXXXX_RenderDrawData(draw_data).
 - Reorganized context handling to be more explicit: (#1599)
   - YOU NOW NEED TO CALL ImGui::CreateContext() AT THE BEGINNING OF YOUR APP, AND CALL ImGui::DestroyContext() AT THE END.
-  - removed Shutdown() function, as DestroyContext() serve this purpose. If you are using an old backend from the examples/ folder, remove the line that calls Shutdown().
+  - removed shutdown() function, as DestroyContext() serve this purpose. If you are using an old backend from the examples/ folder, remove the line that calls shutdown().
   - you may pass a ImFontAtlas* pointer to CreateContext() to share a font atlas between contexts. Otherwise CreateContext() will create its own font atlas instance.
   - removed allocator parameters from CreateContext(), they are now setup with SetAllocatorFunctions(), and shared by all contexts.
   - removed the default global context and font atlas instance, which were confusing for users of DLL reloading and users of multiple contexts.
@@ -3342,7 +3342,7 @@ Other Changes:
 - columns: End() avoid calling columns(1) if no columns set is open, not sure why it wasn't the case already (pros: faster, cons: exercise less code).
 - ColorButton(): Fix ColorButton showing wrong hex value for alpha. (#1068) [@codecat]
 - ColorEdit4(): better preserve inputting value out of 0..255 range, display then clamped in Hexadecimal form.
-- Shutdown() clear out some remaining pointers for sanity. (#836)
+- shutdown() clear out some remaining pointers for sanity. (#836)
 - Added IMGUI_USE_BGRA_PACKED_COLOR option in imconfig.h (#767, #844) [@thedmd]
 - style: Removed the inconsistent shadow under RenderCollapseTriangle() (~#707)
 - style: Added button_text_align, ImGuiStyleVar_ButtonTextAlign. (#842)
@@ -3375,7 +3375,7 @@ Other Changes:
 - Examples: Vulkan: Countless fixes and improvements. (#785, #804, #910, #1017, #1039, #1041, #1042, #1043, #1080) [@martty, @Loftilus, @ParticlePeter, @SaschaWillems]
 - Examples: DirectX9/10/10: Only call SetCursor(None) is io.mouse_draw_cursor is set. (#585, #909)
 - Examples: DirectX9: Explicitly setting viewport to match that other examples are doing. (#937)
-- Examples: GLFW+OpenGL3: Fixed Shutdown() calling GL functions with None parameters if NewFrame was never called. (#800)
+- Examples: GLFW+OpenGL3: Fixed shutdown() calling GL functions with None parameters if NewFrame was never called. (#800)
 - Examples: GLFW+OpenGL2: Renaming opengl_example/ to opengl2_example/ for clarity.
 - Examples: SDL+OpenGL: explicitly setting GL_UNPACK_ROW_LENGTH to reduce issues because SDL changes it. (#752)
 - Examples: SDL2: Added build .bat files for Win32.
@@ -3457,7 +3457,7 @@ Other changes:
 - Examples: DirectX9: Removed dependency on d3dx9.h, d3dx9.lib, dxguid.lib so it can be used in a DirectXMath.h only environment. (#611)
 - Examples: DirectX10/X11: Apply depth-stencil state (no use of depth buffer). (#640, #636)
 - Examples: DirectX11/X11: Added comments on removing dependency on D3DCompiler. (#638)
-- Examples: SDL: Initialize video+timer subsystem only.
+- Examples: SDL: initialize video+timer subsystem only.
 - Examples: Apple/iOS: lowered XCode project deployment target from 10.7 to 10.11. (#598, #575)
 
 
@@ -3551,7 +3551,7 @@ Changes:
   and window_padding < DisplaySafeAreaPadding.
 - Fixed border rendering in various situations when using non-pixel aligned glyphs.
 - Fixed border rendering of windows to always contain the border within the window.
-- Fixed Shutdown() leaking font atlas data if NewFrame() was never called. (#396, #303)
+- Fixed shutdown() leaking font atlas data if NewFrame() was never called. (#396, #303)
 - Fixed int>void\* warnings for 64-bit architectures with fancy warnings enabled.
 - Renamed the dubious Color() helpers to ValueColor() - dangerously named, rarely used and probably to be made obsolete.
 - InputText(): Fixed and better handling of using keyboard while mouse button if being held and dragging. (#429)
@@ -3785,7 +3785,7 @@ Other Changes:
 - ImDrawList: Added multi-channel rendering so out of order elements can be rendered in separate channels and then merged
   back together (used by columns).
 - ImDrawList: Fixed merging draw commands when equal clip rectangles are in the two first commands.
-- ImDrawList: Fixed window draw lists not destructed properly on Shutdown().
+- ImDrawList: Fixed window draw lists not destructed properly on shutdown().
 - ImDrawData: Added de_index_all_buffers() helper.
 - Added lots of new font options ImFontAtlas::add_font() and the new ImFontConfig structure.
   - Added support for oversampling (ImFontConfig: oversample_h, oversample_v) and sub-pixel positioning (ImFontConfig: pixel_snap_h).
@@ -3978,7 +3978,7 @@ Other Changes:
 - ImFontAtlas: Fixed appending new fonts without clearing existing fonts. Clearing input data left to application. (#224)
 - ImDrawList: merge draw command better, cases of multiple Begin/End gets merged properly.
 - Store common stacked settings contiguously in memory to avoid heap allocation for unused features, and reduce cache misses.
-- Shutdown() tests for g.io.fonts not being None to ease use of multiple ImGui contexts. (#207)
+- shutdown() tests for g.io.fonts not being None to ease use of multiple ImGui contexts. (#207)
 - Added IMGUI_DISABLE_OBSOLETE_FUNCTIONS define to disable the functions that are meant to be removed.
 - Examples: Added ? marks with tooltips next to various widgets. Added more comments in the demo window.
 - Examples: Added Menu-bar example.

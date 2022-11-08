@@ -2,24 +2,24 @@ use std::env::args;
 use std::ffi::CStr;
 use std::ptr::null_mut;
 use libc::{c_char, c_float, c_int, c_uint, c_void, open, size_t};
-use crate::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
+use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::button_ops::SmallButton;
 use crate::widgets::checkbox_ops::{Checkbox, CheckboxFlags};
 use crate::child_ops::{BeginChild, EndChild};
 use crate::clipboard_ops::SetClipboardText;
 use crate::color::{color_u32_from_rgba, ImGuiCol_Border, ImGuiCol_Header, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_WindowBg};
 use crate::combo_box::{Combo, Combo2};
-use crate::condition::{ImGuiCond_FirstUseEver, ImGuiCond_Once};
-use crate::context::ImguiContext;
+use crate::core::condition::{ImGuiCond_FirstUseEver, ImGuiCond_Once};
+use crate::core::context::ImguiContext;
 use crate::context_ops::GetFrameCount;
 use crate::cursor_ops::{cursor_screen_pos, indent, unindent};
 use crate::data_type::{ImGuiDataType, IM_GUI_DATA_TYPE_STRING};
-use crate::debug_log_flags::{IM_GUI_DEBUG_LOG_FLAGS_EVENT_ACTIVE_ID, IM_GUI_DEBUG_LOG_FLAGS_EVENT_CLIPPER, IM_GUI_DEBUG_LOG_FLAGS_EVENT_DOCKING, IM_GUI_DEBUG_LOG_FLAGS_EVENT_FOCUS, IM_GUI_DEBUG_LOG_FLAGS_EVENT_IO, IM_GUI_DEBUG_LOG_FLAGS_EVENT_MASK, IM_GUI_DEBUG_LOG_FLAGS_EVENT_NAV, IM_GUI_DEBUG_LOG_FLAGS_EVENT_POPUP, IM_GUI_DEBUG_LOG_FLAGS_EVENT_VIEWPORT, IM_GUI_DEBUG_LOG_FLAGS_OUTPUT_TO_TTY};
+use crate::debugging::debug_log_flags::{IM_GUI_DEBUG_LOG_FLAGS_EVENT_ACTIVE_ID, IM_GUI_DEBUG_LOG_FLAGS_EVENT_CLIPPER, IM_GUI_DEBUG_LOG_FLAGS_EVENT_DOCKING, IM_GUI_DEBUG_LOG_FLAGS_EVENT_FOCUS, IM_GUI_DEBUG_LOG_FLAGS_EVENT_IO, IM_GUI_DEBUG_LOG_FLAGS_EVENT_MASK, IM_GUI_DEBUG_LOG_FLAGS_EVENT_NAV, IM_GUI_DEBUG_LOG_FLAGS_EVENT_POPUP, IM_GUI_DEBUG_LOG_FLAGS_EVENT_VIEWPORT, IM_GUI_DEBUG_LOG_FLAGS_OUTPUT_TO_TTY};
 use crate::dock_context_ops::clear_dock_context_nodes;
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::docking::dock_node_flags::{ImGuiDockNodeFlags, ImGuiDockNodeFlags_HiddenTabBar, ImGuiDockNodeFlags_NoCloseButton, ImGuiDockNodeFlags_NoDocking, ImGuiDockNodeFlags_NoDockingOverEmpty, ImGuiDockNodeFlags_NoDockingOverMe, ImGuiDockNodeFlags_NoDockingOverOther, ImGuiDockNodeFlags_NoDockingSplitMe, ImGuiDockNodeFlags_NoDockingSplitOther, ImGuiDockNodeFlags_NoResize, ImGuiDockNodeFlags_NoResizeX, ImGuiDockNodeFlags_NoResizeY, ImGuiDockNodeFlags_NoSplit, ImGuiDockNodeFlags_NoTabBar, ImGuiDockNodeFlags_NoWindowMenuButton};
 use crate::drag::DragFloat;
-use crate::draw_cmd::ImDrawCmd;
+use crate::drawing::draw_cmd::ImDrawCmd;
 use crate::draw_flags::ImDrawFlags_Closed;
 use crate::draw_list::ImDrawList;
 use crate::draw_list_flags::ImDrawListFlags_AntiAliasedLines;
@@ -54,7 +54,7 @@ use crate::rect::ImRect;
 use crate::render_ops::FindRenderedTextEnd;
 use crate::scrolling_ops::{GetScrollMaxY, GetScrollY, SetScrollHereY};
 use crate::separator::Separator;
-use crate::settings_ops::{ClearIniSettings, FindWindowSettings, SaveIniSettingsToDisk};
+use crate::settings_ops::{ClearIniSettings, FindWindowSettings, save_ini_settings_to_disk};
 use crate::stack_level_info::ImGuiStackLevelInfo;
 use crate::stack_tool::ImGuiStackTool;
 use crate::storage::ImGuiStorage;
@@ -812,7 +812,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
         }
         same_line(g, 0.0, 0.0);
         if SmallButton(String::from("Save to disk")) {
-            SaveIniSettingsToDisk(g.IO.IniFilename);
+            save_ini_settings_to_disk(g, g.IO.IniFilename);
         }
         same_line(g, 0.0, 0.0);
         if g.IO.IniFilename {

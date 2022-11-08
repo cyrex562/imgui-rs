@@ -132,7 +132,7 @@ struct stbrp_rect
 
 
 STBRP_DEF c_void stbrp_init_target (context: *mut stbrp_context, width: c_int, height: c_int, nodes: *mut stbrp_node, num_nodes: c_int);
-// Initialize a rectangle packer to:
+// initialize a rectangle packer to:
 //    pack a rectangle that is 'width' by 'height' in dimensions
 //    using temporary storage provided by the array 'nodes', which is 'num_nodes' long
 //

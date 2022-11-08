@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 #![allow(non_upper_case_globals)]
 
-use crate::debug_log_flags::IM_GUI_DEBUG_LOG_FLAGS_EVENT_IO;
+use crate::debugging::debug_log_flags::IM_GUI_DEBUG_LOG_FLAGS_EVENT_IO;
 use crate::imgui::GImGui;
 use crate::input_event::ImguiInputEvent;
 use crate::input_event_type::{

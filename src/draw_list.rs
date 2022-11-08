@@ -1,12 +1,10 @@
 #![allow(non_snake_case)]
 
 use crate::color::IM_COL32_A_MASK;
-use crate::constants::{
+use crate::core::constants::{
     IM_DRAWLIST_ARCFAST_SAMPLE_MAX, IM_DRAWLIST_ARCFAST_TABLE_SIZE,
     IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_MAX,
 };
-use crate::draw::ImDrawCallback;
-use crate::draw_cmd::ImDrawCmd;
 use crate::draw_cmd_header::ImDrawCmdHeader;
 use crate::draw_flags::{
     FixRectCornerFlags, ImDrawFlags, ImDrawFlags_Closed, ImDrawFlags_RoundCornersBottom,
@@ -22,6 +20,8 @@ use crate::draw_list_flags::{
 use crate::draw_list_shared_data::Imgui_DrawListSharedData;
 use crate::draw_list_splitter::ImDrawListSplitter;
 use crate::draw_vert::ImDrawVert;
+use crate::drawing::draw::ImDrawCallback;
+use crate::drawing::draw_cmd::ImDrawCmd;
 use crate::font::ImFont;
 use crate::math_ops::{
     ImBezierCubicCalc, ImBezierQuadraticCalc, ImCeil, ImClamp, ImCos, ImFabs, ImMax, ImMin, ImSin,
@@ -1616,7 +1616,7 @@ impl ImDrawList {
     // [Internal helpers]
     // void  _ResetForNewFrame();
 
-    // Initialize before use in a new frame. We always have a command ready in the buffer.
+    // initialize before use in a new frame. We always have a command ready in the buffer.
     pub unsafe fn _ResetForNewFrame(&mut self) {
         // Verify that the ImDrawCmd fields we want to memcmp() are contiguous in memory.
         // IM_STATIC_ASSERT(IM_OFFSETOF(ImDrawCmd, ClipRect) == 0);

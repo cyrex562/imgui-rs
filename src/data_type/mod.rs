@@ -1,5 +1,9 @@
 use libc::c_int;
 
+pub mod data_type_info;
+pub mod data_type_ops;
+pub mod data_type_temp_storage;
+
 pub type ImGuiDataType = c_int;
 
 // Standard Drag and Drop payload types. You can define you own payload types using short strings. Types starting with '_' are defined by Dear ImGui.

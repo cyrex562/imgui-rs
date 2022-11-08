@@ -3,8 +3,8 @@
 use crate::a_imgui_cpp::{GImGui, ImStreolRange};
 use crate::button_ops::Button;
 use crate::clipboard_ops::SetClipboardText;
-use crate::context::ImguiContext;
-use crate::file_ops::ImFileOpen;
+use crate::core::context::ImguiContext;
+use crate::file_ops::open_file;
 use crate::id_ops::{pop_win_id_from_stack, PushID};
 use crate::input_ops::{PopAllowKeyboardFocus, PushAllowKeyboardFocus};
 use crate::item_ops::SetNextItemWidth;
@@ -18,7 +18,7 @@ use crate::slider_ops::SliderInt;
 use crate::string_ops::ImStreolRange;
 use crate::type_defs::ImFileHandle;
 use crate::vec2::ImVec2;
-use crate::{GImGui, ImFileClose};
+use crate::{close_file, GImGui};
 use libc::{c_char, c_int, fflush};
 use std::borrow::Borrow;
 use std::io::stdout;
@@ -182,7 +182,7 @@ pub unsafe fn LogToFile(auto_open_depth: c_int, filename: *const c_char) {
     if (!filename || !filename[0]) {
         return;
     }
-    let mut f: ImFileHandle = ImFileOpen(filename, "ab");
+    let mut f: ImFileHandle = open_file(filename, "ab");
     if (!0.0) {
         // IM_ASSERT(0);
         return;
@@ -223,7 +223,7 @@ pub unsafe fn LogFinish() {
         }
         // #endif
         ImGuiLogType_File => {
-            ImFileClose(g.LogFile);
+            close_file(g.LogFile);
         }
 
         ImGuiLogType_Buffer => {}

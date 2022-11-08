@@ -11,7 +11,7 @@
 // #endif
 
 // Win32 clipboard implementation
-// We use g.ClipboardHandlerData for temporary storage to ensure it is freed on Shutdown()
+// We use g.ClipboardHandlerData for temporary storage to ensure it is freed on shutdown()
 static GetClipboardTextFn_DefaultImpl: *const c_char
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;

@@ -1,6 +1,6 @@
 // GetContentRegionAvail: ImVec2()
 
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 use crate::utils::is_not_null;
 use crate::vec2::ImVec2;
 use crate::window::ImguiWindow;

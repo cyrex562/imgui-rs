@@ -49,7 +49,7 @@ int main(int, char**)
         return 1;
     }
 
-    // Initialize the WebGPU environment
+    // initialize the WebGPU environment
     if (!init_wgpu())
     {
         if (window)

@@ -90,7 +90,7 @@ pub unsafe fn ImFontAtlasBuildWithStbTruetype(mut atlas: *mut ImFontAtlas) -> bo
     // libc::memset(&mut src_tmp_array, 0, src_tmp_array.size_in_bytes());
     // libc::memset(&dst_tmp_array, 0, dst_tmp_array.size_in_bytes());
 
-    // 1. Initialize font loading structure, check font data validity
+    // 1. initialize font loading structure, check font data validity
     // for (let src_i: c_int = 0; src_i < atlas.ConfigData.Size; src_i++)
     for src_i in 0 .. atlas.ConfigData.len()
     {
@@ -114,7 +114,7 @@ pub unsafe fn ImFontAtlasBuildWithStbTruetype(mut atlas: *mut ImFontAtlas) -> bo
             // IM_ASSERT(src_tmp.DstIndex != -1); // cfg.DstFont not pointing within atlas.Fonts[] array?
             return false;
         }
-        // Initialize helper structure for font loading and verify that the TTF/OTF data is correct
+        // initialize helper structure for font loading and verify that the TTF/OTF data is correct
         let font_offset: c_int = stbtt_GetFontOffsetForIndex(cfg.FontData, cfg.FontNo);
         // IM_ASSERT(font_offset >= 0 && "FontData is incorrect, or FontNo cannot be found.");
         if !stbtt_InitFont(&src_tmp.FontInfo, cfg.FontData, font_offset) {

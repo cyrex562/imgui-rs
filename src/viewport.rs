@@ -17,6 +17,7 @@ use crate::type_defs::ImguiHandle;
 use crate::vec2::ImVec2;
 use crate::viewport_flags::ImGuiViewportFlags;
 use crate::window::ImguiWindow;
+use crate::INVALID_IMGUI_HANDLE;
 use libc::{c_float, c_int, c_short, c_void};
 use std::ptr::null_mut;
 
@@ -33,12 +34,12 @@ pub struct ImguiViewport {
     pub LastAlpha: c_float,
     pub PlatformMonitor: c_short,
     pub PlatformWindowCreated: bool,
-    pub window: &mut ImguiWindow,
+    pub window: ImguiHandle,
     // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
-    // c_int                 DrawListsLastFrame[2];  // Last frame number the background (0) and foreground (1) draw lists were used
+    // Last frame number the background (0) and foreground (1) draw lists were used
     pub DrawListsLastFrame: [c_int; 2],
-    // ImDrawList*         DrawLists[2];           // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.MouseDrawCursor is set and to draw most debug overlays.
-    pub DrawLists: [*mut ImDrawList; 2],
+    // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.MouseDrawCursor is set and to draw most debug overlays.
+    pub DrawLists: [ImguiHandle; 2],
     pub DrawDataP: ImDrawData,
     pub DrawDataBuilder: ImDrawDataBuilder,
     pub LastPlatformPos: ImVec2,
@@ -51,7 +52,6 @@ pub struct ImguiViewport {
     pub BuildWorkOffsetMin: ImVec2,
     // Work Area: Offset being built during current frame. Generally >= 0.0.
     pub BuildWorkOffsetMax: ImVec2, // Work Area: Offset being built during current frame. Generally <= 0.0.
-
     pub ID: ImguiHandle,
     // Unique identifier for the viewport
     pub Flags: ImGuiViewportFlags,
@@ -68,20 +68,19 @@ pub struct ImguiViewport {
     // 1.0 = 96 DPI = No extra scale.
     pub ParentViewportId: ImguiHandle,
     // (Advanced) 0: no parent. Instruct the platform backend to setup a parent/child relationship between platform windows.
-    pub DrawData: *mut ImDrawData, // The ImDrawData corresponding to this viewport. Valid after Render() and until the next call to NewFrame().
-
+    pub DrawData: ImDrawData, // The ImDrawData corresponding to this viewport. Valid after Render() and until the next call to NewFrame().
     // Platform/Backend Dependent Data
     // Our design separate the Renderer and Platform backends to facilitate combining default backends with each others.
     // When our create your own backend for a custom engine, it is possible that both Renderer and Platform will be handled
     // by the same system and you may not need to use all the UserData/Handle fields.
     // The library never uses those fields, they are merely storage to facilitate backend implementation.
-    pub RendererUserData: *mut c_void,
+    pub RendererUserData: Vec<u8>,
     // void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your Renderer_CreateWindow function.
-    pub PlatformUserData: *mut c_void,
+    pub PlatformUserData: Vec<u8>,
     // void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your Platform_CreateWindow function.
-    pub PlatformHandle: *mut c_void,
+    pub PlatformHandle: Vec<u8>,
     // void* for FindViewportByPlatformHandle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)
-    pub PlatformHandleRaw: *mut c_void,
+    pub PlatformHandleRaw: Vec<u8>,
     // void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where PlatformHandle would be a SDL_Window*)
     pub PlatformRequestMove: bool,
     // Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)
@@ -91,28 +90,20 @@ pub struct ImguiViewport {
 }
 
 impl ImguiViewport {
-    // ImGuiViewport()     { memset(this, 0, sizeof(*this)); }
-    // ~ImGuiViewport()    { IM_ASSERT(PlatformUserData == NULL && RendererUserData == NULL); }
-
-    // Helpers
-
-    // ImVec2              GetCenter() const       { return ImVec2::new(Pos.x + Size.x * 0.5, Pos.y + Size.y * 0.5); }
-    pub fn GetCenter(&self) -> ImVec2 {
+    pub fn get_center(&self) -> ImVec2 {
         ImVec2::from_floats(
             self.Pos.x + self.Size.x * 0.5,
             self.Pos.y + self.Size.y * 0.5,
         )
     }
 
-    // ImVec2              GetWorkCenter() const   { return ImVec2::new(WorkPos.x + WorkSize.x * 0.5, WorkPos.y + WorkSize.y * 0.5); }
-    pub fn GetWorkCenter(&self) -> ImVec2 {
+    pub fn get_work_center(&self) -> ImVec2 {
         ImVec2::from_floats(
             self.WorkPos.x + self.WorkSize.x * 0.5,
             self.WorkPos.y + self.WorkSize.y * 0.5,
         )
     }
 
-    // ImGuiViewportP()                    { Idx = -1; LastFrameActive = DrawListsLastFrame[0] = DrawListsLastFrame[1] = LastFrontMostStampCount = -1; LastNameHash = 0; Alpha = LastAlpha = 1.0; PlatformMonitor = -1; PlatformWindowCreated = false; Window = None; DrawLists[0] = DrawLists[1] = None; LastPlatformPos = LastPlatformSize = LastRendererSize = ImVec2::new(f32::MAX, f32::MAX); }
     pub fn new() -> Self {
         Self {
             Idx: -1,
@@ -123,8 +114,8 @@ impl ImguiViewport {
             LastAlpha: 1.0,
             PlatformMonitor: -1,
             PlatformWindowCreated: false,
-            Window: None,
-            DrawLists: [None; 2],
+            window: INVALID_IMGUI_HANDLE,
+            DrawLists: [INVALID_IMGUI_HANDLE; 2],
             LastPlatformPos: ImVec2::from_floats(f32::MAX, f32::MAX),
             LastPlatformSize: ImVec2::from_floats(f32::MAX, f32::MAX),
             LastRendererSize: ImVec2::from_floats(f32::MAX, f32::MAX),
@@ -132,38 +123,31 @@ impl ImguiViewport {
         }
     }
 
-    // ~ImGuiViewportP()                   { if (DrawLists[0]) IM_DELETE(DrawLists[0]); if (DrawLists[1]) IM_DELETE(DrawLists[1]); }
-
-    // void    ClearRequestFlags()         { PlatformRequestClose = PlatformRequestMove = PlatformRequestResize = false; }
-    pub fn ClearRequestFlags(&mut self) {
+    pub fn clear_request_flags(&mut self) {
         self.PlatformRequestClose = false;
         self.PlatformRequestMove = false;
         self.PlatformRequestResize = false;
     }
 
     // Calculate work rect pos/size given a set of offset (we have 1 pair of offset for rect locked from last frame data, and 1 pair for currently building rect)
-    //     ImVec2  CalcWorkRectPos(const off_min: &mut ImVec2) const                            { return ImVec2::new(Pos.x + off_min.x, Pos.y + off_min.y); }
-    pub fn CalcWorkRectPos(&self, off_min: &ImVec2) -> ImVec2 {
+    pub fn calc_work_rect_pos(&self, off_min: &ImVec2) -> ImVec2 {
         ImVec2::from_floats(self.Pos.x + off_min.x, self.Pos.y + off_min.y)
     }
 
-    // ImVec2  CalcWorkRectSize(const off_min: &mut ImVec2, const off_max: &mut ImVec2) const    { return ImVec2::new(ImMax(0.0, Size.x - off_min.x + off_max.x), ImMax(0.0, Size.y - off_min.y + off_max.y)); }
-    pub fn CalcWorkRectSize(&self, off_min: &ImVec2, off_max: &ImVec2) -> ImVec2 {
+    pub fn calc_work_rect_size(&self, off_min: &ImVec2, off_max: &ImVec2) -> ImVec2 {
         ImVec2::from_floats(
             ImMax(0.0, self.Size.x - off_min.x + off_max.x),
             ImMax(0.0, self.Size.y - off_min.y + off_max.y),
         )
     }
 
-    // void    UpdateWorkRect()            { WorkPos = CalcWorkRectPos(WorkOffsetMin); WorkSize = CalcWorkRectSize(WorkOffsetMin, WorkOffsetMax); } // Update public fields
-    pub fn UpdateWorkRect(&mut self) {
-        self.WorkPos = self.CalcWorkRectPos(&self.WorkOffsetMin);
-        self.WorkSize = self.CalcWorkRectSize(&self.WorkOffsetMin, &self.WorkOffsetMax)
+    pub fn update_work_rect(&mut self) {
+        self.WorkPos = self.calc_work_rect_pos(&self.WorkOffsetMin);
+        self.WorkSize = self.calc_work_rect_size(&self.WorkOffsetMin, &self.WorkOffsetMax)
     }
 
     // Helpers to retrieve ImRect (we don't need to store BuildWorkRect as every access tend to change it, hence the code asymmetry)
-    //     ImRect  GetMainRect() const         { return ImRect(Pos.x, Pos.y, Pos.x + Size.x, Pos.y + Size.y); }
-    pub fn GetMainRect(&self) -> ImRect {
+    pub fn get_main_rect(&self) -> ImRect {
         ImRect::from_floats(
             self.Pos.x,
             self.Pos.y,
@@ -172,8 +156,7 @@ impl ImguiViewport {
         )
     }
 
-    // ImRect  GetWorkRect() const         { return ImRect(WorkPos.x, WorkPos.y, WorkPos.x + WorkSize.x, WorkPos.y + WorkSize.y); }
-    pub fn GetWorkRect(&self) -> ImRect {
+    pub fn get_work_rect(&self) -> ImRect {
         ImRect::from_floats(
             self.WorkPos.x,
             self.WorkPos.y,
@@ -182,10 +165,9 @@ impl ImguiViewport {
         )
     }
 
-    // ImRect  GetBuildWorkRect() const    { let mut pos: ImVec2 =  CalcWorkRectPos(BuildWorkOffsetMin); let mut size: ImVec2 =  CalcWorkRectSize(BuildWorkOffsetMin, BuildWorkOffsetMax); return ImRect(pos.x, pos.y, pos.x + size.x, pos.y + size.y); }
-    pub fn GetBuildWorkRect(&self) -> ImRect {
-        let pos = self.CalcWorkRectPos(&self.BuildWorkOffsetMin);
-        let size = self.CalcWorkRectSize(&self.BuildWorkOffsetMin, &self.BuildWorkOffsetMax);
+    pub fn get_build_work_rect(&self) -> ImRect {
+        let pos = self.calc_work_rect_pos(&self.BuildWorkOffsetMin);
+        let size = self.calc_work_rect_size(&self.BuildWorkOffsetMin, &self.BuildWorkOffsetMax);
         ImRect::from_floats(pos.x, pos.y, pos.x + size.x, pos.y + size.y)
     }
 }

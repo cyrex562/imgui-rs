@@ -1,4 +1,4 @@
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 use crate::type_defs::ImguiHandle;
 use libc::{c_int, c_void};
 

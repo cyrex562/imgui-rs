@@ -3,7 +3,7 @@ use crate::backend_flags::{
     IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VIEWPORTS,
 };
 use crate::child_ops::EndChild;
-use crate::config_flags::{
+use crate::core::config_flags::{
     ImGuiConfigFlags_DockingEnable, ImGuiConfigFlags_NavEnableKeyboard,
     ImGuiConfigFlags_ViewportsEnable,
 };

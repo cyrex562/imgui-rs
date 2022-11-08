@@ -18,7 +18,7 @@ use crate::window::ImguiWindow;
 use crate::GImGui;
 use libc::{c_char, c_float, c_int};
 use std::ptr::{null, null_mut};
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
 // CalcTextSize("") should return ImVec2::new(0.0, g.FontSize)

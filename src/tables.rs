@@ -266,10 +266,10 @@ use crate::bit_array::ImBitArray;
 use crate::widgets::button_flags::{ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_FlattenChildren, ImGuiButtonFlags_NoNavFocus, ImGuiButtonFlags_PressedOnClick, ImGuiButtonFlags_PressedOnDoubleClick};
 use crate::child_ops::{BeginChildEx, EndChild};
 use crate::content_ops::content_region_avail;
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 use crate::cursor_ops::cursor_screen_pos;
 use crate::direction::{ImGuiDir_Down, ImGuiDir_Up};
-use crate::draw_channel::ImDrawChannel;
+use crate::drawing::draw_channel::ImDrawChannel;
 use crate::draw_list::ImDrawList;
 use crate::draw_list_splitter::ImDrawListSplitter;
 use crate::hovered_flags::ImGuiHoveredFlags_DelayNormal;
@@ -432,7 +432,7 @@ pub fn  BeginTableEx(g: &mut ImguiContext, name: &String, id: ImguiHandle, colum
     table.IsDefaultSizingPolicy = flag_clear(flags, ImGuiTableFlags_SizingMask_);
     flags = TableFixFlags(flags, outer_window);
 
-    // Initialize
+    // initialize
     table.ID = id;
     table.Flags = flags;
     table.InstanceCurrent = instance_no;
@@ -587,7 +587,7 @@ pub fn  BeginTableEx(g: &mut ImguiContext, name: &String, id: ImguiHandle, colum
         TableResetSettings(table);}
     if (table.IsInitializing)
     {
-        // Initialize
+        // initialize
         table.SettingsOffset = -1;
         table.IsSortSpecsDirty = true;
         table.InstanceInteracted = -1;
@@ -1007,7 +1007,7 @@ pub unsafe fn TableUpdateLayout(table: *mut ImGuiTable)
         }
         else
         {
-            // Initialize stretch weight
+            // initialize stretch weight
             if (column.AutoFitQueue != 0x00 || column.StretchWeight < 0.0 || !column_is_resizable)
             {
                 if column.InitStretchWeightOrWidth > 0.0{
@@ -1623,7 +1623,7 @@ pub unsafe fn TableSetupColumn(label: String, mut flags: ImGuiTableColumnFlags, 
     column.UserID = user_id;
     flags = column.Flags;
 
-    // Initialize defaults
+    // initialize defaults
     column.InitStretchWeightOrWidth = init_width_or_weight;
     if table.IsInitializing
     {
@@ -4071,7 +4071,7 @@ pub unsafe fn BeginColumns(str_id: *const c_char, columns_count: c_int, flags: I
         columns.Columns.clear();
     }
 
-    // Initialize default widths
+    // initialize default widths
     columns.IsFirstFrame = (columns.Columns.Size == 0);
     if (columns.Columns.Size == 0)
     {

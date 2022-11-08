@@ -1,4 +1,4 @@
-use crate::axis::{ImGuiAxis, IM_GUI_AXIS_NONE};
+use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_NONE};
 use crate::docking::dock_node_flags::ImGuiDockNodeFlags;
 use crate::type_defs::ImguiHandle;
 use crate::vec2::ImVec2ih;

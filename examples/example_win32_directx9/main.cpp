@@ -32,7 +32,7 @@ int main(int, char **) {
       wc.lpszClassName, _T("Dear ImGui DirectX9 Example"), WS_OVERLAPPEDWINDOW,
       100, 100, 1280, 800, None, None, wc.hInstance, None);
 
-  // Initialize Direct3D
+  // initialize Direct3D
   if (!CreateDeviceD3D(hwnd)) {
     CleanupDeviceD3D();
     ::UnregisterClass(wc.lpszClassName, wc.hInstance);

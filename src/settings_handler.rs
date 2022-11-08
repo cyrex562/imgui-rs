@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
-use crate::axis::ImGuiAxis;
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
+use crate::core::axis::ImGuiAxis;
 use crate::text_buffer::ImGuiTextBuffer;
 use crate::type_defs::ImguiHandle;
 use libc::{c_char, c_void};

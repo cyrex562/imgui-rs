@@ -1,17 +1,16 @@
 use crate::activate_flags::{ImGuiActivateFlags, IM_GUI_ACTIVATE_FLAGS_NONE};
 use crate::chunk_stream::ImChunkStream;
-use crate::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_DefaultOptions_};
-use crate::color_mod::ImGuiColorMod;
-use crate::combo_preview_data::ImGuiComboPreviewData;
-use crate::config_flags::{ImGuiConfigFlags_None, ImguiConfigFlags};
-use crate::context_hook::ImGuiContextHook;
-use crate::debug_log_flags::{ImGuiDebugLogFlags, IM_GUI_DEBUG_LOG_FLAGS_OUTPUT_TO_TTY};
+use crate::color::color_edit_flags::{ImGuiColorEditFlags, ImGuiColorEditFlags_DefaultOptions_};
+use crate::color::color_mod::ImGuiColorMod;
+use crate::core::config_flags::{ImGuiConfigFlags_None, ImguiConfigFlags};
+use crate::core::context_hook::ImGuiContextHook;
+use crate::debugging::debug_log_flags::{ImGuiDebugLogFlags, IM_GUI_DEBUG_LOG_FLAGS_OUTPUT_TO_TTY};
 use crate::direction::{ImGuiDir, ImGuiDir_None};
 use crate::docking::dock_context::ImGuiDockContext;
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::drag_drop::drag_drop_flags::{ImGuiDragDropFlags, ImGuiDragDropFlags_None};
-use crate::draw_channel::ImDrawChannel;
 use crate::draw_list_shared_data::Imgui_DrawListSharedData;
+use crate::drawing::draw_channel::ImDrawChannel;
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
 use crate::group_data::ImGuiGroupData;
@@ -58,12 +57,13 @@ use crate::type_defs::{
 use crate::vec2::ImVec2;
 use crate::vec4::ImVec4;
 use crate::viewport::ImguiViewport;
+use crate::widgets::combo_preview_data::ImGuiComboPreviewData;
 use crate::window::window_settings::ImGuiWindowSettings;
 use crate::window::window_stack_data::ImGuiWindowStackData;
 use crate::window::ImguiWindow;
 use crate::window_settings::ImGuiWindowSettings;
 use crate::window_stack_data::ImGuiWindowStackData;
-use crate::{Initialize, Shutdown};
+use crate::{initialize, shutdown};
 use libc::{c_char, c_double, c_float, c_int, c_uchar, c_void};
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
@@ -778,7 +778,7 @@ pub fn create_context(
 ) -> ImguiContext {
     let mut ctx = ImguiContext::new(shared_font_atlas);
     // SetCurrentContext(&mut ctx);
-    Initialize(g);
+    initialize(g);
     if prev_ctx != None {
         SetCurrentContext(prev_ctx.unwrap().borrow_mut());
     } // Restore previous context if any, else keep new one.
@@ -793,7 +793,7 @@ pub unsafe fn destroy_context(mut ctx: &mut ImguiContext) {
     //     ctx = prev_ctx;
     // }
     // SetCurrentContext(ctx);
-    Shutdown(g);
+    shutdown(g);
     // SetCurrentContext(if prev_ctx.unwrap() != ctx {
     //     prev_ctx.unwrap().borrow_mut()
     // } else {

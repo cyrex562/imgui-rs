@@ -18,12 +18,11 @@ pub unsafe fn staticCalcScrollEdgeSnap(
     return target;
 }
 
-use crate::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
-use crate::widgets::button_flags::ImGuiButtonFlags_NoNavFocus;
 use crate::color::{
     ImGuiCol_ScrollbarBg, ImGuiCol_ScrollbarGrab, ImGuiCol_ScrollbarGrabActive,
     ImGuiCol_ScrollbarGrabHovered,
 };
+use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::draw_flags::{
     ImDrawFlags, ImDrawFlags_RoundCornersBottomLeft, ImDrawFlags_RoundCornersBottomRight,
     ImDrawFlags_RoundCornersNone, ImDrawFlags_RoundCornersTopRight,
@@ -41,6 +40,7 @@ use crate::style_ops::GetColorU32;
 use crate::type_defs::ImguiHandle;
 use crate::utils::{flag_clear, flag_set};
 use crate::vec2::ImVec2;
+use crate::widgets::button_flags::ImGuiButtonFlags_NoNavFocus;
 use crate::window::window_flags::{
     ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_NoTitleBar,
 };

@@ -15,7 +15,7 @@ use imgui_rs::type_defs::ImguiHandle;
 use imgui_rs::window::ImGuiWindow;
 use libc::{c_char, c_int, c_void};
 use std::ptr::null;
-use crate::context::ImguiContext;
+use crate::core::context::ImguiContext;
 
 // c_void SetActiveID(ImguiHandle id, window: &mut ImGuiWindow)
 pub fn SetActiveID(g: &mut ImguiContext, id: ImguiHandle, window: Option<&mut ImguiWindow>) {

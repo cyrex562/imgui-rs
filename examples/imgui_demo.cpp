@@ -2026,7 +2026,7 @@ static void ShowDemoWindowWidgets() {
     if (ImGui::TreeNode("TabItemButton & Leading/Trailing flags")) {
       static ImVector<int> active_tabs;
       static int next_tab_id = 0;
-      if (next_tab_id == 0) // Initialize with some default tabs
+      if (next_tab_id == 0) // initialize with some default tabs
         for (int i = 0; i < 3; i += 1)
           active_tabs.push_back(next_tab_id += 1);
 

@@ -2,8 +2,8 @@
 
 use std::ptr::null_mut;
 use libc::{c_char, c_void, size_t};
-use crate::context::ImguiContext;
-use crate::context_hook::{ImGuiContextHook, ImguiContextHookType, IM_GUI_CONTEXT_HOOK_TYPE_PENDING_REMOVAL};
+use crate::core::context::ImguiContext;
+use crate::core::context_hook::{ImGuiContextHook, ImguiContextHookType, IM_GUI_CONTEXT_HOOK_TYPE_PENDING_REMOVAL};
 use crate::font_atlas::ImFontAtlas;
 use crate::imgui::{GImAllocatorUserData, GImGui};
 use crate::type_defs::{ImguiHandle, ImGuiMemAllocFunc, ImGuiMemFreeFunc};
