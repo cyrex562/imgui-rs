@@ -21,6 +21,8 @@ use core::context_hook::IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN;
 use std::collections::HashSet;
 use std::io::stdout;
 use std::ptr::null_mut;
+use crate::core::settings_ops::{save_ini_settings_to_disk, WindowSettingsHandler_ApplyAll, WindowSettingsHandler_ClearAll, WindowSettingsHandler_ReadLine, WindowSettingsHandler_WriteAll};
+use crate::table::tables::TableSettingsAddSettingsHandler;
 
 mod backends;
 mod color;
@@ -77,7 +79,7 @@ pub fn initialize(g: &mut ImguiContext) {
     init_dock_context(g);
     // #endif
 
-    g.Initialized = true;
+    g.initialized = true;
 }
 
 // This function is merely here to free heap allocations.
@@ -91,13 +93,13 @@ pub fn shutdown(g: &mut ImguiContext) {
     g.IO.Fonts = None;
 
     // Cleanup of other data are conditional on actually having initialized Dear ImGui.
-    if !g.Initialized {
+    if !g.initialized {
         return;
     }
 
     // Save settings (unless we haven't attempted to load them: CreateContext/DestroyContext without a call to NewFrame shouldn't save an empty file)
-    if g.SettingsLoaded && g.IO.IniFilename != None {
-        save_ini_settings_to_disk(g, g.IO.IniFilename);
+    if g.SettingsLoaded && g.IO.IniFilename.is_empty() == false {
+        save_ini_settings_to_disk(g, &g.IO.IniFilename);
     }
 
     // Destroy platform windows
@@ -110,20 +112,20 @@ pub fn shutdown(g: &mut ImguiContext) {
     g.call_context_hooks(IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN);
 
     // Clear everything else
-    g.Windows.clear_delete();
+    // g.Windows.clear_delete();
     g.WindowsFocusOrder.clear();
     g.WindowsTempSortBuffer.clear();
     g.CurrentWindow = INVALID_IMGUI_HANDLE;
     g.CurrentWindowStack.clear();
-    g.WindowsById.Clear();
+    g.windows.Clear();
     g.NavWindow = INVALID_IMGUI_HANDLE;
-    g.HoveredWindow = null_Mut();
+    g.HoveredWindow = INVALID_IMGUI_HANDLE;
     g.HoveredWindowUnderMovingWindow = INVALID_IMGUI_HANDLE;
     g.ActiveIdWindow = INVALID_IMGUI_HANDLE;
     g.ActiveIdPreviousFrameWindow = INVALID_IMGUI_HANDLE;
     g.MovingWindow = INVALID_IMGUI_HANDLE;
     g.ColorStack.clear();
-    g.styleVarStack.clear();
+    g.style_var_stack.clear();
     g.FontStack.clear();
     g.OpenPopupStack.clear();
     g.BeginPopupStack.clear();
@@ -135,7 +137,7 @@ pub fn shutdown(g: &mut ImguiContext) {
 
     g.TabBars.Clear();
     g.CurrentTabBarStack.clear();
-    g.ShrinkWidthBuffer.clear();
+    g.shrink_width_buffer.clear();
 
     g.ClipperTempData.clear_destruct();
 
@@ -147,19 +149,19 @@ pub fn shutdown(g: &mut ImguiContext) {
     g.MenusIdSubmittedThisFrame.clear();
     g.InputTextState.ClearFreeMemory();
 
-    g.SettingsWindows.clear();
-    g.SettingsHandlers.clear();
+    g.settings_windows.clear();
+    g.settings_handlers.clear();
 
-    if g.LogFile {
+    if g.log_file_handle.is_some() {
         // #ifndef IMGUI_DISABLE_TTY_FUNCTIONS
-        if g.LogFile != libc::stdout {
+        if g.log_file_handle.unwrap() != libc::stdout {
             // #endif
-            close_file(g.LogFile);
+            close_file(&g.log_file_handle.unwrap());
         }
-        g.LogFile = None;
+        g.log_file_handle = None;
     }
-    g.LogBuffer.clear();
-    g.DebugLogBuf.clear();
+    g.log_buffer.clear();
+    g.debug_log_buffer.clear();
 
-    g.Initialized = false;
+    g.initialized = false;
 }

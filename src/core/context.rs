@@ -17,7 +17,7 @@ use crate::widgets::group_data::ImGuiGroupData;
 use crate::io::input_event::ImguiInputEvent;
 use crate::io::input_source::{ImGuiInputSource, ImGuiInputSource_None, ImGuiNavLayer};
 use crate::input_text_state::ImGuiInputTextState;
-use crate::io::ImguiIo;
+use crate::io::IoContext;
 use crate::item::item_flags::{ImGuiItemFlags, ImGuiItemFlags_None};
 use crate::item::last_item_data::ImGuiLastItemData;
 use crate::list_clipper_data::ImGuiListClipperData;
@@ -65,15 +65,29 @@ use crate::{initialize, shutdown};
 use libc::{c_char, c_double, c_float, c_int, c_uchar, c_void};
 use std::borrow::BorrowMut;
 use std::collections::HashMap;
+use std::fs;
 use std::ptr::null_mut;
+use crate::font::font_atlas::ImFontAtlas;
+use crate::platform::platform_ime_data::ImGuiPlatformImeData;
+use crate::platform::platform_io::ImguiPlatformIo;
+use crate::platform::platform_monitor::ImGuiPlatformMonitor;
+use crate::style::style_mod::ImGuiStyleMod;
+use crate::table::table_settings::ImGuiTableSettings;
+use crate::table::table_temp_data::ImGuiTableTempData;
+use crate::widgets::list_clipper_data::ImGuiListClipperData;
+use crate::widgets::nav_item_data::ImGuiNavItemData;
+use crate::widgets::nav_layer::{ImGuiNavLayer, ImGuiNavLayer_Main};
+use crate::widgets::nav_move_flags::{ImGuiNavMoveFlags, ImGuiNavMoveFlags_None};
+use crate::widgets::popup_data::ImGuiPopupData;
+use crate::window::input_text_state::ImGuiInputTextState;
 
 #[derive(Default, Debug, Clone)]
 pub struct ImguiContext {
-    pub Initialized: bool,
+    pub initialized: bool,
     // IO.Fonts. is owned by the ImGuiContext and will be destructed along with it.
     pub FontAtlasOwnedByContext: bool,
     // ImGuiIO                 IO;
-    pub IO: ImguiIo,
+    pub IO: IoContext,
     pub PlatformIO: ImguiPlatformIo,
     // Input events which will be tricked/written into IO structure.
     pub InputEventsQueue: Vec<ImguiInputEvent>,
@@ -469,10 +483,10 @@ pub struct ImguiContext {
     // Capture target
     pub LogType: ImGuiLogType,
     // If != NULL log to stdout/ file
-    pub LogFile: Option<ImFileHandle>,
+    pub log_file_handle: Option<fs::File>,
     // Accumulation buffer when log to clipboard. This is pointer so our GImGui static
     // constructor doesn't call heap allocators.
-    pub LogBuffer: String,
+    pub log_buffer: String,
     pub LogNextPrefix: Option<String>,
     pub LogNextSuffix: Option<String>,
     pub LogLinePosY: c_float,
@@ -484,7 +498,7 @@ pub struct ImguiContext {
     pub LogDepthToExpandDefault: c_int,
     // Debug Tools
     pub DebugLogFlags: ImGuiDebugLogFlags,
-    pub DebugLogBuf: String,
+    pub debug_log_buffer: String,
     // Item picker is active (started with DebugStartItemPicker())
     pub DebugItemPickerActive: bool,
     pub DebugItemPickerMouseButton: ImGuiMouseButton,
@@ -512,7 +526,7 @@ pub struct ImguiContext {
 impl ImguiContext {
     pub fn new(shared_font_atlas: Option<ImFontAtlas>) -> Self {
         let mut out = Self {
-            Initialized: false,
+            initialized: false,
             ConfigFlagsCurrFrame: ImGuiConfigFlags_None,
             ConfigFlagsLastFrame: ImGuiConfigFlags_None,
             FontAtlasOwnedByContext: if shared_font_atlas.is_null() == false {
@@ -674,7 +688,7 @@ impl ImguiContext {
             LogType: ImGuiLogType_None,
             LogNextPrefix: None,
             LogNextSuffix: None,
-            LogFile: None,
+            log_file_handle: None,
             LogLinePosY: f32::MAX,
             LogLineFirstItem: false,
             LogDepthRef: 0,

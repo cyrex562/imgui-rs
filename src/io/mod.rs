@@ -9,11 +9,13 @@ use crate::font_atlas::ImFontAtlas;
 use crate::imgui::GImGui;
 use crate::a_imgui_cpp::{GImGui, ImTextCharFromUtf8};
 use input_event::ImguiInputEvent;
+use crate::backends::backend_flags::ImGuiBackendFlags;
 use crate::input_ops::{GetKeyData, IsGamepadKey};
 use crate::platform_ime_data::ImGuiPlatformImeData;
 use crate::core::string_ops::ImTextCharFromUtf8;
 use crate::core::type_defs::{ImguiHandle, ImWchar, ImWchar16};
 use crate::core::vec2::ImVec2;
+use crate::font::font_atlas::ImFontAtlas;
 use crate::viewport::ImguiViewport;
 
 pub mod input_event;
@@ -30,7 +32,7 @@ pub mod mouse_cursor;
 pub mod mouse_ops;
 
 #[derive(Default, Debug, Clone)]
-pub struct ImguiIo {
+pub struct IoContext {
     //------------------------------------------------------------------
     // Configuration                            // Default value
     //------------------------------------------------------------------
@@ -45,9 +47,9 @@ pub struct ImguiIo {
     pub IniSavingRate: c_float,
     // = 5f32           // Minimum time between saving positions/sizes to .ini file, in seconds.
     // const char* IniFilename;                    // = "imgui.ini"    // Path to .ini file (important: default "imgui.ini" is relative to current working dir!). Set NULL to disable automatic .ini loading/saving or if you want to manually call LoadIniSettingsXXX() / SaveIniSettingsXXX() functions.
-    pub IniFilename: *const c_char,
+    pub IniFilename:String,
     // const char* LogFilename;                    // = "imgui_log.txt"// Path to .log file (default parameter to LogToFile when no file is specified).
-    pub LogFilename: *const c_char,
+    pub LogFilename: String,
     pub MouseDoubleClickTime: c_double,
     // = 0.3f32          // Time for a double-click, in seconds.
     pub MouseDoubleClickMaxDist: c_float,
@@ -117,8 +119,8 @@ pub struct ImguiIo {
     //------------------------------------------------------------------
     // Optional: Platform/Renderer backend name (informational only! will be displayed in
     // About Window) + User data for backend/wrappers to store their own stuff.
-    pub BackendPlatformName: *const c_char,
-    pub BackendRendererName: *const c_char,
+    pub BackendPlatformName: String,
+    pub BackendRendererName: String,
     pub BackendPlatformUserData: *mut c_void,
     // User data for platform backend
     pub BackendRendererUserData: *mut c_void,
@@ -269,7 +271,7 @@ pub struct ImguiIo {
 
 
 
-impl ImguiIo {
+impl IoContext {
     // ImGuiIO::ImGuiIO()
     pub fn new() -> Self {
         // Most fields are initialized with zero

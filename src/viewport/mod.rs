@@ -20,10 +20,15 @@ use crate::window::ImguiWindow;
 use crate::INVALID_IMGUI_HANDLE;
 use libc::{c_float, c_int, c_short, c_void};
 use std::ptr::null_mut;
+use viewport_renderer_user_data::ViewportRendererUserData;
+use crate::viewport::viewport_platform_handle::ViewportPlatformHandle;
 
 pub mod widget_ops;
 pub mod viewport_ops;
 pub mod viewport_flags;
+pub mod viewport_renderer_user_data;
+mod viewport_platform_handle;
+
 
 pub struct ImguiViewport {
     pub Idx: c_int,
@@ -78,13 +83,13 @@ pub struct ImguiViewport {
     // When our create your own backend for a custom engine, it is possible that both Renderer and Platform will be handled
     // by the same system and you may not need to use all the UserData/Handle fields.
     // The library never uses those fields, they are merely storage to facilitate backend implementation.
-    pub RendererUserData: Vec<u8>,
+    pub RendererUserData:ViewportRendererUserData,
     // void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your Renderer_CreateWindow function.
     pub PlatformUserData: Vec<u8>,
     // void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your Platform_CreateWindow function.
-    pub PlatformHandle: Vec<u8>,
+    pub PlatformHandle:ViewportPlatformHandle,
     // void* for FindViewportByPlatformHandle(). (e.g. suggested to use natural platform handle such as HWND, GLFWWindow*, SDL_Window*)
-    pub PlatformHandleRaw: Vec<u8>,
+    pub PlatformHandleRaw: ViewportPlatformHandle,
     // void* to hold lower-level, platform-native window handle (under Win32 this is expected to be a HWND, unused for other platforms), when using an abstraction layer like GLFW or SDL (where PlatformHandle would be a SDL_Window*)
     pub PlatformRequestMove: bool,
     // Platform window requested move (e.g. window was moved by the OS / host window manager, authoritative position will be OS window position)

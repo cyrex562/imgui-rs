@@ -15,7 +15,7 @@ use crate::widgets::input_flags::{
     ImGuiInputFlags_RepeatRateNavMove, ImGuiInputFlags_RepeatRateNavTweak,
 };
 use crate::input_source::{input_source_names, ImGuiInputSource};
-use crate::io::ImguiIo;
+use crate::io::IoContext;
 use crate::item::item_flags::ImGuiItemFlags_NoTabStop;
 use crate::item::item_ops::{PopItemFlag, PushItemFlag};
 use crate::io::key::{
@@ -263,7 +263,7 @@ pub unsafe fn GetKeyName(mut key: ImGuiKey) -> *const c_char {
     // IM_ASSERT((IsNamedKey(key) || key == ImGuiKey_None) && "Support for user key indices was dropped in favor of ImGuiKey. Please update backend and user code.");
     // #else
     if IsLegacyKey(key) {
-        let mut io: *mut ImguiIo = GetIO();
+        let mut io: *mut IoContext = GetIO();
         if io.KeyMap[key.clone()] == -1 {
             return str_to_const_c_char_ptr("NA");
         }

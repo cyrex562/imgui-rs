@@ -17,7 +17,7 @@ use crate::core::context::ImguiContext;
 use crate::widgets::input_flags::{ImGuiInputFlags_Repeat, ImGuiInputFlags_RepeatRateNavMove, ImGuiInputFlags_RepeatRateNavTweak};
 use crate::input_ops::{GetKeyPressedAmount, GetTypematicRepeatRate, IsKeyDown, IsKeyPressed, IsKeyPressedEx, IsMouseHoveringRect, IsMousePosValid};
 use crate::io::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Keyboard, ImGuiInputSource_Nav};
-use crate::io::ImguiIo;
+use crate::io::IoContext;
 use crate::item::item_flags::{ImGuiItemFlags, ImGuiItemFlags_Disabled, ImGuiItemFlags_Inputable, ImGuiItemFlags_NoNav, ImGuiItemFlags_NoNavDefaultFocus, ImGuiItemFlags_NoTabStop};
 use crate::io::key::{ImGuiKey, ImGuiKey_C, ImGuiKey_DownArrow, ImGuiKey_End, ImGuiKey_Enter, ImGuiKey_Escape, ImGuiKey_GamepadDpadDown, ImGuiKey_GamepadDpadLeft, ImGuiKey_GamepadDpadRight, ImGuiKey_GamepadDpadUp, ImGuiKey_GamepadFaceDown, ImGuiKey_GamepadFaceLeft, ImGuiKey_GamepadFaceRight, ImGuiKey_GamepadFaceUp, ImGuiKey_GamepadL1, ImGuiKey_GamepadLStickDown, ImGuiKey_GamepadLStickLeft, ImGuiKey_GamepadLStickRight, ImGuiKey_GamepadLStickUp, ImGuiKey_GamepadR1, ImGuiKey_Home, ImGuiKey_LeftArrow, ImGuiKey_ModAlt, ImGuiKey_NavGamepadActivate, ImGuiKey_NavGamepadCancel, ImGuiKey_NavGamepadInput, ImGuiKey_NavGamepadMenu, ImGuiKey_NavGamepadTweakFast, ImGuiKey_NavGamepadTweakSlow, ImGuiKey_None, ImGuiKey_PageDown, ImGuiKey_PageUp, ImGuiKey_RightArrow, ImGuiKey_Space, ImGuiKey_Tab, ImGuiKey_UpArrow};
 use crate::core::math_ops::{ImClamp, ImFabs, ImLerp, ImMax, ImMin};

@@ -27,7 +27,7 @@ use crate::core::string_ops::ImStrchrRange;
 use crate::core::type_defs::ImguiHandle;
 use crate::text_buffer::ImGuiTextBuffer;
 use crate::core::type_defs::ImFileHandle;
-use crate::core::utils::is_not_null;
+use crate::core::utils::{flag_clear, is_not_null};
 use crate::core::vec2::ImVec2ih;
 use crate::window::find::FindWindowByID;
 use crate::window::ImguiWindow;
@@ -62,19 +62,12 @@ pub unsafe fn UpdateSettings()
     }
 }
 
-pub unsafe fn MarkIniSettingsDirty()
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (g.SettingsDirtyTimer <= 0.0){
-        g.SettingsDirtyTimer = g.IO.IniSavingRate;}
-}
-
-pub unsafe fn MarkIniSettingsDirty2(window: &mut ImguiWindow)
-{
-    let g = GImGui; // ImGuiContext& g = *GImGui;
-    if (flag_clear(window.Flags, ImGuiWindowFlags_NoSavedSettings)){
-        if (g.SettingsDirtyTimer <= 0.0){
-            g.SettingsDirtyTimer = g.IO.IniSavingRate;}}
+pub unsafe fn mark_ini_setings_dirty2(g: &mut ImguiContext, window: &mut ImguiWindow) {
+    if flag_clear(window.Flags, ImGuiWindowFlags_NoSavedSettings) {
+        if g.SettingsDirtyTimer <= 0.0 {
+            g.SettingsDirtyTimer = g.IO.IniSavingRate;
+        }
+    }
 }
 
 pub unsafe fn CreateNewWindowSettings(name: *const c_char) -> *mut ImGuiWindowSettings
@@ -251,7 +244,7 @@ pub fn save_ini_settings_to_disk(g: &mut ImguiContext, ini_filename: &String)
     f: ImFileHandle = open_file(ini_filename, "wt");
     if !0.0 { return ; }
     ImFileWrite(ini_data, sizeof, ini_data_size, 0.0);
-    close_file(0.0);
+    // close_file(0.0);
 }
 
 // Call registered handlers (e.g. SettingsHandlerWindow_WriteAll() + custom handlers) to write their stuff into a text buffer

@@ -38,7 +38,7 @@ use crate::input_num_ops::InputText;
 use crate::input_ops::{GetInputSourceName, IsKeyDown, IsKeyPressed, IsMouseClicked, IsMouseHoveringRect, SetMouseCursor};
 use crate::input_text::InputTextMultiline;
 use crate::input_text_flags::ImGuiInputTextFlags_ReadOnly;
-use crate::io::ImguiIo;
+use crate::io::IoContext;
 use crate::io::io_ops::GetIO;
 use crate::item::item_ops::{IsItemHovered, SetNextItemWidth};
 use crate::io::key::{ImGuiKey_C, ImGuiKey_Escape, ImGuiKey_ModCtrl, ImGuiKey_NamedKey_BEGIN, ImGuiKey_NamedKey_END};

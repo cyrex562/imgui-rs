@@ -220,7 +220,7 @@ use crate::input_text_flags::{
     ImGuiInputTextFlags_ReadOnly,
 };
 use crate::input_text_state::ImGuiInputTextState;
-use crate::io::ImguiIo;
+use crate::io::IoContext;
 use crate::io::io_ops::GetIO;
 use crate::item::item_flags::{
     ImGuiItemFlags, ImGuiItemFlags_ButtonRepeat, ImGuiItemFlags_Disabled, ImGuiItemFlags_Inputable,
