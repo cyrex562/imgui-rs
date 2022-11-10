@@ -10,7 +10,7 @@ use crate::drawing::render_ops::{RenderNavHighlight, RenderText};
 use crate::style_ops::GetColorU32;
 use crate::text_ops::CalcTextSize;
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ImguiWindow;
 use crate::window::ops::GetCurrentWindow;
 
@@ -22,16 +22,16 @@ pub unsafe fn RadioButton(label: String, active: bool) -> bool
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let setyle = &mut g.style;
     let mut id: ImguiHandle =  window.id_from_str(label, );
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
 
     let square_sz: c_float =  GetFrameHeight();
-    let pos: ImVec2 = window.dc.cursor_pos;
-    let mut check_bb: ImRect = ImRect::new(pos, pos + ImVec2::from_floats(square_sz, square_sz));
-    let mut total_bb: ImRect = ImRect::new(pos, pos + ImVec2::from_floats(square_sz + (if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x } else { 0.0 }), label_size.y + style.FramePadding.y * 2.0));
+    let pos: Vector2 = window.dc.cursor_pos;
+    let mut check_bb: ImRect = ImRect::new(pos, pos + Vector2::from_floats(square_sz, square_sz));
+    let mut total_bb: ImRect = ImRect::new(pos, pos + Vector2::from_floats(square_sz + (if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x } else { 0.0 }), label_size.y + style.FramePadding.y * 2.0));
     ItemSize(g, &total_bb.GetSize(), style.FramePadding.y);
     if !ItemAdd(g, &mut total_bb, id, None, 0) { return  false; }
 
-    let mut center: ImVec2 = check_bb.GetCenter();
+    let mut center: Vector2 = check_bb.GetCenter();
     center.x = IM_ROUND(center.x);
     center.y = IM_ROUND(center.y);
     let radius: c_float =  (square_sz - 1.0) * 0.5;
@@ -52,11 +52,11 @@ pub unsafe fn RadioButton(label: String, active: bool) -> bool
 
     if style.FrameBorderSize > 0.0
     {
-        window.DrawList.AddCircle(center + ImVec2::from_ints(1, 1), radius, GetColorU32(ImGuiCol_BorderShadow, 0.0), 16, style.FrameBorderSize);
+        window.DrawList.AddCircle(center + Vector2::from_ints(1, 1), radius, GetColorU32(ImGuiCol_BorderShadow, 0.0), 16, style.FrameBorderSize);
         window.DrawList.AddCircle(&center, radius, GetColorU32(ImGuiCol_Border, 0.0), 16, style.FrameBorderSize);
     }
 
-    let label_pos: ImVec2 = ImVec2::from_floats(check_bb.max.x + style.ItemInnerSpacing.x, check_bb.min.y + style.FramePadding.y);
+    let label_pos: Vector2 = Vector2::from_floats(check_bb.max.x + style.ItemInnerSpacing.x, check_bb.min.y + style.FramePadding.y);
     if g.LogEnabled {
         // LogRenderedText(&label_pos, active? "(x)": "( )");
     }

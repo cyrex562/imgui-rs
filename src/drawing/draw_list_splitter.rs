@@ -3,7 +3,7 @@
 use crate::drawing::draw_list::ImDrawList;
 use crate::drawing::draw_channel::ImDrawChannel;
 use crate::drawing::draw_cmd::ImDrawCmd;
-use crate::core::type_defs::ImDrawIdx;
+use crate::core::type_defs::DrawIndex;
 use libc::{c_int, size_t};
 use std::mem;
 use std::ptr::null_mut;
@@ -137,13 +137,13 @@ impl ImDrawListSplitter {
         );
         draw_list.IdxBuffer.resize_with(
             draw_list.IdxBuffer.len() + new_idx_buffer_count,
-            ImDrawIdx::default(),
+            DrawIndex::default(),
         );
 
         // Write commands and indices in order (they are fairly small structures, we don't copy vertices only indices)
         let mut cmd_write: *mut ImDrawCmd =
             draw_list.CmdBuffer.as_mut_ptr() + draw_list.CmdBuffer.len() - new_cmd_buffer_count;
-        let mut idx_write: *mut ImDrawIdx =
+        let mut idx_write: *mut DrawIndex =
             draw_list.IdxBuffer.as_mut_ptr() + draw_list.IdxBuffer.len() - new_idx_buffer_count;
         // for (let i: c_int = 1; i < _Count; i++)
         for i in 1..self._Count {

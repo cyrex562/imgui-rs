@@ -19,7 +19,7 @@ use crate::drawing::draw_list_flags::{
 };
 use crate::drawing::draw_list_shared_data::Imgui_DrawListSharedData;
 use crate::drawing::draw_list_splitter::ImDrawListSplitter;
-use crate::drawing::draw_vert::ImDrawVert;
+use crate::drawing::draw_vert::DrawVertex;
 use crate::drawing::draw::ImDrawCallback;
 use crate::drawing::draw_cmd::ImDrawCmd;
 use crate::font::ImFont;
@@ -28,9 +28,9 @@ use crate::core::math_ops::{
     PathBezierCubicCurveToCasteljau, PathBezierQuadraticCurveToCasteljau,
 };
 use crate::rect::ImRect;
-use crate::core::type_defs::{ImDrawIdx, ImTextureID};
+use crate::core::type_defs::{DrawIndex, ImTextureID};
 use crate::core::utils::flag_set;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use libc::{c_char, c_float, c_int, c_uint, c_void, size_t};
 use std::mem;
@@ -51,9 +51,9 @@ pub struct ImDrawList {
     // This is what you have to render
     pub CmdBuffer: Vec<ImDrawCmd>,
     // Draw commands. Typically 1 command = 1 GPU draw call, unless the command is a callback.
-    pub IdxBuffer: Vec<ImDrawIdx>,
+    pub IdxBuffer: Vec<DrawIndex>,
     // Index buffer. Each command consume ImDrawCmd::ElemCount of those
-    pub VtxBuffer: Vec<ImDrawVert>,
+    pub VtxBuffer: Vec<DrawVertex>,
     // Vertex buffer.
     pub Flags: ImDrawListFlags, // Flags, you may poke into these to adjust anti-aliasing settings per-primitive.
     // [Internal, used while building lists]
@@ -63,15 +63,15 @@ pub struct ImDrawList {
     // Pointer to shared draw data (you can use GetDrawListSharedData() to get the one from current ImGui context)
     pub _OwnerName: String,
     // Pointer to owner window's name for debugging
-    pub _VtxWritePtr: *mut ImDrawVert,
+    pub _VtxWritePtr: *mut DrawVertex,
     // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
-    pub _IdxWritePtr: *mut ImDrawIdx,
+    pub _IdxWritePtr: *mut DrawIndex,
     // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
     pub _ClipRectStack: Vec<ImVec4>,
     // [Internal]
     pub _TextureIdStack: Vec<ImTextureID>,
     // [Internal]
-    pub _Path: Vec<ImVec2>,
+    pub _Path: Vec<Vector2>,
     // [Internal] current path building
     pub _CmdHeader: ImDrawCmdHeader,
     // [Internal] template of active commands. Fields should match those of CmdBuffer.back().
@@ -95,8 +95,8 @@ impl ImDrawList {
     // void  PushClipRect(const clip_rect_min: &mut ImVec2, const clip_rect_max: &mut ImVec2, intersect_with_current_clip_rect: bool = false);  // Render-level scissoring. This is passed down to your render function but not used for CPU-side coarse clipping. Prefer using higher-level PushClipRect() to affect logic (hit-testing and widget culling)
     pub fn PushClipRect(
         &mut self,
-        cr_min: &ImVec2,
-        cr_max: &ImVec2,
+        cr_min: &Vector2,
+        cr_max: &Vector2,
         intersect_with_current_clip_rect: bool,
     ) {
         let mut cr = ImVec4::from_floats(cr_min.x, cr_min.y, cr_max.x, cr_max.y);
@@ -126,11 +126,11 @@ impl ImDrawList {
     // void  PushClipRectFullScreen();
     pub unsafe fn PushClipRectFullScreen(&mut self) {
         self.PushClipRect(
-            &ImVec2::from_floats(
+            &Vector2::from_floats(
                 self._Data.ClipRectFullscreen.x,
                 self._Data.ClipRectFullscreen.y,
             ),
-            &ImVec2::from_floats(
+            &Vector2::from_floats(
                 self._Data.ClipRectFullscreen.z,
                 self._Data.ClipRectFullscreen.w,
             ),
@@ -168,15 +168,15 @@ impl ImDrawList {
     }
 
     // inline ImVec2   GetClipRectMin() const { cr: &ImVec4 = _ClipRectStack.back(); return ImVec2::new(cr.x, cr.y); }
-    pub fn GetClipRectMin(&mut self) -> ImVec2 {
+    pub fn GetClipRectMin(&mut self) -> Vector2 {
         let cr = self._ClipRectStack.last().unwrap();
-        return ImVec2::from_floats(cr.x, cr.y);
+        return Vector2::from_floats(cr.x, cr.y);
     }
 
     // inline ImVec2   GetClipRectMax() const { cr: &ImVec4 = _ClipRectStack.back(); return ImVec2::new(cr.z, cr.w); }
-    pub fn GetClipRectMax(&mut self) -> ImVec2 {
+    pub fn GetClipRectMax(&mut self) -> Vector2 {
         let cr = self._ClipRectStack.last();
-        return ImVec2::from_floats(cr.z, cr.w);
+        return Vector2::from_floats(cr.z, cr.w);
     }
 
     // Primitives
@@ -187,31 +187,31 @@ impl ImDrawList {
     //   In future versions we will use textures to provide cheaper and higher-quality circles.
     //   Use AddNgon() and AddNgonFilled() functions if you need to guaranteed a specific number of sides.
     // void  AddLine(const p1: &mut ImVec2, const p2: &mut ImVec2, col: u32, c_float thickness = 1.0);
-    pub unsafe fn AddLine(&mut self, p1: ImVec2, p2: ImVec2, col: u32, thickness: c_float) {
+    pub unsafe fn AddLine(&mut self, p1: Vector2, p2: Vector2, col: u32, thickness: c_float) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
         }
-        self.PathLineTo(p1 + ImVec2::from_floats(0.5, 0.5));
-        self.PathLineTo(p2 + ImVec2::from_floats(0.5, 0.5));
+        self.PathLineTo(p1 + Vector2::from_floats(0.5, 0.5));
+        self.PathLineTo(p2 + Vector2::from_floats(0.5, 0.5));
         self.PathStroke(col, 0, thickness);
     }
 
     // void  AddRect(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0, c_float thickness = 1.0);   // a: upper-left, b: lower-right (== upper-left + size)
-    pub fn AddRect(&mut self, p_min: ImVec2, p_max: ImVec2, col: u32, rounding: c_float) {
+    pub fn AddRect(&mut self, p_min: Vector2, p_max: Vector2, col: u32, rounding: c_float) {
         if (col & IM_COL32_A_MASK) == 0 {
             return;
         }
         if flag_set(Flags, ImDrawListFlags_AntiAliasedLines) {
             self.PathRect(
-                p_min + ImVec2::from_floats(0.50, 0.5),
-                p_max - ImVec2::from_floats(0.50, 0.5),
+                p_min + Vector2::from_floats(0.50, 0.5),
+                p_max - Vector2::from_floats(0.50, 0.5),
                 rounding,
                 flags,
             );
         } else {
             self.PathRect(
-                p_min + ImVec2::from_floats(0.50, 0.5),
-                p_max - ImVec2::from_floats(0.49, 0.490),
+                p_min + Vector2::from_floats(0.50, 0.5),
+                p_max - Vector2::from_floats(0.49, 0.490),
                 rounding,
                 flags,
             ); // Better looking lower-right corner and rounded non-AA shapes.
@@ -222,8 +222,8 @@ impl ImDrawList {
     // void  AddRectFilled(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col: u32, c_float rounding = 0.0, flags: ImDrawFlags = 0);                     // a: upper-left, b: lower-right (== upper-left + size)
     pub fn AddRectFilled(
         &mut self,
-        p_min: &ImVec2,
-        p_masx: &ImVec2,
+        p_min: &Vector2,
+        p_masx: &Vector2,
         col: u32,
         rounding: c_float,
         flags: ImDrawFlags,
@@ -244,8 +244,8 @@ impl ImDrawList {
     // void  AddRectFilledMultiColor(const p_min: &mut ImVec2, const p_max: &mut ImVec2, col_upr_left: u32, col_upr_right: u32, col_bot_right: u32, col_bot_left: u32);
     pub unsafe fn AddRectFilledMultiColor(
         &mut self,
-        p_min: &ImVec2,
-        p_max: &ImVec2,
+        p_min: &Vector2,
+        p_max: &Vector2,
         col_upr_left: u32,
         col_upr_right: u32,
         col_bot_right: u32,
@@ -255,7 +255,7 @@ impl ImDrawList {
             return;
         }
 
-        let uv: ImVec2 = self._Data.TexUvWhitePixel;
+        let uv: Vector2 = self._Data.TexUvWhitePixel;
         self.PrimReserve(6, 4);
         self.PrimWriteIdx((self._VtxCurrentIdx));
         self.PrimWriteIdx((self._VtxCurrentIdx + 1));
@@ -264,18 +264,18 @@ impl ImDrawList {
         self.PrimWriteIdx((self._VtxCurrentIdx + 2));
         self.PrimWriteIdx((self._VtxCurrentIdx + 3));
         self.PrimWriteVtx(p_min, &uv, col_upr_left);
-        self.PrimWriteVtx(&ImVec2::from_floats(p_max.x, p_min.y), &uv, col_upr_right);
+        self.PrimWriteVtx(&Vector2::from_floats(p_max.x, p_min.y), &uv, col_upr_right);
         self.PrimWriteVtx(p_max, &uv, col_bot_right);
-        self.PrimWriteVtx(&ImVec2::from_floats(p_min.x, p_max.y), &uv, col_bot_left);
+        self.PrimWriteVtx(&Vector2::from_floats(p_min.x, p_max.y), &uv, col_bot_left);
     }
 
     // void  AddQuad(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, col: u32, c_float thickness = 1.0);
     pub unsafe fn AddQuad(
         &mut self,
-        p1: &ImVec2,
-        p2: &ImVec2,
-        p3: &ImVec2,
-        p4: &ImVec2,
+        p1: &Vector2,
+        p2: &Vector2,
+        p3: &Vector2,
+        p4: &Vector2,
         col: u32,
         thickness: c_float,
     ) {
@@ -293,10 +293,10 @@ impl ImDrawList {
     // void  AddQuadFilled(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, col: u32);
     pub unsafe fn AddQuadFilled(
         &mut self,
-        p1: &ImVec2,
-        p2: &ImVec2,
-        p3: &ImVec2,
-        p4: &ImVec2,
+        p1: &Vector2,
+        p2: &Vector2,
+        p3: &Vector2,
+        p4: &Vector2,
         col: u32,
     ) {
         if (col & IM_COL32_A_MASK) == 0 {
@@ -313,9 +313,9 @@ impl ImDrawList {
     // void  AddTriangle(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, col: u32, c_float thickness = 1.0);
     pub unsafe fn AddTriangle(
         &mut self,
-        p1: &ImVec2,
-        p2: &ImVec2,
-        p3: &ImVec2,
+        p1: &Vector2,
+        p2: &Vector2,
+        p3: &Vector2,
         col: u32,
         thickness: c_float,
     ) {
@@ -330,7 +330,7 @@ impl ImDrawList {
     }
 
     // void  AddTriangleFilled(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, col: u32);
-    pub fn AddTriangleFilled(&mut self, p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, col: u32) {
+    pub fn AddTriangleFilled(&mut self, p1: &Vector2, p2: &Vector2, p3: &Vector2, col: u32) {
         if ((col & IM_COL32_A_MASK) == 0) {
             return;
         }
@@ -344,7 +344,7 @@ impl ImDrawList {
     // void  AddCircle(const center: &mut ImVec2, c_float radius, col: u32, num_segments: c_int = 0, c_float thickness = 1.0);
     pub unsafe fn AddCircle(
         &mut self,
-        center: &ImVec2,
+        center: &Vector2,
         radius: c_float,
         col: u32,
         mut num_segments: size_t,
@@ -373,7 +373,7 @@ impl ImDrawList {
     // void  AddCircleFilled(const center: &mut ImVec2, c_float radius, col: u32, num_segments: c_int = 0);
     pub unsafe fn AddCircleFilled(
         &mut self,
-        center: &ImVec2,
+        center: &Vector2,
         radius: c_float,
         col: u32,
         mut num_segments: size_t,
@@ -401,7 +401,7 @@ impl ImDrawList {
     // void  AddNgon(const center: &mut ImVec2, c_float radius, col: u32, num_segments: c_int, c_float thickness = 1.0);
     pub unsafe fn AddNgon(
         &mut self,
-        center: &ImVec2,
+        center: &Vector2,
         radius: c_float,
         col: u32,
         num_semgnets: c_int,
@@ -420,7 +420,7 @@ impl ImDrawList {
     // void  AddNgonFilled(const center: &mut ImVec2, c_float radius, col: u32, num_segments: c_int);
     pub unsafe fn AddNgonFilled(
         &mut self,
-        center: &ImVec2,
+        center: &Vector2,
         radius: c_float,
         col: u32,
         num_segments: size_t,
@@ -436,7 +436,7 @@ impl ImDrawList {
     }
 
     // void  AddText(const pos: &mut ImVec2, col: u32, const char* text_begin, const char* text_end = NULL);
-    pub unsafe fn AddText(&mut self, pos: ImVec2, col: u32, text_begin: String) {
+    pub unsafe fn AddText(&mut self, pos: Vector2, col: u32, text_begin: String) {
         self.AddText(pos, col, text_begin);
     }
 
@@ -446,7 +446,7 @@ impl ImDrawList {
         &mut self,
         mut font: Option<ImFont>,
         mut font_size: c_float,
-        pos: ImVec2,
+        pos: Vector2,
         col: u32,
         text_begin: String,
         mut wrap_width: c_float,
@@ -493,7 +493,7 @@ impl ImDrawList {
     // void  AddPolyline(const ImVec2* points, num_points: c_int, col: u32, flags: ImDrawFlags, c_float thickness);
     pub fn AddPolyline(
         &mut self,
-        points: &Vec<ImVec2>,
+        points: &Vec<Vector2>,
         color: u32,
         flags: ImDrawFlags,
         thickness: c_float,
@@ -503,7 +503,7 @@ impl ImDrawList {
         }
 
         let closed: bool = flag_set(flags, ImDrawFlags_Closed);
-        let opaque_uv: ImVec2 = self._Data.TexUvWhitePixel;
+        let opaque_uv: Vector2 = self._Data.TexUvWhitePixel;
         let count: size_t = if closed {
             points_count
         } else {
@@ -555,7 +555,7 @@ impl ImDrawList {
             } else {
                 5
             };
-            let mut temp_normals: Vec<ImVec2> = vec![];
+            let mut temp_normals: Vec<Vector2> = vec![];
             // libc::malloc(points_count * count * mem::size_of::<ImVec2>()); //-V630
             // let mut temp_points_offset: *mut ImVec2 = temp_normals + points_count;
 
@@ -620,7 +620,7 @@ impl ImDrawList {
                     dm_y *= half_draw_size;
 
                     // Add temporary vertexes for the outer edges
-                    let mut out_vtx: *mut ImVec2 = &mut temp_points[i2 * 2];
+                    let mut out_vtx: *mut Vector2 = &mut temp_points[i2 * 2];
                     out_vtx[0].x = points[i2].x + dm_x;
                     out_vtx[0].y = points[i2].y + dm_y;
                     out_vtx[1].x = points[i2].x - dm_x;
@@ -667,8 +667,8 @@ impl ImDrawList {
                         tex_uvs.z = tex_uvs.z + (tex_uvs_1.z - tex_uvs.z) * fractional_thickness;
                         tex_uvs.w = tex_uvs.w + (tex_uvs_1.w - tex_uvs.w) * fractional_thickness;
                     }*/
-                    let tex_uv0 = ImVec2::from_floats(tex_uvs.x, tex_uvs.y);
-                    let tex_uv1 = ImVec2::from_floats(tex_uvs.z, tex_uvs.w);
+                    let tex_uv0 = Vector2::from_floats(tex_uvs.x, tex_uvs.y);
+                    let tex_uv1 = Vector2::from_floats(tex_uvs.z, tex_uvs.w);
                     // for (let i: c_int = 0; i < points_count; i++)
                     for i in 0..points_count {
                         self._VtxWritePtr[0].pos = temp_points[i * 2 + 0];
@@ -739,7 +739,7 @@ impl ImDrawList {
                     let dm_in_y: c_float = dm_y * half_inner_thickness;
 
                     // Add temporary vertices
-                    let mut out_vtx: *mut ImVec2 = &mut temp_points[i2 * 4];
+                    let mut out_vtx: *mut Vector2 = &mut temp_points[i2 * 4];
                     out_vtx[0].x = points[i2].x + dm_out_x;
                     out_vtx[0].y = points[i2].y + dm_out_y;
                     out_vtx[1].x = points[i2].x + dm_in_x;
@@ -841,12 +841,12 @@ impl ImDrawList {
     }
 
     // void  AddConvexPolyFilled(const ImVec2* points, num_points: c_int, col: u32);
-    pub fn AddConvexPolyFilled(&mut self, points: *const ImVec2, points_count: size_t, col: u32) {
+    pub fn AddConvexPolyFilled(&mut self, points: *const Vector2, points_count: size_t, col: u32) {
         if points_count < 3 {
             return;
         }
 
-        let uv: ImVec2 = self._Data.TexUvWhitePixel;
+        let uv: Vector2 = self._Data.TexUvWhitePixel;
 
         if flag_set(self.Flags, ImDrawListFlags_AntiAliasedFill) {
             // Anti-aliased Fill
@@ -871,12 +871,12 @@ impl ImDrawList {
             // let mut temp_normals: *mut ImVec2 =
             //     libc::malloc(points_count * mem::size_of::<ImVec2>()); //-V630
             // for (let i0: c_int = points_count - 1, i1 = 0; i1 < points_count; i0 = i1++)
-            let mut temp_normals: Vec<ImVec2> = vec![];
+            let mut temp_normals: Vec<Vector2> = vec![];
             let mut i0 = points_count - 1;
             let mut i1: size_t = 0;
             while i1 < points_count {
-                p0: &ImVec2 = points[i0];
-                p1: &ImVec2 = points[i1];
+                p0: &Vector2 = points[i0];
+                p1: &Vector2 = points[i1];
                 let dx: c_float = p1.x - p0.x;
                 let dy: c_float = p1.y - p0.y;
                 IM_NORMALIZE2F_OVER_ZERO(dx, dy);
@@ -948,10 +948,10 @@ impl ImDrawList {
     // void  AddBezierCubic(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, col: u32, c_float thickness, num_segments: c_int = 0); // Cubic Bezier (4 control points)
     pub unsafe fn AddBezierCubic(
         &mut self,
-        p1: &ImVec2,
-        p2: &ImVec2,
-        p3: &ImVec2,
-        p4: &ImVec2,
+        p1: &Vector2,
+        p2: &Vector2,
+        p3: &Vector2,
+        p4: &Vector2,
         col: u32,
         thickness: c_float,
         num_segments: c_int,
@@ -968,9 +968,9 @@ impl ImDrawList {
     // void  AddBezierQuadratic(const p1: &mut ImVec2, const p2: &mut ImVec2, const p3: &mut ImVec2, col: u32, c_float thickness, num_segments: c_int = 0);               // Quadratic Bezier (3 control points)
     pub unsafe fn AddBezierQuadratic(
         &mut self,
-        p1: &ImVec2,
-        p2: &ImVec2,
-        p3: &ImVec2,
+        p1: &Vector2,
+        p2: &Vector2,
+        p3: &Vector2,
         col: u32,
         thickness: c_float,
         num_segments: c_int,
@@ -992,10 +992,10 @@ impl ImDrawList {
     pub fn AddImage(
         &mut self,
         user_texture_id: ImTextureID,
-        p_min: &ImVec2,
-        p_max: &ImVec2,
-        uv_ming: &ImVec2,
-        uv_max: &ImVec2,
+        p_min: &Vector2,
+        p_max: &Vector2,
+        uv_ming: &Vector2,
+        uv_max: &Vector2,
         col: u32,
     ) {
         if (col & IM_COL32_A_MASK) == 0 {
@@ -1019,14 +1019,14 @@ impl ImDrawList {
     pub fn AddImageQuad(
         &mut self,
         user_texture_id: ImTextureID,
-        p1: &ImVec2,
-        p2: &ImVec2,
-        p3: &ImVec2,
-        p4: &ImVec2,
-        uv1: &ImVec2,
-        uv2: &ImVec2,
-        uv3: &ImVec2,
-        uv4: &ImVec2,
+        p1: &Vector2,
+        p2: &Vector2,
+        p3: &Vector2,
+        p4: &Vector2,
+        uv1: &Vector2,
+        uv2: &Vector2,
+        uv3: &Vector2,
+        uv4: &Vector2,
         col: u32,
     ) {
         if (col & IM_COL32_A_MASK) == 0 {
@@ -1049,10 +1049,10 @@ impl ImDrawList {
     pub unsafe fn AddImageRounded(
         &mut self,
         user_texture_id: ImTextureID,
-        p_min: &ImVec2,
-        p_max: &ImVec2,
-        uv_min: &ImVec2,
-        uv_max: &ImVec2,
+        p_min: &Vector2,
+        p_max: &Vector2,
+        uv_min: &Vector2,
+        uv_max: &Vector2,
         col: u32,
         rounding: c_float,
         mut flags: ImDrawFlags,
@@ -1101,12 +1101,12 @@ impl ImDrawList {
     }
 
     // inline    void  PathLineTo(const pos: &mut ImVec2)                               { _Path.push(pos); }
-    pub fn PathLineTo(&mut self, pos: &ImVec2) {
+    pub fn PathLineTo(&mut self, pos: &Vector2) {
         self._Path.push(pos.clone())
     }
 
     // inline    void  PathLineToMergeDuplicate(const pos: &mut ImVec2)
-    pub unsafe fn PathLineToMergeDuplicate(&mut self, pos: &ImVec2) {
+    pub unsafe fn PathLineToMergeDuplicate(&mut self, pos: &Vector2) {
         // if self._Path.len() == 0 || libc::memcmp(&self._Path[self._Path.Size - 1], pos, 8) != 0 {
         //     self._Path.push(pos.clone());
         // }
@@ -1127,7 +1127,7 @@ impl ImDrawList {
     // void  PathArcTo(const center: &mut ImVec2, c_float radius, c_float a_min, c_float a_max, num_segments: c_int = 0);
     pub fn PathArcTo(
         &mut self,
-        center: &ImVec2,
+        center: &Vector2,
         radius: c_float,
         a_min: c_float,
         a_max: c_float,
@@ -1183,7 +1183,7 @@ impl ImDrawList {
                         + (if a_emit_end { 1 } else { 0 })),
             );
             if a_emit_start {
-                self._Path.push(ImVec2::from_floats(
+                self._Path.push(Vector2::from_floats(
                     center.x + ImCos(a_min) * radius,
                     center.y + ImSin(a_min) * radius,
                 ));
@@ -1198,7 +1198,7 @@ impl ImDrawList {
                 );
             }
             if (a_emit_end) {
-                self._Path.push(ImVec2::from_floats(
+                self._Path.push(Vector2::from_floats(
                     center.x + ImCos(a_max) * radius,
                     center.y + ImSin(a_max) * radius,
                 ));
@@ -1217,7 +1217,7 @@ impl ImDrawList {
     // void  PathArcToFast(const center: &mut ImVec2, c_float radius, a_min_of_12: c_int, a_max_of_12: c_int);                // Use precomputed angles for a 12 steps circle
     pub fn PathArcToFast(
         &mut self,
-        center: &ImVec2,
+        center: &Vector2,
         radius: c_float,
         a_min_of_12: c_int,
         a_max_of_12: c_int,
@@ -1238,12 +1238,12 @@ impl ImDrawList {
     // void  PathBezierCubicCurveTo(const p2: &mut ImVec2, const p3: &mut ImVec2, const p4: &mut ImVec2, num_segments: c_int = 0); // Cubic Bezier (4 control points)
     pub fn PathBezierCubicCurveTo(
         &mut self,
-        p2: &ImVec2,
-        p3: &ImVec2,
-        p4: &ImVec2,
+        p2: &Vector2,
+        p3: &Vector2,
+        p4: &Vector2,
         num_segments: c_int,
     ) {
-        let p1: ImVec2 = sekf._Path.last().unwrap();
+        let p1: Vector2 = sekf._Path.last().unwrap();
         if num_segments == 0 {
             PathBezierCubicCurveToCasteljau(
                 &mut self._Path,
@@ -1269,8 +1269,8 @@ impl ImDrawList {
     }
 
     // void  PathBezierQuadraticCurveTo(const p2: &mut ImVec2, const p3: &mut ImVec2, num_segments: c_int = 0);               // Quadratic Bezier (3 control points)
-    pub fn PathBezierQuadraticCurveTo(&mut self, p2: &ImVec2, p3: &ImVec2, num_segments: c_int) {
-        let p1: ImVec2 = self._Path.last().unwrap().clone();
+    pub fn PathBezierQuadraticCurveTo(&mut self, p2: &Vector2, p3: &Vector2, num_segments: c_int) {
+        let p1: Vector2 = self._Path.last().unwrap().clone();
         if num_segments == 0 {
             PathBezierQuadraticCurveToCasteljau(
                 &mut self._Path,
@@ -1296,8 +1296,8 @@ impl ImDrawList {
     // void  PathRect(const rect_min: &mut ImVec2, const rect_max: &mut ImVec2, c_float rounding = 0.0, flags: ImDrawFlags = 0);
     pub fn PathRect(
         &mut self,
-        rect_min: &ImVec2,
-        rect_max: &ImVec2,
+        rect_min: &Vector2,
+        rect_max: &Vector2,
         mut rounding: c_float,
         mut flags: ImDrawFlags,
     ) {
@@ -1330,9 +1330,9 @@ impl ImDrawList {
         if rounding < 0.5 || (flags & ImDrawFlags_RoundCornersMask_) == ImDrawFlags_RoundCornersNone
         {
             self.PathLineTo(a);
-            self.PathLineTo(&ImVec2::from_floats(b.x, a.y));
+            self.PathLineTo(&Vector2::from_floats(b.x, a.y));
             self.PathLineTo(b);
-            self.PathLineTo(&ImVec2::from_floats(a.x, b.y));
+            self.PathLineTo(&Vector2::from_floats(a.x, b.y));
         } else {
             let rounding_tl: c_float = if flag_set(flags, ImDrawFlags_RoundCornersTopLeft) {
                 rounding
@@ -1355,25 +1355,25 @@ impl ImDrawList {
                 0
             };
             self.PathArcToFast(
-                &ImVec2::from_floats(a.x + rounding_tl, a.y + rounding_tl),
+                &Vector2::from_floats(a.x + rounding_tl, a.y + rounding_tl),
                 rounding_tl,
                 6,
                 9,
             );
             self.PathArcToFast(
-                &ImVec2::from_floats(b.x - rounding_tr, a.y + rounding_tr),
+                &Vector2::from_floats(b.x - rounding_tr, a.y + rounding_tr),
                 rounding_tr,
                 9,
                 12,
             );
             self.PathArcToFast(
-                &ImVec2::from_floats(b.x - rounding_br, b.y - rounding_br),
+                &Vector2::from_floats(b.x - rounding_br, b.y - rounding_br),
                 rounding_br,
                 0,
                 3,
             );
             self.PathArcToFast(
-                &ImVec2::from_floats(a.x + rounding_bl, b.y - rounding_bl),
+                &Vector2::from_floats(a.x + rounding_bl, b.y - rounding_bl),
                 rounding_bl,
                 3,
                 6,
@@ -1453,7 +1453,7 @@ impl ImDrawList {
     pub fn PrimReserve(&mut self, idx_count: size_t, vtx_count: size_t) {
         // Large mesh support (when enabled)
         // IM_ASSERT_PARANOID(idx_count >= 0 && vtx_count >= 0);
-        if mem::size_of::<ImDrawIdx>() == 2
+        if mem::size_of::<DrawIndex>() == 2
             && (self._VtxCurrentIdx + vtx_count >= (1 << 16))
             && flag_set(self.Flags, ImDrawListFlags_AllowVtxOffset)
         {
@@ -1469,7 +1469,7 @@ impl ImDrawList {
 
         let vtx_buffer_old_size: size_t = self.VtxBuffer.len();
         self.VtxBuffer
-            .resize_with(vtx_buffer_old_size + vtx_count, ImDrawVert::default());
+            .resize_with(vtx_buffer_old_size + vtx_count, DrawVertex::default());
         self._VtxWritePtr = self.VtxBuffer.Data + vtx_buffer_old_size;
 
         let idx_buffer_old_size: size_t = self.IdxBuffer.len();
@@ -1487,13 +1487,13 @@ impl ImDrawList {
     }
 
     // void  PrimRect(const a: &mut ImVec2, const b: &mut ImVec2, col: u32);      // Axis aligned rectangle (composed of two triangles)
-    pub fn PrimRect(&mut self, a: &ImVec2, b: &ImVec2, col: u32) {
+    pub fn PrimRect(&mut self, a: &Vector2, b: &Vector2, col: u32) {
         // b: ImVec2(c.x, a.y), d(a.x, c.y), uv(_Data.TexUvWhitePixel);
-        let mut b = ImVec2::from_floats(c.x, a.y);
-        let mut d = ImVec2::from_floats(a.x, c.y);
+        let mut b = Vector2::from_floats(c.x, a.y);
+        let mut d = Vector2::from_floats(a.x, c.y);
         let mut uv = self._Data.TexUvWhitePixel;
 
-        let idx: ImDrawIdx = self._VtxCurrentIdx as ImDrawIdx;
+        let idx: DrawIndex = self._VtxCurrentIdx as DrawIndex;
         self._IdxWritePtr[0] = idx;
         self._IdxWritePtr[1] = (idx + 1);
         self._IdxWritePtr[2] = (idx + 2);
@@ -1518,10 +1518,10 @@ impl ImDrawList {
     }
 
     // void  PrimRectUV(const a: &mut ImVec2, const b: &mut ImVec2, const uv_a: &mut ImVec2, const uv_b: &mut ImVec2, col: u32);
-    pub fn PrimRectUV(&mut self, a: &ImVec2, b: &ImVec2, uv_a: &imVec2, uv_b: &ImVec2, col: u32) {
+    pub fn PrimRectUV(&mut self, a: &Vector2, b: &Vector2, uv_a: &imVec2, uv_b: &Vector2, col: u32) {
         // b: ImVec2(c.x, a.y), d(a.x, c.y), uv_b(uv_c.x, uv_a.y), uv_d(uv_a.x, uv_c.y);
 
-        let idx: ImDrawIdx = self._VtxCurrentIdx as ImDrawIdx;
+        let idx: DrawIndex = self._VtxCurrentIdx as DrawIndex;
         self._IdxWritePtr[0] = idx;
         self._IdxWritePtr[1] = (idx + 1);
         self._IdxWritePtr[2] = (idx + 2);
@@ -1548,17 +1548,17 @@ impl ImDrawList {
     // void  PrimQuadUV(const a: &mut ImVec2, const b: &mut ImVec2, const c: &mut ImVec2, const d: &mut ImVec2, const uv_a: &mut ImVec2, const uv_b: &mut ImVec2, const uv_c: &mut ImVec2, const uv_d: &mut ImVec2, col: u32);
     pub fn PrimQuadUV(
         &mut self,
-        a: &ImVec2,
-        b: &ImVec2,
-        c: &ImVec2,
-        d: &ImVec2,
-        uv_a: &ImVec2,
-        uv_b: &ImVec2,
-        uv_c: &ImVec2,
-        uv_d: &ImVec2,
+        a: &Vector2,
+        b: &Vector2,
+        c: &Vector2,
+        d: &Vector2,
+        uv_a: &Vector2,
+        uv_b: &Vector2,
+        uv_c: &Vector2,
+        uv_d: &Vector2,
         col: u32,
     ) {
-        let mut idx: ImDrawIdx = self._VtxCurrentIdx;
+        let mut idx: DrawIndex = self._VtxCurrentIdx;
         self._IdxWritePtr[0] = idx;
         self._IdxWritePtr[1] = (idx + 1);
         self._IdxWritePtr[2] = (idx + 2);
@@ -1583,7 +1583,7 @@ impl ImDrawList {
     }
 
     // inline    void  PrimWriteVtx(const pos: &mut ImVec2, const uv: &mut ImVec2, col: u32)    { _VtxWritePtr->pos = pos; _VtxWritePtr->uv = uv; _VtxWritePtr->col = col; _VtxWritePtr+= 1; _VtxCurrentIdx+= 1; }
-    pub fn PrimWriteVtx(&mut self, pos: &ImVec2, uv: &ImVec2, col: u32) {
+    pub fn PrimWriteVtx(&mut self, pos: &Vector2, uv: &Vector2, col: u32) {
         self._VtxWritePtr.pos = pos.clone();
         self._VtxWritePtr.uv = uv.clone();
         self._VtxWritePtr.col = col;
@@ -1592,14 +1592,14 @@ impl ImDrawList {
     }
 
     // inline    void  PrimWriteIdx(ImDrawIdx idx)                                     { *_IdxWritePtr = idx; _IdxWritePtr+= 1; }
-    pub unsafe fn PrimWriteIdx(&mut self, idx: ImDrawIdx) {
+    pub unsafe fn PrimWriteIdx(&mut self, idx: DrawIndex) {
         *self._IdxWritePtr = idx;
         self._IdxWritePtr += 1;
     }
 
     // inline    void  PrimVtx(const pos: &mut ImVec2, const uv: &mut ImVec2, col: u32)         { PrimWriteIdx((ImDrawIdx)_VtxCurrentIdx); PrimWriteVtx(pos, uv, col); } // Write vertex with unique index
-    pub unsafe fn PrimVtx(&mut self, pos: &ImVec2, uv: &ImVec2, col: u32) {
-        self.PrimWriteIdx(self._VtxCurrentIdx as ImDrawIdx);
+    pub unsafe fn PrimVtx(&mut self, pos: &Vector2, uv: &Vector2, col: u32) {
+        self.PrimWriteIdx(self._VtxCurrentIdx as DrawIndex);
         self.PrimWriteVtx(pos, uv, col);
     }
 
@@ -1776,7 +1776,7 @@ impl ImDrawList {
     // void  _PathArcToFastEx(const center: &mut ImVec2, c_float radius, a_min_sample: c_int, a_max_sample: c_int, a_step: c_int);
     pub fn _PathArcToFastEx(
         &mut self,
-        center: &ImVec2,
+        center: &Vector2,
         radius: c_float,
         a_min_sample: size_t,
         a_max_sample: size_t,
@@ -1817,8 +1817,8 @@ impl ImDrawList {
         }
 
         self._Path
-            .resize_with(self._Path.Size + samples, ImVec2::default());
-        let mut out_ptr: *mut ImVec2 = self._Path.Data + (self._Path.Size - samples);
+            .resize_with(self._Path.Size + samples, Vector2::default());
+        let mut out_ptr: *mut Vector2 = self._Path.Data + (self._Path.Size - samples);
 
         let mut sample_index: size_t = a_min_sample;
         if sample_index < 0 || sample_index >= IM_DRAWLIST_ARCFAST_SAMPLE_MAX {
@@ -1838,7 +1838,7 @@ impl ImDrawList {
                     sample_index -= IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
                 }
 
-                let s: ImVec2 = _Data.ArcFastVtx[sample_index];
+                let s: Vector2 = _Data.ArcFastVtx[sample_index];
                 out_ptr.x = center.x + s.x * radius;
                 out_ptr.y = center.y + s.y * radius;
                 out_ptr += 1;
@@ -1855,7 +1855,7 @@ impl ImDrawList {
                     sample_index += IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
                 }
 
-                let s: ImVec2 = self._Data.ArcFastVtx[sample_index];
+                let s: Vector2 = self._Data.ArcFastVtx[sample_index];
                 out_ptr.x = center.x + s.x * radius;
                 out_ptr.y = center.y + s.y * radius;
                 out_ptr += 1;
@@ -1871,7 +1871,7 @@ impl ImDrawList {
                 normalized_max_sample += IM_DRAWLIST_ARCFAST_SAMPLE_MAX;
             }
 
-            let s: ImVec2 = self._Data.ArcFastVtx[normalized_max_sample];
+            let s: Vector2 = self._Data.ArcFastVtx[normalized_max_sample];
             out_ptr.x = center.x + s.x * radius;
             out_ptr.y = center.y + s.y * radius;
             out_ptr += 1;
@@ -1883,7 +1883,7 @@ impl ImDrawList {
     // void  _PathArcToN(const center: &mut ImVec2, c_float radius, c_float a_min, c_float a_max, num_segments: c_int);
     pub fn _PathArcToN(
         &mut self,
-        center: &ImVec2,
+        center: &Vector2,
         radius: c_float,
         a_min: c_float,
         a_max: c_float,
@@ -1900,7 +1900,7 @@ impl ImDrawList {
         // for (let i: c_int = 0; i <= num_segments; i++)
         for i in 0..num_segments {
             let a: c_float = a_min + (i / num_segments) * (a_max - a_min);
-            self._Path.push(ImVec2::from_floats(
+            self._Path.push(Vector2::from_floats(
                 center.x + ImCos(a) * radius,
                 center.y + ImSin(a) * radius,
             ));

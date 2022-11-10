@@ -10,7 +10,7 @@ use crate::clipboard_ops::SetClipboardText;
 use crate::color::{color_u32_from_rgba, ImGuiCol_Border, ImGuiCol_Header, ImGuiCol_Text, ImGuiCol_TextDisabled, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_WindowBg};
 use crate::combo_box::{Combo, Combo2};
 use crate::core::condition::{ImGuiCond_FirstUseEver, ImGuiCond_Once};
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::context_ops::GetFrameCount;
 use crate::cursor_ops::{cursor_screen_pos, indent, unindent};
 use crate::data_type::{ImGuiDataType, IM_GUI_DATA_TYPE_STRING};
@@ -24,7 +24,7 @@ use crate::drawing::draw_flags::ImDrawFlags_Closed;
 use crate::drawing::draw_list::ImDrawList;
 use crate::drawing::draw_list_flags::ImDrawListFlags_AntiAliasedLines;
 use crate::draw_list_ops::{GetForegroundDrawList, GetForegroundDrawList2};
-use crate::drawing::draw_vert::ImDrawVert;
+use crate::drawing::draw_vert::DrawVertex;
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
 use crate::font::font_glyph::ImFontGlyph;
@@ -33,7 +33,7 @@ use crate::widgets::hovered_flags::ImGuiHoveredFlags_DelayShort;
 use crate::core::id_ops::pop_win_id_from_stack;
 use crate::image_ops::Image;
 use crate::imgui::GImGui;
-use crate::ImguiViewport;
+use crate::Viewport;
 use crate::input_num_ops::InputText;
 use crate::input_ops::{GetInputSourceName, IsKeyDown, IsKeyPressed, IsMouseClicked, IsMouseHoveringRect, SetMouseCursor};
 use crate::input_text::InputTextMultiline;
@@ -76,7 +76,7 @@ use crate::widgets::tooltip_ops::{BeginTooltip, EndTooltip};
 use crate::widgets::tree_node_flags::{ImGuiTreeNodeFlags_None, ImGuiTreeNodeFlags_Selected};
 use crate::core::type_defs::{ImguiHandle, ImGuiTableColumnIdx};
 use crate::core::utils::{flag_clear, flag_set, GetVersion};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use crate::viewport::viewport_flags::{ImGuiViewportFlags_CanHostOtherWindows, ImGuiViewportFlags_IsPlatformMonitor, ImGuiViewportFlags_Minimized, ImGuiViewportFlags_NoAutoMerge, ImGuiViewportFlags_NoDecoration, ImGuiViewportFlags_NoFocusOnAppearing, ImGuiViewportFlags_NoFocusOnClick, ImGuiViewportFlags_NoInputs, ImGuiViewportFlags_NoRendererClear, ImGuiViewportFlags_NoTaskBarIcon, ImGuiViewportFlags_OwnedByApp, ImGuiViewportFlags_TopMost};
 use crate::viewport::viewport_ops::GetMainViewport;
@@ -91,7 +91,7 @@ use crate::window::window_settings::ImGuiWindowSettings;
 
 // [DEBUG] Stack tool: hooks called by GetID() family functions
 // c_void DebugHookIdInfo(ImguiHandle id, data_type: ImGuiDataType, data_id: *const c_void, data_id_end: *const c_void)
-pub fn DebugHookIdInfo(g: &mut ImguiContext, id: ImguiHandle, data_type: ImGuiDataType, data_id: Option<&[u8]>) {
+pub fn DebugHookIdInfo(g: &mut AppContext, id: ImguiHandle, data_type: ImGuiDataType, data_id: Option<&[u8]>) {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = &mut g.CurrentWindow;
     let mut tool = &mut g.DebugStackTool;
@@ -208,7 +208,7 @@ pub unsafe fn DebugCheckVersionAndDataLayout(version: *const c_char, sz_io: size
 
 // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
 
-pub fn DebugRenderViewportThumbnail(g: &mut ImguiContext, draw_list: &mut ImDrawList, viewport: &mut ImguiViewport, bb: &mut ImRect)
+pub fn DebugRenderViewportThumbnail(g: &mut AppContext, draw_list: &mut ImDrawList, viewport: &mut Viewport, bb: &mut ImRect)
 {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = &mut g.CurrentWindow;
@@ -232,7 +232,7 @@ pub fn DebugRenderViewportThumbnail(g: &mut ImguiContext, draw_list: &mut ImDraw
         let mut thumb_r: ImRect =  win.Rect();
         let mut title_r: ImRect =  win.TitleBarRect();
         thumb_r = ImRect(ImFloor(off + thumb_r.min * scale), ImFloor(off +  thumb_r.max * scale));
-        title_r = ImRect(ImFloor(off + title_r.min * scale), ImFloor(off +  ImVec2::from_floats(title_r.max.x, title_r.min.y) * scale) + ImVec2::from_ints(0, 5)); // Exaggerate title bar height
+        title_r = ImRect(ImFloor(off + title_r.min * scale), ImFloor(off +  Vector2::from_floats(title_r.max.x, title_r.min.y) * scale) + Vector2::from_ints(0, 5)); // Exaggerate title bar height
         thumb_r.ClipWithFull(bb);
         title_r.ClipWithFull(bb);
         let window_is_focused: bool = (g.NavWindow.is_null() == fallse && thumb_window.RootWindowForTitleBarHighlight == g.NavWindow.RootWindowForTitleBarHighlight);
@@ -246,7 +246,7 @@ pub fn DebugRenderViewportThumbnail(g: &mut ImguiContext, draw_list: &mut ImDraw
     draw_list.AddRect(bb.min, bb.max, GetColorU32(ImGuiCol_Border, alpha_mul), 0.0);
 }
 
-pub fn RenderViewportsThumbnails(g: &mut ImguiContext)
+pub fn RenderViewportsThumbnails(g: &mut AppContext)
 {
     let mut window = &mut g.CurrentWindow;
     // We don't display full monitor bounds (we could, but it often looks awkward), instead we display just enough to cover all of our viewports.
@@ -257,8 +257,8 @@ pub fn RenderViewportsThumbnails(g: &mut ImguiContext)
     {
         bb_full.Add(&g.Viewports[n].GetMainRect().GetSize());
     }
-    let p: ImVec2 = window.dc.cursor_pos;
-    let off: ImVec2 = p - bb_full.min * SCALE;
+    let p: Vector2 = window.dc.cursor_pos;
+    let off: Vector2 = p - bb_full.min * SCALE;
     // for (let n: c_int = 0; n < g.Viewports.len(); n++)
     for n in 0 .. g.Viewports.len()
     {
@@ -269,7 +269,7 @@ pub fn RenderViewportsThumbnails(g: &mut ImguiContext)
     Dummy(g, bb_full.GetSize() * SCALE);
 }
 
-pub fn ViewportComparerByFrontMostStampCount(lhs: &ImguiViewport, rhs: &ImguiViewport) -> c_int
+pub fn ViewportComparerByFrontMostStampCount(lhs: &Viewport, rhs: &Viewport) -> c_int
 {
     rhs.last_front_most_stamp_count - lhs.last_front_most_stamp_count
 }
@@ -337,7 +337,7 @@ pub unsafe fn ShowFontAtlas(atlas: &mut ImFontAtlas) {
     if TreeNode(String::from("Atlas texture"), format!("Atlas texture ({}x{} pixels)", atlas.TexWidth, atlas.TexHeight)) {
         let tint_col = ImVec4::from_floats(1.0, 1.0, 1.0, 1.0);
         let border_col = ImVec4::from_floats(1.0, 1.0, 1.0, 0.5);
-        Image(atlas.TexID, &ImVec2::from_usizes(atlas.TexWidth, atlas.TexHeight), &ImVec2::from_floats(0.0, 0.0), &ImVec2::from_floats(1.0, 1.0), tint_col, border_col);
+        Image(atlas.TexID, &Vector2::from_usizes(atlas.TexWidth, atlas.TexHeight), &Vector2::from_floats(0.0, 0.0), &Vector2::from_floats(1.0, 1.0), tint_col, border_col);
         TreePop();
     }
 }
@@ -561,7 +561,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
 
                 BulletText(format!("Table {} ({} columns, in '{}')", table.ID, table.ColumnsCount, table.Outerwindow.Name));
                 if IsItemHovered(0) {
-                    GetForegroundDrawList2().AddRect(table.OuterRect.Min - ImVec2::new(1, 1), table.OuterRect.Max + ImVec2::new(1, 1), color_u32_from_rgba(255, 255, 0, 255), 0.0);
+                    GetForegroundDrawList2().AddRect(table.OuterRect.Min - Vector2::new(1, 1), table.OuterRect.Max + Vector2::new(1, 1), color_u32_from_rgba(255, 255, 0, 255), 0.0);
                 }
                 indent(0.0, g);
                 // buf: [c_char;128];
@@ -581,7 +581,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
                             // ImFormatString(buf, buf.len(), "(%6.1f,%6.10.0) (%6.1f,%6.10.0) Size (%6.1f,%6.10.0) Col {} {}", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), column_n, trt_rects_names[rect_n]);
                             Selectable(buf.clone(), false, 0, None);
                             if IsItemHovered(0) {
-                                GetForegroundDrawList2().AddRect(r.min - ImVec2::new(1, 1), r.max + ImVec2::new(1, 1), color_u32_from_rgba(255, 255, 0, 255), 0.0);
+                                GetForegroundDrawList2().AddRect(r.min - Vector2::new(1, 1), r.max + Vector2::new(1, 1), color_u32_from_rgba(255, 255, 0, 255), 0.0);
                             }
                         }
                     }
@@ -591,7 +591,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
                         // ImFormatString(buf, buf.len(), "(%6.1f,%6.10.0) (%6.1f,%6.10.0) Size (%6.1f,%6.10.0) {}", r.Min.x, r.Min.y, r.Max.x, r.Max.y, r.GetWidth(), r.GetHeight(), trt_rects_names[rect_n]);
                         Selectable(buf.clone(), false, 0, None);
                         if IsItemHovered(0) {
-                            GetForegroundDrawList2().AddRect(r.min - ImVec2::new(1, 1), r.max + ImVec2::new(1, 1), color_u32_from_rgba(255, 255, 0, 255), 0.0);
+                            GetForegroundDrawList2().AddRect(r.min - Vector2::new(1, 1), r.max + Vector2::new(1, 1), color_u32_from_rgba(255, 255, 0, 255), 0.0);
                         }
                     }
                 }
@@ -695,7 +695,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
         if TreeNode(String::from("Inferred Z order (front-to-back)"), String::from(""))
         {
             // static Vec<*mut ImGuiViewportP> viewports;
-            let mut viewports: Vec<ImguiViewport> = vec![];
+            let mut viewports: Vec<Viewport> = vec![];
             viewports.reserve(g.Viewports.len());
             // memcpy(viewports.Data, g.Viewports.Data, g.Viewports.size_in_bytes());
             viewports.clone_from_slice(&g.Viewports);
@@ -895,7 +895,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
 
         if TreeNode(String::from("SettingsIniData"), format!("Settings unpacked data (.ini): {} bytes", g.SettingsIniData.size()))
         {
-            InputTextMultiline(String::from("##Ini"), &mut g.SettingsIniData, g.SettingsIniData.Buf.len(), &mut ImVec2::from_floats(f32::MIN, GetTextLineHeight() * 20), ImGuiInputTextFlags_ReadOnly, None, None);
+            InputTextMultiline(String::from("##Ini"), &mut g.SettingsIniData, g.SettingsIniData.Buf.len(), &mut Vector2::from_floats(f32::MIN, GetTextLineHeight() * 20), ImGuiInputTextFlags_ReadOnly, None, None);
             TreePop();
         }
         TreePop();
@@ -969,7 +969,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
                 let mut buf = String::with_capacity(32);
                 // ImFormatString(buf, buf.len(), "{}", window.BeginOrderWithinContext);
                 let font_size: c_float =  GetFontSize();
-                draw_list.AddRectFilled(&window.position, window.position + ImVec2::from_floats(font_size, font_size), color_u32_from_rgba(200, 100, 100, 255), 0.0, 0);
+                draw_list.AddRectFilled(&window.position, window.position + Vector2::from_floats(font_size, font_size), color_u32_from_rgba(200, 100, 100, 255), 0.0, 0);
                 draw_list.AddText(window.position, color_u32_from_rgba(255, 255, 255, 255), buf);
             }
         }
@@ -1021,9 +1021,9 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
         // p += ImFormatString(p, buf + buf.len() - p, "Size: ({}, {})\n", node.Size.x, node.Size.y);
         // p += ImFormatString(p, buf + buf.len() - p, "SizeRef: ({}, {})\n", node.SizeRef.x, node.SizeRef.y);
         let depth: c_int = DockNodeGetDepth(node);
-        overlay_draw_list.AddRect(node.Pos + ImVec2::new(3, 3) * depth, node.Pos + node.Size - ImVec2::new(3, 3) * depth, color_u32_from_rgba(200, 100, 100, 255), 0.0);
-        let pos: ImVec2 = node.Pos + ImVec2::new(3, 3) * depth;
-        overlay_draw_list.AddRectFilled(pos - ImVec2::new(1, 1), pos + CalcTextSize(, buf, false, 0.0) + ImVec2::from_ints(1, 1), color_u32_from_rgba(200, 100, 100, 255), 0.0, 0);
+        overlay_draw_list.AddRect(node.Pos + Vector2::new(3, 3) * depth, node.Pos + node.Size - Vector2::new(3, 3) * depth, color_u32_from_rgba(200, 100, 100, 255), 0.0);
+        let pos: Vector2 = node.Pos + Vector2::new(3, 3) * depth;
+        overlay_draw_list.AddRectFilled(pos - Vector2::new(1, 1), pos + CalcTextSize(, buf, false, 0.0) + Vector2::from_ints(1, 1), color_u32_from_rgba(200, 100, 100, 255), 0.0, 0);
         overlay_draw_list.AddText2(None, 0.0, pos, color_u32_from_rgba(255, 255, 255, 255), buf.clone(), 0.0, None);
     }
 // #endif // #ifdef IMGUI_HAS_DOCK
@@ -1045,7 +1045,7 @@ pub unsafe fn DebugNodeColumns(columns: &ImGuiOldColumns) {
 pub unsafe fn DebugNodeDockNodeFlags(p_flags: &mut ImGuiDockNodeFlags, label: String, enabled: bool) {
     // using namespace ImGui;
     PushID(label);
-    PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2::from_floats(0.0, 0.0));
+    PushStyleVar(ImGuiStyleVar_FramePadding, Vector2::from_floats(0.0, 0.0));
     Text(format!("{}:", label));
     if !enabled {
         BeginDisabled(false);
@@ -1151,7 +1151,7 @@ pub unsafe fn DebugNodeDockNode(node:&mut ImGuiDockNode, label: String)
 // [DEBUG] Display contents of ImDrawList
 // Note that both 'window' and 'viewport' may be NULL here. Viewport is generally null of destroyed popups which previously owned a viewport.
 pub unsafe fn DebugNodeDrawList(window: Option<&mut ImguiWindow>,
-                                viewport: Option<&mut ImguiViewport>,
+                                viewport: Option<&mut Viewport>,
                                 draw_list: &ImDrawList,
                                 label: String)
 {
@@ -1213,7 +1213,7 @@ pub unsafe fn DebugNodeDrawList(window: Option<&mut ImguiWindow>,
         for idx_n in pcmd.IdxOffset .. pcmd.IdxOffset + pcmd.ElemCount
         {
             // triangle: ImVec2[3];
-            let mut triangle: [ImVec2;3] = [ImVec2::default();3];
+            let mut triangle: [Vector2;3] = [Vector2::default();3];
             // for (let n: c_int = 0; n < 3; n++, idx_n++)
             for n in 0 .. 3
             {
@@ -1240,7 +1240,7 @@ pub unsafe fn DebugNodeDrawList(window: Option<&mut ImguiWindow>,
                 // let buf_p = buf;
                 // let buf_end = buf + buf.len();
                 // triangle: ImVec2[3];
-                let mut triangle: [ImVec2;3] = [ImVec2::default();3];
+                let mut triangle: [Vector2;3] = [Vector2::default();3];
                 // for (let n: c_int = 0; n < 3; n+ +, idx_i+ +)
                 for n in 0 .. 3
                 {
@@ -1288,7 +1288,7 @@ pub unsafe fn DebugNodeDrawCmdShowMeshAndBoundingBox(out_draw_list: &mut ImDrawL
         let vtx_buffer = draw_list.VtxBuffer.Data + draw_cmd.VtxOffset;
 
         // let mut triangle: [ImVec2;3] = [ImVec2::default();3];
-        let mut triangle: Vec<ImVec2> = vec![];
+        let mut triangle: Vec<Vector2> = vec![];
         // for (let n: c_int = 0; n < 3; n++, idx_n++)
         for n in 0 .. 3
         {
@@ -1386,13 +1386,13 @@ pub unsafe fn DebugNodeFont(font: &mut ImFont)
             }
 
             // Draw a 16x16 grid of glyphs
-            let base_pos: ImVec2 = cursor_screen_pos(g);
+            let base_pos: Vector2 = cursor_screen_pos(g);
             // for (let mut n: c_uint =  0; n < 256; n++)
             {
                 // We use ImFont::RenderChar as a shortcut because we don't have UTF-8 conversion functions
                 // available here and thus cannot easily generate a zero-terminated UTF-8 encoded string.
-                let cell_p1 = ImVec2::from_floats(base_pos.x + (n % 16) * (cell_size + cell_spacing), base_pos.y + (n / 16) * (cell_size + cell_spacing));
-                let cell_p2 = ImVec2::from_floats(cell_p1.x + cell_size, cell_p1.y + cell_size);
+                let cell_p1 = Vector2::from_floats(base_pos.x + (n % 16) * (cell_size + cell_spacing), base_pos.y + (n / 16) * (cell_size + cell_spacing));
+                let cell_p2 = Vector2::from_floats(cell_p1.x + cell_size, cell_p1.y + cell_size);
                 let glyph = font.FindGlyphNoFallback((base + n));
                 draw_list.AddRect(cell_p1, cell_p2, if glyph.is_some() { color_u32_from_rgba(255, 255, 255, 100) } else { color_u32_from_rgba(255, 255, 255, 50) }, 0.0);
                 if !glyph {
@@ -1406,7 +1406,7 @@ pub unsafe fn DebugNodeFont(font: &mut ImFont)
                     EndTooltip();
                 }
             }
-            Dummy(g, &ImVec2::from_floats((cell_size + cell_spacing) * 16, (cell_size + cell_spacing) * 16));
+            Dummy(g, &Vector2::from_floats((cell_size + cell_spacing) * 16, (cell_size + cell_spacing) * 16));
             TreePop();
         }
         TreePop();
@@ -1465,8 +1465,8 @@ pub unsafe fn DebugNodeTabBar(tab_bar: &mut ImGuiTabBar, label: String)
                           tab_bar.BarRect.max,
                           color_u32_from_rgba(255, 255, 0, 255),
                           0.0);
-        draw_list.AddLine(ImVec2::from_floats(ScrollingRectMinX, tab_bar.BarRect.min.y), ImVec2::from_floats(ScrollingRectMinX, tab_bar.BarRect.max.y), color_u32_from_rgba(0, 255, 0, 255), 0.0);
-        draw_list.AddLine(ImVec2::from_floats(ScrollingRectMaxX, tab_bar.BarRect.min.y), ImVec2::from_floats(ScrollingRectMaxX, tab_bar.BarRect.max.y), color_u32_from_rgba(0, 255, 0, 255), 0.0);
+        draw_list.AddLine(Vector2::from_floats(ScrollingRectMinX, tab_bar.BarRect.min.y), Vector2::from_floats(ScrollingRectMinX, tab_bar.BarRect.max.y), color_u32_from_rgba(0, 255, 0, 255), 0.0);
+        draw_list.AddLine(Vector2::from_floats(ScrollingRectMaxX, tab_bar.BarRect.min.y), Vector2::from_floats(ScrollingRectMaxX, tab_bar.BarRect.max.y), color_u32_from_rgba(0, 255, 0, 255), 0.0);
     }
     if open
     {
@@ -1486,7 +1486,7 @@ pub unsafe fn DebugNodeTabBar(tab_bar: &mut ImGuiTabBar, label: String)
     }
 }
 
-pub unsafe fn DebugNodeViewport(viewport: &mut ImguiViewport)
+pub unsafe fn DebugNodeViewport(viewport: &mut Viewport)
 {
     SetNextItemOpen(true, ImGuiCond_Once);
     if TreeNode(viewport.ID.to_string(), format!("Viewport #{}, ID: 0x{}, Parent: 0x{}, Window: \"{}\"", viewport.Idx, viewport.ID, viewport.ParentViewportId, if viewport.Window { viewport.window.Name } else { "N/A" }))
@@ -1496,7 +1496,7 @@ pub unsafe fn DebugNodeViewport(viewport: &mut ImguiViewport)
             viewport.Pos.x, viewport.Pos.y, viewport.Size.x, viewport.Size.y,
             viewport.WorkOffsetMin.x, viewport.WorkOffsetMin.y, viewport.WorkOffsetMax.x, viewport.WorkOffsetMax.y,
             viewport.PlatformMonitor, viewport.DpiScale * 100));
-        if viewport.Idx > 0 { same_line(g, 0.0, 0.0); if SmallButton(String::from("Reset Pos")) { viewport.Pos = ImVec2::from_ints(200, 200); viewport.UpdateWorkRect(); if viewport.Window{ viewport.window.position = viewport.Pos;} } }
+        if viewport.Idx > 0 { same_line(g, 0.0, 0.0); if SmallButton(String::from("Reset Pos")) { viewport.Pos = Vector2::from_ints(200, 200); viewport.UpdateWorkRect(); if viewport.Window{ viewport.window.position = viewport.Pos;} } }
         BulletText(format!("Flags: {} ={}{}{}{}{}{}{}{}{}{}{}{}", viewport.Flags,
             //(flags & ImGuiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard
             if flag_set(flags, ImGuiViewportFlags_IsPlatformMonitor) { " IsPlatformMonitor"} else {""},
@@ -1665,7 +1665,7 @@ pub unsafe fn ShowDebugLogWindow(p_open: &mut bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if flag_clear(g.NextWindowData.Flags , ImGuiNextWindowDataFlags_HasSize) {
-        SetNextWindowSize(ImVec2::from_floats(0.0, GetFontSize() * 12.0), ImGuiCond_FirstUseEver);
+        SetNextWindowSize(Vector2::from_floats(0.0, GetFontSize() * 12.0), ImGuiCond_FirstUseEver);
     }
     if !Begin(g, "Dear ImGui Debug Log", Some(p_open)) || GetCurrentWindow().BeginCount > 1
     {
@@ -1692,7 +1692,7 @@ pub unsafe fn ShowDebugLogWindow(p_open: &mut bool)
     if SmallButton(String::from("Copy")) {
         SetClipboardText(g.DebugLogBuf.c_str());
     }
-    BeginChild(String::from("##log"), ImVec2::from_floats(0.0, 0.0), true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
+    BeginChild(String::from("##log"), Vector2::from_floats(0.0, 0.0), true, ImGuiWindowFlags_AlwaysVerticalScrollbar | ImGuiWindowFlags_AlwaysHorizontalScrollbar);
     TextUnformatted(g.DebugLogBuf.begin()); // FIXME-OPT: Could use a line index, but TextUnformatted() has a semi-decent fast path for large text.
     if GetScrollY() >= GetScrollMaxY(){
         SetScrollHereY(1.0);}
@@ -1811,7 +1811,7 @@ pub unsafe fn ShowStackToolWindow(p_open: &mut bool)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if !(g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasSize) {
-        SetNextWindowSize(ImVec2::from_floats(0.0, GetFontSize() * 8.0), ImGuiCond_FirstUseEver);
+        SetNextWindowSize(Vector2::from_floats(0.0, GetFontSize() * 8.0), ImGuiCond_FirstUseEver);
     }
     if !Begin(g, "Dear ImGui Stack Tool", Some(p_open)) || GetCurrentWindow().BeginCount > 1
     {

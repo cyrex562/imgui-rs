@@ -21,7 +21,7 @@ use crate::style_var_ops::{
 };
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::flag_clear;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::focus::FocusWindow;
 use crate::window::ops::{Begin, GetCurrentWindow, SetNextWindowSize};
 use crate::window::window_flags::{
@@ -46,7 +46,7 @@ use std::ptr::{null, null_mut};
 pub unsafe fn BeginChildEx(
     name: String,
     id: ImguiHandle,
-    size_arg: ImVec2,
+    size_arg: Vector2,
     border: bool,
     mut flags: ImGuiWindowFlags,
 ) -> bool {
@@ -61,8 +61,8 @@ pub unsafe fn BeginChildEx(
     flags |= (parent_window.Flags & ImGuiWindowFlags_NoMove); // Inherit the NoMove flag
 
     // Size
-    let content_avail: ImVec2 = content_region_avail(g);
-    let mut size: ImVec2 = ImFloor(size_arg);
+    let content_avail: Vector2 = content_region_avail(g);
+    let mut size: Vector2 = ImFloor(size_arg);
     let auto_fit_axises: c_int = (if size.x == 0.0 {
         (1 << IM_GUI_AXIS_X)
     } else {
@@ -123,7 +123,7 @@ pub unsafe fn BeginChildEx(
 // BeginChild: bool(str_id: *const c_char, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild(
     str_id: String,
-    size_arg: ImVec2,
+    size_arg: Vector2,
     border: bool,
     extra_flags: ImGuiWindowFlags,
 ) -> bool {
@@ -140,7 +140,7 @@ pub unsafe fn BeginChild(
 // BeginChild: bool(ImguiHandle id, const size_arg: &mut ImVec2, border: bool, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChild2(
     id: ImguiHandle,
-    size_arg: ImVec2,
+    size_arg: Vector2,
     border: bool,
     extra_flags: ImGuiWindowFlags,
 ) -> bool {
@@ -160,7 +160,7 @@ pub unsafe fn EndChild() {
     if window.BeginCount > 1 {
         End(0);
     } else {
-        let mut sz: ImVec2 = window.Size;
+        let mut sz: Vector2 = window.Size;
         if window.AutoFitChildAxises & (1 << IM_GUI_AXIS_X) {
             // Arbitrary minimum zero-ish child size of 4.0 causes less trouble than a 0.0
             sz.x = ImMax(4.0, sz.x);
@@ -184,8 +184,8 @@ pub unsafe fn EndChild() {
             if window.dc.NavLayersActiveMask == 0 && window == g.NavWindow {
                 RenderNavHighlight(,
                                    &ImRect::from_vec2(
-                                       bb.min.clone() - ImVec2::from_floats(2.0, 2.0),
-                                       bb.max.clone() + ImVec2::from_floats(2.0, 2.0),
+                                       bb.min.clone() - Vector2::from_floats(2.0, 2.0),
+                                       bb.max.clone() + Vector2::from_floats(2.0, 2.0),
                                    ),
                                    g.NavId,
                                    ImGuiNavHighlightFlags_TypeThin,
@@ -207,7 +207,7 @@ pub unsafe fn EndChild() {
 // BeginChildFrame: bool(ImguiHandle id, const size: &mut ImVec2, ImGuiWindowFlags extra_flags)
 pub unsafe fn BeginChildFrame(
     id: ImguiHandle,
-    size: ImVec2,
+    size: Vector2,
     extra_flags: ImGuiWindowFlagss,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;

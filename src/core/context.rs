@@ -52,9 +52,9 @@ use crate::text_buffer::ImGuiTextBuffer;
 use crate::core::type_defs::{
     ImBitArrayForNamedKeys, ImFileHandle, ImGuiDir, ImTextureID, ImguiHandle, INVALID_IMGUI_HANDLE,
 };
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
-use crate::viewport::ImguiViewport;
+use crate::viewport::Viewport;
 use crate::widgets::combo_preview_data::ImGuiComboPreviewData;
 use crate::window::window_settings::ImGuiWindowSettings;
 use crate::window::window_stack_data::ImGuiWindowStackData;
@@ -69,8 +69,8 @@ use std::fs;
 use std::ptr::null_mut;
 use crate::font::font_atlas::ImFontAtlas;
 use crate::platform::platform_ime_data::ImGuiPlatformImeData;
-use crate::platform::platform_io::ImguiPlatformIo;
-use crate::platform::platform_monitor::ImGuiPlatformMonitor;
+use crate::platform::platform_io::PlatformIo;
+use crate::platform::platform_monitor::PlatformMonitor;
 use crate::style::style_mod::ImGuiStyleMod;
 use crate::table::table_settings::ImGuiTableSettings;
 use crate::table::table_temp_data::ImGuiTableTempData;
@@ -82,13 +82,13 @@ use crate::widgets::popup_data::ImGuiPopupData;
 use crate::window::input_text_state::ImGuiInputTextState;
 
 #[derive(Default, Debug, Clone)]
-pub struct ImguiContext {
+pub struct AppContext {
     pub initialized: bool,
     // IO.Fonts. is owned by the ImGuiContext and will be destructed along with it.
     pub FontAtlasOwnedByContext: bool,
     // ImGuiIO                 IO;
     pub IO: IoContext,
-    pub PlatformIO: ImguiPlatformIo,
+    pub PlatformIO: PlatformIo,
     // Input events which will be tricked/written into IO structure.
     pub InputEventsQueue: Vec<ImguiInputEvent>,
     // Past input events processed in NewFrame(). This is to allow domain-specific
@@ -134,7 +134,7 @@ pub struct ImguiContext {
     pub WindowsActiveCount: i32,
     // Padding around resizable windows for which hovering on counts as hovering the
     // window == ImMax(style.TouchExtraPadding, WINDOWS_HOVER_PADDING)
-    pub WindowsHoverPadding: ImVec2,
+    pub WindowsHoverPadding: Vector2,
     // Window being drawn into
     pub CurrentWindow: ImguiHandle,
     // Window the mouse is hovering. Will typically catch mouse inputs.
@@ -148,7 +148,7 @@ pub struct ImguiContext {
     // moved, generally keep scrolling the same window even if during the course of
     // scrolling the mouse ends up hovering a child window.
     pub WheelingWindow: ImguiWindow,
-    pub WheelingWindowRefMousePos: ImVec2,
+    pub WheelingWindowRefMousePos: Vector2,
     pub WheelingWindowTimer: f32,
     // Will call core hooks: DebugHookIdInfo() from GetID functions, used by Stack Tool
     // [next HoveredId/ActiveId to not pull in an extra cache-line]
@@ -189,7 +189,7 @@ pub struct ImguiContext {
     pub ActiveIdHasBeenEditedThisFrame: bool,
     // Clicked offset from upper-left corner, if applicable (currently only set by
     // ButtonBehavior)
-    pub ActiveIdClickOffset: ImVec2,
+    pub ActiveIdClickOffset: Vector2,
     pub ActiveIdWindow: ImguiHandle,
     // Activating with mouse or nav (gamepad/keyboard)
     pub ActiveIdSource: ImGuiInputSource,
@@ -237,7 +237,7 @@ pub struct ImguiContext {
     pub BeginMenuCount: Vec<c_int>,
     // Active viewports (always 1+, and generally 1 unless multi-viewports are enabled).
     // Each viewports hold their copy of ImDrawData.
-    pub Viewports: HashMap<ImguiHandle, ImguiViewport>,
+    pub Viewports: HashMap<ImguiHandle, Viewport>,
     pub CurrentDpiScale: c_float,
     // We track changes of viewport (happening in Begin) so we can call
     // Platform_OnChangedViewport()
@@ -248,7 +248,7 @@ pub struct ImguiContext {
     pub MouseLastHoveredViewport: ImguiHandle,
     pub PlatformLastFocusedViewportId: ImguiHandle,
     // Virtual monitor used as fallback if backend doesn't provide monitor information.
-    pub FallbackMonitor: ImGuiPlatformMonitor,
+    pub FallbackMonitor: PlatformMonitor,
     // Every time the front-most window changes, we stamp its viewport with an
     // incrementing counter
     pub ViewportFrontMostStampCount: c_int,
@@ -349,8 +349,8 @@ pub struct ImguiContext {
     pub NavWindowingTimer: c_float,
     pub NavWindowingHighlightAlpha: c_float,
     pub NavWindowingToggleLayer: bool,
-    pub NavWindowingAccumDeltaPos: ImVec2,
-    pub NavWindowingAccumDeltaSize: ImVec2,
+    pub NavWindowingAccumDeltaPos: Vector2,
+    pub NavWindowingAccumDeltaSize: Vector2,
     // Render
     // 0.0..1.0 animation when fading in a dimming background (for modal window and CTRL+TAB list)
     pub DimBgRatio: c_float,
@@ -414,7 +414,7 @@ pub struct ImguiContext {
     // Currently used IsItemHovered(): grace time before g.TooltipHoverTimer gets cleared.
     pub HoverDelayClearTimer: c_float,
     // Widget state
-    pub MouseLastValidPos: ImVec2,
+    pub MouseLastValidPos: Vector2,
     pub InputTextState: ImGuiInputTextState,
     pub InputTextPasswordFont: ImFont,
     // Temporary text input when CTRL+clicking on a slider, etc.
@@ -523,7 +523,7 @@ pub struct ImguiContext {
     pub TempBuffer: Vec<c_char>,
 }
 
-impl ImguiContext {
+impl AppContext {
     pub fn new(shared_font_atlas: Option<ImFontAtlas>) -> Self {
         let mut out = Self {
             initialized: false,
@@ -573,7 +573,7 @@ impl ImguiContext {
             ActiveIdHasBeenPressedBefore: false,
             ActiveIdHasBeenEditedBefore: false,
             ActiveIdHasBeenEditedThisFrame: false,
-            ActiveIdClickOffset: ImVec2::from_floats(-1.0, -1.0),
+            ActiveIdClickOffset: Vector2::from_floats(-1.0, -1.0),
             ActiveIdWindow: ImguiWindow::default(),
             ActiveIdSource: ImGuiInputSource_None,
             ActiveIdMouseButton: -1,
@@ -591,9 +591,9 @@ impl ImguiContext {
             BeginMenuCount: vec![],
 
             CurrentDpiScale: 0.0,
-            CurrentViewport: ImguiViewport::default(),
-            MouseViewport: ImguiViewport::default(),
-            MouseLastHoveredViewport: ImguiViewport::default(),
+            CurrentViewport: Viewport::default(),
+            MouseViewport: Viewport::default(),
+            MouseLastHoveredViewport: Viewport::default(),
             PlatformLastFocusedViewportId: 0,
             ViewportFrontMostStampCount: 0,
 
@@ -714,8 +714,8 @@ impl ImguiContext {
             None() => ImFontAtlas::default(),
         });
         out.ActiveIdUsingKeyInputMask.ClearAllBits();
-        out.PlatformImeData.InputPos = ImVec2::default();
-        out.PlatformImeDataPrev.InputPos = ImVec2::from_floats(-1.0, -1.0); // Different to ensure initial submission
+        out.PlatformImeData.InputPos = Vector2::default();
+        out.PlatformImeDataPrev.InputPos = Vector2::from_floats(-1.0, -1.0); // Different to ensure initial submission
                                                                             // libc::memset(
                                                                             //     out.DragDropPayloadBufLocal.as_mut_ptr(),
                                                                             //     0,
@@ -771,7 +771,7 @@ impl ImguiContext {
         }
     }
 
-    pub fn platform_io_mut(&mut self) -> &mut ImguiPlatformIo {
+    pub fn platform_io_mut(&mut self) -> &mut PlatformIo {
         self.PlatformIO.borrow_mut()
     }
 
@@ -785,10 +785,10 @@ impl ImguiContext {
 }
 
 pub fn create_context(
-    pg: Option<&mut ImguiContext>,
+    pg: Option<&mut AppContext>,
     shared_font_atlas: Option<ImFontAtlas>,
-) -> ImguiContext {
-    let mut ctx = ImguiContext::new(shared_font_atlas);
+) -> AppContext {
+    let mut ctx = AppContext::new(shared_font_atlas);
     // SetCurrentContext(&mut ctx);
     initialize(g);
     if prev_ctx != None {
@@ -798,7 +798,7 @@ pub fn create_context(
 }
 
 // c_void DestroyContext(g: &mut ImguiContext)
-pub unsafe fn destroy_context(mut ctx: &mut ImguiContext) {
+pub unsafe fn destroy_context(mut ctx: &mut AppContext) {
     // let mut prev_ctx = GetCurrentContext();
     // if ctx == None {
     //     //-V1051

@@ -3,7 +3,7 @@
 use crate::widgets::activate_flags::IM_GUI_ACTIVATE_FLAGS_NONE;
 use crate::color::color_u32_from_rgba;
 use crate::content_ops::content_region_max_abs;
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::drawing::draw_flags::ImDrawFlags_None;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::widgets::hovered_flags::{
@@ -32,7 +32,7 @@ use crate::item::next_item_data_flags::{ImGuiNextItemDataFlags_HasWidth, ImGuiNe
 use crate::rect::ImRect;
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::{flag_clear, flag_set};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ops::{GetCurrentWindow, IsWindowContentHoverable};
 use crate::window::window_flags::ImGuiWindowFlags_NavFlattened;
 use crate::window::ImguiWindow;
@@ -42,7 +42,7 @@ use libc::{c_float, c_int};
 use std::ptr::null_mut;
 
 // c_void MarkItemEdited(ImguiHandle id)
-pub fn MarkItemEdited(g: &mut ImguiContext, id: ImguiHandle) {
+pub fn MarkItemEdited(g: &mut AppContext, id: ImguiHandle) {
     // This marking is solely to be able to provide info for IsItemDeactivatedAfterEdit().
     // ActiveId might have been released by the time we call this (as in the typical press/release button behavior) but still need need to fill the data.
     // IM_ASSERT(g.ActiveId == id || g.ActiveId == 0 || g.DragDropActive);
@@ -252,7 +252,7 @@ pub unsafe fn IsClippedEx(bb: &mut ImRect, id: ImguiHandle) -> bool {
 }
 
 pub fn set_last_item_data(
-    g: &mut ImguiContext,
+    g: &mut AppContext,
     item_id: ImguiHandle,
     in_flags: ImGuiItemFlags,
     item_flags: ImGuiItemStatusFlags,
@@ -264,7 +264,7 @@ pub fn set_last_item_data(
     g.last_item_data.rect = item_rect.clone();
 }
 
-pub fn calc_width_for_pos(g: &mut ImguiContext, pos: &ImVec2, mut wrap_pos_x: f32) -> f32 {
+pub fn calc_width_for_pos(g: &mut AppContext, pos: &Vector2, mut wrap_pos_x: f32) -> f32 {
     if wrap_pos_x < 0.0 {
         return 0.0;
     }
@@ -404,19 +404,19 @@ pub unsafe fn SetItemUsingMouseWheel() {
 }
 
 // GetItemRectMin: ImVec2()
-pub unsafe fn GetItemRectMin() -> ImVec2 {
+pub unsafe fn GetItemRectMin() -> Vector2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.last_item_data.Rect.Min.clone();
 }
 
 // GetItemRectMax: ImVec2()
-pub unsafe fn GetItemRectMax() -> ImVec2 {
+pub unsafe fn GetItemRectMax() -> Vector2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.last_item_data.Rect.Max.clone();
 }
 
 // GetItemRectSize: ImVec2()
-pub unsafe fn GetItemRectSize() -> ImVec2 {
+pub unsafe fn GetItemRectSize() -> Vector2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.last_item_data.Rect.GetSize();
 }
@@ -425,7 +425,7 @@ pub unsafe fn GetItemRectSize() -> ImVec2 {
 // Note that the size can be different than the one provided to ItemSize(). Typically, widgets that spread over available surface
 // declare their minimum size requirement to ItemSize() and provide a larger region to ItemAdd() which is used drawing/interaction.
 pub fn ItemAdd(
-    g: &mut ImguiContext,
+    g: &mut AppContext,
     bb: &mut ImRect,
     id: ImguiHandle,
     nav_bb_arg: Option<&ImRect>,
@@ -506,7 +506,7 @@ pub fn ItemAdd(
 // Advance cursor given item size for layout.
 // Register minimum needed size so it can extend the bounding box used for auto-fit calculation.
 // See comments in ItemAdd() about how/why the size provided to ItemSize() vs ItemAdd() may often different.
-pub fn ItemSize(g: &mut ImguiContext, size: &ImVec2, text_baseline_y: f32) {
+pub fn ItemSize(g: &mut AppContext, size: &Vector2, text_baseline_y: f32) {
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
         return;
@@ -640,7 +640,7 @@ pub unsafe fn PopItemWidth() {
 
 // Calculate default item width given value passed to PushItemWidth() or SetNextItemWidth().
 // The SetNextItemWidth() data is generally cleared/consumed by ItemAdd() or NextItemData.ClearFlags()CalcItemWidth: c_float()
-pub fn CalcItemWidth(g: &mut ImguiContext) -> f32 {
+pub fn CalcItemWidth(g: &mut AppContext) -> f32 {
     let mut window = g.current_window_mut().unwrap();
     let mut w: c_float = 0.0;
     if g.next_item_data.flags & ImGuiNextItemDataFlags_HasWidth {
@@ -661,10 +661,10 @@ pub fn CalcItemWidth(g: &mut ImguiContext) -> f32 {
 // Note that only CalcItemWidth() is publicly exposed.
 // The 4.0 here may be changed to match CalcItemWidth() and/or BeginChild() (right now we have a mismatch which is harmless but undesirable)
 // CalcItemSize: ImVec2(size: ImVec2,default_w: c_float,default_h: c_float)
-pub fn CalcItemSize(g: &mut ImguiContext, mut size: ImVec2, default_w: c_float, default_h: c_float) -> ImVec2 {
+pub fn CalcItemSize(g: &mut AppContext, mut size: Vector2, default_w: c_float, default_h: c_float) -> Vector2 {
     let mut window = g.current_window_mut().unwrap();
 
-    let mut region_max = ImVec2::default();
+    let mut region_max = Vector2::default();
     if size.x < 0.0 || size.y < 0.0 {
         region_max = content_region_max_abs(g);
     }

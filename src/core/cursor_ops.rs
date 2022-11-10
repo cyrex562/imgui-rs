@@ -1,8 +1,8 @@
 use crate::a_imgui_cpp::GImGui;
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::imgui::GImGui;
 use crate::core::math_ops::ImMax;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
 use libc::c_float;
@@ -23,7 +23,7 @@ use libc::c_float;
 //  The previous logic made SetCursorScreenPos(GetCursorScreenPos()) have a side-effect! It would erroneously incorporate ItemSpacing.y after the item into content size, making the group taller!
 //  While this code is a little twisted, no-one would expect SetXXX(GetXXX()) to have a side-effect. Using vertical alignment patterns could trigger this issue.
 // c_void ErrorCheckUsingSetCursorPosToExtendParentBoundaries()
-pub fn ErrorCheckUsingSetCursorPosToExtendParentBoundaries(g: &mut ImguiContext) {
+pub fn ErrorCheckUsingSetCursorPosToExtendParentBoundaries(g: &mut AppContext) {
     let mut window = g.current_window_mut().unwrap();
     // IM_ASSERT(window.dc.is_set_pos);
     window.dc.is_set_pos = false;
@@ -35,7 +35,7 @@ pub fn ErrorCheckUsingSetCursorPosToExtendParentBoundaries(g: &mut ImguiContext)
     // IM_ASSERT(0 && "Code uses SetCursorPos()/SetCursorScreenPos() to extend window/parent boundaries. Please submit an item e.g. Dummy() to validate extent.");
 }
 
-pub fn cursor_screen_pos(g: &mut ImguiContext) -> ImVec2 {
+pub fn cursor_screen_pos(g: &mut AppContext) -> Vector2 {
     let mut window = g.current_window_mut().unwrap();
     return window.dc.cursor_pos;
 }
@@ -46,7 +46,7 @@ pub fn cursor_screen_pos(g: &mut ImguiContext) -> ImVec2 {
 // been the case since 1.31 and 1.50)
 // It would be sane if we requested user to use SetCursorPos() + Dummy(ImVec2::new(0,0))
 // to extend CursorMaxPos...
-pub fn set_cursor_screen_pos(g: &mut ImguiContext, pos: &ImVec2) {
+pub fn set_cursor_screen_pos(g: &mut AppContext, pos: &Vector2) {
     let mut window = g.current_window_mut().unwrap();
     window.dc.cursor_pos = pos.clone();
     //window.dc.CursorMaxPos = ImMax(window.dc.CursorMaxPos, window.dc.cursor_pos);
@@ -56,52 +56,52 @@ pub fn set_cursor_screen_pos(g: &mut ImguiContext, pos: &ImVec2) {
 // User generally sees positions in window coordinates. Internally we store CursorPos in absolute screen coordinates because it is more convenient.
 // Conversion happens as we pass the value to user, but it makes our naming convention confusing because GetCursorPos() == (dc.cursor_pos - window.position). May want to rename 'dc.cursor_pos'.
 // GetCursorPos: ImVec2()
-pub fn cursor_pos(g: &mut ImguiContext) -> ImVec2 {
+pub fn cursor_pos(g: &mut AppContext) -> Vector2 {
     let mut window = g.current_window_mut().unwrap();
     return window.dc.cursor_pos - window.position + window.scroll;
 }
 
 // GetCursorPosX: c_float()
-pub fn cursor_pos_x(g: &mut ImguiContext) -> f32 {
+pub fn cursor_pos_x(g: &mut AppContext) -> f32 {
     let mut window = g.current_window_mut().unwrap();
     return window.dc.cursor_pos.x - window.position.x + window.scroll.x;
 }
 
 // GetCursorPosY: c_float()
-pub fn cursor_pos_y(g: &mut ImguiContext) -> f32 {
+pub fn cursor_pos_y(g: &mut AppContext) -> f32 {
     let mut window = g.current_window_mut().unwrap();
     return window.dc.cursor_pos.y - window.position.y + window.scroll.y;
 }
 
 // c_void SetCursorPos(local_pos: &ImVec2)
-pub fn set_cursor_pos(g: &mut ImguiContext, local_pos: &ImVec2) {
+pub fn set_cursor_pos(g: &mut AppContext, local_pos: &Vector2) {
     let mut window = g.current_window_mut().unwrap();
     window.dc.cursor_pos = window.position - window.scroll + local_pos;
     //window.dc.CursorMaxPos = ImMax(window.dc.CursorMaxPos, window.dc.cursor_pos);
     window.dc.is_set_pos = true;
 }
 
-pub fn set_cursor_x(g: &mut ImguiContext, x: c_float) {
+pub fn set_cursor_x(g: &mut AppContext, x: c_float) {
     let mut window = g.current_window_mut().unwrap();
     window.dc.cursor_pos.x = window.position.x - window.scroll.x + x;
     //window.dc.CursorMaxPos.x = ImMax(window.dc.CursorMaxPos.x, window.dc.cursor_pos.x);
     window.dc.is_set_pos = true;
 }
 
-pub fn set_cursor_pos_y(g: &mut ImguiContext, y: c_float) {
+pub fn set_cursor_pos_y(g: &mut AppContext, y: c_float) {
     let mut window = g.current_window_mut().unwrap();
     window.dc.cursor_pos.y = window.position.y - window.scroll.y + y;
     //window.dc.CursorMaxPos.y = ImMax(window.dc.CursorMaxPos.y, window.dc.cursor_pos.y);
     window.dc.is_set_pos = true;
 }
 
-pub fn cursor_start_pos(g: &mut ImguiContext) -> ImVec2 {
+pub fn cursor_start_pos(g: &mut AppContext) -> Vector2 {
     let mut window = g.current_window_mut().unwrap();
     return window.dc.cursor_start_pos - window.position;
 }
 
 // c_void Indent(indent_w: c_float)
-pub fn indent(indent_w: c_float, g: &mut ImguiContext) {
+pub fn indent(indent_w: c_float, g: &mut AppContext) {
     let mut window = g.current_window_mut().unwrap();
     window.dc.indent.x += if indent_w != 0.0 {
         indent_w
@@ -111,7 +111,7 @@ pub fn indent(indent_w: c_float, g: &mut ImguiContext) {
     window.dc.cursor_pos.x = window.position.x + window.dc.indent.x + window.dc.columns_offset.x;
 }
 
-pub fn unindent(g: &mut ImguiContext, indent_w: c_float) {
+pub fn unindent(g: &mut AppContext, indent_w: c_float) {
     let mut window = g.current_window_mut().unwrap();
     window.dc.indent.x -= if indent_w != 0.0 {
         indent_w

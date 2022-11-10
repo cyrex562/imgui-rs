@@ -4,7 +4,7 @@ use crate::core::condition::ImGuiCond;
 use crate::window::next_window_data_flags::{ImGuiNextWindowDataFlags, ImGuiNextWindowDataFlags_None};
 use crate::rect::ImRect;
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::window_class::ImGuiWindowClass;
 use crate::window_class::ImGuiWindowClass;
 use libc::{c_float, c_void};
@@ -17,11 +17,11 @@ pub struct ImGuiNextWindowData {
     pub SizeCond: ImGuiCond,
     pub CollapsedCond: ImGuiCond,
     pub DockCond: ImGuiCond,
-    pub PosVal: ImVec2,
-    pub PosPivotVal: Option<ImVec2>,
-    pub SizeVal: ImVec2,
-    pub ContentSizeVal: ImVec2,
-    pub ScrollVal: ImVec2,
+    pub PosVal: Vector2,
+    pub PosPivotVal: Option<Vector2>,
+    pub SizeVal: Vector2,
+    pub ContentSizeVal: Vector2,
+    pub ScrollVal: Vector2,
     pub PosUndock: bool,
     pub CollapsedVal: bool,
     pub SizeConstraintRect: ImRect,
@@ -32,7 +32,7 @@ pub struct ImGuiNextWindowData {
     pub ViewportId: ImguiHandle,
     pub DockId: ImguiHandle,
     pub WindowClass: ImGuiWindowClass,
-    pub MenuBarOffsetMinVal: ImVec2, // (Always on) This is not exposed publicly, so we don't clear it and it doesn't have a corresponding flag (could we? for consistency?)
+    pub MenuBarOffsetMinVal: Vector2, // (Always on) This is not exposed publicly, so we don't clear it and it doesn't have a corresponding flag (could we? for consistency?)
 }
 
 impl ImGuiNextWindowData {

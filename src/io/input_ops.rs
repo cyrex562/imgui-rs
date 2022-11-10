@@ -30,7 +30,7 @@ use crate::io::mouse_button::ImGuiMouseButton;
 use crate::io::mouse_cursor::ImGuiMouseCursor;
 use crate::rect::ImRect;
 use crate::core::string_ops::{str_to_const_c_char_ptr, ImFormatString};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use libc::{c_char, c_float, c_int, c_uint};
 use std::ffi::CString;
 
@@ -38,7 +38,7 @@ use std::ffi::CString;
 // NB- Rectangle is clipped by our current clip setting
 // NB- Expand the rectangle to be generous on imprecise inputs systems (g.style.TouchExtraPadding)
 // IsMouseHoveringRect: bool(const r_min: &mut ImVec2, const r_max: &mut ImVec2, clip: bool)
-pub unsafe fn IsMouseHoveringRect(r_min: &ImVec2, r_max: &ImVec2, clip: bool) -> bool {
+pub unsafe fn IsMouseHoveringRect(r_min: &Vector2, r_max: &Vector2, clip: bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Clip
@@ -389,8 +389,8 @@ pub fn GetKeyVector2D(
     key_right: ImGuiKey,
     key_up: ImGuiKey,
     key_down: ImGuiKey,
-) -> ImVec2 {
-    return ImVec2::from_floats(
+) -> Vector2 {
+    return Vector2::from_floats(
         GetKeyData(key_right).AnalogValue - GetKeyData(key_left).AnalogValue,
         GetKeyData(key_down).AnalogValue - GetKeyData(key_up).AnalogValue,
     );
@@ -531,14 +531,14 @@ pub fn IsMouseDragging(button: ImGuiMouseButton, lock_threshold: c_float) -> boo
 }
 
 // GetMousePos: ImVec2()
-pub fn GetMousePos() -> ImVec2 {
+pub fn GetMousePos() -> Vector2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.IO.MousePos.clone();
 }
 
 // NB: prefer to call right after BeginPopup(). At the time Selectable/MenuItem is activated, the popup is already closed!
 // GetMousePosOnOpeningCurrentPopup: ImVec2()
-pub fn GetMousePosOnOPeningCurrentPopup() -> ImVec2 {
+pub fn GetMousePosOnOPeningCurrentPopup() -> Vector2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if g.BeginPopupStack.len() > 0 {
         return g.OpenPopupStack[g.BeginPopupStack.len() - 1].OpenMousePos;
@@ -548,12 +548,12 @@ pub fn GetMousePosOnOPeningCurrentPopup() -> ImVec2 {
 
 // We typically use ImVec2::new(-f32::MAX,-f32::MAX) to denote an invalid mouse position.
 // IsMousePosValid: bool(*const mouse_pos: ImVec2)
-pub fn IsMousePosValid(mouse_pos: *const ImVec2) -> bool {
+pub fn IsMousePosValid(mouse_pos: *const Vector2) -> bool {
     // The assert is only to silence a false-positive in XCode Static Analysis.
     // Because GImGui is not dereferenced in every code path, the static analyzer assume that it may be NULL (which it doesn't for other functions).
     // IM_ASSERT(GImGui != NULL);
     let MOUSE_INVALID: c_float = -256000;
-    let p: ImVec2 = if mouse_pos {
+    let p: Vector2 = if mouse_pos {
         *mouse_pos
     } else {
         GimGui.IO.MousePos
@@ -578,7 +578,7 @@ pub fn IsAnyMouseDown() -> bool {
 // This is locked and return 0.0 until the mouse moves past a distance threshold at least once.
 // NB: This is only valid if IsMousePosValid(). backends in theory should always keep mouse position valid when dragging even outside the client window.
 // GetMouseDragDelta: ImVec2(ImGuiMouseButton button, c_float lock_threshold)
-pub fn GetMouseDragDelta(button: ImGuiMouseButton, mut lock_threshold: c_float) -> ImVec2 {
+pub fn GetMouseDragDelta(button: ImGuiMouseButton, mut lock_threshold: c_float) -> Vector2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
                     // IM_ASSERT(button >= 0 && button < IM_ARRAYSIZE(g.IO.MouseDown));
     if lock_threshold < 0.0 {
@@ -591,7 +591,7 @@ pub fn GetMouseDragDelta(button: ImGuiMouseButton, mut lock_threshold: c_float) 
             }
         }
     }
-    return ImVec2::from_floats(0.0, 0.0);
+    return Vector2::from_floats(0.0, 0.0);
 }
 
 // c_void ResetMouseDragDelta(ImGuiMouseButton button)
@@ -698,10 +698,10 @@ pub fn UpdateInputEvents(trickle_fast_inputs: bool) {
     for event_n in 0..g.InputEventsQueue.len() {
         let mut e: *mut ImguiInputEvent = &mut g.InputEventsQueue[event_n];
         if e.Type == ImGuiInputEventType_MousePos {
-            let mut event_pos = ImVec2::from_floats(e.MousePos.PosX, e.MousePos.PosY);
+            let mut event_pos = Vector2::from_floats(e.MousePos.PosX, e.MousePos.PosY);
             if IsMousePosValid(&event_pos) {
                 event_pos =
-                    ImVec2::from_floats(ImFloorSigned(event_pos.x), ImFloorSigned(event_pos.y));
+                    Vector2::from_floats(ImFloorSigned(event_pos.x), ImFloorSigned(event_pos.y));
             } // Apply same flooring as UpdateMouseInputs()
             e.IgnoredAsSame = (io.MousePos.x == event_pos.x && io.MousePos.y == event_pos.y);
             if !e.IgnoredAsSame {

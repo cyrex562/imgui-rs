@@ -15,10 +15,10 @@ use imgui_rs::type_defs::ImguiHandle;
 use imgui_rs::window::ImGuiWindow;
 use libc::{c_char, c_int, c_void};
 use std::ptr::null;
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 
 // c_void SetActiveID(ImguiHandle id, window: &mut ImGuiWindow)
-pub fn SetActiveID(g: &mut ImguiContext, id: ImguiHandle, window: Option<&mut ImguiWindow>) {
+pub fn SetActiveID(g: &mut AppContext, id: ImguiHandle, window: Option<&mut ImguiWindow>) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // While most behaved code would make an effort to not steal active id during window move/drag operations,
@@ -67,7 +67,7 @@ pub fn SetActiveID(g: &mut ImguiContext, id: ImguiHandle, window: Option<&mut Im
 }
 
 // c_void ClearActiveID()
-pub fn ClearActiveID(g: &mut ImguiContext) {
+pub fn ClearActiveID(g: &mut AppContext) {
     SetActiveID(g, 0, None);
 }
 
@@ -95,7 +95,7 @@ pub unsafe fn GetHoveredID() -> ImguiHandle {
 
 // Code not using ItemAdd() may need to call this manually otherwise ActiveId will be
 // cleared. In IMGUI_VERSION_NUM < 18717 this was called by GetID().
-pub fn KeepAliveID(g: &mut ImguiContext, id: ImguiHandle) {
+pub fn KeepAliveID(g: &mut AppContext, id: ImguiHandle) {
     if g.ActiveId == id {
         g.ActiveIdIsAlive = id;
     }
@@ -104,20 +104,20 @@ pub fn KeepAliveID(g: &mut ImguiContext, id: ImguiHandle) {
     }
 }
 
-pub fn push_str_id(g: &mut ImguiContext, str_id: &String) {
+pub fn push_str_id(g: &mut AppContext, str_id: &String) {
     let mut window = g.current_window_mut().unwrap();
     let mut id = window.id_by_string(g, str_id);
     window.id_stack.push(id);
 }
 
-pub fn push_int_id(g: &mut ImguiContext, int_id: c_int) {
+pub fn push_int_id(g: &mut AppContext, int_id: c_int) {
     let mut window = g.current_window_mut().unwrap();
     let mut id: ImguiHandle = window.id_by_int(g, int_id);
     window.id_stack.push(id);
 }
 
 // Push a given id value ignoring the ID stack as a seed.
-pub fn PushOverrideID(g: &mut ImguiContext, id: ImguiHandle) {
+pub fn PushOverrideID(g: &mut AppContext, id: ImguiHandle) {
     let mut window = g.current_window_mut().unwrap();
     if g.DebugHookIdInfo == id {
         DebugHookIdInfo(g, id, IM_GUI_DATA_TYPE_ID, None);
@@ -135,7 +135,7 @@ pub fn GetIDWithSeed(arg: &str, seed: ImguiHandle) -> ImguiHandle {
     return id;
 }
 
-pub fn pop_win_id_from_stack(g: &mut ImguiContext) {
+pub fn pop_win_id_from_stack(g: &mut AppContext) {
     let mut window = g.current_window_mut().unwrap();
     // IM_ASSERT(window.id_stack.Size > 1); // Too many PopID(), or could be popping in a wrong/different window?
     window.id_stack.pop_back();

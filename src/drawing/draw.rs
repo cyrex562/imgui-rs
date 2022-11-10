@@ -31,7 +31,7 @@ use crate::drawing::draw_flags::{
     ImDrawFlags_RoundCornersTopLeft, ImDrawFlags_RoundCornersTopRight,
 };
 use crate::drawing::draw_list::ImDrawList;
-use crate::drawing::draw_vert::ImDrawVert;
+use crate::drawing::draw_vert::DrawVertex;
 use crate::drawing::draw_cmd::ImDrawCmd;
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
@@ -55,7 +55,7 @@ use crate::style::ImguiStyle;
 use crate::style_ops::{GetColorU32, GetStyle};
 use crate::core::type_defs::ImWchar;
 use crate::core::utils::{flag_clear, is_not_null};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_ushort, c_void, size_t};
 use std::ffi::CStr;

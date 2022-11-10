@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use libc::c_char;
 
 pub fn ImIsFloatAboveGuaranteedIntegerPrecision(f: f32) -> bool {
@@ -63,31 +63,31 @@ pub fn ImLinearSweep(current: f32, target: f32, speed: f32) -> f32 {
     current
 }
 
-pub fn ImBezierCubicCalc(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, p4: &ImVec2, t: f32) -> ImVec2 {
+pub fn ImBezierCubicCalc(p1: &Vector2, p2: &Vector2, p3: &Vector2, p4: &Vector2, t: f32) -> Vector2 {
     let u: f32 = 1 - t;
     let w1: f32 = u * u * u;
     let w2: f32 = 3 * u * u * t;
     let w3: f32 = 3 * u * t * t;
     let w4: f32 = t * t * t;
-    return ImVec2::from_floats(
+    return Vector2::from_floats(
         w1 * p1.x + w2 * p2.x + w3 * p3.x + w4 * p4.x,
         w1 * p1.y + w2 * p2.y + w3 * p3.y + w4 * p4.y,
     );
 }
 
-pub fn ImBezierQuadraticCalc(p1: &ImVec2, p2: &ImVec2, p3: &ImVec2, t: f32) -> ImVec2 {
+pub fn ImBezierQuadraticCalc(p1: &Vector2, p2: &Vector2, p3: &Vector2, t: f32) -> Vector2 {
     let u: f32 = 1 - t;
     let w1: f32 = u * u;
     let w2: f32 = 2 * u * t;
     let w3: f32 = t * t;
-    return ImVec2::from_floats(
+    return Vector2::from_floats(
         w1 * p1.x + w2 * p2.x + w3 * p3.x,
         w1 * p1.y + w2 * p2.y + w3 * p3.y,
     );
 }
 
 pub fn PathBezierCubicCurveToCasteljau(
-    path: &mut Vec<ImVec2>,
+    path: &mut Vec<Vector2>,
     x1: f32,
     y1: f32,
     x2: f32,
@@ -106,7 +106,7 @@ pub fn PathBezierCubicCurveToCasteljau(
     d2 = if d2 >= 0.0 { d2 } else { -d2 };
     d3 = if d3 >= 0.0 { d3 } else { -d3 };
     if (d2 + d3) * (d2 + d3) < tess_tol * (dx * dx + dy * dy) {
-        path.push(ImVec2::from_floats(x4, y4));
+        path.push(Vector2::from_floats(x4, y4));
     } else if level < 10 {
         let x12: f32 = (x1 + x2) * 0.5;
         let y12 = (y1 + y2) * 0.5;
@@ -150,7 +150,7 @@ pub fn PathBezierCubicCurveToCasteljau(
 }
 
 pub fn PathBezierQuadraticCurveToCasteljau(
-    path: &mut Vec<ImVec2>,
+    path: &mut Vec<Vector2>,
     x1: f32,
     y1: f32,
     x2: f32,
@@ -164,7 +164,7 @@ pub fn PathBezierQuadraticCurveToCasteljau(
     let dy = y3 - y1;
     let det: f32 = (x2 - x3) * dy - (y2 - y3) * dx;
     if det * det * 4.0 < tess_tol * (dx * dx + dy * dy) {
-        path.push(ImVec2::from_floats(x3, y3));
+        path.push(Vector2::from_floats(x3, y3));
     } else if level < 10 {
         let x12: f32 = (x1 + x2) * 0.5;
         let y12 = (y1 + y2) * 0.5;

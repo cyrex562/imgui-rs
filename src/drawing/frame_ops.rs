@@ -16,13 +16,13 @@ use crate::drawing::draw_list_flags::{
 use crate::core::error_ops::{ErrorCheckEndFrameSanityChecks, ErrorCheckNewFrameSanityChecks};
 use crate::font::font_atlas_flags::ImFontAtlasFlags_NoBakedLines;
 use crate::font::font_ops::SetCurrentFont;
-use crate::{CallContextHooks, GImGui, ImguiViewport};
+use crate::{CallContextHooks, GImGui, Viewport};
 use libc::{c_float, c_int};
 use std::ptr::null_mut;
 
 use crate::a_imgui_cpp::{UpdateDebugToolItemPicker, UpdateDebugToolStackQueries};
 use crate::backend_flags::IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET;
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::dock_context_ops::{
     DockContextEndFrame, DockContextNewFrameUpdateDocking, DockContextNewFrameUpdateUndocking,
 };
@@ -45,7 +45,7 @@ use crate::rect::ImRect;
 use crate::settings_ops::UpdateSettings;
 use crate::core::string_ops::str_to_const_c_char_ptr;
 use crate::core::utils::{flag_clear, flag_set};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::viewport::viewport_ops::{
     FindViewportByID, GetMainViewport, SetCurrentViewport, UpdateViewportsEndFrame,
     UpdateViewportsNewFrame,
@@ -58,7 +58,7 @@ use crate::window_flags::ImGuiWindowFlags_ChildWindow;
 use crate::window_ops::{AddWindowToSortBuffer, SetNextWindowSize};
 
 // c_void NewFrame()
-pub fn NewFrame(g: &mut ImguiContext) {
+pub fn NewFrame(g: &mut AppContext) {
     // IM_ASSERT(GImGui != NULL && "No current context. Did you call CreateContext() and SetCurrentContext() ?");
     // Remove pending delete hooks before frame start.
     // This deferred removal avoid issues of removal while iterating the hook vector
@@ -130,14 +130,14 @@ pub fn NewFrame(g: &mut ImguiContext) {
     if g.style.AntiAliasedFill {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AntiAliasedFill;
     }
-    if g.IO.BackendFlags & IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET {
+    if g.IO.backend_flags & IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET {
         g.DrawListSharedData.InitialFlags |= ImDrawListFlags_AllowVtxOffset;
     }
 
     // Mark rendering data as invalid to prevent user who may have a handle on it to use it.
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
     for n in 0..g.Viewports.len() {
-        let mut viewport: *mut ImguiViewport = g.Viewports[n];
+        let mut viewport: *mut Viewport = g.Viewports[n];
         viewport.DrawData = None;
         viewport.DrawDataP.Clear();
     }
@@ -359,7 +359,7 @@ pub fn NewFrame(g: &mut ImguiContext) {
     // We don't use "Debug" to avoid colliding with user trying to create a "Debug" window with custom flags.
     // This fallback is particularly important as it avoid  calls from crashing.
     g.WithinFrameScopeWithImplicitWindow = true;
-    SetNextWindowSize(&ImVec2::from_floats(400.0, 400.0), ImGuiCond_FirstUseEver);
+    SetNextWindowSize(&Vector2::from_floats(400.0, 400.0), ImGuiCond_FirstUseEver);
     Begin(g, str_to_const_c_char_ptr("Debug##Default"), null_mut());
     // IM_ASSERT(g.Currentwindow.IsFallbackWindow == true);
 
@@ -369,7 +369,7 @@ pub fn NewFrame(g: &mut ImguiContext) {
 
 // This is normally called by Render(). You may want to call it directly if you want to avoid calling Render() but the gain will be very minimal.
 // c_void EndFrame()
-pub fn EndFrame(g: &mut ImguiContext) {
+pub fn EndFrame(g: &mut AppContext) {
     // IM_ASSERT(g.Initialized);
     // Don't process EndFrame() multiple times.
     if g.FrameCountEnded == g.FrameCount {
@@ -383,7 +383,7 @@ pub fn EndFrame(g: &mut ImguiContext) {
     ErrorCheckEndFrameSanityChecks();
 
     // Notify Platform/OS when our Input Method Editor cursor has moved (e.g. CJK inputs using Microsoft IME)
-    if g.IO.SetPlatformImeDataFn != None
+    if g.IO.set_platform_ime_fn != None
         && libc::memcmp(
             &g.PlatformImeData,
             &g.PlatformImeDataPrev,
@@ -479,13 +479,13 @@ pub fn EndFrame(g: &mut ImguiContext) {
 }
 
 // GetFrameHeight: c_float()
-pub fn GetFrameHeight(g: &mut ImguiContext) -> f32 {
+pub fn GetFrameHeight(g: &mut AppContext) -> f32 {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.FontSize + g.style.FramePadding.y * 2.0;
 }
 
 // GetFrameHeightWithSpacing: c_float()
-pub fn GetFrameHeightWithSpacing(g: &mut ImguiContext) -> f32 {
+pub fn GetFrameHeightWithSpacing(g: &mut AppContext) -> f32 {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.FontSize + g.style.FramePadding.y * 2.0 + g.style.item_spacing.y;
 }

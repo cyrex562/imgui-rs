@@ -18,7 +18,7 @@ use crate::core::math_ops::{ImClamp, ImMax, ImMin};
 use crate::popup_flags::ImGuiPopupFlags_AnyPopupLevel;
 use crate::popup_ops::{ClosePopupsOverWindow, GetTopMostPopupModal, IsPopupOpen};
 use crate::widgets::scrolling_ops::{SetScrollX, SetScrollY};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::viewport::viewport_ops::UpdateTryMergeWindowIntoHostViewport;
 use crate::window::find::{IsWindowAbove, IsWindowWithinBeginStackOf};
 use crate::window::focus::FocusWindow;
@@ -123,7 +123,7 @@ pub unsafe fn UpdateMouseMovingWindowNewFrame() {
         let window_disappared: bool = ((!moving_window.WasActive && !moving_window.Active)
             || moving_window.Viewport == null_mut());
         if g.IO.MouseDown[0] && IsMousePosValid(&g.IO.MousePos) && !window_disappared {
-            let pos: ImVec2 = g.IO.MousePos.clone() - g.ActiveIdClickOffset.clone();
+            let pos: Vector2 = g.IO.MousePos.clone() - g.ActiveIdClickOffset.clone();
             if moving_window.position.x != pos.x || moving_window.position.y != pos.y {
                 SetWindowPos(moving_window, pos, ImGuiCond_Always);
                 if moving_window.ViewportOwned
@@ -255,7 +255,7 @@ pub unsafe fn UpdateMouseInputs() {
     if IsMousePosValid(&io.MousePos) && IsMousePosValid(&io.MousePosPrev) {
         io.MouseDelta = io.MousePos.clone() - io.MousePosPrev.clone();
     } else {
-        io.MouseDelta = ImVec2::from_floats(0.0, 0.0);
+        io.MouseDelta = Vector2::from_floats(0.0, 0.0);
     }
 
     // If mouse moved we re-enable mouse hovering in case it was disabled by gamepad/keyboard. In theory should use a >0.0 threshold but would need to reset in everywhere we set this to true.
@@ -282,10 +282,10 @@ pub unsafe fn UpdateMouseInputs() {
         if io.MouseClicked[i] {
             let mut is_repeated_click: bool = false;
             if (g.Time - io.MouseClickedTime[i]) < io.MouseDoubleClickTime {
-                let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) {
+                let delta_from_click_pos: Vector2 = if IsMousePosValid(&io.MousePos) {
                     (io.MousePos.clone() - io.MouseClickedPos[i].clone())
                 } else {
-                    ImVec2::from_floats(0.0, 0.0)
+                    Vector2::from_floats(0.0, 0.0)
                 };
                 if ImLengthSqr(delta_from_click_pos)
                     < io.MouseDoubleClickMaxDist * io.MouseDoubleClickMaxDist
@@ -301,14 +301,14 @@ pub unsafe fn UpdateMouseInputs() {
             io.MouseClickedTime[i] = g.Time.clone();
             io.MouseClickedPos[i] = io.MousePos.clone();
             io.MouseClickedCount[i] = io.MouseClickedLastCount[i];
-            io.MouseDragMaxDistanceAbs[i] = ImVec2::from_floats(0.0, 0.0);
+            io.MouseDragMaxDistanceAbs[i] = Vector2::from_floats(0.0, 0.0);
             io.MouseDragMaxDistanceSqr[i] = 0.0;
         } else if io.MouseDown[i] {
             // Maintain the maximum distance we reaching from the initial click position, which is used with dragging threshold
-            let delta_from_click_pos: ImVec2 = if IsMousePosValid(&io.MousePos) {
+            let delta_from_click_pos: Vector2 = if IsMousePosValid(&io.MousePos) {
                 (io.MousePos.clone() - io.MouseClickedPos[i].clone())
             } else {
-                ImVec2::from_floats(0.0, 0.0)
+                Vector2::from_floats(0.0, 0.0)
             };
             io.MouseDragMaxDistanceSqr[i] = ImMax(
                 io.MouseDragMaxDistanceSqr[i],
@@ -414,7 +414,7 @@ pub unsafe fn UpdateMouseWheel() {
         let scale: c_float = new_font_scale / window.FontWindowScale;
         window.FontWindowScale = new_font_scale;
         if window == window.RootWindow {
-            let offset: ImVec2 = window.Size.clone()
+            let offset: Vector2 = window.Size.clone()
                 * (1.0 - scale)
                 * (g.IO.MousePos.clone() - window.position.clone())
                 / window.Size.clone();
@@ -487,7 +487,7 @@ pub unsafe fn UpdateHoveredWindowAndCaptureFlags() {
     let io = &mut g.IO;
     g.WindowsHoverPadding = ImMax(
         g.style.TouchExtraPadding.clone(),
-        ImVec2::from_floats(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING),
+        Vector2::from_floats(WINDOWS_HOVER_PADDING, WINDOWS_HOVER_PADDING),
     );
 
     // Find the window hovered by mouse:

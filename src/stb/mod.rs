@@ -10,7 +10,7 @@ use crate::stb::stb_textedit::{
 use crate::core::string_ops::ImTextCountUtf8BytesFromStr;
 use crate::core::type_defs::ImWchar;
 use crate::core::utils::flag_set;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::{input_text, widgets, GImGui};
 use libc::{c_float, c_int};
 
@@ -77,7 +77,7 @@ pub unsafe fn STB_TEXTEDIT_LAYOUTROW(
 ) {
     let text: *const ImWchar = obj.TextW.Data;
     let mut text_remaining: usize = 0;
-    let size: ImVec2 =
+    let size: Vector2 =
         input_text::InputTextCalcTextSizeW(text + line_start_idx, &mut text_remaining, None, true);
     r.x0 = 0.0;
     r.x1 = size.x;

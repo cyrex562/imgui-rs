@@ -39,7 +39,7 @@ use crate::widgets::scroll_flags::{
 use crate::style_ops::GetColorU32;
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::{flag_clear, flag_set};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::widgets::button_flags::ImGuiButtonFlags_NoNavFocus;
 use crate::window::window_flags::{
     ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_NoTitleBar,
@@ -49,8 +49,8 @@ use crate::{button_ops, GImGui};
 use libc::c_float;
 
 // static CalcNextScrollFromScrollTargetAndClamp: ImVec2(window: &mut ImGuiWindow)
-pub fn CalcNextScrollFromScrollTargetAndClamp(window: &mut ImguiWindow) -> ImVec2 {
-    let mut scroll: ImVec2 = window.scroll;
+pub fn CalcNextScrollFromScrollTargetAndClamp(window: &mut ImguiWindow) -> Vector2 {
+    let mut scroll: Vector2 = window.scroll;
     if window.scrollTarget.x < f32::MAX {
         let decoration_total_width: c_float = window.scrollbarSizes.x;
         let center_x_ratio: c_float = window.scrollTargetCenterRatio.x;
@@ -116,11 +116,11 @@ pub unsafe fn ScrollToRectEx(
     window: &mut ImguiWindow,
     item_rect: &mut ImRect,
     mut flags: ImGuiScrollFlags,
-) -> ImVec2 {
+) -> Vector2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window_rect: ImRect = ImRect::new(
-        window.InnerRect.min - ImVec2::from_floats(1.0, 1.0),
-        window.InnerRect.max + ImVec2::from_floats(1.0, 1.0),
+        window.InnerRect.min - Vector2::from_floats(1.0, 1.0),
+        window.InnerRect.max + Vector2::from_floats(1.0, 1.0),
     );
     //GetForegroundDrawList(window).AddRect(window_rect.Min, window_rect.Max, IM_COL32_WHITE); // [DEBUG]
 
@@ -200,8 +200,8 @@ pub unsafe fn ScrollToRectEx(
         SetScrollFromPosY(window, target_y - window.position.y, 0.0);
     }
 
-    let next_scroll: ImVec2 = CalcNextScrollFromScrollTargetAndClamp(window);
-    let mut delta_scroll: ImVec2 = next_scroll - window.scroll;
+    let next_scroll: Vector2 = CalcNextScrollFromScrollTargetAndClamp(window);
+    let mut delta_scroll: Vector2 = next_scroll - window.scroll;
 
     // Also scroll parent window to keep us into view if necessary
     if flag_clear(flags, ImGuiScrollFlags_NoScrollParent)
@@ -467,7 +467,7 @@ pub unsafe fn ScrollbarEx(
     let allow_interaction: bool = (alpha >= 1.0);
 
     let bb = bb_frame;
-    bb.expand_from_vec(&ImVec2::from_floats(
+    bb.expand_from_vec(&Vector2::from_floats(
         -ImClamp(IM_FLOOR((bb_frame_width - 2.0) * 0.5), 0.0, 3.0),
         -ImClamp(IM_FLOOR((bb_frame_height - 2.0) * 0.5), 0.0, 3.0),
     ));

@@ -5,7 +5,7 @@ use crate::core::g_style_var_info::GetStyleVarInfo;
 use crate::imgui::GImGui;
 use crate::style_mod::ImGuiStyleMod;
 use crate::style_var::ImGuiStyleVar;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use libc::{c_float, c_int, c_void};
 
 // c_void PushStyleVar(ImGuiStyleVar idx, c_float val)
@@ -22,7 +22,7 @@ pub unsafe fn PushStyleVarFloat(idx: ImGuiStyleVar, val: c_float) {
 }
 
 // c_void PushStyleVar(ImGuiStyleVar idx, const val: &mut ImVec2)
-pub unsafe fn PushStyleVarVec2(idx: ImGuiStyleVar, val: &ImVec2) {
+pub unsafe fn PushStyleVarVec2(idx: ImGuiStyleVar, val: &Vector2) {
     let mut var_info = GetStyleVarInfo(idx);
     if var_info.Type == IM_GUI_DATA_TYPE_FLOAT && var_info.Count == 2 {
         let g = GImGui; // ImGuiContext& g = *GImGui;

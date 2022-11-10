@@ -61,7 +61,7 @@ use crate::widgets::tooltip_ops::{BeginTooltipEx, EndTooltip};
 use crate::widgets::tree_node_flags::{ImGuiTreeNodeFlags, ImGuiTreeNodeFlags_AllowItemOverlap, ImGuiTreeNodeFlags_Bullet, ImGuiTreeNodeFlags_ClipLabelForTrailingButton, ImGuiTreeNodeFlags_CollapsingHeader, ImGuiTreeNodeFlags_DefaultOpen, ImGuiTreeNodeFlags_Framed, ImGuiTreeNodeFlags_FramePadding, ImGuiTreeNodeFlags_NavLeftJumpsBackHere, ImGuiTreeNodeFlags_NoAutoOpenOnLog, ImGuiTreeNodeFlags_None, ImGuiTreeNodeFlags_NoTreePushOnOpen, ImGuiTreeNodeFlags_OpenOnArrow, ImGuiTreeNodeFlags_OpenOnDoubleClick, ImGuiTreeNodeFlags_Selected, ImGuiTreeNodeFlags_SpanAvailWidth, ImGuiTreeNodeFlags_SpanFullWidth};
 use crate::core::type_defs::{ImguiHandle, ImGuiInputTextCallback, ImWchar};
 use crate::core::utils::{flag_clear, flag_set};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use crate::widgets::{checkbox_ops, radio_button, scrolling_ops, separator};
 use crate::window::focus::FocusWindow;
@@ -98,7 +98,7 @@ pub unsafe fn TempInputText(bb: &mut ImRect,
     return value_changed;
 }
 
-pub unsafe fn InputTextMultiline(label: String, buf: &mut String, buf_size: size_t, size: &mut ImVec2, flags: ImGuiInputTextFlags, callback: Option<ImGuiInputTextCallback>, user_data: Option<&Vec<u8>>) -> bool
+pub unsafe fn InputTextMultiline(label: String, buf: &mut String, buf_size: size_t, size: &mut Vector2, flags: ImGuiInputTextFlags, callback: Option<ImGuiInputTextCallback>, user_data: Option<&Vec<u8>>) -> bool
 {
     return InputTextEx(label, "", buf, buf_size, size, flags | ImGuiInputTextFlags_Multiline, Some(callback), Some(user_data));
 }
@@ -106,7 +106,7 @@ pub unsafe fn InputTextMultiline(label: String, buf: &mut String, buf_size: size
 pub unsafe fn InputTextWithHint(label: String, hint: &str, buf: &mut String, buf_size: size_t, flags: ImGuiInputTextFlags, callback: ImGuiInputTextCallback, user_data: &Vec<u8>) -> bool
 {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline() or  InputTextEx() manually if you need multi-line + hint.
-    return InputTextEx(label, hint, buf, buf_size, ImVec2::new(0, 0), flags, Some(callback), Some(user_data));
+    return InputTextEx(label, hint, buf, buf_size, Vector2::new(0, 0), flags, Some(callback), Some(user_data));
 }
 
 pub fn InputTextCalcTextLenAndLineCount(text_begin: &String, out_text_end: &mut usize) -> usize
@@ -138,15 +138,15 @@ pub fn InputTextCalcTextLenAndLineCount(text_begin: &String, out_text_end: &mut 
 pub unsafe fn InputTextCalcTextSizeW(
     text_begin: &String,
     remaining: &mut usize,
-    mut out_offset: Option<&mut ImVec2>,
-    stop_on_new_line: bool) -> ImVec2
+    mut out_offset: Option<&mut Vector2>,
+    stop_on_new_line: bool) -> Vector2
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let font = g.Font;
     let line_height =  g.FontSize;
     let scale =  line_height / font.FontSize;
 
-    let mut text_size = ImVec2::new(0, 0);
+    let mut text_size = Vector2::new(0, 0);
     let mut line_width: c_float =  0.0;
     let mut text_end = text_begin.len();
 
@@ -178,7 +178,7 @@ pub unsafe fn InputTextCalcTextSizeW(
     if out_offset.is_some() {
         // offset allow for the possibility of sitting after a trailing
         // *out_offset. = ImVec2::new(line_width, text_size.y + line_height);
-        let _ = out_offset.replace(&mut ImVec2::from_floats(line_width, text_size.y + line_height));
+        let _ = out_offset.replace(&mut Vector2::from_floats(line_width, text_size.y + line_height));
     }
 
     if line_width > 0.0 as c_float || text_size.y == 0.0 {
@@ -365,7 +365,7 @@ pub unsafe fn InputTextEx(label: String,
                           hint: &str,
                           buf: &mut String,
                           mut buf_size: usize,
-                          size_arg: &mut ImVec2,
+                          size_arg: &mut Vector2,
                           flags: ImGuiInputTextFlags,
                           callback: Option<ImGuiInputTextCallback>,
                           callback_user_data: Option<&Vec<u8>>) -> bool
@@ -394,20 +394,20 @@ pub unsafe fn InputTextEx(label: String,
         BeginGroup();
     }
     let mut id: ImguiHandle =  window.GetID(label);
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
-    let frame_size: ImVec2 = CalcItemSize(g, size_arg, CalcItemWidth(g), (if is_multiline { g.FontSize * 8.0} else {label_size.y}) + style.FramePadding.y * 2.0); // Arbitrary default of 8 lines high for multi-line
-    let total_size: ImVec2 = ImVec2::new(frame_size.x + (if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x} else {0.0}), frame_size.y);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
+    let frame_size: Vector2 = CalcItemSize(g, size_arg, CalcItemWidth(g), (if is_multiline { g.FontSize * 8.0} else {label_size.y}) + style.FramePadding.y * 2.0); // Arbitrary default of 8 lines high for multi-line
+    let total_size: Vector2 = Vector2::new(frame_size.x + (if label_size.x > 0.0 { style.ItemInnerSpacing.x + label_size.x} else {0.0}), frame_size.y);
 
     let mut frame_bb: ImRect = ImRect::new(window.dc.cursor_pos, window.dc.cursor_pos + frame_size);
     let mut total_bb: ImRect = ImRect::new(frame_bb.min, frame_bb.min + total_size);
 
     draw_window: &mut ImguiWindow = window;
-    let mut inner_size: ImVec2 = frame_size;
+    let mut inner_size: Vector2 = frame_size;
     let mut item_status_flags: ImGuiItemStatusFlags =  0;
     let mut item_data_backup = ImGuiLastItemData::default();
     if is_multiline
     {
-        let backup_pos: ImVec2 = window.dc.cursor_pos;
+        let backup_pos: Vector2 = window.dc.cursor_pos;
         ItemSize(g, &total_bb.GetSize(), style.FramePadding.y);
         if !ItemAdd(g, &mut total_bb, id, &frame_bb, ImGuiItemFlags_Inputable)
         {
@@ -423,7 +423,7 @@ pub unsafe fn InputTextEx(label: String,
         PushStyleColor(ImGuiCol_ChildBg, style.Colors[ImGuiCol_FrameBg]);
         PushStyleVar(ImGuiStyleVar_ChildRounding, style.FrameRounding);
         PushStyleVar(ImGuiStyleVar_ChildBorderSize, style.FrameBorderSize);
-        PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2::new(0, 0)); // Ensure no clip rect so mouse hover can reach FramePadding edges
+        PushStyleVar(ImGuiStyleVar_WindowPadding, Vector2::new(0, 0)); // Ensure no clip rect so mouse hover can reach FramePadding edges
         let mut child_visible: bool =  BeginChildEx(label, id, &frame_bb.GetSize(), true, ImGuiWindowFlags_NoMove);
         PopStyleVar(3);
         PopStyleColor(0);
@@ -1047,8 +1047,8 @@ pub unsafe fn InputTextEx(label: String,
     }
 
     let mut clip_rect = ImVec4(frame_bb.min.x, frame_bb.min.y, frame_bb.min.x + inner_size.x, frame_bb.min.y + inner_size.y); // Not using frame_bb.Max because we have adjusted size
-    let mut draw_pos: ImVec2 = if is_multiline { draw_window.dc.cursor_pos} else {frame_bb.min + style.FramePadding};
-    let mut text_size = ImVec2::from_floats(0.0, 0.0);
+    let mut draw_pos: Vector2 = if is_multiline { draw_window.dc.cursor_pos} else {frame_bb.min + style.FramePadding};
+    let mut text_size = Vector2::from_floats(0.0, 0.0);
 
     // Set upper limit of single-line InputTextEx() at 2 million characters strings. The current pathological worst case is a long line
     // without any carriage return, which would makes ImFont::RenderText() reserve too many vertices and probably crash. Avoid it altogether.
@@ -1080,8 +1080,8 @@ pub unsafe fn InputTextEx(label: String,
         // FIXME: This should occur on buf_display but we'd need to maintain cursor/select_start/select_end for UTF-8.
         let text_begin: String = state.TextW.clone();
         // cursor_offset: ImVec2, select_start_offset;
-        let mut cursor_offset = ImVec2::default();
-        let mut select_start_offset = ImVec2::default();
+        let mut cursor_offset = Vector2::default();
+        let mut select_start_offset = Vector2::default();
 
         {
             // Find lines numbers straddling 'cursor' (slot 0) and 'select_start' (slot 1) positions.
@@ -1137,7 +1137,7 @@ pub unsafe fn InputTextEx(label: String,
 
             // Store text height (note that we haven't calculated text width at all, see GitHub issues #383, #1224)
             if is_multiline {
-                text_size = ImVec2::new(inner_size.x, line_count * g.FontSize);
+                text_size = Vector2::new(inner_size.x, line_count * g.FontSize);
             }
         }
 
@@ -1181,7 +1181,7 @@ pub unsafe fn InputTextEx(label: String,
         }
 
         // Draw selection
-        let draw_scroll: ImVec2 = ImVec2::new(state.ScrollX, 0.0);
+        let draw_scroll: Vector2 = Vector2::new(state.ScrollX, 0.0);
         if render_selection
         {
             let text_selected_begin = ImMin(state.Stb.select_start, state.Stb.select_end);
@@ -1190,7 +1190,7 @@ pub unsafe fn InputTextEx(label: String,
             bg_color: u32 = GetColorU32(ImGuiCol_TextSelectedBg, if render_cursor { 1.0} else {0.60}); // FIXME: current code flow mandate that render_cursor is always true here, we are leaving the transparent one for tests.
             let bg_offy_up: c_float =  if is_multiline { 0.0 }else {- 1.0};    // FIXME: those offsets should be part of the style? they don't play so well with multi-line selection.
             let bg_offy_dn: c_float = if is_multiline { 0.0} else {2.0};
-            let mut rect_pos: ImVec2 = draw_pos + select_start_offset - draw_scroll;
+            let mut rect_pos: Vector2 = draw_pos + select_start_offset - draw_scroll;
             // for (*let p: ImWchar = text_selected_begin; p < text_selected_end; )
             for p in text_selected_begin .. text_selected_end
             {
@@ -1234,7 +1234,7 @@ pub unsafe fn InputTextEx(label: String,
         {
             state.CursorAnim += io.DeltaTime;
             let mut cursor_is_visible: bool =  (!g.IO.ConfigInputTextCursorBlink) || (state.CursorAnim <= 0.0) || ImFmod(state.CursorAnim, 1.200) <= 0.80;
-            let cursor_screen_pos: ImVec2 = ImFloor(draw_pos + cursor_offset - draw_scroll);
+            let cursor_screen_pos: Vector2 = ImFloor(draw_pos + cursor_offset - draw_scroll);
             let mut cursor_screen_rect: ImRect = ImRect::new(cursor_screen_pos.x, cursor_screen_pos.y - g.FontSize + 0.5, cursor_screen_pos.x + 1.0, cursor_screen_pos.y - 1.5);
             if cursor_is_visible && cursor_screen_rect.Overlaps(clip_rect) {
                 draw_window.DrawList.AddLine(cursor_screen_rect.min, cursor_screen_rect.GetBL(), GetColorU32(ImGuiCol_Text, 0.0));
@@ -1244,7 +1244,7 @@ pub unsafe fn InputTextEx(label: String,
             if !is_readonly
             {
                 g.PlatformImeData.WantVisible = true;
-                g.PlatformImeData.InputPos = ImVec2::new(cursor_screen_pos.x - 1.0, cursor_screen_pos.y - g.FontSize);
+                g.PlatformImeData.InputPos = Vector2::new(cursor_screen_pos.x - 1.0, cursor_screen_pos.y - g.FontSize);
                 g.PlatformImeData.InputLineHeight = g.FontSize;
                 g.PlatformImeViewport = window.Viewport.ID;
             }
@@ -1277,7 +1277,7 @@ pub unsafe fn InputTextEx(label: String,
     if is_multiline
     {
         // For focus requests to work on our multiline we need to ensure our child ItemAdd() call specifies the ImGuiItemFlags_Inputable (ref issue #4761)...
-        layout_ops::Dummy(g, ImVec2::new(text_size.x, text_size.y + style.FramePadding.y));
+        layout_ops::Dummy(g, Vector2::new(text_size.x, text_size.y + style.FramePadding.y));
         let mut backup_item_flags: ImGuiItemFlags =  g.CurrentItemFlags;
         g.CurrentItemFlags |= ImGuiItemFlags_Inputable | ImGuiItemFlags_NoTabStop;
         EndChild();
@@ -1303,7 +1303,7 @@ pub unsafe fn InputTextEx(label: String,
     }
 
     if label_size.x > 0.0 {
-        RenderText(ImVec2::new(frame_bb.max.x + style.ItemInnerSpacing.x, frame_bb.min.y + style.FramePadding.y), label, false, g);
+        RenderText(Vector2::new(frame_bb.max.x + style.ItemInnerSpacing.x, frame_bb.min.y + style.FramePadding.y), label, false, g);
     }
 
     if value_changed && flag_clear(flags, ImGuiInputTextFlags_NoMarkEdited) {

@@ -4,7 +4,7 @@ use crate::core::constants::{IM_DRAWLIST_ARCFAST_SAMPLE_MAX, IM_DRAWLIST_ARCFAST
 use crate::drawing::draw_list_flags::ImDrawListFlags;
 use crate::font::ImFont;
 use crate::core::math_ops::{ImCos, ImSin};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use libc::c_float;
 
@@ -12,7 +12,7 @@ use libc::c_float;
 // You may want to create your own instance of this if you want to use ImDrawList completely without ImGui. In that case, watch out for future changes to this structure.
 #[derive(Default, Debug, Clone, Copy)]
 pub struct Imgui_DrawListSharedData {
-    pub TexUvWhitePixel: ImVec2,
+    pub TexUvWhitePixel: Vector2,
     // UV of white pixel in the atlas
     pub Font: ImFont,
     // Current/default font (optional, for simplified AddText overload)
@@ -27,7 +27,7 @@ pub struct Imgui_DrawListSharedData {
     pub InitialFlags: ImDrawListFlags, // Initial flags at the beginning of the frame (it is possible to alter flags on a per-drawlist basis afterwards)
 
     // [Internal] Lookup tables
-    pub ArcFastVtx: [ImVec2; IM_DRAWLIST_ARCFAST_TABLE_SIZE],
+    pub ArcFastVtx: [Vector2; IM_DRAWLIST_ARCFAST_TABLE_SIZE],
     // Sample points on the quarter of the circle.
     pub ArcFastRadiusCutoff: c_float,
     // Cutoff radius after which arc drawing will fallback to slower PathArcTo()
@@ -44,7 +44,7 @@ impl Imgui_DrawListSharedData {
         // for (let i: c_int = 0; i < IM_ARRAYSIZE(ArcFastVtx); i++)
         for i in 0..out.ArcFastVtx.len() {
             let a: c_float = (i * 2 * IM_PI) / out.ArcFastVtx.len();
-            out.ArcFastVtx[i] = ImVec2::from_floats(ImCos(a), ImSin(a));
+            out.ArcFastVtx[i] = Vector2::from_floats(ImCos(a), ImSin(a));
         }
         out.ArcFastRadiusCutoff = IM_DRAWLIST_CIRCLE_AUTO_SEGMENT_CALC_R(
             IM_DRAWLIST_ARCFAST_SAMPLE_MAX,

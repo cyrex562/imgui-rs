@@ -14,9 +14,11 @@ use crate::input_ops::{GetKeyData, IsGamepadKey};
 use crate::platform_ime_data::ImGuiPlatformImeData;
 use crate::core::string_ops::ImTextCharFromUtf8;
 use crate::core::type_defs::{ImguiHandle, ImWchar, ImWchar16};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::font::font_atlas::ImFontAtlas;
-use crate::viewport::ImguiViewport;
+use crate::io::backend_renderer_user_data::BackendRendererUserData;
+use crate::platform::platform_ime_data::ImGuiPlatformImeData;
+use crate::viewport::Viewport;
 
 pub mod input_event;
 pub mod input_event_type;
@@ -24,12 +26,13 @@ pub mod input_ops;
 pub mod input_source;
 pub mod io_ops;
 pub mod key;
-mod key_data;
+pub mod key_data;
 pub mod keyboard_ops;
 pub mod mod_flags;
 pub mod mouse_button;
 pub mod mouse_cursor;
 pub mod mouse_ops;
+pub mod backend_renderer_user_data;
 
 #[derive(Default, Debug, Clone)]
 pub struct IoContext {
@@ -38,9 +41,9 @@ pub struct IoContext {
     //------------------------------------------------------------------
     pub ConfigFlags: ImguiConfigFlags,
     // = 0              // See ImGuiConfigFlags_ enum. Set by user/application. Gamepad/keyboard navigation options, etc.
-    pub BackendFlags: ImGuiBackendFlags,
+    pub backend_flags: ImGuiBackendFlags,
     // = 0              // See ImGuiBackendFlags_ enum. Set by backend (imgui_impl_xxx files or custom backend) to communicate features supported by the backend.
-    pub DisplaySize: ImVec2,
+    pub DisplaySize: Vector2,
     // <unset>          // Main display size, in pixels (generally == GetMainViewport().Size). May change every frame.
     pub DeltaTime: c_float,
     // = 1.0f/60f32     // Time elapsed since last frame, in seconds. May change every frame.
@@ -74,7 +77,7 @@ pub struct IoContext {
     // = false          // Allow user scaling text of individual window with CTRL+Wheel.
     // ImFont*     FontDefault;                    // = NULL           // Font to use on NewFrame(). Use NULL to uses Fonts.Fonts[0].
     pub FontDefault: *mut ImFont,
-    pub DisplayFramebufferScale: ImVec2,        // = (1, 1)         // For retina display or other situations where window coordinates are different from framebuffer coordinates. This generally ends up in ImDrawData::FramebufferScale.
+    pub DisplayFramebufferScale: Vector2,        // = (1, 1)         // For retina display or other situations where window coordinates are different from framebuffer coordinates. This generally ends up in ImDrawData::FramebufferScale.
 
     // Docking options (when ImGuiConfigFlags_DockingEnable is set)
     pub ConfigDockingNoSplit: bool,
@@ -119,24 +122,24 @@ pub struct IoContext {
     //------------------------------------------------------------------
     // Optional: Platform/Renderer backend name (informational only! will be displayed in
     // About Window) + User data for backend/wrappers to store their own stuff.
-    pub BackendPlatformName: String,
-    pub BackendRendererName: String,
-    pub BackendPlatformUserData: *mut c_void,
+    pub backend_platform_data: String,
+    pub backend_renderer_name: String,
+    pub backend_platform_user_data: *mut c_void,
     // User data for platform backend
-    pub BackendRendererUserData: *mut c_void,
+    pub backend_renderer_user_data: BackendRendererUserData,
      // User data for renderer backend
-    pub BackendLanguageUserData: *mut c_void, // User data for non C++ programming
+    pub backend_language_user_data: *mut c_void, // User data for non C++ programming
     // language backend
     // Optional: Access OS clipboard
     // (default to use native Win32 clipboard on Windows, otherwise uses a private
     // clipboard. Override to access OS clipboard on other architectures)
-    pub GetClipboardTextFn: fn(user_data: *mut c_void) -> *const c_char,
-    pub SetClipboardTextFn: fn(user_dat: *mut c_void, text: &String),
-    pub ClipboardUserData: *mut c_void,
+    pub get_clipboard_text_fn: fn(user_data: *mut c_void) -> *const c_char,
+    pub set_clipboard_text_fn: fn(user_dat: *mut c_void, text: &String),
+    pub clipboard_user_data: *mut c_void,
     // Optional: Notify OS Input Method Editor of the screen position of your cursor for
     // text input position (e.g. when using Japanese/Chinese IME on Windows)
     // (default to use native imm32 api on Windows)
-    pub SetPlatformImeDataFn: Option<fn(viewport: &mut ImguiViewport, data: &mut  ImGuiPlatformImeData)>,
+    pub set_platform_ime_fn: Option<fn(viewport: &mut Viewport, data: &mut  ImGuiPlatformImeData)>,
     //------------------------------------------------------------------
     // Input - Call before calling NewFrame()
     //------------------------------------------------------------------
@@ -147,7 +150,7 @@ pub struct IoContext {
     //  generally easier and more correct to use their state BEFORE calling NewFrame().
     // See FAQ for details!)
     //------------------------------------------------------------------
-    pub WantCaptureMouse: bool,
+    pub want_capture_mouse: bool,
     // Set when Dear ImGui will use mouse inputs, in this case do not dispatch them to
     // your main game/application (either way, always pass on mouse inputs to imgui).
     // (e.g. unclicked mouse is hovering over an imgui window, widget is active, mouse
@@ -194,14 +197,14 @@ pub struct IoContext {
     // Mouse delta. Note that this is zero if either current or previous position are
     // invalid (-f32::MAX,-f32::MAX), so a disappearing/reappearing mouse won't have
     // a huge delta.
-    pub MouseDelta: ImVec2,
+    pub MouseDelta: Vector2,
     //------------------------------------------------------------------
     // [Internal] Dear ImGui will maintain those fields. Forward compatibility not guaranteed!
     //------------------------------------------------------------------
     // Main Input State
     // (this block used to be written by backend, since 1.87 it is best to NOT write to those directly, call the AddXXX functions above instead)
     // (reading from those variables is fair game, as they are extremely unlikely to be moving anywhere)
-    pub MousePos: ImVec2,
+    pub MousePos: Vector2,
     // Mouse buttons: 0=left, 1=right, 2=middle + extras (ImGuiMouseButton_COUNT == 5). Dear ImGui mostly uses left and right buttons. Others buttons allows us to track if the mouse is being used by your application + available to user as a convenience via IsMouse** API.
     pub MouseDown: [bool; 5],
     pub MouseWheel: c_float,
@@ -225,10 +228,10 @@ pub struct IoContext {
     pub KeysData: [ImguiKeyData; ImGuiKey_KeysData_SIZE as usize],
     pub WantCaptureMouseUnlessPopupClose: bool,
     // Alternative to WantCaptureMouse: (WantCaptureMouse == true && WantCaptureMouseUnlessPopupClose == false) when a click over void is expected to close a popup.
-    pub MousePosPrev: ImVec2,
+    pub MousePosPrev: Vector2,
     // Previous mouse position (note that MouseDelta is not necessary == MousePos-MousePosPrev, in case either position is invalid)
     // ImVec2      MouseClickedPos[5];                 // Position at time of clicking
-    pub MouseClickedPos: [ImVec2; 5],
+    pub MouseClickedPos: [Vector2; 5],
     // double      MouseClickedTime[5];                // Time of last click (used to figure out double-click)
     pub MouseClickedTime: [c_double; 5],
     // bool        MouseClicked[5];                    // Mouse button went from !Down to Down (same as MouseClickedCount[x] != 0)
@@ -250,7 +253,7 @@ pub struct IoContext {
     // c_float       MouseDownDurationPrev[5];           // Previous time the mouse button has been down
     pub MouseDownDurationPrev: [c_float; 5],
     // ImVec2      MouseDragMaxDistanceAbs[5];         // Maximum distance, absolute, on each axis, of how much mouse has traveled from the clicking point
-    pub MouseDragMaxDistanceAbs: [ImVec2; 5],
+    pub MouseDragMaxDistanceAbs: [Vector2; 5],
     // c_float       MouseDragMaxDistanceSqr[5];         // Squared maximum distance of how much mouse has traveled from the clicking point (used for moving thresholds)
     pub MouseDragMaxDistanceSqr: [c_float; 5],
     pub PenPressure: c_float,
@@ -281,8 +284,8 @@ impl IoContext {
 
         // Settings
         out.ConfigFlags = ImGuiConfigFlags_None;
-        out.BackendFlags = ImGuiBackendFlags_None;
-        out.DisplaySize = ImVec2::from_floats(-1.0, -1.0);
+        out.backend_flags = ImGuiBackendFlags_None;
+        out.DisplaySize = Vector2::from_floats(-1.0, -1.0);
         out.DeltaTime = 1.0 / 60f32;
         out.IniSavingRate = 5f32;
         out.IniFilename = String::from("imgui.ini").as_ptr().into(); // Important: "imgui.ini" is relative to current working dir, most apps will want to lock this to an absolute path (e.g. same path as executables).
@@ -306,7 +309,7 @@ impl IoContext {
         out.FontGlobalScale = 1.0;
         out.FontDefault = None;
         out.FontAllowUserScaling = false;
-        out.DisplayFramebufferScale = ImVec2::from_floats(1.0, 1.0);
+        out.DisplayFramebufferScale = Vector2::from_floats(1.0, 1.0);
 
         // Docking options (when ImGuiConfigFlags_DockingEnable is set)
         out.ConfigDockingNoSplit = false;
@@ -336,19 +339,19 @@ impl IoContext {
         out.ConfigMemoryCompactTimer = 60f32;
 
         // Platform Functions
-        out.BackendPlatformName = None;
-        out.BackendRendererName = None;
-        out.BackendPlatformUserData = None;
-        out.BackendRendererUserData = None;
-        out.BackendLanguageUserData = None;
-        out.GetClipboardTextFn = GetClipboardTextFn_DefaultImpl;   // Platform dependent default implementations
-        out.SetClipboardTextFn = SetClipboardTextFn_DefaultImpl;
-        out.ClipboardUserData = None;
-        out.SetPlatformImeDataFn = SetPlatformImeDataFn_DefaultImpl;
+        out.backend_platform_data = None;
+        out.backend_renderer_name = None;
+        out.backend_platform_user_data = None;
+        out.backend_renderer_user_data = None;
+        out.backend_language_user_data = None;
+        out.get_clipboard_text_fn = GetClipboardTextFn_DefaultImpl;   // Platform dependent default implementations
+        out.set_clipboard_text_fn = SetClipboardTextFn_DefaultImpl;
+        out.clipboard_user_data = None;
+        out.set_platform_ime_fn = SetPlatformImeDataFn_DefaultImpl;
 
         // Input (NB: we already have memset zero the entire structure!)
-        out.MousePos = ImVec2::from_floats(-f32::MAX, -f32::MAX);
-        out.MousePosPrev = ImVec2::from_floats(-f32::MAX, -f32::MAX);
+        out.MousePos = Vector2::from_floats(-f32::MAX, -f32::MAX);
+        out.MousePosPrev = Vector2::from_floats(-f32::MAX, -f32::MAX);
         out.MouseDragThreshold = 6f32;
         // for (i: c_int = 0; i < IM_ARRAYSIZE(MouseDownDuration); i+ +)
         for i in 0 .. out.MouseDownDuration.len()

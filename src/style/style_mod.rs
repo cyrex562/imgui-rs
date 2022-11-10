@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use libc::{c_float, c_int};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::style_var::ImGuiStyleVar;
 
 // Stacked style modifier, backup of modified data so we can restore it. Data type inferred from the variable.
@@ -33,7 +33,7 @@ impl ImGuiStyleMod {
 
 
     // ImGuiStyleMod(ImGuiStyleVar idx, v: ImVec2)  { VarIdx = idx; BackupFloat[0] = v.x; BackupFloat[1] = v.y; }
-    pub fn new3(idx: ImGuiStyleVar, v: ImVec2) -> Self {
+    pub fn new3(idx: ImGuiStyleVar, v: Vector2) -> Self {
         Self {
             VarIdx: idx,
             BackupFloat: [v.x, 0.0],

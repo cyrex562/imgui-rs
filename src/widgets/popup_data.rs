@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ImguiWindow;
 use libc::c_int;
 
@@ -20,9 +20,9 @@ pub struct ImGuiPopupData {
     // Set on OpenPopup()
     pub OpenParentId: ImguiHandle,
     // Set on OpenPopup(), we need this to differentiate multiple menu sets from each others (e.g. inside menu bar vs loose menu items)
-    pub OpenPopupPos: ImVec2,
+    pub OpenPopupPos: Vector2,
     // Set on OpenPopup(), preferred popup position (typically == OpenMousePos when using mouse)
-    pub OpenMousePos: ImVec2, // Set on OpenPopup(), copy of mouse position at the time of opening popup
+    pub OpenMousePos: Vector2, // Set on OpenPopup(), copy of mouse position at the time of opening popup
 }
 
 impl ImGuiPopupData {

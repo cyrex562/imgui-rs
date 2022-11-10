@@ -4,7 +4,7 @@ use crate::widgets::tooltip_flags::{
     ImGuiTooltipFlags, ImGuiTooltipFlags_None, ImGuiTooltipFlags_OverridePreviousTooltip,
 };
 use crate::core::utils::is_not_null;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::find::FindWindowByName;
 use crate::window::ops::{Begin, End};
 use crate::window::props::{SetNextWindowBgAlpha, SetNextWindowPos};
@@ -34,8 +34,8 @@ pub unsafe fn BeginTooltipEx(
         // In the context of a dragging tooltip we try to reduce that offset and we enforce following the cursor.
         // Whatever we do we want to call SetNextWindowPos() to enforce a tooltip position and disable clipping the tooltip without our display area, like regular tooltip do.
         //let mut tooltip_pos: ImVec2 =  g.IO.MousePos - g.ActiveIdClickOffset - g.style.WindowPadding;
-        let tooltip_pos: ImVec2 = g.IO.MousePos
-            + ImVec2::from_floats(16 * g.style.MouseCursorScale, 8 * g.style.MouseCursorScale);
+        let tooltip_pos: Vector2 = g.IO.MousePos
+            + Vector2::from_floats(16 * g.style.MouseCursorScale, 8 * g.style.MouseCursorScale);
         SetNextWindowPos(, &tooltip_pos, 0, &Default::default());
         SetNextWindowBgAlpha(g.style.Colors[ImGuiCol_PopupBg].w * 0.60);
         //PushStyleVar(ImGuiStyleVar_Alpha, g.style.Alpha * 0.60); // This would be nice but e.g ColorButton with checkboard has issue with transparent colors :(

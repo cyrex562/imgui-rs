@@ -10,7 +10,7 @@
 use std::ptr::null_mut;
 use libc::{c_char, c_int, strlen};
 use crate::core::condition::{ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_Once};
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::{GImGui, SettingsHandler, hash_string};
 use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
@@ -27,7 +27,7 @@ use crate::window::next_window_data_flags::ImGuiNextWindowDataFlags_HasPos;
 use crate::drag_drop::payload::ImGuiPayload;
 use crate::rect::ImRect;
 use crate::core::type_defs::{ImguiHandle, INVALID_IMGUI_HANDLE};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::find::{FindWindowByID, FindWindowByName};
 use crate::window::ImguiWindow;
 use crate::window::ops::SetNextWindowSize;
@@ -46,7 +46,7 @@ pub unsafe fn SetWindowDock(window: &mut ImguiWindow, dock_id: ImguiHandle, cond
     if window.DockId == dock_id { return ; }
 
     // If the user attempt to set a dock id that is a split node, we'll dig within to find a suitable docking spot
-    g: &mut ImguiContext = GImGui;
+    g: &mut AppContext = GImGui;
     if (new_node:*mut ImGuiDockNode = DockContextFindNodeByID(ctx, dock_id))
         if (new_node.IsSplitNode())
         {
@@ -254,18 +254,18 @@ DockBuilderGetNode:*mut ImGuiDockNode(node_id: ImguiHandle)
     return DockContextFindNodeByID(ctx, node_id);
 }
 
-pub unsafe fn DockBuilderSetNodePos(node_id: ImguiHandle, pos: ImVec2)
+pub unsafe fn DockBuilderSetNodePos(node_id: ImguiHandle, pos: Vector2)
 {
-    g: &mut ImguiContext = GImGui;
+    g: &mut AppContext = GImGui;
     node:*mut ImGuiDockNode = DockContextFindNodeByID(ctx, node_id);
     if node == None { return ; }
     node.Pos = pos;
     node.AuthorityForPos = ImGuiDataAuthority_DockNode;
 }
 
-pub unsafe fn DockBuilderSetNodeSize(node_id: ImguiHandle, size: ImVec2)
+pub unsafe fn DockBuilderSetNodeSize(node_id: ImguiHandle, size: Vector2)
 {
-    g: &mut ImguiContext = GImGui;
+    g: &mut AppContext = GImGui;
     node:*mut ImGuiDockNode = DockContextFindNodeByID(ctx, node_id);
     if node == None { return ; }
     // IM_ASSERT(size.x > 0.0 && size.y > 0.0);
@@ -304,7 +304,7 @@ DockBuilderAddNode: ImguiHandle(id: ImguiHandle, ImGuiDockNodeFlags flags)
 
 pub unsafe fn DockBuilderRemoveNode(node_id: ImguiHandle)
 {
-    g: &mut ImguiContext = GImGui;
+    g: &mut AppContext = GImGui;
     node:*mut ImGuiDockNode = DockContextFindNodeByID(ctx, node_id);
     if node == None { return ; }
     DockBuilderRemoveNodeDockedWindows(g, node_id, true);
@@ -318,7 +318,7 @@ pub unsafe fn DockBuilderRemoveNode(node_id: ImguiHandle)
 }
 
 // root_id = 0 to remove all, root_id != 0 to remove child of given node.
-pub fn DockBuilderRemoveNodeChildNodes(g: &mut ImguiContext, root_id: ImguiHandle)
+pub fn DockBuilderRemoveNodeChildNodes(g: &mut AppContext, root_id: ImguiHandle)
 {
     let dc = &g.dock_context;
     let root_node = if root_id { DockContextFindNodeByID(g, root_id) } else { None };
@@ -386,7 +386,7 @@ pub fn DockBuilderRemoveNodeChildNodes(g: &mut ImguiContext, root_id: ImguiHandl
 }
 
 pub fn DockBuilderRemoveNodeDockedWindows(
-    g: &mut ImguiContext, root_id: ImguiHandle,
+    g: &mut AppContext, root_id: ImguiHandle,
     clear_settings_refs: bool)
 {
     if clear_settings_refs
@@ -485,7 +485,7 @@ static DockBuilderCopyNodeRec:*mut ImGuiDockNode(src_node:*mut ImGuiDockNode, ds
 
 pub unsafe fn DockBuilderCopyNode(src_node_id: ImguiHandle, dst_node_id: ImguiHandle, Vec<ImguiHandle>* out_node_remap_pairs)
 {
-    g: &mut ImguiContext = GImGui;
+    g: &mut AppContext = GImGui;
     // IM_ASSERT(src_node_id != 0);
     // IM_ASSERT(dst_node_id != 0);
     // IM_ASSERT(out_node_remap_pairs != NULL);
@@ -608,7 +608,7 @@ pub unsafe fn DockBuilderCopyDockSpace(src_dockspace_id: ImguiHandle, dst_docksp
 // FIXME-DOCK: This is awkward because in series of split user is likely to loose access to its root node.
 pub unsafe fn DockBuilderFinish(root_id: ImguiHandle)
 {
-    g: &mut ImguiContext = GImGui;
+    g: &mut AppContext = GImGui;
     //DockContextRebuild(ctx);
     DockContextBuildAddWindowsToNodes(ctx, root_id);
 }
@@ -678,7 +678,7 @@ static DockContextBindNodeToWindow:*mut ImGuiDockNode(g: &mut ImguiContext, wind
 
 pub unsafe fn BeginDocked(window: &mut ImguiWindow, p_open: *mut bool)
 {
-    g: &mut ImguiContext = GImGui;
+    g: &mut AppContext = GImGui;
     let g =  ctx;
 
     // Clear fields ahead so most early-out paths don't have to do it
@@ -825,7 +825,7 @@ pub unsafe fn BeginDockableDragDropSource(window: &mut ImguiWindow)
 
 pub unsafe fn BeginDockableDragDropTarget(window: &mut ImguiWindow)
 {
-    g: &mut ImguiContext = GImGui;
+    g: &mut AppContext = GImGui;
     let g =  ctx;
 
     //IM_ASSERT(window.RootWindowDockTree == window); // May also be a DockSpace
@@ -869,7 +869,7 @@ pub unsafe fn BeginDockableDragDropTarget(window: &mut ImguiWindow)
                 dock_into_floating_window = true; // Dock into a regular window
         }
 
-        let explicit_target_rect: ImRect =  if (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) { node.TabBar.BarRect } else { ImRect(window.position, window.position + ImVec2::from_floats(window.Size.x, GetFrameHeight())) };
+        let explicit_target_rect: ImRect =  if (node && node.TabBar && !node.IsHiddenTabBar() && !node.IsNoTabBar()) { node.TabBar.BarRect } else { ImRect(window.position, window.position + Vector2::from_floats(window.Size.x, GetFrameHeight())) };
         let is_explicit_target: bool = g.IO.ConfigDockingWithShift || IsMouseHoveringRect(explicit_target_rect.min, explicit_target_rect.max);
 
         // Preview docking request and find out split direction/ratio
@@ -961,7 +961,7 @@ static DockSettingsFindNodeSettings: *mut ImGuiDockNodeSettings(g: &mut ImguiCon
 }
 
 // Clear settings data
-pub unsafe fn DockSettingsHandler_ClearAll(g: &mut ImguiContext, SettingsHandler*)
+pub unsafe fn DockSettingsHandler_ClearAll(g: &mut AppContext, SettingsHandler*)
 {
     dc: *mut ImGuiDockContext  = &ctx.DockContext;
     dc.NodesSettings.clear();
@@ -969,7 +969,7 @@ pub unsafe fn DockSettingsHandler_ClearAll(g: &mut ImguiContext, SettingsHandler
 }
 
 // Recreate nodes based on settings data
-pub unsafe fn DockSettingsHandler_ApplyAll(g: &mut ImguiContext, SettingsHandler*)
+pub unsafe fn DockSettingsHandler_ApplyAll(g: &mut AppContext, SettingsHandler*)
 {
     // Prune settings at boot time only
     dc: *mut ImGuiDockContext  = &ctx.DockContext;
@@ -979,14 +979,14 @@ pub unsafe fn DockSettingsHandler_ApplyAll(g: &mut ImguiContext, SettingsHandler
     DockContextBuildAddWindowsToNodes(ctx, 0);
 }
 
-static DockSettingsHandler_ReadOpen: *mut c_void(ImguiContext *, ImGuiSettingsHandler*, name: *const c_char)
+static DockSettingsHandler_ReadOpen: *mut c_void(AppContext *, ImGuiSettingsHandler*, name: *const c_char)
 {
     if (strcmp(name, "Data") != 0)
         return None;
     return 1;
 }
 
-pub unsafe fn DockSettingsHandler_ReadLine(g: &mut ImguiContext, SettingsHandler*, * mut c_void, line: *const c_char)
+pub unsafe fn DockSettingsHandler_ReadLine(g: &mut AppContext, SettingsHandler*, * mut c_void, line: *const c_char)
 {
      c: c_char = 0;
     let x: c_int = 0, y = 0;
@@ -1048,7 +1048,7 @@ pub unsafe fn DockSettingsHandler_DockNodeToSettings(dc: *mut ImGuiDockContext, 
         DockSettingsHandler_DockNodeToSettings(dc, node.ChildNodes[1], depth + 1);
 }
 
-pub unsafe fn DockSettingsHandler_WriteAll(g: &mut ImguiContext, SettingsHandler* handler, ImGuiTextBuffer* buf)
+pub unsafe fn DockSettingsHandler_WriteAll(g: &mut AppContext, SettingsHandler* handler, ImGuiTextBuffer* buf)
 {
     let g =  ctx;
     dc: *mut ImGuiDockContext = &ctx.DockContext;

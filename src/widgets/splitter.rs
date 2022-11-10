@@ -11,7 +11,7 @@ use crate::io::mouse_cursor::{ImGuiMouseCursor_ResizeEW, ImGuiMouseCursor_Resize
 use crate::rect::ImRect;
 use crate::style_ops::GetColorU32;
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::widgets::button_flags::{
     ImGuiButtonFlags_AllowItemOverlap, ImGuiButtonFlags_FlattenChildren,
 };
@@ -50,7 +50,7 @@ pub unsafe fn SplitterBehavior(
     bb_interact.expand_from_vec(if axis == IM_GUI_AXIS_Y {
         &mVec2::from_floats(0.0, hover_extend)
     } else {
-        &ImVec2::from_floats(hover_extend, 0.0)
+        &Vector2::from_floats(hover_extend, 0.0)
     });
     button_ops::ButtonBehavior(
         g,
@@ -79,7 +79,7 @@ pub unsafe fn SplitterBehavior(
 
     let mut bb_render: ImRect = bb.clone();
     if (held) {
-        let mouse_delta_2d: ImVec2 = g.IO.MousePos - g.ActiveIdClickOffset - bb_interact.min;
+        let mouse_delta_2d: Vector2 = g.IO.MousePos - g.ActiveIdClickOffset - bb_interact.min;
         let mut mouse_delta: c_float = if (axis == IM_GUI_AXIS_Y) {
             mouse_delta_2d.y
         } else {
@@ -105,9 +105,9 @@ pub unsafe fn SplitterBehavior(
             *size1 += mouse_delta;
             *size2 -= mouse_delta;
             bb_render.Translate(if axis == IM_GUI_AXIS_X {
-                &ImVec2::from_floats(mouse_delta, 0.0)
+                &Vector2::from_floats(mouse_delta, 0.0)
             } else {
-                &ImVec2::from_floats(0.0, mouse_delta)
+                &Vector2::from_floats(0.0, mouse_delta)
             });
             MarkItemEdited(g, id);
         }

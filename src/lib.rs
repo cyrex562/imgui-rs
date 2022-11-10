@@ -13,10 +13,10 @@ use crate::settings_ops::{
 };
 use crate::tables::TableSettingsAddSettingsHandler;
 use core::type_defs::INVALID_IMGUI_HANDLE;
-use crate::viewport::ImguiViewport;
+use crate::viewport::Viewport;
 use viewport::viewport_flags::ImGuiViewportFlags_OwnedByApp;
 use viewport::viewport_ops::DestroyPlatformWindows;
-use core::context::ImguiContext;
+use core::context::AppContext;
 use core::context_hook::IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN;
 use std::collections::HashSet;
 use std::io::stdout;
@@ -47,7 +47,7 @@ mod platform;
 mod text;
 
 // c_void initialize()
-pub fn initialize(g: &mut ImguiContext) {
+pub fn initialize(g: &mut AppContext) {
     // IM_ASSERT(!g.Initialized && !g.SettingsLoaded);
     // Add .ini handle for ImGuiWindow type
     let mut ini_handler = SettingsHandler::new();
@@ -65,7 +65,7 @@ pub fn initialize(g: &mut ImguiContext) {
     TableSettingsAddSettingsHandler(g);
 
     // Create default viewport
-    let mut viewport: *mut ImguiViewport = IM_NEW(ImGuiViewportP)();
+    let mut viewport: *mut Viewport = IM_NEW(ImGuiViewportP)();
     viewport.ID = IMGUI_VIEWPORT_DEFAULT_ID;
     viewport.Idx = 0;
     viewport.PlatformWindowCreated = true;
@@ -84,7 +84,7 @@ pub fn initialize(g: &mut ImguiContext) {
 
 // This function is merely here to free heap allocations.
 // c_void shutdown()
-pub fn shutdown(g: &mut ImguiContext) {
+pub fn shutdown(g: &mut AppContext) {
     // The fonts atlas can be used prior to calling NewFrame(), so we clear it even if g.Initialized is FALSE (which would happen if we never called NewFrame)
     if g.IO.Fonts.is_some() && g.FontAtlasOwnedByContext {
         g.IO.Fonts.Locked = false;

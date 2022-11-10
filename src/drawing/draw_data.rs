@@ -2,11 +2,11 @@
 
 use std::collections::HashMap;
 use crate::drawing::draw_list::ImDrawList;
-use crate::drawing::draw_vert::ImDrawVert;
+use crate::drawing::draw_vert::DrawVertex;
 use crate::drawing::draw_cmd::ImDrawCmd;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
-use crate::viewport::ImguiViewport;
+use crate::viewport::Viewport;
 use libc::{c_int, size_t};
 use std::ptr::null_mut;
 use crate::core::type_defs::{ImguiHandle, INVALID_IMGUI_HANDLE};
@@ -26,11 +26,11 @@ pub struct ImDrawData {
     // For convenience, sum of all ImDrawList's VtxBuffer.Size
     pub CmdLists: HashMap<ImguiHandle, ImDrawList>,
     // Array of ImDrawList* to render. The ImDrawList are owned by ImGuiContext and only pointed to from here.
-    pub DisplayPos: ImVec2,
+    pub DisplayPos: Vector2,
     // Top-left position of the viewport to render (== top-left of the orthogonal projection matrix to use) (== GetMainViewport().Pos for the main viewport, == (0.0) in most single-viewport applications)
-    pub DisplaySize: ImVec2,
+    pub DisplaySize: Vector2,
     // Size of the viewport to render (== GetMainViewport().Size for the main viewport, == io.DisplaySize in most single-viewport applications)
-    pub FramebufferScale: ImVec2,
+    pub FramebufferScale: Vector2,
     // Amount of pixels for each unit of DisplaySize. Based on io.DisplayFramebufferScale. Generally (1,1) on normal display, (2,2) on OSX with Retina display.
     pub OwnerViewport: ImguiHandle, // Viewport carrying the ImDrawData instance, might be of use to the renderer (generally not).
 }
@@ -46,16 +46,16 @@ impl ImDrawData {
         self.TotalIdxCount = 0;
         self.TotalVtxCount = 0;
         self.CmdLists = vec![];
-        self.DisplayPos = ImVec2::default();
-        self.DisplaySize = ImVec2::default();
-        self.FramebufferScale = ImVec2::default();
+        self.DisplayPos = Vector2::default();
+        self.DisplaySize = Vector2::default();
+        self.FramebufferScale = Vector2::default();
         self.OwnerViewport = INVALID_IMGUI_HANDLE;
     }
 
     // void  DeIndexAllBuffers();                    // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
     pub fn DeIndexAllBuffers(&mut self) {
         // Vec<ImDrawVert> new_vtx_buffer;
-        let mut new_vtx_buffer: Vec<ImDrawVert> = vec![];
+        let mut new_vtx_buffer: Vec<DrawVertex> = vec![];
         self.TotalVtxCount = 0;
         self.TotalIdxCount = 0;
         // for (let i: c_int = 0; i < CmdListsCount; i++)
@@ -77,7 +77,7 @@ impl ImDrawData {
     }
 
     // void  ScaleClipRects(const fb_scale: &mut ImVec2); // Helper to scale the ClipRect field of each ImDrawCmd. Use if your final output buffer is at a different scale than Dear ImGui expects, or if there is a difference between your window resolution and framebuffer resolution.
-    pub fn ScaleClipRects(&mut self, fb_scale: &ImVec2) {
+    pub fn ScaleClipRects(&mut self, fb_scale: &Vector2) {
         // for (let i: c_int = 0; i < CmdListsCount; i++)
         for i in 0..self.CmdListsCount {
             let mut cmd_list: *mut ImDrawList = self.CmdLists[i];

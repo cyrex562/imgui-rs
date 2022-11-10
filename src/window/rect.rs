@@ -1,9 +1,9 @@
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::frame_ops::GetFrameHeight;
 use crate::core::math_ops::ImClamp;
 use crate::rect::ImRect;
 use crate::core::utils::{flag_clear, is_not_null};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::window_flags::ImGuiWindowFlags_NoTitleBar;
 use crate::window::ImguiWindow;
@@ -52,9 +52,9 @@ pub fn window_rect_abs_to_rel(window: &ImguiWindow, r: &ImRect) -> ImRect {
 //   more specialized SetWindowClipRectBeforeSetChannel() to avoid extraneous updates of underlying ImDrawCmds.
 // c_void PushClipRect(const clip_rect_min: &mut ImVec2, const clip_rect_max: &mut ImVec2, intersect_with_current_clip_rect: bool)
 pub fn PushClipRect(
-    g: &mut ImguiContext,
-    clip_rect_min: &ImVec2,
-    clip_rect_max: &ImVec2,
+    g: &mut AppContext,
+    clip_rect_min: &Vector2,
+    clip_rect_max: &Vector2,
     intersect_with_current_clip_rect: bool,
 ) {
     let mut window = g.current_window_mut();
@@ -67,7 +67,7 @@ pub fn PushClipRect(
 }
 
 // c_void PopClipRect()
-pub fn PopClipRect(g: &mut ImguiContext) {
+pub fn PopClipRect(g: &mut AppContext) {
     let mut window = g.current_window_mut().unwrap();
     window.DrawList.PopClipRect();
     window.ClipRect = window.DrawList._ClipRectStack.last().unwrap().clone();

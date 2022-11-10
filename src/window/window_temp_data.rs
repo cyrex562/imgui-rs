@@ -4,7 +4,7 @@ use crate::nav_layer::ImGuiNavLayer;
 use crate::table::old_columns::ImGuiOldColumns;
 use crate::core::storage::ImGuiStorage;
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ImguiWindow;
 use libc::{c_float, c_int, c_short};
 
@@ -14,17 +14,17 @@ use libc::{c_float, c_int, c_short};
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiWindowTempData {
     // Layout
-    pub cursor_pos: ImVec2,
+    pub cursor_pos: Vector2,
     // Current emitting position, in absolute coordinates.
-    pub cursor_pos_prev_line: ImVec2,
-    pub cursor_start_pos: ImVec2,
+    pub cursor_pos_prev_line: Vector2,
+    pub cursor_start_pos: Vector2,
     // Initial position after Begin(), generally ~ window position + WindowPadding.
-    pub CursorMaxPos: ImVec2,
+    pub CursorMaxPos: Vector2,
     // Used to implicitly calculate ContentSize at the beginning of next frame, for scrolling range and auto-resize. Always growing during the frame.
-    pub IdealMaxPos: ImVec2,
+    pub IdealMaxPos: Vector2,
     // Used to implicitly calculate ContentSizeIdeal at the beginning of next frame, for auto-resize only. Always growing during the frame.
-    pub curr_line_size: ImVec2,
-    pub prev_line_size: ImVec2,
+    pub curr_line_size: Vector2,
+    pub prev_line_size: Vector2,
     pub curr_line_text_base_offset: f32,
     // Baseline offset (0.0 by default on a new line, generally == style.FramePadding.y when a framed item has been added).
     pub prev_line_text_base_offset: f32,
@@ -35,7 +35,7 @@ pub struct ImGuiWindowTempData {
     pub columns_offset: ImVec1,
     // Offset to the current column (if ColumnsCurrent > 0). FIXME: This and the above should be a stack to allow use cases like Tree->column.Tree. Need revamp columns API.
     pub group_offset: ImVec1,
-    pub CursorStartPosLossyness: ImVec2, // Record the loss of precision of CursorStartPos due to really large scrolling amount. This is used by clipper to compensentate and fix the most common use case of large scroll area.
+    pub CursorStartPosLossyness: Vector2, // Record the loss of precision of CursorStartPos due to really large scrolling amount. This is used by clipper to compensentate and fix the most common use case of large scroll area.
     // Keyboard/Gamepad navigation
     pub NavLayerCurrent: ImGuiNavLayer,
     // Current layer, 0..31 (we currently only use 0..1)
@@ -50,7 +50,7 @@ pub struct ImGuiWindowTempData {
     // Miscellaneous
     pub MenuBarAppending: bool,
     // FIXME: Remove this
-    pub MenuBarOffset: ImVec2,
+    pub MenuBarOffset: Vector2,
     // MenuBarOffset.x is sort of equivalent of a per-layer CursorPos.x, saved/restored as we switch to the menu bar. The only situation when MenuBarOffset.y is > 0 if when (SafeAreaPadding.y > FramePadding.y), often used on TVs.
     pub MenuColumns: ImGuiMenuColumns,
     // Simplified columns storage for menu items measurement

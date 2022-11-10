@@ -2,15 +2,15 @@
 
 use crate::color::IM_COL32_A_MASK;
 use crate::drawing::draw_list::ImDrawList;
-use crate::drawing::draw_vert::ImDrawVert;
+use crate::drawing::draw_vert::DrawVertex;
 use crate::font_atlas::ImFontAtlas;
 use font_config::ImFontConfig;
 use font_glyph::ImFontGlyph;
 use font_ops::FindFirstExistingGlyph;
 use crate::core::math_ops::{char_is_blank, ImCharIsBlankA, ImClamp, ImMax};
 use crate::core::string_ops::ImTextCharFromUtf8;
-use crate::core::type_defs::{ImDrawIdx, ImWchar};
-use crate::core::vec2::ImVec2;
+use crate::core::type_defs::{DrawIndex, ImWchar};
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use libc::{c_char, c_float, c_int, c_short, c_uint, size_t};
 use std::borrow::BorrowMut;
@@ -163,7 +163,7 @@ impl ImFont {
         wrap_width: c_float,
         text: &String,
         remaining: Option<&mut usize>,
-    ) -> ImVec2 {
+    ) -> Vector2 {
         // if !text_end {
         //     text_end = text_begin + libc::strlen(text_begin);
         // } // FIXME-OPT: Need to avoid this.
@@ -171,7 +171,7 @@ impl ImFont {
         let line_height: c_float = size;
         let scale: c_float = size / FontSize;
 
-        let mut text_size: ImVec2 = ImVec2::from_floats(0.0, 0.0);
+        let mut text_size: Vector2 = Vector2::from_floats(0.0, 0.0);
         let mut line_width: c_float = 0.0;
 
         let word_wrap_enabled = (wrap_width > 0.0);
@@ -394,7 +394,7 @@ impl ImFont {
         &mut self,
         draw_list: &mut ImDrawList,
         size: c_float,
-        pos: &ImVec2,
+        pos: &Vector2,
         mut col: u32,
         c: char,
     ) {
@@ -414,10 +414,10 @@ impl ImFont {
         let y: c_float = IM_FLOOR(pos.y);
         draw_list.PrimReserve(6, 4);
         draw_list.PrimRectUV(
-            &ImVec2::from_floats(x + glyph.X0 * scale, y + glyph.Y0 * scale),
-            &ImVec2::from_floats(x + glyph.X1 * scale, y + glyph.Y1 * scale),
-            &ImVec2::from_floats(glyph.U0, glyph.V0),
-            &ImVec2::from_floats(glyph.U1, glyph.V1),
+            &Vector2::from_floats(x + glyph.X0 * scale, y + glyph.Y0 * scale),
+            &Vector2::from_floats(x + glyph.X1 * scale, y + glyph.Y1 * scale),
+            &Vector2::from_floats(glyph.U0, glyph.V0),
+            &Vector2::from_floats(glyph.U1, glyph.V1),
             col,
         );
     }
@@ -427,7 +427,7 @@ impl ImFont {
         &mut self,
         draw_list: &mut ImDrawList,
         size: c_float,
-        pos: &ImVec2,
+        pos: &Vector2,
         mut col: u32,
         clip_rect: &ImVec4,
         text_begin: &str,
@@ -482,7 +482,7 @@ impl ImFont {
         let idx_expected_size: size_t = (draw_list.IdxBuffer.len() + idx_count_max);
         draw_list.PrimReserve(idx_count_max, vtx_count_max);
 
-        vtx_write: *mut ImDrawVert = draw_list._VtxWritePtr;
+        vtx_write: *mut DrawVertex = draw_list._VtxWritePtr;
         ImDrawIdx * idx_write = draw_list._IdxWritePtr;
         let mut vtx_current_idx: size_t = draw_list._VtxCurrentIdx;
 

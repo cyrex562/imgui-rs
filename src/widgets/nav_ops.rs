@@ -4,7 +4,7 @@ use crate::widgets::activate_flags::{IM_GUI_ACTIVATE_FLAGS_NONE, IM_GUI_ACTIVATE
 use crate::core::config_flags::{ImGuiConfigFlags_NavEnableGamepad, ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_NavEnableSetMousePos};
 use crate::core::constants::{NAV_WINDOWING_HIGHLIGHT_DELAY, NAV_WINDOWING_LIST_APPEAR_DELAY};
 use crate::core::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
-use crate::{GImGui, ImguiViewport};
+use crate::{GImGui, Viewport};
 use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_X};
 use crate::backend_flags::{IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD, IM_GUI_BACKEND_FLAGS_HAS_SET_MOUSE_POS};
 use crate::color::color_u32_from_rgba;
@@ -13,7 +13,7 @@ use crate::drawing::draw_list::ImDrawList;
 use crate::draw_list_ops::GetForegroundDrawList;
 use crate::core::id_ops::ClearActiveID;
 use crate::a_imgui_cpp::{NavProcessItemForTabbingRequest, SetNavWindow};
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::widgets::input_flags::{ImGuiInputFlags_Repeat, ImGuiInputFlags_RepeatRateNavMove, ImGuiInputFlags_RepeatRateNavTweak};
 use crate::input_ops::{GetKeyPressedAmount, GetTypematicRepeatRate, IsKeyDown, IsKeyPressed, IsKeyPressedEx, IsMouseHoveringRect, IsMousePosValid};
 use crate::io::input_source::{ImGuiInputSource_Gamepad, ImGuiInputSource_Keyboard, ImGuiInputSource_Nav};
@@ -35,7 +35,7 @@ use crate::style_var::ImGuiStyleVar_WindowPadding;
 use crate::text_ops::CalcTextSize;
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::{flag_clear, flag_set, is_not_null, is_null};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::viewport::viewport_ops::GetMainViewport;
 use crate::window::find::FindWindowByName;
 use crate::window::focus::FocusWindow;
@@ -47,7 +47,7 @@ use crate::window::window_flags::{ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindow
 
 // We get there when either NavId == id, or when g.NavAnyRequest is set (which is updated by NavUpdateAnyRequestFlag above)
 // This is called after LastItemData is set.
-pub fn NavProcessItem(g: &mut ImguiContext) {
+pub fn NavProcessItem(g: &mut AppContext) {
     let mut window  = g.current_window_mut().unwrap();
     let mut id: ImguiHandle = g.last_item_data.id;
     let nav_bb: ImRect = g.last_item_data.NavRect;
@@ -280,7 +280,7 @@ pub unsafe fn NavScoreItem(result: *mut ImGuiNavItemData) -> bool
         let mut  draw_list: *mut ImDrawList =  GetForegroundDrawList(window.Viewport);
         draw_list.AddRect(&curr.min, &curr.max, color_u32_from_rgba(255, 200, 0, 100), 0.0);
         draw_list.AddRect(&cand.min, &cand.max, color_u32_from_rgba(255, 255, 0, 200), 0.0);
-        draw_list.AddRectFilled(cand.max - ImVec2::from_floats(4.0, 4.0), cand.max + CalcTextSize(, buf.as_ptr(), false, 0.0) + ImVec2::from_floats(4.0, 4.0), color_u32_from_rgba(40, 0, 0, 150), 0.0, 0);
+        draw_list.AddRectFilled(cand.max - Vector2::from_floats(4.0, 4.0), cand.max + CalcTextSize(, buf.as_ptr(), false, 0.0) + Vector2::from_floats(4.0, 4.0), color_u32_from_rgba(40, 0, 0, 150), 0.0, 0);
         draw_list.AddText(&cand.max, !0, buf.as_ptr());
     }
     else if (g.IO.KeyCtrl) // Hold to preview score in matching quadrant. Press C to rotate.
@@ -581,7 +581,7 @@ pub unsafe fn NavInitWindow(window: &mut ImguiWindow, force_reinit: bool)
     }
 }
 
-pub fn NavCalcPreferredRefPos(g: &mut ImguiContext) -> ImVec2
+pub fn NavCalcPreferredRefPos(g: &mut AppContext) -> Vector2
 {
     // let mut window: &mut ImGuiWindow =  g.NavWindow;
     let mut window = g.window_by_id_mut(g.NavWindow);
@@ -590,8 +590,8 @@ pub fn NavCalcPreferredRefPos(g: &mut ImguiContext) -> ImVec2
         // Mouse (we need a fallback in case the mouse becomes invalid after being used)
         // The +1.0 offset when stored by OpenPopupEx() allows reopening this or another popup (same or another mouse button) while not moving the mouse, it is pretty standard.
         // In theory we could move that +1.0 offset in OpenPopupEx()
-        let p: ImVec2 = if IsMousePosValid(&g.IO.MousePos) { g.IO.MousePos } else { g.MouseLastValidPos };
-        return ImVec2::from_floats(p.x + 1.0, p.y);
+        let p: Vector2 = if IsMousePosValid(&g.IO.MousePos) { g.IO.MousePos } else { g.MouseLastValidPos };
+        return Vector2::from_floats(p.x + 1.0, p.y);
     }
     else
     {
@@ -604,7 +604,7 @@ pub fn NavCalcPreferredRefPos(g: &mut ImguiContext) -> ImVec2
             let next_scroll = CalcNextScrollFromScrollTargetAndClamp(window);
             rect_rel.Translate(window.scroll - next_scroll);
         }
-        let pos: ImVec2 = ImVec2::from_floats(rect_rel.min.x + ImMin(g.style.FramePadding.x * 4, rect_rel.GetWidth()), rect_rel.max.y - ImMin(g.style.FramePadding.y, rect_rel.GetHeight()));
+        let pos: Vector2 = Vector2::from_floats(rect_rel.min.x + ImMin(g.style.FramePadding.x * 4, rect_rel.GetWidth()), rect_rel.max.y - ImMin(g.style.FramePadding.y, rect_rel.GetHeight()));
         let viewport = window.Viewport;
         return ImFloor(ImClamp(pos, viewport.Pos, viewport.Pos + viewport.Size)); // ImFloor() is important because non-integer mouse position application in backend might be lossy and result in undesirable non-zero delta.
     }
@@ -791,7 +791,7 @@ pub unsafe fn NavUpdate()
         // Next movement request will clamp the NavId reference rectangle to the visible area, so navigation will resume within those bounds.
         if (nav_gamepad_active)
         {
-            let scroll_dir: ImVec2 = GetKeyVector2d(ImGuiKey_GamepadLStickLeft, ImGuiKey_GamepadLStickRight, ImGuiKey_GamepadLStickUp, ImGuiKey_GamepadLStickDown);
+            let scroll_dir: Vector2 = GetKeyVector2d(ImGuiKey_GamepadLStickLeft, ImGuiKey_GamepadLStickRight, ImGuiKey_GamepadLStickUp, ImGuiKey_GamepadLStickDown);
             let tweak_factor: c_float =  if IsKeyDown(ImGuiKey_NavGamepadTweakSlow) { 1.0 / 10.0 } else {
                 if IsKeyDown(ImGuiKey_NavGamepadTweakFast) {
                     10.0
@@ -837,11 +837,11 @@ pub unsafe fn NavUpdate()
         }
 
         let col: u32 = if (!g.NavWindow.Hidden) { color_u32_from_rgba(255, 0, 255, 255) } else { color_u32_from_rgba(255, 0, 0, 255) };
-        let mut p: ImVec2 =  NavCalcPreferredRefPos(g);
+        let mut p: Vector2 =  NavCalcPreferredRefPos(g);
         let mut buf: [c_char;32] = [0;32];
         // ImFormatString(buf, 32, "{}", g.NavLayer);
         draw_list.AddCircleFilled(&p, 3.0, col, 0);
-        draw_list.AddText2(None, 13.0, p + ImVec2::from_floats(8.0, -4.0), col, buf.as_ptr(),  0.0, None);
+        draw_list.AddText2(None, 13.0, p + Vector2::from_floats(8.0, -4.0), col, buf.as_ptr(), 0.0, None);
     }
 // #endif
 }
@@ -945,7 +945,7 @@ pub unsafe fn NavUpdateCreateMoveRequest()
     {
         let mut clamp_x: bool =  (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopX | ImGuiNavMoveFlags_WrapX)) == 0;
         let mut clamp_y: bool =  (g.NavMoveFlags & (ImGuiNavMoveFlags_LoopY | ImGuiNavMoveFlags_WrapY)) == 0;
-        let mut inner_rect_rel: ImRect =  window_rect_abs_to_rel(window, ImRect(window.InnerRect.min - ImVec2::from_floats(1.0, 1.0), window.InnerRect.max + ImVec2::from_floats(1.0, 1.0)));
+        let mut inner_rect_rel: ImRect =  window_rect_abs_to_rel(window, ImRect(window.InnerRect.min - Vector2::from_floats(1.0, 1.0), window.InnerRect.max + Vector2::from_floats(1.0, 1.0)));
         if (clamp_x || clamp_y) && !inner_rect_rel.Contains(window.NavRectRel[g.NavLayer])
         {
             //IMGUI_DEBUG_LOG_NAV("[nav] NavMoveRequest: clamp NavRectRel for gamepad move\n");
@@ -1377,8 +1377,8 @@ pub unsafe fn NavUpdateWindowingHighlightWindow(focus_change_dir: c_int)
     {
         g.NavWindowingTarget = window_target;
         g.NavWindowingTargetAnim = window_target;
-        g.NavWindowingAccumDeltaPos = ImVec2::from_floats(0.0, 0.0);
-        g.NavWindowingAccumDeltaSize = ImVec2::from_floats(0.0, 0.0);
+        g.NavWindowingAccumDeltaPos = Vector2::from_floats(0.0, 0.0);
+        g.NavWindowingAccumDeltaSize = Vector2::from_floats(0.0, 0.0);
     }
     g.NavWindowingToggleLayer = false;
 }
@@ -1424,8 +1424,8 @@ pub unsafe fn NavUpdateWindowing()
             g.NavWindowingTargetAnim = window.RootWindow;
             g.NavWindowingTimer = 0.0;
             g.NavWindowingHighlightAlpha = 0.0;
-            g.NavWindowingAccumDeltaPos = ImVec2::from_floats(0.0, 0.0);
-            g.NavWindowingAccumDeltaSize = ImVec2::from_floats(0.0, 0.0);
+            g.NavWindowingAccumDeltaPos = Vector2::from_floats(0.0, 0.0);
+            g.NavWindowingAccumDeltaSize = Vector2::from_floats(0.0, 0.0);
             g.NavWindowingToggleLayer = if start_windowing_with_gamepad { true } else { false }; // Gamepad starts toggling layer
         g.NavInputSource = if start_windowing_with_keyboard { ImGuiInputSource_Keyboard } else { ImGuiInputSource_Gamepad };
         }
@@ -1506,7 +1506,7 @@ pub unsafe fn NavUpdateWindowing()
     // Move window
     if is_not_null(g.NavWindowingTarget) && flag_clear(g.NavWindowingTarget.Flags , ImGuiWindowFlags_NoMove)
     {
-        nav_move_dir: ImVec2;
+        nav_move_dir: Vector2;
         if g.NavInputSource == ImGuiInputSource_Keyboard && !io.KeyShift {
             nav_move_dir = GetKeyVector2d(ImGuiKey_LeftArrow, ImGuiKey_RightArrow, ImGuiKey_UpArrow, ImGuiKey_DownArrow);
         }
@@ -1519,7 +1519,7 @@ pub unsafe fn NavUpdateWindowing()
             let move_step: c_float =  NAV_MOVE_SPEED * io.DeltaTime * ImMin(io.DisplayFramebufferScale.x, io.DisplayFramebufferScale.y);
             g.NavWindowingAccumDeltaPos += nav_move_dir * move_step;
             g.NavDisableMouseHover = true;
-            let accum_floored: ImVec2 = ImFloor(g.NavWindowingAccumDeltaPos);
+            let accum_floored: Vector2 = ImFloor(g.NavWindowingAccumDeltaPos);
             if accum_floored.x != 0.0 || accum_floored.y != 0.0
             {
                 let mut moving_window: &mut ImguiWindow =  g.NavWindowingTarget.RootWindowDockTree;
@@ -1532,7 +1532,7 @@ pub unsafe fn NavUpdateWindowing()
     // Apply final focus
     if is_not_null(apply_focus_window) && (g.NavWindow == None || apply_focus_window != g.NavWindow.RootWindow)
     {
-        previous_viewport: *mut ImguiViewport = if is_not_null(g.NavWindow) { g.NavWindow.Viewport } else { None };
+        previous_viewport: *mut Viewport = if is_not_null(g.NavWindow) { g.NavWindow.Viewport } else { None };
         ClearActiveID(g);
         NavRestoreHighlightAfterMove();
         apply_focus_window = NavRestoreLastChildNavWindow(apply_focus_window);
@@ -1627,9 +1627,9 @@ pub unsafe fn NavUpdateWindowingOverlay()
     if g.NavWindowingListWindow == None {
         g.NavWindowingListWindow = FindWindowByName(str_to_const_c_char_ptr("###NavWindowingList"), );
     }
-    let viewport: *const ImguiViewport = /*g.NavWindow ? g.Navwindow.Viewport :*/ GetMainViewport();
-    SetNextWindowSizeConstraints(, &ImVec2::from_floats(viewport.Size.x * 0.20, viewport.Size.y * 0.200), &ImVec2::from_floats(f32::MAX, f32::MAX), (), null_mut());
-    SetNextWindowPos(, &viewport.get_center(), ImGuiCond_Always, &ImVec2::from_floats(0.5, 0.5));
+    let viewport: *const Viewport = /*g.NavWindow ? g.Navwindow.Viewport :*/ GetMainViewport();
+    SetNextWindowSizeConstraints(, &Vector2::from_floats(viewport.Size.x * 0.20, viewport.Size.y * 0.200), &Vector2::from_floats(f32::MAX, f32::MAX), (), null_mut());
+    SetNextWindowPos(, &viewport.get_center(), ImGuiCond_Always, &Vector2::from_floats(0.5, 0.5));
     PushStyleVar(ImGuiStyleVar_WindowPadding, g.style.WindowPadding * 2.0);
     Begin(g, str_to_const_c_char_ptr("###NavWindowingList"), null_mut());
     // for (let n: c_int = g.WindowsFocusOrder.Size - 1; n >= 0; n--)

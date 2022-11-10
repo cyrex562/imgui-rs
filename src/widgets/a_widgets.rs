@@ -383,7 +383,7 @@ use crate::widgets::tree_node_flags::{
 };
 use crate::core::type_defs::{ImguiHandle, ImGuiInputTextCallback, ImTextureID, ImWchar};
 use crate::core::utils::{flag_clear, flag_set, ImQsort};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use crate::viewport::viewport_ops::{GetMainViewport, SetCurrentViewport};
 use crate::viewport::widget_ops::{PopTextWrapPos, PushTextWrapPos};
@@ -406,7 +406,7 @@ use crate::window::window_flags::{
 };
 use crate::window::ImguiWindow;
 use crate::{
-    button_ops, data_type_ops, drag, GImGui, hash_string, ImguiViewport,
+    button_ops, data_type_ops, drag, GImGui, hash_string, Viewport,
     input_num_ops, popup_ops, stb, text_ops,
 };
 use crate::{CalcTextSize, GetTextLineHeight, GetTextLineHeightWithSpacing, Text};
@@ -579,7 +579,7 @@ pub unsafe fn ColorEdit4(
     let mut value_changed: bool = false;
     let mut value_changed_as_float: bool = false;
 
-    let pos: ImVec2 = window.dc.cursor_pos;
+    let pos: Vector2 = window.dc.cursor_pos;
     let inputs_offset_x: c_float = if style.ColorButtonPosition == ImGuiDir_Left {
         w_button
     } else {
@@ -743,7 +743,7 @@ pub unsafe fn ColorEdit4(
         } else {
             w_inputs + style.ItemInnerSpacing.x
         };
-        window.dc.cursor_pos = ImVec2::new(pos.x + button_offset_x, pos.y);
+        window.dc.cursor_pos = Vector2::new(pos.x + button_offset_x, pos.y);
 
         let mut col_v4 =
             ImVec4::from_floats(col[0], col[1], col[2], if alpha { col[3] } else { 1.0 });
@@ -753,7 +753,7 @@ pub unsafe fn ColorEdit4(
                 g.ColorPickerRef = col_v4;
                 OpenPopup("picker", 0);
                 SetNextWindowPos(,
-                                 g.last_item_data.Rect.GetBL() + ImVec2::from_floats(0.0, style.ItemSpacing.y),
+                                 g.last_item_data.Rect.GetBL() + Vector2::from_floats(0.0, style.ItemSpacing.y),
                                  0,
                                  &Default::default(),
                 );
@@ -887,36 +887,36 @@ pub unsafe fn ColorPicker3(
 // Helper for ColorPicker4()
 pub unsafe fn RenderArrowsForVerticalBar(
     draw_list: *mut ImDrawList,
-    pos: ImVec2,
-    half_sz: ImVec2,
+    pos: Vector2,
+    half_sz: Vector2,
     bar_w: c_float,
     alpha: c_float,
 ) {
     alpha8: u32 = IM_F32_TO_INT8_SAT(alpha);
     RenderArrowPointingAt(
         draw_list,
-        ImVec2::new(pos.x + half_sz.x + 1, pos.y),
-        ImVec2::new(half_sz.x + 2, half_sz.y + 1),
+        Vector2::new(pos.x + half_sz.x + 1, pos.y),
+        Vector2::new(half_sz.x + 2, half_sz.y + 1),
         ImGuiDir_Right,
         color_u32_from_rgba(0, 0, 0, alpha8),
     );
     RenderArrowPointingAt(
         draw_list,
-        ImVec2::new(pos.x + half_sz.x, pos.y),
+        Vector2::new(pos.x + half_sz.x, pos.y),
         half_sz,
         ImGuiDir_Right,
         color_u32_from_rgba(255, 255, 255, alpha8),
     );
     RenderArrowPointingAt(
         draw_list,
-        ImVec2::new(pos.x + bar_w - half_sz.x - 1, pos.y),
-        ImVec2::new(half_sz.x + 2, half_sz.y + 1),
+        Vector2::new(pos.x + bar_w - half_sz.x - 1, pos.y),
+        Vector2::new(half_sz.x + 2, half_sz.y + 1),
         ImGuiDir_Left,
         color_u32_from_rgba(0, 0, 0, alpha8),
     );
     RenderArrowPointingAt(
         draw_list,
-        ImVec2::new(pos.x + bar_w - half_sz.x, pos.y),
+        Vector2::new(pos.x + bar_w - half_sz.x, pos.y),
         half_sz,
         ImGuiDir_Left,
         color_u32_from_rgba(255, 255, 255, alpha8),
@@ -987,7 +987,7 @@ pub unsafe fn ColorPicker4(
     };
     let mut alpha_bar: bool = flag_set(flags, ImGuiColorEditFlags_AlphaBar)
         && flag_clear(flags, ImGuiColorEditFlags_NoAlpha);
-    let picker_pos: ImVec2 = window.dc.cursor_pos;
+    let picker_pos: Vector2 = window.dc.cursor_pos;
     let square_sz: c_float = GetFrameHeight();
     let bars_width: c_float = square_sz; // Arbitrary smallish width of Hue/Alpha picking bars
     let sv_picker_size: c_float = ImMax(
@@ -1004,16 +1004,16 @@ pub unsafe fn ColorPicker4(
     let wheel_thickness: c_float = sv_picker_size * 0.08;
     let wheel_r_outer: c_float = sv_picker_size * 0.50;
     let wheel_r_inner: c_float = wheel_r_outer - wheel_thickness;
-    let wheel_center = ImVec2::from_floats(
+    let wheel_center = Vector2::from_floats(
         picker_pos.x + (sv_picker_size + bars_width) * 0.5,
         picker_pos.y + sv_picker_size * 0.5,
     );
 
     // Note: the triangle is displayed rotated with triangle_pa pointing to Hue, but most coordinates stays unrotated for logic.
     let triangle_r: c_float = wheel_r_inner - (sv_picker_size * 0.0270f32);
-    let triangle_pa: ImVec2 = ImVec2::from_floats(triangle_r, 0.0); // Hue point.
-    let triangle_pb: ImVec2 = ImVec2::from_floats(triangle_r * -0.5, triangle_r * -0.8660250f32); // Black point.
-    let triangle_pc: ImVec2 = ImVec2::from_floats(triangle_r * -0.5, triangle_r * 0.8660250f32); // White point.
+    let triangle_pa: Vector2 = Vector2::from_floats(triangle_r, 0.0); // Hue point.
+    let triangle_pb: Vector2 = Vector2::from_floats(triangle_r * -0.5, triangle_r * -0.8660250f32); // Black point.
+    let triangle_pc: Vector2 = Vector2::from_floats(triangle_r * -0.5, triangle_r * 0.8660250f32); // White point.
 
     let mut H: c_float = col[0];
     let mut S = col[1];
@@ -1038,15 +1038,15 @@ pub unsafe fn ColorPicker4(
         // Hue wheel + SV triangle logic
         button_ops::InvisibleButton(
             "hsv",
-            ImVec2::new(
+            Vector2::new(
                 sv_picker_size + style.ItemInnerSpacing.x + bars_width,
                 sv_picker_size,
             ),
             0,
         );
         if IsItemActive() {
-            let initial_off: ImVec2 = g.IO.MouseClickedPos[0] - wheel_center;
-            let current_off: ImVec2 = g.IO.MousePos - wheel_center;
+            let initial_off: Vector2 = g.IO.MouseClickedPos[0] - wheel_center;
+            let current_off: Vector2 = g.IO.MousePos - wheel_center;
             let initial_dist2: c_float = ImLengthSqr(initial_off);
             if initial_dist2 >= (wheel_r_inner - 1) * (wheel_r_inner - 1)
                 && initial_dist2 <= (wheel_r_outer + 1) * (wheel_r_outer + 1)
@@ -1068,7 +1068,7 @@ pub unsafe fn ColorPicker4(
                 &ImRotate(&initial_off, cos_hue_angle, sin_hue_angle),
             ) {
                 // Interacting with SV triangle
-                let mut current_off_unrotated: ImVec2 =
+                let mut current_off_unrotated: Vector2 =
                     ImRotate(&current_off, cos_hue_angle, sin_hue_angle);
                 if !ImTriangleContainsPoint(
                     &triangle_pa,
@@ -1109,7 +1109,7 @@ pub unsafe fn ColorPicker4(
         // SV rectangle logic
         InvisibleButton(
             "sv",
-            &mut ImVec2::from_floats(sv_picker_size, sv_picker_size),
+            &mut Vector2::from_floats(sv_picker_size, sv_picker_size),
             0,
         );
         if IsItemActive() {
@@ -1128,8 +1128,8 @@ pub unsafe fn ColorPicker4(
         }
 
         // Hue bar logic
-        set_cursor_screen_pos(g, ImVec2::new(bar0_pos_x, picker_pos.y));
-        button_ops::InvisibleButton("hue", ImVec2::new(bars_width, sv_picker_size), 0);
+        set_cursor_screen_pos(g, Vector2::new(bar0_pos_x, picker_pos.y));
+        button_ops::InvisibleButton("hue", Vector2::new(bars_width, sv_picker_size), 0);
         if IsItemActive() {
             H = ImSaturate((io.MousePos.y - picker_pos.y) / (sv_picker_size - 1));
             value_changed = true;
@@ -1139,8 +1139,8 @@ pub unsafe fn ColorPicker4(
 
     // Alpha bar logic
     if alpha_bar {
-        set_cursor_screen_pos(g, ImVec2::new(bar1_pos_x, picker_pos.y));
-        button_ops::InvisibleButton("alpha", ImVec2::new(bars_width, sv_picker_size), 0);
+        set_cursor_screen_pos(g, Vector2::new(bar1_pos_x, picker_pos.y));
+        button_ops::InvisibleButton("alpha", Vector2::new(bars_width, sv_picker_size), 0);
         if IsItemActive() {
             col[3] = 1.0 - ImSaturate((io.MousePos.y - picker_pos.y) / (sv_picker_size - 1));
             value_changed = true;
@@ -1188,7 +1188,7 @@ pub unsafe fn ColorPicker4(
             "##current",
             col_v4,
             (flags & sub_flags_to_forward),
-            ImVec2::new(square_sz * 3, square_sz * 2),
+            Vector2::new(square_sz * 3, square_sz * 2),
         );
         if ref_col != c_float::MIN {
             Text("Original");
@@ -1206,7 +1206,7 @@ pub unsafe fn ColorPicker4(
                 "##original",
                 ref_col_v4,
                 (flags & sub_flags_to_forward),
-                ImVec2::new(square_sz * 3, square_sz * 2),
+                Vector2::new(square_sz * 3, square_sz * 2),
             ) {
                 // memcpy(col, ref_col, components * sizeof);
                 value_changed = true;
@@ -1333,7 +1333,7 @@ pub unsafe fn ColorPicker4(
     hue_color32: u32 = ColorConvertFloat4ToU32(hue_color_0f32);
     user_col32_striped_of_alpha: u32 = ColorConvertFloat4ToU32(ImVec4(R, G, B, style.Alpha)); // Important: this is still including the main rendering/style alpha!!
 
-    sv_cursor_pos: ImVec2;
+    sv_cursor_pos: Vector2;
 
     if flag_set(flags, ImGuiColorEditFlags_PickerHueWheel) {
         // Render Hue Wheel
@@ -1355,11 +1355,11 @@ pub unsafe fn ColorPicker4(
             let vert_end_idx: c_int = draw_list.VtxBuffer.len();
 
             // Paint colors over existing vertices
-            let mut gradient_p0 = ImVec2::from_floats(
+            let mut gradient_p0 = Vector2::from_floats(
                 wheel_center.x + ImCos(a0) * wheel_r_inner,
                 wheel_center.y + ImSin(a0) * wheel_r_inner,
             );
-            let mut gradient_p1 = ImVec2::from_floats(
+            let mut gradient_p1 = Vector2::from_floats(
                 wheel_center.x + ImCos(a1) * wheel_r_inner,
                 wheel_center.y + ImSin(a1) * wheel_r_inner,
             );
@@ -1377,7 +1377,7 @@ pub unsafe fn ColorPicker4(
         // Render Cursor + preview on Hue Wheel
         let cos_hue_angle: c_float = ImCos(H * 2.0 * IM_PI);
         let sin_hue_angle: c_float = ImSin(H * 2.0 * IM_PI);
-        let mut hue_cursor_pos = ImVec2::from_floats(
+        let mut hue_cursor_pos = Vector2::from_floats(
             wheel_center.x + cos_hue_angle * (wheel_r_inner + wheel_r_outer) * 0.5,
             wheel_center.y + sin_hue_angle * (wheel_r_inner + wheel_r_outer) * 0.5,
         );
@@ -1407,10 +1407,10 @@ pub unsafe fn ColorPicker4(
         );
 
         // Render SV triangle (rotated according to hue)
-        let tra: ImVec2 = wheel_center + ImRotate(&triangle_pa, cos_hue_angle, sin_hue_angle);
-        let trb: ImVec2 = wheel_center + ImRotate(&triangle_pb, cos_hue_angle, sin_hue_angle);
-        let trc: ImVec2 = wheel_center + ImRotate(&triangle_pc, cos_hue_angle, sin_hue_angle);
-        let uv_white: ImVec2 = GetFontTexUvWhitePixel();
+        let tra: Vector2 = wheel_center + ImRotate(&triangle_pa, cos_hue_angle, sin_hue_angle);
+        let trb: Vector2 = wheel_center + ImRotate(&triangle_pb, cos_hue_angle, sin_hue_angle);
+        let trc: Vector2 = wheel_center + ImRotate(&triangle_pc, cos_hue_angle, sin_hue_angle);
+        let uv_white: Vector2 = GetFontTexUvWhitePixel();
         draw_list.PrimReserve(6, 6);
         draw_list.PrimVtx(tra, uv_white, hue_color32);
         draw_list.PrimVtx(trb, uv_white, hue_color32);
@@ -1424,7 +1424,7 @@ pub unsafe fn ColorPicker4(
         // Render SV Square
         draw_list.AddRectFilledMultiColor(
             picker_pos,
-            picker_pos + ImVec2::new(sv_picker_size, sv_picker_size),
+            picker_pos + Vector2::new(sv_picker_size, sv_picker_size),
             col_white,
             hue_color32,
             hue_color32,
@@ -1432,7 +1432,7 @@ pub unsafe fn ColorPicker4(
         );
         draw_list.AddRectFilledMultiColor(
             picker_pos,
-            picker_pos + ImVec2::new(sv_picker_size, sv_picker_size),
+            picker_pos + Vector2::new(sv_picker_size, sv_picker_size),
             0,
             0,
             col_black,
@@ -1441,7 +1441,7 @@ pub unsafe fn ColorPicker4(
         RenderFrameBorder(
             g,
             picker_pos,
-            picker_pos + ImVec2::new(sv_picker_size, sv_picker_size),
+            picker_pos + Vector2::new(sv_picker_size, sv_picker_size),
             0.0,
         );
         sv_cursor_pos.x = ImClamp(
@@ -1459,8 +1459,8 @@ pub unsafe fn ColorPicker4(
         // for (let i: c_int = 0; i < 6; ++i)
         for i in 0..6 {
             draw_list.AddRectFilledMultiColor(
-                ImVec2::new(bar0_pos_x, picker_pos.y + i * (sv_picker_size / 6)),
-                ImVec2::new(
+                Vector2::new(bar0_pos_x, picker_pos.y + i * (sv_picker_size / 6)),
+                Vector2::new(
                     bar0_pos_x + bars_width,
                     picker_pos.y + (i + 1) * (sv_picker_size / 6),
                 ),
@@ -1473,14 +1473,14 @@ pub unsafe fn ColorPicker4(
         let bar0_line_y: c_float = IM_ROUND(picker_pos.y + H * sv_picker_size);
         RenderFrameBorder(
             g,
-            ImVec2::new(bar0_pos_x, picker_pos.y),
-            ImVec2::new(bar0_pos_x + bars_width, picker_pos.y + sv_picker_size),
+            Vector2::new(bar0_pos_x, picker_pos.y),
+            Vector2::new(bar0_pos_x + bars_width, picker_pos.y + sv_picker_size),
             0.0,
         );
         RenderArrowsForVerticalBar(
             draw_list,
-            ImVec2::new(bar0_pos_x - 1, bar0_line_y),
-            ImVec2::new(bars_triangles_half_sz + 1, bars_triangles_half_sz),
+            Vector2::new(bar0_pos_x - 1, bar0_line_y),
+            Vector2::new(bars_triangles_half_sz + 1, bars_triangles_half_sz),
             bars_width + 2.0,
             style.Alpha,
         );
@@ -1512,7 +1512,7 @@ pub unsafe fn ColorPicker4(
             bar1_bb.max,
             0,
             bar1_bb.GetWidth() / 2.0,
-            ImVec2::new(0.0, 0.0),
+            Vector2::new(0.0, 0.0),
             0.0,
             0,
         );
@@ -1528,8 +1528,8 @@ pub unsafe fn ColorPicker4(
         RenderFrameBorder(g, bar1_bb.min, bar1_bb.max, 0.0);
         RenderArrowsForVerticalBar(
             draw_list,
-            ImVec2::new(bar1_pos_x - 1, bar1_line_y),
-            ImVec2::new(bars_triangles_half_sz + 1, bars_triangles_half_sz),
+            Vector2::new(bar1_pos_x - 1, bar1_line_y),
+            Vector2::new(bars_triangles_half_sz + 1, bars_triangles_half_sz),
             bars_width + 2.0,
             style.Alpha,
         );
@@ -1559,7 +1559,7 @@ pub unsafe fn ColorButton(
     desc_id: &str,
     col: &ImVec4,
     mut flags: ImGuiColorEditFlags,
-    size_arg: Option<&ImVec2>,
+    size_arg: Option<&Vector2>,
 ) -> bool {
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
@@ -1569,7 +1569,7 @@ pub unsafe fn ColorButton(
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut id: ImguiHandle = window.GetID(desc_id);
     let default_size: c_float = GetFrameHeight();
-    let mut size = ImVec2::from_floats(
+    let mut size = Vector2::from_floats(
         if size_arg.x == 0.0 {
             default_size
         } else {
@@ -1628,17 +1628,17 @@ pub unsafe fn ColorButton(
         let mid_x: c_float = IM_ROUND((bb_inner.min.x + bb_inner.max.x) * 0.5);
         RenderColorRectWithAlphaCheckerboard(
             window.DrawList,
-            ImVec2::new(bb_inner.min.x + grid_step, bb_inner.min.y),
+            Vector2::new(bb_inner.min.x + grid_step, bb_inner.min.y),
             bb_inner.max,
             GetColorU32FromImVec4(&col_rgb),
             grid_step,
-            ImVec2::new(-grid_step + off, off),
+            Vector2::new(-grid_step + off, off),
             rounding,
             ImDrawFlags_RoundCornersRight,
         );
         window.DrawList.AddRectFilled(
             &bb_inner.min,
-            ImVec2::new(mid_x, bb_inner.max.y),
+            Vector2::new(mid_x, bb_inner.max.y),
             GetColorU32(col_rgb_without_alpha, 0.0),
             rounding,
             ImDrawFlags_RoundCornersLeft,
@@ -1657,7 +1657,7 @@ pub unsafe fn ColorButton(
                 bb_inner.max,
                 GetColorU32(col_source, 0.0),
                 grid_step,
-                ImVec2::new(off, off),
+                Vector2::new(off, off),
                 rounding,
                 0,
             );
@@ -1757,7 +1757,7 @@ pub unsafe fn ColorTooltip(text: String, col: c_float, flags: ImGuiColorEditFlag
     separator::Separator();
     // }
 
-    let sz = ImVec2::from_floats(
+    let sz = Vector2::from_floats(
         g.FontSize * 3 + g.style.FramePadding.y * 2,
         g.FontSize * 3 + g.style.FramePadding.y * 2,
     );
@@ -1853,7 +1853,7 @@ pub unsafe fn ColorEditOptionsPopup(col: &[c_float], flags: ImGuiColorEditFlags)
     if allow_opt_inputs || allow_opt_datatype {
         separator::Separator();
     }
-    if button_ops::Button("Copy as..", ImVec2::new(-1, 0)) {
+    if button_ops::Button("Copy as..", Vector2::new(-1, 0)) {
         OpenPopup("Copy", 0);
     }
     if BeginPopup("Copy", 0) {
@@ -1900,7 +1900,7 @@ pub unsafe fn ColorPickerOptionsPopup(ref_col: &[c_float], flags: ImGuiColorEdit
     }
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if allow_opt_picker {
-        let picker_size = ImVec2::from_floats(
+        let picker_size = Vector2::from_floats(
             g.FontSize * 8,
             ImMax(
                 g.FontSize * 8 - (GetFrameHeight() + g.style.ItemInnerSpacing.x),
@@ -1926,7 +1926,7 @@ pub unsafe fn ColorPickerOptionsPopup(ref_col: &[c_float], flags: ImGuiColorEdit
             if picker_type == 1 {
                 picker_flags |= ImGuiColorEditFlags_PickerHueWheel;
             }
-            let backup_pos: ImVec2 = cursor_screen_pos(g);
+            let backup_pos: Vector2 = cursor_screen_pos(g);
             if Selectable("##selectable", false, 0, &picker_size) {
                 // By default, Selectable() is closing popup
                 g.ColorEditOptions = (g.ColorEditOptions & !ImGuiColorEditFlags_PickerMask_)
@@ -2118,10 +2118,10 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let setyle = &mut g.style;
     let display_frame: bool = flag_set(flags, ImGuiTreeNodeFlags_Framed);
-    let padding: ImVec2 = if display_frame || flag_set(flags, ImGuiTreeNodeFlags_FramePadding) {
+    let padding: Vector2 = if display_frame || flag_set(flags, ImGuiTreeNodeFlags_FramePadding) {
         style.FramePadding
     } else {
-        ImVec2::new(
+        Vector2::new(
             style.FramePadding.x,
             window.dc.CurrLineTextBaseOffset.min(style.FramePadding.y),
         )
@@ -2130,7 +2130,7 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
     if (!label_end) {
         label_end = FindRenderedTextEnd(label);
     }
-    let label_size: ImVec2 = CalcTextSize(, label, false, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, false, 0.0);
 
     // We vertically grow up to current line height up the typical widget height.
     let frame_height: c_float = ImMax(
@@ -2170,11 +2170,11 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
         } else {
             0.0
         }); // Include collapser
-    let mut text_pos = ImVec2::from_floats(
+    let mut text_pos = Vector2::from_floats(
         window.dc.cursor_pos.x + text_offset_x,
         window.dc.cursor_pos.y + text_offset_y,
     );
-    ItemSize(g, ImVec2::new(text_width, frame_height), padding.y);
+    ItemSize(g, Vector2::new(text_width, frame_height), padding.y);
 
     // For regular tree nodes, we arbitrary allow to click past 2 worth of ItemSpacing
     let mut interact_bb: ImRect = frame_bb;
@@ -2351,7 +2351,7 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
         if flags & ImGuiTreeNodeFlags_Bullet {
             RenderBullet(
                 window.DrawList,
-                ImVec2::new(
+                Vector2::new(
                     text_pos.x - text_offset_x * 0.60,
                     text_pos.y + g.FontSize * 0.5,
                 ),
@@ -2360,7 +2360,7 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
         } else if !is_leaf {
             RenderArrow(
                 window.DrawList,
-                ImVec2::new(text_pos.x - text_offset_x + padding.x, text_pos.y),
+                Vector2::new(text_pos.x - text_offset_x + padding.x, text_pos.y),
                 text_col,
                 if is_open {
                     ImGuiDir_Down
@@ -2409,7 +2409,7 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
         if flag_set(flags, ImGuiTreeNodeFlags_Bullet) {
             RenderBullet(
                 window.DrawList,
-                ImVec2::new(
+                Vector2::new(
                     text_pos.x - text_offset_x * 0.5,
                     text_pos.y + g.FontSize * 0.5,
                 ),
@@ -2418,7 +2418,7 @@ pub unsafe fn TreeNodeBehavior(id: ImguiHandle, flags: ImGuiTreeNodeFlags, label
         } else if !is_leaf {
             RenderArrow(
                 window.DrawList,
-                ImVec2::new(
+                Vector2::new(
                     text_pos.x - text_offset_x + padding.x,
                     text_pos.y + g.FontSize * 0.150f32,
                 ),
@@ -2576,7 +2576,7 @@ pub unsafe fn CollapsingHeader2(
         );
         let button_y: c_float = g.last_item_data.Rect.Min.y;
         let mut close_button_id: ImguiHandle = GetIDWithSeed("#CLOSE", id);
-        if button_ops::CloseButton(close_button_id, ImVec2::new(button_x, button_y)) {
+        if button_ops::CloseButton(close_button_id, Vector2::new(button_x, button_y)) {
             *p_visible = false;
         }
         g.last_item_data = last_item_backup;
@@ -2599,7 +2599,7 @@ pub fn Selectable(
     label: String,
     selected: bool,
     flags: ImGuiSelectableFlags,
-    size_arg: Option<ImVec2>,
+    size_arg: Option<Vector2>,
 ) -> bool {
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
@@ -2611,8 +2611,8 @@ pub fn Selectable(
 
     // Submit label or explicit size to ItemSize(), whereas ItemAdd() will submit a larger/spanning rectangle.
     let mut id: ImguiHandle = window.GetID(label);
-    let label_size: ImVec2 = CalcTextSize(, label.clone(), true, 0.0);
-    let mut size = ImVec2::from_floats(
+    let label_size: Vector2 = CalcTextSize(, label.clone(), true, 0.0);
+    let mut size = Vector2::from_floats(
         if size_arg.x != 0.0 {
             size_arg.x
         } else {
@@ -2624,7 +2624,7 @@ pub fn Selectable(
             label_size.y
         },
     );
-    let mut pos: ImVec2 = window.dc.cursor_pos;
+    let mut pos: Vector2 = window.dc.cursor_pos;
     pos.y += window.dc.CurrLineTextBaseOffset;
     ItemSize(g, &size, 0.0);
 
@@ -2646,8 +2646,8 @@ pub fn Selectable(
     }
 
     // Text stays at the submission position, but bounding box may be extended on both sides
-    let text_min: ImVec2 = pos;
-    let text_max = ImVec2::from_floats(min_x + size.x, pos.y + size.y);
+    let text_min: Vector2 = pos;
+    let text_max = Vector2::from_floats(min_x + size.x, pos.y + size.y);
 
     // Selectables are meant to be tightly packed together with no click-gap, so we extend their box to cover spacing between selectable.
     let mut bb: ImRect = ImRect::new(min_x, pos.y, text_max.x, text_max.y);
@@ -2845,7 +2845,7 @@ pub unsafe fn Selectable2(
     label: String,
     p_selected: &mut bool,
     flags: ImGuiSelectableFlags,
-    size_arg: &ImVec2,
+    size_arg: &Vector2,
 ) -> bool {
     if Selectable(label, *p_selected, flags, size_arg) {
         *p_selected = !*p_selected;
@@ -2864,7 +2864,7 @@ pub unsafe fn Selectable2(
 
 // Tip: To have a list filling the entire window width, use size.x = -FLT_MIN and pass an non-visible label e.g. "##empty"
 // Tip: If your vertical size is calculated from an item count (e.g. 10 * item_height) consider adding a fractional part to facilitate seeing scrolling boundaries (e.g. 10.25 * item_height).
-pub unsafe fn BeginListBox(label: String, size_arg: &mut ImVec2) -> bool {
+pub unsafe fn BeginListBox(label: String, size_arg: &mut Vector2) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
@@ -2873,22 +2873,22 @@ pub unsafe fn BeginListBox(label: String, size_arg: &mut ImVec2) -> bool {
 
     let setyle = &mut g.style;
     let mut id: ImguiHandle = GetID(label);
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
 
     // Size default to hold ~7.25 items.
     // Fractional number of items helps seeing that we can scroll down/up without looking at scrollbar.
-    let size: ImVec2 = ImFloor(CalcItemSize(
+    let size: Vector2 = ImFloor(CalcItemSize(
         g,
         size_arg,
         CalcItemWidth(g),
         GetTextLineHeightWithSpacing() * 7.25 + style.FramePadding.y * 2.0,
     ));
-    let frame_size: ImVec2 = ImVec2::new(size.x, ImMax(size.y, label_size.y));
+    let frame_size: Vector2 = Vector2::new(size.x, ImMax(size.y, label_size.y));
     let mut frame_bb: ImRect = ImRect::new(window.dc.cursor_pos, window.dc.cursor_pos + frame_size);
     let mut bb: ImRect = ImRect::new(
         frame_bb.min,
         frame_bb.max
-            + ImVec2::new(
+            + Vector2::new(
                 if label_size.x > 0.0 {
                     style.ItemInnerSpacing.x + label_size.x
                 } else {
@@ -2908,7 +2908,7 @@ pub unsafe fn BeginListBox(label: String, size_arg: &mut ImVec2) -> bool {
     // FIXME-OPT: We could omit the BeginGroup() if label_size.x but would need to omit the EndGroup() as well.
     BeginGroup();
     if (label_size.x > 0.0) {
-        let label_pos: ImVec2 = ImVec2::new(
+        let label_pos: Vector2 = Vector2::new(
             frame_bb.max.x + style.ItemInnerSpacing.x,
             frame_bb.min.y + style.FramePadding.y,
         );
@@ -2930,7 +2930,7 @@ pub unsafe fn ListBoxHeader(label: String, items_count: c_int, height_in_items: 
     } else {
         height_in_items
     }) + 0.25f32;
-    size: ImVec2;
+    size: Vector2;
     size.x = 0.0;
     size.y = GetTextLineHeightWithSpacing() * height_in_items_f + g.style.FramePadding.y * 2.0;
     return BeginListBox(label, size);
@@ -2982,7 +2982,7 @@ pub unsafe fn ListBox2(
         height_in_items = items_count.min(7);
     }
     let height_in_items_f: c_float = height_in_items + 0.25f32;
-    let mut size = ImVec2::from_floats(
+    let mut size = Vector2::from_floats(
         0.0,
         ImFloor(GetTextLineHeightWithSpacing() * height_in_items_f + g.style.FramePadding.y * 2.0),
     );
@@ -3048,7 +3048,7 @@ pub unsafe fn PlotEx(
     overlay_text: String,
     mut scale_min: c_float,
     mut scale_max: c_float,
-    mut frame_size: ImVec2,
+    mut frame_size: Vector2,
 ) -> usize {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.current_window_mut().unwrap();
@@ -3059,7 +3059,7 @@ pub unsafe fn PlotEx(
     let setyle = &mut g.style;
     let mut id: ImguiHandle = window.GetID(label);
 
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
     if frame_size.x == 0.0 {
         frame_size.x = CalcItemWidth(g);
     }
@@ -3075,7 +3075,7 @@ pub unsafe fn PlotEx(
     let mut total_bb: ImRect = ImRect::new(
         frame_bb.min,
         frame_bb.max
-            + ImVec2::new(
+            + Vector2::new(
                 if label_size.x > 0.0 {
                     style.ItemInnerSpacing.x + label_size.x
                 } else {
@@ -3171,7 +3171,7 @@ pub unsafe fn PlotEx(
 
         let v0: c_float = values_getter(data, (0 + values_offset) % values_count);
         let mut t0: c_float = 0.0;
-        let mut tp0: ImVec2 = ImVec2::new(t0, 1.0 - ImSaturate((v0 - scale_min) * inv_scale)); // Point in the normalized space of our target rectangle
+        let mut tp0: Vector2 = Vector2::new(t0, 1.0 - ImSaturate((v0 - scale_min) * inv_scale)); // Point in the normalized space of our target rectangle
         let histogram_zero_line_t: c_float = if scale_min * scale_max < 0.0 {
             (1 + scale_min * inv_scale)
         } else {
@@ -3202,17 +3202,17 @@ pub unsafe fn PlotEx(
             // IM_ASSERT(v1_idx >= 0 && v1_idx < values_count);
             let v1: c_float =
                 values_getter(data, ((v1_idx + values_offset + 1) % values_count) as usize);
-            let tp1: ImVec2 = ImVec2::new(t1, 1.0 - ImSaturate((v1 - scale_min) * inv_scale));
+            let tp1: Vector2 = Vector2::new(t1, 1.0 - ImSaturate((v1 - scale_min) * inv_scale));
 
             // NB: Draw calls are merged together by the DrawList system. Still, we should render our batch are lower level to save a bit of CPU.
-            let pos0: ImVec2 = ImLerpVec22(&inner_bb.min, &inner_bb.max, &tp0);
-            let mut pos1: ImVec2 = ImLerpVec22(
+            let pos0: Vector2 = ImLerpVec22(&inner_bb.min, &inner_bb.max, &tp0);
+            let mut pos1: Vector2 = ImLerpVec22(
                 &inner_bb.min,
                 &inner_bb.max,
                 &if plot_type == ImGuiPlotType_Lines {
                     tp1
                 } else {
-                    ImVec2::new(tp1.x, histogram_zero_line_t)
+                    Vector2::new(tp1.x, histogram_zero_line_t)
                 },
             );
             if plot_type == ImGuiPlotType_Lines {
@@ -3251,18 +3251,18 @@ pub unsafe fn PlotEx(
     // Text overlay
     if overlay_text {
         RenderTextClipped(
-            ImVec2::new(frame_bb.min.x, frame_bb.min.y + style.FramePadding.y),
+            Vector2::new(frame_bb.min.x, frame_bb.min.y + style.FramePadding.y),
             &frame_bb.max,
             overlay_text,
             None,
             None,
-            Some(ImVec2::new(0.5, 0.0)),
+            Some(Vector2::new(0.5, 0.0)),
         );
     }
 
     if label_size.x > 0.0 {
         RenderText(
-            ImVec2::new(frame_bb.max.x + style.ItemInnerSpacing.x, inner_bb.min.y),
+            Vector2::new(frame_bb.max.x + style.ItemInnerSpacing.x, inner_bb.min.y),
             label,
             false,
             g,
@@ -3286,7 +3286,7 @@ pub unsafe fn PlotLines(
     overlay_text: String,
     scale_min: c_float,
     scale_max: c_float,
-    graph_size: &ImVec2,
+    graph_size: &Vector2,
     stride: c_int,
 ) {
     let mut data = ImGuiPlotArrayGetterData::new(values, stride);
@@ -3313,7 +3313,7 @@ pub unsafe fn PlotLines2(
     overlay_text: String,
     scale_min: c_float,
     scale_max: c_float,
-    graph_size: ImVec2,
+    graph_size: Vector2,
 ) {
     PlotEx(
         ImGuiPlotType_Lines,
@@ -3337,7 +3337,7 @@ pub unsafe fn PlotHistogram(
     overlay_text: String,
     scale_min: c_float,
     scale_max: c_float,
-    graph_size: ImVec2,
+    graph_size: Vector2,
     stride: c_int,
 ) {
     let mut data = ImGuiPlotArrayGetterData::new(values, stride);
@@ -3364,7 +3364,7 @@ pub unsafe fn PlotHistogram2(
     overlay_text: String,
     scale_min: c_float,
     scale_max: c_float,
-    graph_size: ImVec2,
+    graph_size: Vector2,
 ) {
     PlotEx(
         ImGuiPlotType_Histogram,
@@ -3438,7 +3438,7 @@ pub unsafe fn BeginMenuBar() -> bool {
     PushClipRect(g, &clip_rect.min, &clip_rect.max, false);
 
     // We overwrite CursorMaxPos because BeginGroup sets it to CursorPos (essentially the .EmitItem hack in EndMenuBar() would need something analogous here, maybe a BeginGroupEx() with flags).
-    window.dc.CursorMaxPos = ImVec2::new(
+    window.dc.CursorMaxPos = Vector2::new(
         bar_rect.min.x + window.dc.MenuBarOffset.x,
         bar_rect.min.y + window.dc.MenuBarOffset.y,
     );
@@ -3511,7 +3511,7 @@ pub unsafe fn EndMenuBar() {
 // FIXME: The "rect-cut" aspect of this could be formalized into a lower-level helper (rect-cut: https://halt.software/dead-simple-layouts)
 pub unsafe fn BeginViewportSideBar(
     name: &str,
-    viewport_p: *mut ImguiViewport,
+    viewport_p: *mut Viewport,
     dir: ImGuiDir,
     axis_size: c_float,
     mut window_flags: ImGuiWindowFlags,
@@ -3519,7 +3519,7 @@ pub unsafe fn BeginViewportSideBar(
     // IM_ASSERT(dir != ImGuiDir_None);
 
     let mut bar_window: &mut ImguiWindow = FindWindowByName(name, );
-    let mut viewport: *mut ImguiViewport = (if viewport_p {
+    let mut viewport: *mut Viewport = (if viewport_p {
         viewport_p
     } else {
         GetMainViewport()
@@ -3532,11 +3532,11 @@ pub unsafe fn BeginViewportSideBar(
         } else {
             IM_GUI_AXIS_X
         };
-        let pos: ImVec2 = avail_rect.min;
+        let pos: Vector2 = avail_rect.min;
         if dir == ImGuiDir_Right || dir == ImGuiDir_Down {
             pos[axis] = avail_rect.max[axis] - axis_size;
         }
-        let size: ImVec2 = avail_rect.GetSize();
+        let size: Vector2 = avail_rect.GetSize();
         size[axis] = axis_size;
         SetNextWindowPos(, &pos, 0, &Default::default());
         SetNextWindowSize(&size, 0);
@@ -3555,7 +3555,7 @@ pub unsafe fn BeginViewportSideBar(
         | ImGuiWindowFlags_NoDocking;
     SetNextWindowViewport(viewport.ID); // Enforce viewport so we don't create our own viewport when ImGuiConfigFlags_ViewportsNoMerge is set.
     PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0);
-    PushStyleVar(ImGuiStyleVar_WindowMinSize, ImVec2::new(0, 0)); // Lift normal size constraint
+    PushStyleVar(ImGuiStyleVar_WindowMinSize, Vector2::new(0, 0)); // Lift normal size constraint
     let mut is_open: bool = Begin(g, name, None);
     PopStyleVar(2);
 
@@ -3564,7 +3564,7 @@ pub unsafe fn BeginViewportSideBar(
 
 pub unsafe fn BeginMainMenuBar() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut viewport: *mut ImguiViewport = GetMainViewport();
+    let mut viewport: *mut Viewport = GetMainViewport();
 
     // Notify of viewport change so GetFrameHeight() can be accurate in case of DPI change
     SetCurrentViewport(None, viewport);
@@ -3572,7 +3572,7 @@ pub unsafe fn BeginMainMenuBar() -> bool {
     // For the main menu bar, which cannot be moved, we honor g.style.DisplaySafeAreaPadding to ensure text can be visible on a TV set.
     // FIXME: This could be generalized as an opt-in way to clamp window.dc.CursorStartPos to avoid SafeArea?
     // FIXME: Consider removing support for safe area down the line... it's messy. Nowadays consoles have support for TV calibration in OS settings.
-    g.NextWindowData.MenuBarOffsetMinVal = ImVec2::new(
+    g.NextWindowData.MenuBarOffsetMinVal = Vector2::new(
         g.style.DisplaySafeAreaPadding.x,
         ImMax(
             g.style.DisplaySafeAreaPadding.y - g.style.FramePadding.y,
@@ -3584,7 +3584,7 @@ pub unsafe fn BeginMainMenuBar() -> bool {
     let height: c_float = GetFrameHeight();
     let mut is_open: bool =
         BeginViewportSideBar("##MainMenuBar", viewport, ImGuiDir_Up, height, window_flags);
-    g.NextWindowData.MenuBarOffsetMinVal = ImVec2::new(0.0, 0.0);
+    g.NextWindowData.MenuBarOffsetMinVal = Vector2::new(0.0, 0.0);
 
     if is_open {
         BeginMenuBar();
@@ -3673,7 +3673,7 @@ pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
     // Tag menu as used. Next time BeginMenu() with same ID is called it will append to existing menu
     g.MenusIdSubmittedThisFrame.push(id);
 
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
 
     // Odd hack to allow hovering across menus of a same menu-set (otherwise we wouldn't be able to hover parent without always being a Child window)
     let menuset_is_open: bool = IsRootOfOpenMenuSet();
@@ -3685,7 +3685,7 @@ pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
     // The reference position stored in popup_pos will be used by Begin() to find a suitable position for the child menu,
     // However the final position is going to be different! It is chosen by FindBestWindowPosForPopup().
     // e.g. Menus tend to overlap each other horizontally to amplify relative Z-ordering.
-    let mut popup_pos = ImVec2::default();
+    let mut popup_pos = Vector2::default();
     let pos = window.dc.cursor_pos;
     PushID(label);
     if !enabled {
@@ -3700,21 +3700,21 @@ pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
         // Menu inside an horizontal menu bar
         // Selectable extend their highlight by half ItemSpacing in each direction.
         // For ChildMenu, the popup position will be overwritten by the call to FindBestWindowPosForPopup() in Begin()
-        popup_pos = ImVec2::new(
+        popup_pos = Vector2::new(
             pos.x - 1.0 - IM_FLOOR(style.ItemSpacing.x * 0.5),
             pos.y - style.FramePadding.y + window.MenuBarHeight(),
         );
         window.dc.cursor_pos.x += IM_FLOOR(style.ItemSpacing.x * 0.5);
         PushStyleVar(
             ImGuiStyleVar_ItemSpacing,
-            ImVec2::new(style.ItemSpacing.x * 2.0, style.ItemSpacing.y),
+            Vector2::new(style.ItemSpacing.x * 2.0, style.ItemSpacing.y),
         );
         let w: c_float = label_size.x;
-        let mut text_pos = ImVec2::from_floats(
+        let mut text_pos = Vector2::from_floats(
             window.dc.cursor_pos.x + offsets.OffsetLabel,
             window.dc.cursor_pos.y + window.dc.CurrLineTextBaseOffset,
         );
-        pressed = Selectable("", menu_is_open, selectable_flags, ImVec2::new(w, 0.0));
+        pressed = Selectable("", menu_is_open, selectable_flags, Vector2::new(w, 0.0));
         RenderText(text_pos, label, false, g);
         PopStyleVar();
         window.dc.cursor_pos.x += IM_FLOOR(style.ItemSpacing.x * (-1.0 + 0.5)); // -1 spacing to compensate the spacing added when Selectable() did a SameLine(). It would also work to call SameLine() ourselves after the PopStyleVar().
@@ -3722,7 +3722,7 @@ pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
         // Menu inside a regular/vertical menu
         // (In a typical menu window where all items are BeginMenu() or MenuItem() calls, extra_w will always be 0.0.
         //  Only when they are other items sticking out we're going to add spacing, yet only register minimum width into the layout system.
-        popup_pos = ImVec2::new(pos.x, pos.y - style.WindowPadding.y);
+        popup_pos = Vector2::new(pos.x, pos.y - style.WindowPadding.y);
         let icon_w: c_float = if icon && icon[0] {
             CalcTextSize(, icon, false, 0.0).x
         } else {
@@ -3735,7 +3735,7 @@ pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
                 .MenuColumns
                 .DeclColumns(icon_w, label_size.x, 0.0, checkmark_w); // Feedback to next frame
         let extra_w: c_float = ImMax(0.0, content_region_avail(g).x - min_w);
-        let mut text_pos = ImVec2::from_floats(
+        let mut text_pos = Vector2::from_floats(
             window.dc.cursor_pos.x + offsets.OffsetLabel,
             window.dc.cursor_pos.y + window.dc.CurrLineTextBaseOffset,
         );
@@ -3743,15 +3743,15 @@ pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
             "",
             menu_is_open,
             selectable_flags | ImGuiSelectableFlags_SpanAvailWidth,
-            ImVec2::new(min_w, 0.0),
+            Vector2::new(min_w, 0.0),
         );
         RenderText(text_pos, label, false, g);
         if icon_w > 0.0 {
-            RenderText(pos + ImVec2::new(offsets.OffsetIcon, 0.0), icon, false, g);
+            RenderText(pos + Vector2::new(offsets.OffsetIcon, 0.0), icon, false, g);
         }
         RenderArrow(
             window.DrawList,
-            pos + ImVec2::new(offsets.OffsetMark + extra_w + g.FontSize * 0.3f32, 0.0),
+            pos + Vector2::new(offsets.OffsetMark + extra_w + g.FontSize * 0.3f32, 0.0),
             GetColorU32(ImGuiCol_Text, 0.0),
             ImGuiDir_Right,
             0.0,
@@ -3795,13 +3795,13 @@ pub unsafe fn BeginMenuEx(label: String, icon: &str, enabled: bool) -> bool {
                 -1.0
             };
             let mut next_window_rect: ImRect = child_menu_window.Rect();
-            let mut ta: ImVec2 = (g.IO.MousePos - g.IO.MouseDelta);
-            let mut tb: ImVec2 = if child_dir > 0.0 {
+            let mut ta: Vector2 = (g.IO.MousePos - g.IO.MouseDelta);
+            let mut tb: Vector2 = if child_dir > 0.0 {
                 next_window_rect.GetTL()
             } else {
                 next_window_rect.GetTR()
             };
-            let mut tc: ImVec2 = if child_dir > 0.0 {
+            let mut tc: Vector2 = if child_dir > 0.0 {
                 next_window_rect.GetBL()
             } else {
                 next_window_rect.GetBR()
@@ -3948,8 +3948,8 @@ pub unsafe fn MenuItemEx(
 
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.style;
-    let pos: ImVec2 = window.dc.cursor_pos;
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let pos: Vector2 = window.dc.cursor_pos;
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
 
     let menuset_is_open: bool = IsRootOfOpenMenuSet();
     let mut backed_nav_window: &mut ImguiWindow = g.NavWindow;
@@ -3973,15 +3973,15 @@ pub unsafe fn MenuItemEx(
         // Note that in this situation: we don't render the shortcut, we render a highlight instead of the selected tick mark.
         let w: c_float = label_size.x;
         window.dc.cursor_pos.x += (style.ItemSpacing.x * 0.5).floor();
-        let mut text_pos = ImVec2::from_floats(
+        let mut text_pos = Vector2::from_floats(
             window.dc.cursor_pos.x + offsets.OffsetLabel,
             window.dc.cursor_pos.y + window.dc.CurrLineTextBaseOffset,
         );
         PushStyleVar(
             ImGuiStyleVar_ItemSpacing,
-            ImVec2::new(style.ItemSpacing.x * 2.0, style.ItemSpacing.y),
+            Vector2::new(style.ItemSpacing.x * 2.0, style.ItemSpacing.y),
         );
-        pressed = Selectable("", selected, selectable_flags, ImVec2::new(w, 0.0));
+        pressed = Selectable("", selected, selectable_flags, Vector2::new(w, 0.0));
         PopStyleVar();
         RenderText(text_pos, label, false, g);
         window.dc.cursor_pos.x += IM_FLOOR(style.ItemSpacing.x * (-1.0 + 0.5)); // -1 spacing to compensate the spacing added when Selectable() did a SameLine(). It would also work to call SameLine() ourselves after the PopStyleVar().
@@ -4010,16 +4010,16 @@ pub unsafe fn MenuItemEx(
             "",
             false,
             selectable_flags | ImGuiSelectableFlags_SpanAvailWidth,
-            ImVec2::new(min_w, 0.0),
+            Vector2::new(min_w, 0.0),
         );
-        RenderText(pos + ImVec2::new(offsets.OffsetLabel, 0.0), label, false, g);
+        RenderText(pos + Vector2::new(offsets.OffsetLabel, 0.0), label, false, g);
         if icon._w > 0.0 {
-            RenderText(pos + ImVec2::new(offsets.OffsetIcon, 0.0), icon, false, g);
+            RenderText(pos + Vector2::new(offsets.OffsetIcon, 0.0), icon, false, g);
         }
         if shortcut_w > 0.0 {
             PushStyleColor(ImGuiCol_Text, style.Colors[ImGuiCol_TextDisabled]);
             RenderText(
-                pos + ImVec2::new(offsets.OffsetShortcut + stretch_w, 0.0),
+                pos + Vector2::new(offsets.OffsetShortcut + stretch_w, 0.0),
                 shortcut,
                 false,
                 g,
@@ -4029,7 +4029,7 @@ pub unsafe fn MenuItemEx(
         if (selected) {
             RenderCheckMark(
                 window.DrawList,
-                pos + ImVec2::new(
+                pos + Vector2::new(
                     offsets.OffsetMark + stretch_w + g.FontSize * 0.40,
                     g.FontSize * 0.134 * 0.5,
                 ),
@@ -4192,7 +4192,7 @@ pub unsafe fn BeginTabBarEx(
     // Append with multiple BeginTabBar()/EndTabBar() pairs.
     tab_bar.BackupCursorPos = window.dc.cursor_pos;
     if tab_bar.CurrFrameVisible == g.FrameCount {
-        window.dc.cursor_pos = ImVec2::new(
+        window.dc.cursor_pos = Vector2::new(
             tab_bar.BarRect.min.x,
             tab_bar.BarRect.max.y + tab_bar.ItemSpacingY,
         );
@@ -4231,7 +4231,7 @@ pub unsafe fn BeginTabBarEx(
     tab_bar.BeginCount = 1;
 
     // Set cursor pos in a way which only be used in the off-chance the user erroneously submits item before BeginTabItem(): items will overlap
-    window.dc.cursor_pos = ImVec2::new(
+    window.dc.cursor_pos = Vector2::new(
         tab_bar.BarRect.min.x,
         tab_bar.BarRect.max.y + tab_bar.ItemSpacingY,
     );
@@ -4250,8 +4250,8 @@ pub unsafe fn BeginTabBarEx(
         let separator_min_x: c_float = dock_node.Pos.x + window.WindowBorderSize;
         let separator_max_x: c_float = dock_node.Pos.x + dock_node.Size.x - window.WindowBorderSize;
         window.DrawList.AddLine(
-            ImVec2::new(separator_min_x, y),
-            ImVec2::new(separator_max_x, y),
+            Vector2::new(separator_min_x, y),
+            Vector2::new(separator_max_x, y),
             col,
             1.0,
         );
@@ -4261,8 +4261,8 @@ pub unsafe fn BeginTabBarEx(
         let separator_max_x: c_float =
             tab_bar.BarRect.max.x + IM_FLOOR(window.WindowPadding.x * 0.5);
         window.DrawList.AddLine(
-            ImVec2::new(separator_min_x, y),
-            ImVec2::new(separator_max_x, y),
+            Vector2::new(separator_min_x, y),
+            Vector2::new(separator_max_x, y),
             col,
             1.0,
         );
@@ -4653,7 +4653,7 @@ pub unsafe fn TabBarLayout(tab_bar: &mut ImGuiTabBar) {
     window.dc.cursor_pos = tab_bar.BarRect.min;
     ItemSize(
         g,
-        ImVec2::new(tab_bar.WidthAllTabs, tab_bar.BarRect.GetHeight()),
+        Vector2::new(tab_bar.WidthAllTabs, tab_bar.BarRect.GetHeight()),
         tab_bar.FramePadding.y,
     );
     window.dc.IdealMaxPos.x = ImMax(
@@ -4850,7 +4850,7 @@ pub unsafe fn TabBarQueueReorder(tab_bar: &mut ImGuiTabBar, tab: &ImGuiTabItem, 
 pub unsafe fn TabBarQueueReorderFromMousePos(
     tab_bar: &mut ImGuiTabBar,
     src_tab: &ImGuiTabItem,
-    mouse_pos: ImVec2,
+    mouse_pos: Vector2,
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
                     // IM_ASSERT(tab_bar.ReorderRequestTabId == 0);
@@ -4960,7 +4960,7 @@ pub unsafe fn TabBarScrollingButtons(tab_bar: &mut ImGuiTabBar) {
     let mut window  = g.current_window_mut().unwrap();
 
     let mut arrow_button_size =
-        ImVec2::from_floats(g.FontSize - 2.0, g.FontSize + g.style.FramePadding.y * 2.0);
+        Vector2::from_floats(g.FontSize - 2.0, g.FontSize + g.style.FramePadding.y * 2.0);
     let scrolling_buttons_width: c_float = arrow_button_size.x * 2.0;
 
     let backup_cursor_pos = &mut window.dc.cursor_pos;
@@ -4980,7 +4980,7 @@ pub unsafe fn TabBarScrollingButtons(tab_bar: &mut ImGuiTabBar) {
         tab_bar.BarRect.min.x,
         tab_bar.BarRect.max.x - scrolling_buttons_width,
     );
-    window.dc.cursor_pos = ImVec2::new(x, tab_bar.BarRect.min.y);
+    window.dc.cursor_pos = Vector2::new(x, tab_bar.BarRect.min.y);
     if ArrowButtonEx(
         "##<",
         ImGuiDir_Left,
@@ -4989,7 +4989,7 @@ pub unsafe fn TabBarScrollingButtons(tab_bar: &mut ImGuiTabBar) {
     ) {
         select_dir = -1;
     }
-    window.dc.cursor_pos = ImVec2::new(x + arrow_button_size.x, tab_bar.BarRect.min.y);
+    window.dc.cursor_pos = Vector2::new(x + arrow_button_size.x, tab_bar.BarRect.min.y);
     if ArrowButtonEx(
         "##>",
         ImGuiDir_Right,
@@ -5045,8 +5045,8 @@ pub unsafe fn TabBarTabListPopupButton(tab_bar: &mut ImGuiTabBar) -> *mut ImGuiT
 
     // We use g.style.FramePadding.y to match the square ArrowButton size
     let tab_list_popup_button_width: c_float = g.FontSize + g.style.FramePadding.y;
-    let backup_cursor_pos: ImVec2 = window.dc.cursor_pos;
-    window.dc.cursor_pos = ImVec2::new(
+    let backup_cursor_pos: Vector2 = window.dc.cursor_pos;
+    window.dc.cursor_pos = Vector2::new(
         tab_bar.BarRect.min.x - g.style.FramePadding.y,
         tab_bar.BarRect.min.y,
     );
@@ -5313,18 +5313,18 @@ pub unsafe fn TabItemEx(
     }
 
     // Backup current layout position
-    let backup_main_cursor_pos: ImVec2 = window.dc.cursor_pos;
+    let backup_main_cursor_pos: Vector2 = window.dc.cursor_pos;
 
     // Layout
     let is_central_section: bool = flag_clear(tab.Flags, ImGuiTabItemFlags_SectionMask_);
     size.x = tab.Width;
     if is_central_section {
         window.dc.cursor_pos =
-            tab_bar.BarRect.min + ImVec2::new(IM_FLOOR(tab.Offset - tab_bar.ScrollingAnim), 0.0);
+            tab_bar.BarRect.min + Vector2::new(IM_FLOOR(tab.Offset - tab_bar.ScrollingAnim), 0.0);
     } else {
-        window.dc.cursor_pos = tab_bar.BarRect.min + ImVec2::new(tab.Offset, 0.0);
+        window.dc.cursor_pos = tab_bar.BarRect.min + Vector2::new(tab.Offset, 0.0);
     }
-    let pos: ImVec2 = window.dc.cursor_pos;
+    let pos: Vector2 = window.dc.cursor_pos;
     let mut bb: ImRect = ImRect::new(pos, pos + size);
 
     // We don't have CPU clipping primitives to clip the CloseButton (until it becomes a texture), so need to add an extra draw call (temporary in the case of vertical animation)
@@ -5333,13 +5333,13 @@ pub unsafe fn TabItemEx(
     if (want_clip_rect) {
         PushClipRect(
             g,
-            ImVec2::new(ImMax(bb.min.x, tab_bar.ScrollingRectMinX), bb.min.y - 1),
-            ImVec2::new(tab_bar.ScrollingRectMaxX, bb.max.y),
+            Vector2::new(ImMax(bb.min.x, tab_bar.ScrollingRectMinX), bb.min.y - 1),
+            Vector2::new(tab_bar.ScrollingRectMaxX, bb.max.y),
             true,
         );
     }
 
-    let backup_cursor_max_pos: ImVec2 = window.dc.CursorMaxPos;
+    let backup_cursor_max_pos: Vector2 = window.dc.CursorMaxPos;
     ItemSize(g, &bb.GetSize(), style.FramePadding.y);
     window.dc.CursorMaxPos = backup_cursor_max_pos;
 
@@ -5582,10 +5582,10 @@ pub unsafe fn SetTabItemClosed(label: String) {
     }
 }
 
-pub unsafe fn TabItemCalcSize(label: String, has_close_button: bool) -> ImVec2 {
+pub unsafe fn TabItemCalcSize(label: String, has_close_button: bool) -> Vector2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
-    let mut size: ImVec2 = ImVec2::new(
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
+    let mut size: Vector2 = Vector2::new(
         label_size.x + g.style.FramePadding.x,
         label_size.y + g.style.FramePadding.y * 2.0,
     );
@@ -5596,7 +5596,7 @@ pub unsafe fn TabItemCalcSize(label: String, has_close_button: bool) -> ImVec2 {
     else {
         size.x += g.style.FramePadding.x + 1.0;
     }
-    return ImVec2::new(siz.x.min(TabBarCalMaxTabWidth()), size.y);
+    return Vector2::new(siz.x.min(TabBarCalMaxTabWidth()), size.y);
 }
 
 pub unsafe fn TabItemBackground(
@@ -5628,36 +5628,36 @@ pub unsafe fn TabItemBackground(
         } else {
             -1.0
         });
-    draw_list.PathLineTo(ImVec2::new(bb.min.x, y2));
+    draw_list.PathLineTo(Vector2::new(bb.min.x, y2));
     draw_list.PathArcToFast(
-        ImVec2::new(bb.min.x + rounding, y1 + rounding),
+        Vector2::new(bb.min.x + rounding, y1 + rounding),
         rounding,
         6,
         9,
     );
     draw_list.PathArcToFast(
-        ImVec2::new(bb.max.x - rounding, y1 + rounding),
+        Vector2::new(bb.max.x - rounding, y1 + rounding),
         rounding,
         9,
         12,
     );
-    draw_list.PathLineTo(ImVec2::new(bb.max.x, y2));
+    draw_list.PathLineTo(Vector2::new(bb.max.x, y2));
     draw_list.PathFillConvex(col);
     if (g.style.TabBorderSize > 0.0) {
-        draw_list.PathLineTo(ImVec2::new(bb.min.x + 0.5, y2));
+        draw_list.PathLineTo(Vector2::new(bb.min.x + 0.5, y2));
         draw_list.PathArcToFast(
-            ImVec2::new(bb.min.x + rounding + 0.5, y1 + rounding + 0.5),
+            Vector2::new(bb.min.x + rounding + 0.5, y1 + rounding + 0.5),
             rounding,
             6,
             9,
         );
         draw_list.PathArcToFast(
-            ImVec2::new(bb.max.x - rounding - 0.5, y1 + rounding + 0.5),
+            Vector2::new(bb.max.x - rounding - 0.5, y1 + rounding + 0.5),
             rounding,
             9,
             12,
         );
-        draw_list.PathLineTo(ImVec2::new(bb.max.x - 0.5, y2));
+        draw_list.PathLineTo(Vector2::new(bb.max.x - 0.5, y2));
         draw_list.PathStroke(GetColorU32(ImGuiCol_Border, 0.0), 0, g.style.TabBorderSize);
     }
 }
@@ -5668,7 +5668,7 @@ pub unsafe fn TabItemLabelAndCloseButton(
     draw_list: *mut ImDrawList,
     bb: &mut ImRect,
     flags: ImGuiTabItemFlags,
-    frame_padding: ImVec2,
+    frame_padding: Vector2,
     label: String,
     tab_id: ImguiHandle,
     close_button_id: ImguiHandle,
@@ -5677,7 +5677,7 @@ pub unsafe fn TabItemLabelAndCloseButton(
     out_text_clipped: &mut bool,
 ) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
 
     if (out_just_closed) {
         *out_just_closed = false;
@@ -5715,7 +5715,7 @@ pub unsafe fn TabItemLabelAndCloseButton(
     }
 
     let button_sz: c_float = g.FontSize;
-    let button_pos = ImVec2::from_floats(
+    let button_pos = Vector2::from_floats(
         ImMax(bb.min.x, bb.max.x - frame_padding.x * 2.0 - button_sz),
         bb.min.y,
     );
@@ -5761,7 +5761,7 @@ pub unsafe fn TabItemLabelAndCloseButton(
     } else if (unsaved_marker_visible) {
         let mut bullet_bb: ImRect = ImRect::new(
             button_pos,
-            button_pos + ImVec2::new(button_sz, button_sz) + g.style.FramePadding * 2.0,
+            button_pos + Vector2::new(button_sz, button_sz) + g.style.FramePadding * 2.0,
         );
         RenderBullet(
             draw_list,

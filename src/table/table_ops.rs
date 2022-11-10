@@ -16,7 +16,7 @@ use crate::table_flags::{
 };
 use crate::table_instance_data::ImGuiTableInstanceData;
 use crate::table_row_flags::ImGuiTableRowFlags_Headers;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::rect::SetWindowClipRectBeforeSetChannel;
 use crate::window_ops::SetWindowClipRectBeforeSetChannel;
 use libc::{c_float, c_int};
@@ -147,8 +147,8 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
         // Draw top border
         if border_col > 0 && bg_y1 >= table.BgClipRect.min.y && bg_y1 < table.BgClipRect.max.y {
             window.DrawList.AddLine(
-                &mut ImVec2::from_floats(table.BorderX1, bg_y1),
-                &mut ImVec2::from_floats(table.BorderX2, bg_y1),
+                &mut Vector2::from_floats(table.BorderX1, bg_y1),
+                &mut Vector2::from_floats(table.BorderX2, bg_y1),
                 border_col,
                 border_size,
             );
@@ -160,8 +160,8 @@ pub unsafe fn TableEndRow(table: *mut ImGuiTable) {
             && bg_y2 < table.BgClipRect.max.y
         {
             window.DrawList.AddLine(
-                &mut ImVec2::from_floats(table.BorderX1, bg_y2),
-                &mut ImVec2::from_floats(table.BorderX2, bg_y2),
+                &mut Vector2::from_floats(table.BorderX1, bg_y2),
+                &mut Vector2::from_floats(table.BorderX2, bg_y2),
                 table.BorderColorStrong,
                 border_size,
             );

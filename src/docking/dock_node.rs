@@ -12,7 +12,7 @@ use crate::docking::dock_node_flags::{
 use crate::docking::dock_node_state::{ImGuiDockNodeState, ImGuiDockNodeState_Unknown};
 use crate::widgets::tab_bar::ImGuiTabBar;
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::window_class::ImGuiWindowClass;
 use crate::window::ImguiWindow;
 use crate::window_class::ImGuiWindowClass;
@@ -33,9 +33,9 @@ pub struct ImGuiDockNode {
     pub ChildNodes: [ImGuiDockNode; 2],
     pub Windows: Vec<ImguiWindow>, // Note: unordered list! Iterate TabBar.Tabs for user-order.
     pub TabBar: ImGuiTabBar,
-    pub Pos: ImVec2,                   // Current position
-    pub Size: ImVec2,                  // Current size
-    pub SizeRef: ImVec2, // [Split node only] Last explicitly written-to size (overridden when using a splitter affecting the node), used to calculate Size.
+    pub Pos: Vector2,                   // Current position
+    pub Size: Vector2,                  // Current size
+    pub SizeRef: Vector2, // [Split node only] Last explicitly written-to size (overridden when using a splitter affecting the node), used to calculate Size.
     pub SplitAxis: ImGuiAxis, // [Split node only] Split axis (X or Y)
     pub WindowClass: ImGuiWindowClass, // [Root node only]
     pub LastBgColor: u32,

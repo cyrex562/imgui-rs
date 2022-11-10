@@ -17,7 +17,7 @@ use crate::stb_ops::{stb_decompress, stb_decompress_length};
 use crate::core::string_ops::{str_to_const_c_char_ptr, ImFormatString};
 use crate::core::type_defs::{ImTextureID, ImWchar};
 use crate::core::utils::is_not_null;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use libc::{c_char, c_float, c_int, c_uchar, c_uint, c_ushort, c_void, size_t};
 use std::ptr::{null, null_mut};
@@ -69,9 +69,9 @@ pub struct ImFontAtlas {
     // Texture width calculated during Build().
     pub TexHeight: usize,
     // Texture height calculated during Build().
-    pub TexUvScale: ImVec2,
+    pub TexUvScale: Vector2,
     // = (1.0f/TexWidth, 1.0f/TexHeight)
-    pub TexUvWhitePixel: ImVec2,
+    pub TexUvWhitePixel: Vector2,
     // Texture coordinates to a white pixel
     pub Fonts: Vec<ImFont>,
     // Hold all the fonts returned by AddFont*. Fonts[0] is the default font upon calling NewFrame(), use PushFont()/PopFont() to change the current font.
@@ -706,7 +706,7 @@ impl ImFontAtlas {
         width: size_t,
         height: size_t,
         advance_x: c_float,
-        offset: &ImVec2,
+        offset: &Vector2,
     ) -> size_t {
         // #ifdef IMGUI_USE_WCHAR32
         // IM_ASSERT(id <= IM_UNICODE_CODEPOINT_MAX);
@@ -736,13 +736,13 @@ impl ImFontAtlas {
     pub unsafe fn CalcUstomRectUV(
         &mut self,
         rect: *const ImFontAtlasCustomRect,
-        out_uv_min: *mut ImVec2,
-        out_uv_max: *mut ImVec2,
+        out_uv_min: *mut Vector2,
+        out_uv_max: *mut Vector2,
     ) {
         // IM_ASSERT(TexWidth > 0 && TexHeight > 0);   // Font atlas needs to be built before we can calculate UV coordinates
         // IM_ASSERT(rect.IsPacked());                // Make sure the rectangle has been packed
-        *out_uv_min = ImVec2::from_floats(rect.X * self.TexUvScale.x, rect.Y * self.TexUvScale.y);
-        *out_uv_max = ImVec2::from_floats(
+        *out_uv_min = Vector2::from_floats(rect.X * self.TexUvScale.x, rect.Y * self.TexUvScale.y);
+        *out_uv_max = Vector2::from_floats(
             (rect.X + rect.Width) * self.TexUvScale.x,
             (rect.Y + rect.Height) * self.TexUvScale.y,
         );
@@ -752,10 +752,10 @@ impl ImFontAtlas {
     pub unsafe fn GetMouseCursorTexData(
         &mut self,
         cursor: ImGuiMouseCursor,
-        out_offset: *mut ImVec2,
-        out_size: *mut ImVec2,
-        mut out_uv_border: [ImVec2; 2],
-        mut out_uv_fill: [ImVec2; 2],
+        out_offset: *mut Vector2,
+        out_size: *mut Vector2,
+        mut out_uv_border: [Vector2; 2],
+        mut out_uv_fill: [Vector2; 2],
     ) -> bool {
         if cursor_type <= ImGuiMouseCursor_None || cursor_type >= ImGuiMouseCursor_COUNT {
             return false;
@@ -766,9 +766,9 @@ impl ImFontAtlas {
 
         // IM_ASSERT(PackIdMouseCursors != -1);
         let mut r = self.GetCustomRectByIndex(self.PackIdMouseCursors);
-        let mut pos: ImVec2 = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0]
-            + ImVec2::from_floats(r.X as c_float, r.Y as c_float);
-        let size: ImVec2 = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][1];
+        let mut pos: Vector2 = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][0]
+            + Vector2::from_floats(r.X as c_float, r.Y as c_float);
+        let size: Vector2 = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][1];
         *out_size = size;
         *out_offset = FONT_ATLAS_DEFAULT_TEX_CURSOR_DATA[cursor_type][2];
         out_uv_border[0] = (pos) * self.TexUvScale;

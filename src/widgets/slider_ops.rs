@@ -40,7 +40,7 @@ use crate::style_ops::GetColorU32;
 use crate::text_ops::CalcTextSize;
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::{flag_clear, flag_set};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::focus::FocusWindow;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
@@ -413,15 +413,15 @@ pub unsafe fn SliderScalar(
     let mut id: ImguiHandle = window.GetID(label);
     let w: c_float = CalcItemWidth(g);
 
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
     let mut frame_bb: ImRect = ImRect::new(
         window.dc.cursor_pos,
-        window.dc.cursor_pos + ImVec2::new(w, label_size.y + style.FramePadding.y * 2.0),
+        window.dc.cursor_pos + Vector2::new(w, label_size.y + style.FramePadding.y * 2.0),
     );
     let mut total_bb: ImRect = ImRect::new(
         frame_bb.min,
         frame_bb.max
-            + ImVec2::new(
+            + Vector2::new(
                 if label_size.x > 0.0 {
                     style.ItemInnerSpacing.x + label_size.x
                 } else {
@@ -570,13 +570,13 @@ pub unsafe fn SliderScalar(
         &frame_bb.max,
         value_buf,
         None,
-        ImVec2::new(0.5, 0.5),
+        Vector2::new(0.5, 0.5),
         None,
     );
 
     if label_size.x > 0.0 {
         RenderText(
-            ImVec2::new(
+            Vector2::new(
                 frame_bb.max.x + style.ItemInnerSpacing.x,
                 frame_bb.min.y + style.FramePadding.y,
             ),
@@ -845,7 +845,7 @@ pub unsafe fn SliderInt4(
 
 pub unsafe fn VSliderScalar(
     label: String,
-    size: &ImVec2,
+    size: &Vector2,
     data_type: ImGuiDataType,
     p_data: &mut c_float,
     p_min: c_float,
@@ -862,12 +862,12 @@ pub unsafe fn VSliderScalar(
     let setyle = &mut g.style;
     let mut id: ImguiHandle = window.GetID(label);
 
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
     let mut frame_bb: ImRect = ImRect::new(window.dc.cursor_pos, window.dc.cursor_pos + size);
     let mut bb: ImRect = ImRect::new(
         frame_bb.min,
         frame_bb.max
-            + ImVec2::new(
+            + Vector2::new(
                 if label_size.x > 0.0 {
                     style.ItemInnerSpacing.x + label_size.x
                 } else {
@@ -967,16 +967,16 @@ pub unsafe fn VSliderScalar(
             format,
         );
     RenderTextClipped(
-        ImVec2::new(frame_bb.min.x, frame_bb.min.y + style.FramePadding.y),
+        Vector2::new(frame_bb.min.x, frame_bb.min.y + style.FramePadding.y),
         &frame_bb.max,
         value_buf,
         None,
-        ImVec2::new(0.5, 0.0),
+        Vector2::new(0.5, 0.0),
         None,
     );
     if label_size.x > 0.0 {
         RenderText(
-            ImVec2::new(
+            Vector2::new(
                 frame_bb.max.x + style.ItemInnerSpacing.x,
                 frame_bb.min.y + style.FramePadding.y,
             ),
@@ -991,7 +991,7 @@ pub unsafe fn VSliderScalar(
 
 pub unsafe fn VSliderFloat(
     label: String,
-    size: &ImVec2,
+    size: &Vector2,
     v: &mut c_float,
     v_min: c_float,
     v_max: c_float,
@@ -1012,7 +1012,7 @@ pub unsafe fn VSliderFloat(
 
 pub unsafe fn VSliderInt(
     label: String,
-    size: &ImVec2,
+    size: &Vector2,
     v: &mut c_int,
     v_min: &mut c_int,
     v_max: &mut c_int,

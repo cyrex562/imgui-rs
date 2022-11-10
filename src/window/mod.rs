@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::core::condition::{
     ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_Once,
 };
@@ -21,9 +21,9 @@ use crate::core::stack_sizes::ImGuiStackSizes;
 use crate::core::storage::ImGuiStorage;
 use crate::core::string_ops::ImStrdup;
 use crate::core::type_defs::{ImGuiDir, ImguiHandle};
-use crate::core::vec2::{ImVec2, ImVec2ih};
+use crate::core::vec2::{Vector2, ImVec2ih};
 use crate::core::vec4::ImVec4;
-use crate::viewport::ImguiViewport;
+use crate::viewport::Viewport;
 use crate::docking::win_dock_style::ImGuiWindowDockStyle;
 use crate::window::window_class::ImGuiWindowClass;
 use crate::window::window_flags::ImGuiWindowFlags;
@@ -70,26 +70,26 @@ pub struct ImguiWindow {
     pub FlagsPreviousFrame: ImGuiWindowFlags,
     pub WindowClass: ImGuiWindowClass,
     // Advanced users only. Set with SetNextWindowClass()
-    pub Viewport: ImguiViewport,
+    pub Viewport: Viewport,
     // Always set in Begin(). Inactive windows may have a NULL value here if their viewport was discarded.
     pub ViewportId: ImguiHandle,
     // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)
-    pub ViewportPos: ImVec2,
+    pub ViewportPos: Vector2,
     // We backup the viewport position (since the viewport may disappear or never be created if the window is inactive)
     pub ViewportAllowPlatformMonitorExtend: c_int,
     // Reset to -1 every frame (index is guaranteed to be valid between NewFrame..EndFrame), only used in the Appearing frame of a tooltip/popup to enforce clamping to a given monitor
-    pub position: ImVec2,
+    pub position: Vector2,
     // Position (always rounded-up to nearest pixel)
-    pub Size: ImVec2,
+    pub Size: Vector2,
     // Current size (==SizeFull or collapsed title bar size)
-    pub SizeFull: ImVec2,
+    pub SizeFull: Vector2,
     // Size when non collapsed
-    pub ContentSize: ImVec2,
+    pub ContentSize: Vector2,
     // Size of contents/scrollable client area (calculated from the extents reach of the cursor) from previous frame. Does not include window decoration or window padding.
-    pub ContentSizeIdeal: ImVec2,
-    pub ContentSizeExplicit: ImVec2,
+    pub ContentSizeIdeal: Vector2,
+    pub ContentSizeExplicit: Vector2,
     // Size of contents/scrollable client area explicitly request by the user via SetNextWindowContentSize().
-    pub WindowPadding: ImVec2,
+    pub WindowPadding: Vector2,
     // Window padding at the time of Begin().
     pub WindowRounding: c_float,
     // Window rounding at the time of Begin(). May be clamped lower to avoid rendering artifacts with title bar, menu bar etc.
@@ -103,15 +103,15 @@ pub struct ImguiWindow {
     // == window.GetID("#TAB")
     pub ChildId: ImguiHandle,
     // ID of corresponding item in parent window (for navigation to return from child window to parent window)
-    pub scroll: ImVec2,
-    pub ScrollMax: ImVec2,
-    pub ScrollTarget: ImVec2,
+    pub scroll: Vector2,
+    pub ScrollMax: Vector2,
+    pub ScrollTarget: Vector2,
     // target scroll position. stored as cursor position with scrolling canceled out, so the highest point is always 0.0. (f32::MAX for no change)
-    pub ScrollTargetCenterRatio: ImVec2,
+    pub ScrollTargetCenterRatio: Vector2,
     // 0.0 = scroll so that target position is at top, 0.5 = scroll so that target position is centered
-    pub ScrollTargetEdgeSnapDist: ImVec2,
+    pub ScrollTargetEdgeSnapDist: Vector2,
     // 0.0 = no snapping, >0.0 snapping threshold
-    pub ScrollbarSizes: ImVec2,
+    pub ScrollbarSizes: Vector2,
     // Size taken by each scrollbars on their smaller axis. Pay attention! ScrollbarSizes.x == width of the vertical scrollbar, ScrollbarSizes.y = height of the horizontal scrollbar.
     // bool                    ScrollbarX, ScrollbarY;             // Are scrollbars visible?
     pub ScrollbarX: bool,
@@ -171,9 +171,9 @@ pub struct ImguiWindow {
     pub SetWindowCollapsedAllowFlags: ImGuiCond,
     // ImGuiCond               SetWindowDockAllowFlags : 8;        // store acceptable condition flags for SetNextWindowDock() use.
     pub SetWindowDockAllowFlags: ImGuiCond,
-    pub SetWindowPosVal: ImVec2,
+    pub SetWindowPosVal: Vector2,
     // store window position when using a non-zero Pivot (position set needs to be processed when we know the window size)
-    pub SetWindowPosPivot: ImVec2, // store window pivot for positioning. ImVec2::new(0, 0) when positioning from top-left corner; ImVec2::new(0.5, 0.5) for centering; ImVec2::new(1, 1) for bottom right.
+    pub SetWindowPosPivot: Vector2, // store window pivot for positioning. ImVec2::new(0, 0) when positioning from top-left corner; ImVec2::new(0.5, 0.5) for centering; ImVec2::new(1, 1) for bottom right.
 
     // ImVector<ImguiHandle>       IDStack;                            // ID stack. ID are hashes seeded with the value at the top of the stack. (In theory this should be in the TempData structure)
     pub id_stack: Vec<ImguiHandle>,
@@ -266,17 +266,17 @@ pub struct ImguiWindow {
 
 impl ImguiWindow {
     //ImGuiWindow(context: *mut ImGuiContext, *const c_char name);
-    pub fn new(g: &mut ImguiContext, name: &String) -> Self {
+    pub fn new(g: &mut AppContext, name: &String) -> Self {
         let mut out = Self {
             Name: String::from(name),
             // NameBufLen: name.len(),
             ID: hash_string(name, 0),
             ViewportAllowPlatformMonitorExtend: -1,
-            ViewportPos: ImVec2::from_floats(f32::MAX, f32::MAX),
+            ViewportPos: Vector2::from_floats(f32::MAX, f32::MAX),
             MoveId: id_from_str("#MOVE"),
             TabId: id_from_str("#TAB"),
-            ScrollTarget: ImVec2::from_floats(f32::MAX, f32::MAX),
-            ScrollTargetCenterRatio: ImVec2::from_floats(0.5, 0.5),
+            ScrollTarget: Vector2::from_floats(f32::MAX, f32::MAX),
+            ScrollTargetCenterRatio: Vector2::from_floats(0.5, 0.5),
             AutoFitFramesX: -1,
             AutoFitFramesY: -1,
             AutoPosLastDirection: ImGuiDir_None,
@@ -296,8 +296,8 @@ impl ImguiWindow {
                 | ImGuiCond_Once
                 | ImGuiCond_FirstUseEver
                 | ImGuiCond_Appearing,
-            SetWindowPosVal: ImVec2::from_floats(f32::MAX, f32::MAX),
-            SetWindowPosPivot: ImVec2::from_floats(f32::MAX, f32::MAX),
+            SetWindowPosVal: Vector2::from_floats(f32::MAX, f32::MAX),
+            SetWindowPosPivot: Vector2::from_floats(f32::MAX, f32::MAX),
             LastFrameActive: -1,
             LastFrameJustFocused: -1,
             LastTimeActive: -1.0,
@@ -318,7 +318,7 @@ impl ImguiWindow {
     //~ImGuiWindow();
 
     // ImguiHandle     GetID(*const c_char str, *const c_char str_end = NULL);
-    pub fn id_by_string(&self, g: &mut ImguiContext, begin: &String) -> ImguiHandle {
+    pub fn id_by_string(&self, g: &mut AppContext, begin: &String) -> ImguiHandle {
         let mut seed: ImguiHandle = self.id_stack.last().unwrap().clone();
         let mut id: ImguiHandle = hash_string(begin, seed as u32);
         // let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -328,7 +328,7 @@ impl ImguiWindow {
         return id;
     }
 
-    pub fn id_by_int(&self, g: &mut ImguiContext, n: c_int) -> ImguiHandle {
+    pub fn id_by_int(&self, g: &mut AppContext, n: c_int) -> ImguiHandle {
         let mut seed = self.id_stack.last().unwrap().clone();
         let mut id = hash_data(&n.to_le_bytes(), seed as u32);
         if g.DebugHookIdInfo == id {

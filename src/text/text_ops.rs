@@ -10,7 +10,7 @@ use crate::core::string_ops::ImFormatStringToTempBufferV;
 use crate::style_ops::{GetColorU32, PopStyleColor, PushStyleColor, PushStyleColor2};
 use crate::text_flags::{ImGuiTextFlags, ImGuiTextFlags_NoWidthForLargeClippedText};
 use crate::core::utils::flag_clear;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use crate::viewport::widget_ops::{PopTextWrapPos, PushTextWrapPos};
 use crate::window::ops::GetCurrentWindow;
@@ -18,17 +18,17 @@ use crate::window::ImguiWindow;
 use crate::GImGui;
 use libc::{c_char, c_float, c_int};
 use std::ptr::{null, null_mut};
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 
 // Calculate text size. Text can be multi-line. Optionally ignore text after a ## marker.
 // CalcTextSize("") should return ImVec2::new(0.0, g.FontSize)
 // CalcTextSize: ImVec2(text: &String, text_end: *const c_char, hide_text_after_double_hash: bool, c_float wrap_width)
 pub fn CalcTextSize(
-    g: &mut ImguiContext,
+    g: &mut AppContext,
     text: &String,
     hide_text_after_double_hash: bool,
     wrap_width: c_float,
-) -> ImVec2 {
+) -> Vector2 {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
                     // let text_display_end: *const c_char;
                     // if hide_text_after_double_hash {
@@ -43,7 +43,7 @@ pub fn CalcTextSize(
     // if text == text_display_end {
     //     return ImVec2::new2(0.0, font_size);
     // }
-    let mut text_size: ImVec2 =
+    let mut text_size: Vector2 =
         font.CalcTextSizeA(font_size, f32::MAX, wrap_width, text, None);
 
     // Round
@@ -67,7 +67,7 @@ pub unsafe fn GetTextLineHeightWithSpacing() -> f32 {
     return g.FontSize + g.style.ItemSpacing.y;
 }
 
-pub fn TextEx(g: &mut ImguiContext, mut text: &String, flags: ImGuiTextFlags) {
+pub fn TextEx(g: &mut AppContext, mut text: &String, flags: ImGuiTextFlags) {
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
         return;
@@ -75,7 +75,7 @@ pub fn TextEx(g: &mut ImguiContext, mut text: &String, flags: ImGuiTextFlags) {
     // Calculate length
     let mut text_begin = 0usize;
 
-    let mut text_pos = ImVec2::from_floats(
+    let mut text_pos = Vector2::from_floats(
         window.dc.cursor_pos.x,
         window.dc.cursor_pos.y + window.dc.CurrLineTextBaseOffset,
     );
@@ -88,7 +88,7 @@ pub fn TextEx(g: &mut ImguiContext, mut text: &String, flags: ImGuiTextFlags) {
         } else {
             0.0
         };
-        let text_size: ImVec2 = CalcTextSize(, text, false, wrap_width);
+        let text_size: Vector2 = CalcTextSize(, text, false, wrap_width);
 
         let mut bb: ImRect = ImRect::new(text_pos, text_pos + text_size);
         ItemSize(g, &text_size, 0.0);
@@ -106,10 +106,10 @@ pub fn TextEx(g: &mut ImguiContext, mut text: &String, flags: ImGuiTextFlags) {
         // - We use memchr(), pay attention that well optimized versions of those str/mem functions are much faster than a casually written loop.
         let mut line: String = text.to_string();
         let line_height: c_float = GetTextLineHeight();
-        let mut text_size = ImVec2::from_floats(0.0, 0.0);
+        let mut text_size = Vector2::from_floats(0.0, 0.0);
 
         // Lines to skip (can't skip when logging text)
-        let mut pos: ImVec2 = text_pos;
+        let mut pos: Vector2 = text_pos;
         if !g.LogEnabled {
             let lines_skippable: c_int = ((window.ClipRect.Min.y - text_pos.y) / line_height);
             if lines_skippable > 0 {
@@ -132,7 +132,7 @@ pub fn TextEx(g: &mut ImguiContext, mut text: &String, flags: ImGuiTextFlags) {
         // Lines to render
         if line < text_end {
             let mut line_rect: ImRect =
-                ImRect::new(pos, pos + ImVec2::from_floats(f32::MAX, line_height));
+                ImRect::new(pos, pos + Vector2::from_floats(f32::MAX, line_height));
             while line < text_end {
                 if IsClippedEx(&mut line_rect, 0) {
                     break;
@@ -186,7 +186,7 @@ pub fn Text(fmt: String) {
     // va_end(args);
 }
 
-pub fn TextV(g: &mut ImguiContext, fmt: &String) {
+pub fn TextV(g: &mut AppContext, fmt: &String) {
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
         return;
@@ -280,17 +280,17 @@ pub unsafe fn LabelTextV(label: String, fmt: String) {
     // let mut value_text_begin: *mut c_char;
     // let mut value_text_end: *mut c_char;
     let value_text_begin = ImFormatStringToTempBufferV(fmt);
-    let value_size: ImVec2 = CalcTextSize(, &value_text_begin, false, 0.0);
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let value_size: Vector2 = CalcTextSize(, &value_text_begin, false, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
 
-    let pos: ImVec2 = window.dc.cursor_pos;
+    let pos: Vector2 = window.dc.cursor_pos;
     let mut value_bb: ImRect = ImRect::new(
         pos,
-        pos + ImVec2::from_floats(w, value_size.y + style.FramePadding.y * 2),
+        pos + Vector2::from_floats(w, value_size.y + style.FramePadding.y * 2),
     );
     let mut total_bb: ImRect = ImRect::new(
         pos,
-        pos + ImVec2::from_floats(
+        pos + Vector2::from_floats(
             w + (if label_size.x > 0.0 {
                 style.ItemInnerSpacing.x + label_size.x
             } else {
@@ -310,12 +310,12 @@ pub unsafe fn LabelTextV(label: String, fmt: String) {
         &value_bb.max,
         value_text_begin.as_str(),
         &value_size,
-        Some(&ImVec2::from_floats(0.0, 0.0)),
+        Some(&Vector2::from_floats(0.0, 0.0)),
         None,
     );
     if (label_size.x > 0.0) {
         RenderText(
-            ImVec2::from_floats(
+            Vector2::from_floats(
                 value_bb.max.x + style.ItemInnerSpacing.x,
                 value_bb.min.y + style.FramePadding.y,
             ),
@@ -347,8 +347,8 @@ pub unsafe fn BulletTextV(fmt: String) {
     // let mut text_begin: *mut c_char = None;
     // let mut text_end: *mut c_char = None;
     let text_begin = ImFormatStringToTempBufferV(fmt);
-    let label_size: ImVec2 = CalcTextSize(, text_begin, false, 0.0);
-    let total_size: ImVec2 = ImVec2::from_floats(
+    let label_size: Vector2 = CalcTextSize(, text_begin, false, 0.0);
+    let total_size: Vector2 = Vector2::from_floats(
         g.FontSize
             + (if label_size.x > 0.0 {
                 (label_size.x + style.FramePadding.x * 2)
@@ -357,7 +357,7 @@ pub unsafe fn BulletTextV(fmt: String) {
             }),
         label_size.y,
     ); // Empty text doesn't add padding
-    let mut pos: ImVec2 = window.dc.cursor_pos;
+    let mut pos: Vector2 = window.dc.cursor_pos;
     pos.y += window.dc.CurrLineTextBaseOffset;
     ItemSize(g, &total_size, 0.0);
     let mut bb: ImRect = ImRect::new(pos, pos + total_size);
@@ -369,11 +369,11 @@ pub unsafe fn BulletTextV(fmt: String) {
     text_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
     RenderBullet(
         window.DrawList,
-        bb.min + ImVec2::from_floats(style.FramePadding.x + g.FontSize * 0.5, g.FontSize * 0.5),
+        bb.min + Vector2::from_floats(style.FramePadding.x + g.FontSize * 0.5, g.FontSize * 0.5),
         text_col,
     );
     RenderText(
-        bb.min + ImVec2::from_floats(g.FontSize + style.FramePadding.x * 2, 0.0),
+        bb.min + Vector2::from_floats(g.FontSize + style.FramePadding.x * 2, 0.0),
         text_begin.as_str(),
         false,
         g,

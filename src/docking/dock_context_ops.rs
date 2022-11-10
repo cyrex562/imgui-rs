@@ -1,5 +1,5 @@
 use crate::{a_imgui_cpp::{DockSettingsHandler_ApplyAll, DockSettingsHandler_ClearAll, DockSettingsHandler_ReadLine, DockSettingsHandler_WriteAll}};
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::core::config_flags::ImGuiConfigFlags_DockingEnable;
 use crate::core::direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
@@ -12,7 +12,7 @@ use crate::core::utils::is_not_null;
 use crate::core::type_defs::ImguiHandle;
 
 
-pub fn init_dock_context(g: &mut ImguiContext)
+pub fn init_dock_context(g: &mut AppContext)
 {
     // Add .ini handle for persistent docking data
     let mut ini_handler: SettingsHandler = Default::default();
@@ -27,7 +27,7 @@ pub fn init_dock_context(g: &mut ImguiContext)
     g.settings_handlers.push(ini_handler);
 }
 
-pub fn shutdown_dock_context(g: &mut ImguiContext)
+pub fn shutdown_dock_context(g: &mut AppContext)
 {
     let dc  = &g.dock_context;
     // for (let n: c_int = 0; n < dc.Nodes.Data.Size; n++)
@@ -40,7 +40,7 @@ pub fn shutdown_dock_context(g: &mut ImguiContext)
     }
 }
 
-pub fn clear_dock_context_nodes(g: &mut ImguiContext,
+pub fn clear_dock_context_nodes(g: &mut AppContext,
                                 root_id: ImguiHandle,
                                 clear_settings_refs: bool)
 {
@@ -51,7 +51,7 @@ pub fn clear_dock_context_nodes(g: &mut ImguiContext,
 
 // [DEBUG] This function also acts as a defacto test to make sure we can rebuild from scratch without a glitch
 // (Different from DockSettingsHandler_ClearAll() + DockSettingsHandler_ApplyAll() because this reuses current settings!)
-pub unsafe fn DockContextRebuildNodes(g: &mut ImguiContext)
+pub unsafe fn DockContextRebuildNodes(g: &mut AppContext)
 {
     let g =  ctx;
     let dc: *mut ImGuiDockContext = &ctx.DockContext;
@@ -64,7 +64,7 @@ pub unsafe fn DockContextRebuildNodes(g: &mut ImguiContext)
 }
 
 // Docking context update function, called by NewFrame()
-pub unsafe fn DockContextNewFrameUpdateUndocking(g: &mut ImguiContext)
+pub unsafe fn DockContextNewFrameUpdateUndocking(g: &mut AppContext)
 {
     let g: *mut ImGuiContext =  ctx;
     let dc: *mut ImGuiDockContext = &mut ctx.DockContext;
@@ -112,7 +112,7 @@ pub unsafe fn DockContextNewFrameUpdateUndocking(g: &mut ImguiContext)
 }
 
 // Docking context update function, called by NewFrame()
-pub unsafe fn DockContextNewFrameUpdateDocking(g: &mut ImguiContext)
+pub unsafe fn DockContextNewFrameUpdateDocking(g: &mut AppContext)
 {
     let g =  ctx;
     let dc: *mut ImGuiDockContext  = &mut ctx.DockContext;
@@ -151,7 +151,7 @@ pub unsafe fn DockContextNewFrameUpdateDocking(g: &mut ImguiContext)
                 DockNodeUpdate(node);}}}
 }
 
-pub unsafe fn DockContextEndFrame(g: &mut ImguiContext)
+pub unsafe fn DockContextEndFrame(g: &mut AppContext)
 {
     // Draw backgrounds of node missing their window
     let g =  ctx;
@@ -171,13 +171,13 @@ pub unsafe fn DockContextEndFrame(g: &mut ImguiContext)
             }}}
 }
 
-pub unsafe fn DockContextFindNodeByID(g: &mut ImguiContext, id: ImguiHandle) -> Option<&mut ImGuiDockNode>
+pub unsafe fn DockContextFindNodeByID(g: &mut AppContext, id: ImguiHandle) -> Option<&mut ImGuiDockNode>
 {
     // return ctx.DockContext.Nodes.GetVoidPtr(id);
     g.dock_context.dock_nodes.get_mut(&id)
 }
 
-pub unsafe fn DockContextGenNodeID(g: &mut ImguiContext) -> ImguiHandle
+pub unsafe fn DockContextGenNodeID(g: &mut AppContext) -> ImguiHandle
 {
     // Generate an ID for new node (the exact ID value doesn't matter as long as it is not already used)
     // FIXME-OPT FIXME-DOCK: This is suboptimal, even if the node count is small enough not to be a worry.0
@@ -188,7 +188,7 @@ pub unsafe fn DockContextGenNodeID(g: &mut ImguiContext) -> ImguiHandle
     return id;
 }
 
-pub unsafe fn DockContextAddNode(g: &mut ImguiContext, id: ImguiHandle) -> *mut ImGuiDockNode
+pub unsafe fn DockContextAddNode(g: &mut AppContext, id: ImguiHandle) -> *mut ImGuiDockNode
 {
     // Generate an ID for the new node (the exact ID value doesn't matter as long as it is not already used) and add the first window.
     let g =  ctx;
@@ -206,7 +206,7 @@ pub unsafe fn DockContextAddNode(g: &mut ImguiContext, id: ImguiHandle) -> *mut 
 }
 
 pub unsafe fn DockContextRemoveNode(
-    g: &mut ImguiContext,
+    g: &mut AppContext,
     node: *mut ImGuiDockNode,
     merge_sibling_into_parent_node: bool)
 {
@@ -257,7 +257,7 @@ pub unsafe fn DockNodeComparerDepthMostFirst(lhs: *const ImGuiDockNode, rhs: *co
 
 
 // Garbage collect unused nodes (run once at init time)
-pub unsafe fn DockContextPruneUnusedSettingsNodes(g: &mut ImguiContext)
+pub unsafe fn DockContextPruneUnusedSettingsNodes(g: &mut AppContext)
 {
     let g =  ctx;
     let dc  = &mut ctx.DockContext;
@@ -332,7 +332,7 @@ pub unsafe fn DockContextPruneUnusedSettingsNodes(g: &mut ImguiContext)
     }
 }
 
-pub unsafe fn DockContextBuildNodesFromSettings(g: &mut ImguiContext, node_settings_array: *mut ImGuiDockNodeSettings, node_settings_count: c_int)
+pub unsafe fn DockContextBuildNodesFromSettings(g: &mut AppContext, node_settings_array: *mut ImGuiDockNodeSettings, node_settings_count: c_int)
 {
     // Build nodes
     // for (let node_n: c_int = 0; node_n < node_settings_count; node_n++)
@@ -363,7 +363,7 @@ pub unsafe fn DockContextBuildNodesFromSettings(g: &mut ImguiContext, node_setti
     }
 }
 
-pub unsafe fn DockContextBuildAddWindowsToNodes(g: &mut ImguiContext, root_id: ImguiHandle)
+pub unsafe fn DockContextBuildAddWindowsToNodes(g: &mut AppContext, root_id: ImguiHandle)
 {
     // Rebind all windows to nodes (they can also lazily rebind but we'll have a visible glitch during the first frame)
     // for (let n: c_int = 0; n < g.Windows.len(); n++)
@@ -399,7 +399,7 @@ pub unsafe fn DockContextBuildAddWindowsToNodes(g: &mut ImguiContext, root_id: I
 // - DockContextCalcDropPosForDocking()
 //-----------------------------------------------------------------------------
 
-pub unsafe fn DockContextQueueDock(g: &mut ImguiContext, target: *mut ImGuiWindow, target_node:*mut ImGuiDockNode, payload: *mut ImGuiWindow, split_dir: ImGuiDir, split_ratio: c_float, split_outer: bool)
+pub unsafe fn DockContextQueueDock(g: &mut AppContext, target: *mut ImGuiWindow, target_node:*mut ImGuiDockNode, payload: *mut ImGuiWindow, split_dir: ImGuiDir, split_ratio: c_float, split_outer: bool)
 {
     // IM_ASSERT(target != payload);
     let mut req: ImGuiDockRequest = Default::default();
@@ -413,7 +413,7 @@ pub unsafe fn DockContextQueueDock(g: &mut ImguiContext, target: *mut ImGuiWindo
     ctx.DockContext.Requests.push(req);
 }
 
-pub unsafe fn DockContextQueueUndockWindow(g: &mut ImguiContext, window: &mut ImGuiWindow)
+pub unsafe fn DockContextQueueUndockWindow(g: &mut AppContext, window: &mut ImGuiWindow)
 {
     let mut req: ImGuiDockRequest = Default::default();
     req.Type = ImGuiDockRequestType_Undock;
@@ -421,7 +421,7 @@ pub unsafe fn DockContextQueueUndockWindow(g: &mut ImguiContext, window: &mut Im
     ctx.DockContext.Requests.push(req);
 }
 
-pub unsafe fn DockContextQueueUndockNode(g: &mut ImguiContext, node:*mut ImGuiDockNode)
+pub unsafe fn DockContextQueueUndockNode(g: &mut AppContext, node:*mut ImGuiDockNode)
 {
     let mut req: ImGuiDockRequest = Default::default();
     req.Type = ImGuiDockRequestType_Undock;
@@ -429,7 +429,7 @@ pub unsafe fn DockContextQueueUndockNode(g: &mut ImguiContext, node:*mut ImGuiDo
     ctx.DockContext.Requests.push(req);
 }
 
-pub unsafe fn DockContextQueueNotifyRemovedNode(g: &mut ImguiContext, node:*mut ImGuiDockNode)
+pub unsafe fn DockContextQueueNotifyRemovedNode(g: &mut AppContext, node:*mut ImGuiDockNode)
 {
     let dc  = &mut ctx.DockContext;
     // for (let n: c_int = 0; n < dc.Requests.Size; n++)
@@ -439,7 +439,7 @@ pub unsafe fn DockContextQueueNotifyRemovedNode(g: &mut ImguiContext, node:*mut 
             dc.Requests[n].Type = ImGuiDockRequestType_None;}}
 }
 
-pub unsafe fn DockContextProcessDock(g: &mut ImguiContext, req: *mut ImGuiDockRequest)
+pub unsafe fn DockContextProcessDock(g: &mut AppContext, req: *mut ImGuiDockRequest)
 {
     // IM_ASSERT((req.Type == ImGuiDockRequestType_Dock && req.DockPayload != NULL) || (req.Type == ImGuiDockRequestType_Split && req.DockPayload == NULL));
     // IM_ASSERT(req.DockTargetWindow != NULL || req.DockTargetNode != NULL);
@@ -604,7 +604,7 @@ pub unsafe fn FixLargeWindowsWhenUndocking(size: &ImVec2, ref_viewport: *mut ImG
 }
 
 pub unsafe fn DockContextProcessUndockWindow(
-    g: &mut ImguiContext,
+    g: &mut AppContext,
     window: &mut ImGuiWindow,
     clear_persistent_docking_re0f32: bool)
 {
@@ -622,7 +622,7 @@ pub unsafe fn DockContextProcessUndockWindow(
     MarkIniSettingsDirty();
 }
 
-pub unsafe fn DockContextProcessUndockNode(g: &mut ImguiContext, node:*mut ImGuiDockNode)
+pub unsafe fn DockContextProcessUndockNode(g: &mut AppContext, node:*mut ImGuiDockNode)
 {
     let g =  ctx;
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockContextProcessUndockNode node {}\n", node.ID);

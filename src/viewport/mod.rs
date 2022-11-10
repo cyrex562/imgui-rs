@@ -14,7 +14,7 @@ use crate::drawing::draw_list::ImDrawList;
 use crate::core::math_ops::ImMax;
 use crate::rect::ImRect;
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use viewport_flags::ImGuiViewportFlags;
 use crate::window::ImguiWindow;
 use crate::INVALID_IMGUI_HANDLE;
@@ -30,14 +30,14 @@ pub mod viewport_renderer_user_data;
 mod viewport_platform_handle;
 
 
-pub struct ImguiViewport {
+pub struct Viewport {
     pub Idx: c_int,
     pub LastFrameActive: c_int,
     // Last frame number this viewport was activated by a window
     pub last_front_most_stamp_count: c_int,
     // Last stamp number from when a window hosted by this viewport was made front-most (by comparing this value between two viewport we have an implicit viewport z-order
     pub LastNameHash: ImguiHandle,
-    pub LastPos: ImVec2,
+    pub LastPos: Vector2,
     pub Alpha: c_float,
     // Window opacity (when dragging dockable windows/viewports we make them transparent)
     pub LastAlpha: c_float,
@@ -51,27 +51,27 @@ pub struct ImguiViewport {
     pub DrawLists: [ImguiHandle; 2],
     // pub DrawDataP: ImDrawData,
     // pub DrawDataBuilder: ImDrawDataBuilder,
-    pub LastPlatformPos: ImVec2,
-    pub LastPlatformSize: ImVec2,
-    pub LastRendererSize: ImVec2,
-    pub WorkOffsetMin: ImVec2,
+    pub LastPlatformPos: Vector2,
+    pub LastPlatformSize: Vector2,
+    pub LastRendererSize: Vector2,
+    pub WorkOffsetMin: Vector2,
     // Work Area: Offset from Pos to top-left corner of Work Area. Generally (0,0) or (0,+main_menu_bar_height). Work Area is Full Area but without menu-bars/status-bars (so WorkArea always fit inside Pos/Size!)
-    pub WorkOffsetMax: ImVec2,
+    pub WorkOffsetMax: Vector2,
     // Work Area: Offset from Pos+Size to bottom-right corner of Work Area. Generally (0,0) or (0,-status_bar_height).
-    pub BuildWorkOffsetMin: ImVec2,
+    pub BuildWorkOffsetMin: Vector2,
     // Work Area: Offset being built during current frame. Generally >= 0.0.
-    pub BuildWorkOffsetMax: ImVec2, // Work Area: Offset being built during current frame. Generally <= 0.0.
+    pub BuildWorkOffsetMax: Vector2, // Work Area: Offset being built during current frame. Generally <= 0.0.
     pub ID: ImguiHandle,
     // Unique identifier for the viewport
     pub Flags: ImGuiViewportFlags,
     // See ImGuiViewportFlags_
-    pub Pos: ImVec2,
+    pub Pos: Vector2,
     // Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)
-    pub Size: ImVec2,
+    pub Size: Vector2,
     // Main Area: Size of the viewport.
-    pub WorkPos: ImVec2,
+    pub WorkPos: Vector2,
     // Work Area: Position of the viewport minus task bars, menus bars, status bars (>= Pos)
-    pub WorkSize: ImVec2,
+    pub WorkSize: Vector2,
     // Work Area: Size of the viewport minus task bars, menu bars, status bars (<= Size)
     pub DpiScale: c_float,
     // 1.0 = 96 DPI = No extra scale.
@@ -98,16 +98,16 @@ pub struct ImguiViewport {
     pub PlatformRequestClose: bool, // Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)
 }
 
-impl ImguiViewport {
-    pub fn get_center(&self) -> ImVec2 {
-        ImVec2::from_floats(
+impl Viewport {
+    pub fn get_center(&self) -> Vector2 {
+        Vector2::from_floats(
             self.Pos.x + self.Size.x * 0.5,
             self.Pos.y + self.Size.y * 0.5,
         )
     }
 
-    pub fn get_work_center(&self) -> ImVec2 {
-        ImVec2::from_floats(
+    pub fn get_work_center(&self) -> Vector2 {
+        Vector2::from_floats(
             self.WorkPos.x + self.WorkSize.x * 0.5,
             self.WorkPos.y + self.WorkSize.y * 0.5,
         )
@@ -125,9 +125,9 @@ impl ImguiViewport {
             PlatformWindowCreated: false,
             window: INVALID_IMGUI_HANDLE,
             DrawLists: [INVALID_IMGUI_HANDLE; 2],
-            LastPlatformPos: ImVec2::from_floats(f32::MAX, f32::MAX),
-            LastPlatformSize: ImVec2::from_floats(f32::MAX, f32::MAX),
-            LastRendererSize: ImVec2::from_floats(f32::MAX, f32::MAX),
+            LastPlatformPos: Vector2::from_floats(f32::MAX, f32::MAX),
+            LastPlatformSize: Vector2::from_floats(f32::MAX, f32::MAX),
+            LastRendererSize: Vector2::from_floats(f32::MAX, f32::MAX),
             ..Default::default()
         }
     }
@@ -139,12 +139,12 @@ impl ImguiViewport {
     }
 
     // Calculate work rect pos/size given a set of offset (we have 1 pair of offset for rect locked from last frame data, and 1 pair for currently building rect)
-    pub fn calc_work_rect_pos(&self, off_min: &ImVec2) -> ImVec2 {
-        ImVec2::from_floats(self.Pos.x + off_min.x, self.Pos.y + off_min.y)
+    pub fn calc_work_rect_pos(&self, off_min: &Vector2) -> Vector2 {
+        Vector2::from_floats(self.Pos.x + off_min.x, self.Pos.y + off_min.y)
     }
 
-    pub fn calc_work_rect_size(&self, off_min: &ImVec2, off_max: &ImVec2) -> ImVec2 {
-        ImVec2::from_floats(
+    pub fn calc_work_rect_size(&self, off_min: &Vector2, off_max: &Vector2) -> Vector2 {
+        Vector2::from_floats(
             ImMax(0.0, self.Size.x - off_min.x + off_max.x),
             ImMax(0.0, self.Size.y - off_min.y + off_max.y),
         )

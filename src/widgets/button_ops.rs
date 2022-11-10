@@ -39,7 +39,7 @@ use crate::style_ops::GetColorU32;
 use crate::text_ops::CalcTextSize;
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::{flag_clear, flag_set};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::widgets::DRAGDROP_HOLD_TO_OPEN_TIMER;
 use crate::window::focus::FocusWindow;
 use crate::window::ops::GetCurrentWindow;
@@ -47,10 +47,10 @@ use crate::window::ImguiWindow;
 use crate::GImGui;
 use libc::{c_float, c_int};
 use std::ptr::null;
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 
 pub fn ButtonBehavior(
-    g: &mut ImguiContext,
+    g: &mut AppContext,
     bb: &ImRect,
     id: ImguiHandle,
     out_hovered: *mut bool,
@@ -311,7 +311,7 @@ pub fn ButtonBehavior(
     return pressed;
 }
 
-pub unsafe fn ButtonEx(label: &String, size_arg: Option<ImVec2>, mut flags: ImGuiButtonFlags) -> bool {
+pub unsafe fn ButtonEx(label: &String, size_arg: Option<Vector2>, mut flags: ImGuiButtonFlags) -> bool {
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
         return false;
@@ -320,9 +320,9 @@ pub unsafe fn ButtonEx(label: &String, size_arg: Option<ImVec2>, mut flags: ImGu
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let setyle = &mut g.style;
     let mut id: ImguiHandle = window.id_from_str(&label, );
-    let label_size: ImVec2 = CalcTextSize(, &label, true, 0.0);
+    let label_size: Vector2 = CalcTextSize(, &label, true, 0.0);
 
-    let mut pos: ImVec2 = window.dc.cursor_pos;
+    let mut pos: Vector2 = window.dc.cursor_pos;
     if flag_set(flags, ImGuiButtonFlags_AlignTextBaseLine)
         && style.FramePadding.y < window.dc.CurrLineTextBaseOffset
     {
@@ -387,7 +387,7 @@ pub unsafe fn ButtonEx(label: &String, size_arg: Option<ImVec2>, mut flags: ImGu
     return pressed;
 }
 
-pub unsafe fn Button(label: &String, size_arg: Option<ImVec2>) -> bool {
+pub unsafe fn Button(label: &String, size_arg: Option<Vector2>) -> bool {
     return ButtonEx(label, size_arg, ImGuiButtonFlags_None);
 }
 
@@ -398,7 +398,7 @@ pub unsafe fn SmallButton(label: &String) -> bool {
     g.style.FramePadding.y = 0.0;
     let mut pressed: bool = ButtonEx(
         label,
-        Some(ImVec2::from_floats(0.0, 0.0)),
+        Some(Vector2::from_floats(0.0, 0.0)),
         ImGuiButtonFlags_AlignTextBaseLine,
     );
     g.style.FramePadding.y = backup_padding_y;
@@ -409,7 +409,7 @@ pub unsafe fn SmallButton(label: &String) -> bool {
 // Then you can keep 'str_id' empty or the same for all your buttons (instead of creating a string based on a non-string id)
 pub unsafe fn InvisibleButton(
     str_id: &String,
-    size_arg: ImVec2,
+    size_arg: Vector2,
     flags: ImGuiButtonFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -422,7 +422,7 @@ pub unsafe fn InvisibleButton(
     // IM_ASSERT(size_arg.x != 0.0 && size_arg.y != 0.0);
 
     let mut id: ImguiHandle = window.id_from_str(str_id, );
-    let size: ImVec2 = CalcItemSize(g, size_arg, 0.0, 0.0);
+    let size: Vector2 = CalcItemSize(g, size_arg, 0.0, 0.0);
     let mut bb: ImRect = ImRect::new(window.dc.cursor_pos, window.dc.cursor_pos + size);
     ItemSize(g, &size, 0.0);
     if !ItemAdd(g, &mut bb, id, None, 0) {
@@ -441,7 +441,7 @@ pub unsafe fn InvisibleButton(
 pub unsafe fn ArrowButtonEx(
     str_id: &String,
     dir: ImGuiDir,
-    size: ImVec2,
+    size: Vector2,
     mut flags: ImGuiButtonFlags,
 ) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -494,7 +494,7 @@ pub unsafe fn ArrowButtonEx(
     RenderArrow(
         &mut window.DrawList,
         bb.min
-            + ImVec2::from_floats(
+            + Vector2::from_floats(
                 ImMax(0.0, (size.x - g.FontSize) * 0.5),
                 ImMax(0.0, (size.y - g.FontSize) * 0.5),
             ),
@@ -512,13 +512,13 @@ pub unsafe fn ArrowButton(str_id: &String, dir: ImGuiDir) -> bool {
     return ArrowButtonEx(
         str_id,
         dir,
-        ImVec2::from_floats(sz, sz),
+        Vector2::from_floats(sz, sz),
         ImGuiButtonFlags_None,
     );
 }
 
 // Button to close a window
-pub unsafe fn CloseButton(id: ImguiHandle, pos: &ImVec2) -> bool {
+pub unsafe fn CloseButton(id: ImguiHandle, pos: &Vector2) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.current_window_mut().unwrap();
 
@@ -526,7 +526,7 @@ pub unsafe fn CloseButton(id: ImguiHandle, pos: &ImVec2) -> bool {
     // This may better be applied as a general hit-rect reduction mechanism for all widgets to ensure the area to move window is always accessible?
     let mut bb: ImRect = ImRect::new(
         pos,
-        pos + ImVec2::from_floats(g.FontSize, g.FontSize) + g.style.FramePadding * 2.0,
+        pos + Vector2::from_floats(g.FontSize, g.FontSize) + g.style.FramePadding * 2.0,
     );
     let mut bb_interact: ImRect = bb;
     let area_to_visible_ratio: c_float = window.OuterRectClipped.GetArea() / bb.GetArea();
@@ -556,7 +556,7 @@ pub unsafe fn CloseButton(id: ImguiHandle, pos: &ImVec2) -> bool {
         },
         0.0,
     );
-    let mut center: ImVec2 = bb.GetCenter();
+    let mut center: Vector2 = bb.GetCenter();
     if (hovered) {
         window
             .DrawList
@@ -565,16 +565,16 @@ pub unsafe fn CloseButton(id: ImguiHandle, pos: &ImVec2) -> bool {
 
     let cross_extent: c_float = g.FontSize * 0.5 * 0.7071 - 1.0;
     cross_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
-    center -= ImVec2::from_floats(0.5, 0.5);
+    center -= Vector2::from_floats(0.5, 0.5);
     window.DrawList.AddLine(
-        center + ImVec2::from_floats(cross_extent, cross_extent),
-        center + ImVec2::from_floats(-cross_extent, -cross_extent),
+        center + Vector2::from_floats(cross_extent, cross_extent),
+        center + Vector2::from_floats(-cross_extent, -cross_extent),
         cross_col,
         1.0,
     );
     window.DrawList.AddLine(
-        center + ImVec2::from_floats(cross_extent, -cross_extent),
-        center + ImVec2::from_floats(-cross_extent, cross_extent),
+        center + Vector2::from_floats(cross_extent, -cross_extent),
+        center + Vector2::from_floats(-cross_extent, cross_extent),
         cross_col,
         1.0,
     );
@@ -583,13 +583,13 @@ pub unsafe fn CloseButton(id: ImguiHandle, pos: &ImVec2) -> bool {
 }
 
 // The Collapse button also functions as a Dock Menu button.
-pub unsafe fn CollapseButton(id: ImguiHandle, pos: &ImVec2, dock_node: *mut ImGuiDockNode) -> bool {
+pub unsafe fn CollapseButton(id: ImguiHandle, pos: &Vector2, dock_node: *mut ImGuiDockNode) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.current_window_mut().unwrap();
 
     let mut bb: ImRect = ImRect::new(
         pos,
-        pos + ImVec2::from_floats(g.FontSize, g.FontSize) + g.style.FramePadding * 2.0,
+        pos + Vector2::from_floats(g.FontSize, g.FontSize) + g.style.FramePadding * 2.0,
     );
     ItemAdd(g, &mut bb, id, None, 0);
     // hovered: bool, held;
@@ -614,7 +614,7 @@ pub unsafe fn CollapseButton(id: ImguiHandle, pos: &ImVec2, dock_node: *mut ImGu
     text_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
     if (hovered || held) {
         window.DrawList.AddCircleFilled(
-            bb.GetCenter() + ImVec2::from_floats(0.0, -0.5),
+            bb.GetCenter() + Vector2::from_floats(0.0, -0.5),
             g.FontSize * 0.5 + 1.0,
             bg_col,
             12,

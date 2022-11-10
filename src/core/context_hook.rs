@@ -1,4 +1,4 @@
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::core::type_defs::ImguiHandle;
 use libc::{c_int, c_void};
 
@@ -13,7 +13,7 @@ pub const IM_GUI_CONTEXT_HOOK_TYPE_RENDER_POST: ImguiContextHookType = 5;
 pub const IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN: ImguiContextHookType = 6;
 pub const IM_GUI_CONTEXT_HOOK_TYPE_PENDING_REMOVAL: ImguiContextHookType = 7;
 
-pub type ImGuiContextHookCallback = fn(g: &mut ImguiContext, hook: &mut ImGuiContextHook);
+pub type ImGuiContextHookCallback = fn(g: &mut AppContext, hook: &mut ImGuiContextHook);
 
 #[derive(Default, Debug, Clone)]
 pub struct ImGuiContextHook {

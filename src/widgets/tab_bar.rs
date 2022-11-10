@@ -5,7 +5,7 @@ use crate::widgets::tab_bar_flags::ImGuiTabBarFlags;
 use crate::widgets::tab_item::ImGuiTabItem;
 use crate::text_buffer::ImGuiTextBuffer;
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use libc::{c_char, c_float, c_int};
 use std::borrow::{Borrow, BorrowMut};
 
@@ -50,9 +50,9 @@ pub struct ImGuiTabBar {
     pub LastTabItemIdx: i16,
     // Index of last BeginTabItem() tab for use by EndTabItem()
     pub ItemSpacingY: c_float,
-    pub FramePadding: ImVec2,
+    pub FramePadding: Vector2,
     // style.FramePadding locked at the time of BeginTabBar()
-    pub BackupCursorPos: ImVec2,
+    pub BackupCursorPos: Vector2,
     pub TabsNames: ImGuiTextBuffer, // For non-docking tab bar we re-append names in a contiguous buffer.
 }
 

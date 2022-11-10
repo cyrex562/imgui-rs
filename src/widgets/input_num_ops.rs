@@ -29,7 +29,7 @@ use crate::drawing::render_ops::FindRenderedTextEnd;
 use crate::core::string_ops::ImStrTrimBlanks;
 use crate::core::type_defs::{ImGuiInputTextCallback, ImguiHandle};
 use crate::core::utils::flag_set;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ops::{BeginDisabled, EndDisabled, GetCurrentWindow};
 use crate::window::ImguiWindow;
 use crate::{data_type_ops, input_text, text_ops, widgets, GImGui};
@@ -172,14 +172,14 @@ pub unsafe fn InputScalar(
         IMGUI_TEST_ENGINE_ITEM_INFO(g.last_item_data.ID, label, g.last_item_data.StatusFlags);
 
         // Step buttons
-        let backup_frame_padding: ImVec2 = style.FramePadding;
+        let backup_frame_padding: Vector2 = style.FramePadding;
         style.FramePadding.x = style.FramePadding.y;
         button_flags: ImGuiButtonFlags = ImGuiButtonFlags_Repeat | ImGuiButtonFlags_DontClosePopups;
         if flags & ImGuiInputTextFlags_ReadOnly {
             BeginDisabled(false);
         }
         same_line(g, 0.0, style.ItemInnerSpacing.x);
-        if ButtonEx("-", ImVec2::new(button_size, button_size), button_flags) {
+        if ButtonEx("-", Vector2::new(button_size, button_size), button_flags) {
             DataTypeApplyOp(
                 data_type,
                 DATA_TYPE_OPERATION_SUB,
@@ -194,7 +194,7 @@ pub unsafe fn InputScalar(
             value_changed = true;
         }
         same_line(g, 0.0, style.ItemInnerSpacing.x);
-        if ButtonEx("+", ImVec2::new(button_size, button_size), button_flags) {
+        if ButtonEx("+", Vector2::new(button_size, button_size), button_flags) {
             data_type_ops::DataTypeApplyOp(
                 data_type,
                 DATA_TYPE_OPERATION_ADD,
@@ -485,7 +485,7 @@ pub unsafe fn InputText(
     user_data: Option<&Vec<u8>>,
 ) -> bool {
     // IM_ASSERT(flag_clear(flags, ImGuiInputTextFlags_Multiline)); // call InputTextMultiline()
-    let mut size_arg = ImVec2::default();
+    let mut size_arg = Vector2::default();
     return input_text::InputTextEx(
         label,
         "",

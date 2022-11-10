@@ -4,7 +4,7 @@ use crate::color::{
     ImGuiCol_Button, ImGuiCol_ButtonHovered, ImGuiCol_FrameBg, ImGuiCol_FrameBgHovered,
     ImGuiCol_Text,
 };
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::core::condition::ImGuiCond_None;
 use crate::core::direction::{ImGuiDir_Down, ImGuiDir_Left};
 use crate::drawing::draw_flags::{
@@ -34,7 +34,7 @@ use crate::style_var::ImGuiStyleVar_WindowPadding;
 use crate::text_ops::CalcTextSize;
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::{flag_clear, flag_set};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::widgets::button_ops::ButtonBehavior;
 use crate::widgets::combo_flags::{
     ImGuiComboFlags, ImGuiComboFlags_CustomPreview, ImGuiComboFlags_HeightLarge,
@@ -61,7 +61,7 @@ use std::borrow::BorrowMut;
 use std::ptr::{null, null_mut};
 
 pub fn BeginCombo(
-    g: &mut ImguiContext,
+    g: &mut AppContext,
     label: &String,
     preview_value: &mut String,
     flags: ImGuiComboFlags,
@@ -92,12 +92,12 @@ pub fn BeginCombo(
     };
     let mut bb: ImRect = ImRect::new(
         window.dc.cursor_pos,
-        window.dc.cursor_pos + ImVec2::from_floats(w, label_size.y + style.FramePadding.y * 2.0),
+        window.dc.cursor_pos + Vector2::from_floats(w, label_size.y + style.FramePadding.y * 2.0),
     );
     let mut total_bb: ImRect = ImRect::new(
         bb.min,
         bb.max
-            + ImVec2::from_floats(
+            + Vector2::from_floats(
                 if label_size.x > 0.0 {
                     style.ItemInnerSpacing.x + label_size.x
                 } else {
@@ -136,7 +136,7 @@ pub fn BeginCombo(
     if flag_clear(flags, ImGuiComboFlags_NoPreview) {
         window.DrawList.AddRectFilled(
             &bb.min,
-            &ImVec2::from_floats(value_x2, bb.max.y),
+            &Vector2::from_floats(value_x2, bb.max.y),
             frame_col,
             style.FrameRounding,
             if flag_set(flags, ImGuiComboFlags_NoArrowButton) {
@@ -157,7 +157,7 @@ pub fn BeginCombo(
         );
         text_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
         window.DrawList.AddRectFilled(
-            &ImVec2::from_floats(value_x2, bb.min.y),
+            &Vector2::from_floats(value_x2, bb.min.y),
             &bb.max,
             bg_col,
             style.FrameRounding,
@@ -170,7 +170,7 @@ pub fn BeginCombo(
         if value_x2 + arrow_size - style.FramePadding.x <= bb.max.x {
             RenderArrow(
                 &mut window.DrawList,
-                &ImVec2::from_floats(
+                &Vector2::from_floats(
                     value_x2 + style.FramePadding.y,
                     bb.min.y + style.FramePadding.y,
                 ),
@@ -196,7 +196,7 @@ pub fn BeginCombo(
         }
         RenderTextClipped(
             bb.min + style.FramePadding,
-            ImVec2::from_floats(value_x2, bb.max.y),
+            Vector2::from_floats(value_x2, bb.max.y),
             preview_value,
             None,
             None,
@@ -205,7 +205,7 @@ pub fn BeginCombo(
     }
     if label_size.x > 0.0 {
         RenderText(
-            ImVec2::from_floats(
+            Vector2::from_floats(
                 bb.max.x + style.ItemInnerSpacing.x,
                 bb.min.y + style.FramePadding.y,
             ),
@@ -224,7 +224,7 @@ pub fn BeginCombo(
 }
 
 pub fn BeginComboPopup(
-    g: &mut ImguiContext,
+    g: &mut AppContext,
     popup_id: ImguiHandle,
     bb: &mut ImRect,
     mut flags: ImGuiComboFlags,
@@ -258,8 +258,8 @@ pub fn BeginComboPopup(
         }
         SetNextWindowSizeConstraints(
             g,
-            &ImVec2::from_floats(w, 0.0),
-            &ImVec2::from_floats(
+            &Vector2::from_floats(w, 0.0),
+            &Vector2::from_floats(
                 f32::MAX,
                 popup_ops::CalcMaxPopupHeightFromItemCount(g, popup_max_height_in_items),
             ),
@@ -279,7 +279,7 @@ pub fn BeginComboPopup(
     if popup_window.is_some() {
         if popup_window.unwrap().WasActive {
             // Always override 'AutoPosLastDirection' to not leave a chance for a past value to affect us.
-            let size_expected: ImVec2 =
+            let size_expected: Vector2 =
                 CalcWindowNextAutoFitSize(g, popup_window.unwrap().borrow_mut());
             popup_window.AutoPosLastDirection = if flags & ImGuiComboFlags_PopupAlignLeft {
                 ImGuiDir_Left
@@ -288,7 +288,7 @@ pub fn BeginComboPopup(
             }; // Left = "Below, Toward Left", Down = "Below, Toward Right (default)"
             let mut r_outer: ImRect =
                 GetPopupAllowedExtentRect(g, popup_window.unwrap().borrow_mut());
-            let pos: ImVec2 = FindBestWindowPosForPopupEx(
+            let pos: Vector2 = FindBestWindowPosForPopupEx(
                 &bb.GetBL(),
                 &size_expected,
                 &mut popup_window.AutoPosLastDirection,
@@ -309,7 +309,7 @@ pub fn BeginComboPopup(
         | ImGuiWindowFlags_NoMove;
     PushStyleVar(
         ImGuiStyleVar_WindowPadding,
-        ImVec2::from_floats(g.style.FramePadding.x, g.style.WindowPadding.y),
+        Vector2::from_floats(g.style.FramePadding.x, g.style.WindowPadding.y),
     ); // Horizontally align ourselves with the framed text
     let mut ret: bool = Begin(g, name, None);
     PopStyleVar();
@@ -321,13 +321,13 @@ pub fn BeginComboPopup(
     return true;
 }
 
-pub fn EndCombo(g: &mut ImguiContext) {
+pub fn EndCombo(g: &mut AppContext) {
     EndPopup(g);
 }
 
 // Call directly after the BeginCombo/EndCombo block. The preview is designed to only host non-interactive elements
 // (Experimental, see GitHub issues: #1658, #4168)
-pub unsafe fn BeginComboPreview(g: &mut ImguiContext) -> bool {
+pub unsafe fn BeginComboPreview(g: &mut AppContext) -> bool {
     let mut window_id = g.CurrentWindow;
     let mut preview_data = &mut g.ComboPreviewData;
     let window_opt = g.window_by_id_mut(window_id);
@@ -360,7 +360,7 @@ pub unsafe fn BeginComboPreview(g: &mut ImguiContext) -> bool {
     return true;
 }
 
-pub fn EndComboPreview(g: &mut ImguiContext) {
+pub fn EndComboPreview(g: &mut AppContext) {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.current_window_mut().unwrap();
     let preview_data = &mut g.ComboPreviewData;
@@ -423,7 +423,7 @@ pub unsafe fn Items_SingleStringGetter(data: &[String], idx: usize, out_text: &m
 
 // Old API, prefer using BeginCombo() nowadays if you can.
 pub fn Combo(
-    g: &mut ImguiContext,
+    g: &mut AppContext,
     label: &String,
     current_item: &mut i32,
     items_getter: fn(&[String], usize, &mut String) -> bool,
@@ -446,8 +446,8 @@ pub fn Combo(
     {
         SetNextWindowSizeConstraints(
             g,
-            &ImVec2::from_floats(0.0, 0.0),
-            &ImVec2::from_floats(
+            &Vector2::from_floats(0.0, 0.0),
+            &Vector2::from_floats(
                 f32::MAX,
                 popup_ops::CalcMaxPopupHeightFromItemCount(g, popup_max_height_in_items),
             ),

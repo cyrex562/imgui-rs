@@ -15,10 +15,10 @@ use crate::rect::ImRect;
 use crate::drawing::render_ops::{RenderFrame, RenderRectFilledWithHole};
 use crate::style_ops::GetColorU32;
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::{find, focus, ImguiWindow, render};
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysHorizontalScrollbar, ImGuiWindowFlags_AlwaysVerticalScrollbar, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_HorizontalScrollbar, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoBringToFrontOnFocus, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip};
-use crate::{ImguiViewport, hash_string};
+use crate::{Viewport, hash_string};
 use libc::{c_char, c_float, c_int, c_short, c_void, size_t, strcmp};
 use std::ptr::{null, null_mut};
 use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
@@ -29,7 +29,7 @@ use crate::core::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_No
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::core::hash_ops::hash_data;
 use {ClearActiveID, KeepAliveID};
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::input_ops::{IsMouseDragging, IsMouseHoveringRect};
 use crate::item::item_flags::ImGuiItemFlags_Disabled;
 use crate::item::item_ops::set_last_item_data;
@@ -57,7 +57,7 @@ use crate::window::window_stack_data::ImGuiWindowStackData;
 use crate::window_settings::ImGuiWindowSettings;
 
 // static c_void SetCurrentWindow(window: &mut ImGuiWindow)
-pub fn SetCurrentWindow(g: &mut ImguiContext, window: ImguiHandle) {
+pub fn SetCurrentWindow(g: &mut AppContext, window: ImguiHandle) {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     g.CurrentWindow = window;
     g.current_table = if is_not_null(window) && window.dc.CurrentTableIdx != -1 {
@@ -112,7 +112,7 @@ pub unsafe fn IsWindowContentHoverable(window: &mut ImguiWindow, flags: ImGuiHov
 // This is called during NewFrame()->UpdateViewportsNewFrame() only.
 // Need to keep in sync with SetWindowPos()
 // static c_void TranslateWindow(window: &mut ImGuiWindow, const delta: &mut ImVec2)
-pub fn TranslateWindow(window: &mut ImguiWindow, delta: &ImVec2) {
+pub fn TranslateWindow(window: &mut ImguiWindow, delta: &Vector2) {
     window.position += delta;
     window.ClipRect.Translate(delta);
     window.OuterRectClipped.Translate(delta);
@@ -125,7 +125,7 @@ pub fn TranslateWindow(window: &mut ImguiWindow, delta: &ImVec2) {
 
 // static c_void ScaleWindow(window: &mut ImGuiWindow, c_float scale)
 pub fn ScaleWindow(window: &mut ImguiWindow, scale: c_float) {
-    let origin: ImVec2 = window.Viewport.Pos.clone();
+    let origin: Vector2 = window.Viewport.Pos.clone();
     window.position = ImFloor((window.position.clone() - origin) * scale + origin.clone());
     window.Size = ImFloor(window.Size.clone() * scale.clone());
     window.SizeFull = ImFloor(window.SizeFull.clone() * scale.clone());
@@ -188,7 +188,7 @@ pub fn GetWindowDisplayLayer(window: &mut ImguiWindow) -> c_int {
     };
 }
 
-pub unsafe fn SetNextWindowSize(size: ImVec2, cond: ImGuiCond) {
+pub unsafe fn SetNextWindowSize(size: Vector2, cond: ImGuiCond) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
                     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasSize;
@@ -226,16 +226,16 @@ pub fn SetWindowConditionAllowFlags(window: &mut ImguiWindow, flags: ImGuiCond, 
 
 pub fn ApplyWindowSettings(window: &mut ImguiWindow, settings: *mut ImGuiWindowSettings)
 {
-    let main_viewport: *const ImguiViewport = GetMainViewport();
+    let main_viewport: *const Viewport = GetMainViewport();
     window.ViewportPos = main_viewport.Pos;
     if settings.ViewportId
     {
         window.ViewportId = settings.ViewportId.clone();
-        window.ViewportPos = ImVec2::from_floats(settings.ViewportPos.x.clone() as c_float, settings.ViewportPos.y.clone() as c_float);
+        window.ViewportPos = Vector2::from_floats(settings.ViewportPos.x.clone() as c_float, settings.ViewportPos.y.clone() as c_float);
     }
-    window.position = ImFloor(ImVec2::from_floats(settings.Pos.x.clone() + window.ViewportPos.x.clone(), settings.Pos.y.clone() + window.ViewportPos.y.clone()));
+    window.position = ImFloor(Vector2::from_floats(settings.Pos.x.clone() + window.ViewportPos.x.clone(), settings.Pos.y.clone() + window.ViewportPos.y.clone()));
     if settings.Size.x > 0 && settings.Size.y > 0 {
-        window.SizeFull = ImFloor(ImVec2::from_floats(settings.Size.x.clone() as c_float, settings.Size.y.clone() as c_float));
+        window.SizeFull = ImFloor(Vector2::from_floats(settings.Size.x.clone() as c_float, settings.Size.y.clone() as c_float));
         window.Size = window.SizeFull;
     }
     window.Collapsed = settings.Collapsed.clone();
@@ -270,7 +270,7 @@ pub unsafe fn UpdateWindowInFocusOrderList(window: &mut ImguiWindow, just_create
 }
 
 
-pub fn CreateNewWindow(g: &mut ImguiContext, name: &String, flags: ImGuiWindowFlags) -> ImguiWindow {
+pub fn CreateNewWindow(g: &mut AppContext, name: &String, flags: ImGuiWindowFlags) -> ImguiWindow {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     //IMGUI_DEBUG_LOG("CreateNewWindow '{}', flags = 0x{}\n", name, flags);
 
@@ -280,8 +280,8 @@ pub fn CreateNewWindow(g: &mut ImguiContext, name: &String, flags: ImGuiWindowFl
 
 
     // Default/arbitrary window position. Use SetNextWindowPos() with the appropriate condition flag to change the initial position of a window.
-    let main_viewport: *const ImguiViewport = GetMainViewport();
-    window.position = main_viewport.Pos + ImVec2::from_floats(60.0, 60.0);
+    let main_viewport: *const Viewport = GetMainViewport();
+    window.position = main_viewport.Pos + Vector2::from_floats(60.0, 60.0);
     window.ViewportPos = main_viewport.Pos;
 
     // User can disable loading and saving of settings. Tooltip and child windows also don't store settings.
@@ -329,10 +329,10 @@ pub fn CreateNewWindow(g: &mut ImguiContext, name: &String, flags: ImGuiWindowFl
 }
 
 
-pub fn CalcWindowSizeAfterConstraint(g: &mut ImguiContext, window: &ImguiWindow, size_desired: &ImVec2) -> ImVec2
+pub fn CalcWindowSizeAfterConstraint(g: &mut AppContext, window: &ImguiWindow, size_desired: &Vector2) -> Vector2
 {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut new_size: ImVec2 = size_desired.clone();
+    let mut new_size: Vector2 = size_desired.clone();
     if flag_set(g.NextWindowData.Flags, ImGuiNextWindowDataFlags_HasSizeConstraint)
     {
         // Using -1,-1 on either X/Y axis to preserve the current size.
@@ -365,12 +365,12 @@ pub fn CalcWindowSizeAfterConstraint(g: &mut ImguiContext, window: &ImguiWindow,
 }
 
 
-pub fn CalcWindowAutoFitSize(g: &mut ImguiContext, window: &ImguiWindow, size_contents: &ImVec2) -> ImVec2 {
+pub fn CalcWindowAutoFitSize(g: &mut AppContext, window: &ImguiWindow, size_contents: &Vector2) -> Vector2 {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = g.style.borrow_mut();
     let decoration_up_height: c_float = window.TitleBarHeight() + window.MenuBarHeight();
-    let size_pad: ImVec2 = window.WindowPadding * 2.0;
-    let size_desired: ImVec2 = size_contents + size_pad + ImVec2::from_floats(0.0, decoration_up_height);
+    let size_pad: Vector2 = window.WindowPadding * 2.0;
+    let size_desired: Vector2 = size_contents + size_pad + Vector2::from_floats(0.0, decoration_up_height);
     if flag_set(window.Flags.clone(), ImGuiWindowFlags_Tooltip) {
         // Tooltip always resize
         return size_desired;
@@ -378,25 +378,25 @@ pub fn CalcWindowAutoFitSize(g: &mut ImguiContext, window: &ImguiWindow, size_co
         // Maximum window size is determined by the viewport size or monitor size
         let is_popup: bool = flag_set(window.Flags.clone(), ImGuiWindowFlags_Popup);
         let is_menu: bool = flag_set(window.Flags.clone(), ImGuiWindowFlags_ChildMenu);
-        let mut size_min: ImVec2 = style.WindowMinSize;
+        let mut size_min: Vector2 = style.WindowMinSize;
         if is_popup || is_menu { // Popups and menus bypass style.WindowMinSize by default, but we give then a non-zero minimum size to facilitate understanding problematic cases (e.g. empty popups)
-            size_min = ImMin(size_min, ImVec2::from_floats(4.0, 4.0));
+            size_min = ImMin(size_min, Vector2::from_floats(4.0, 4.0));
         }
 
         // FIXME-VIEWPORT-WORKAREA: May want to use GetWorkSize() instead of Size depending on the type of windows?
-        let mut avail_size: ImVec2 = window.Viewport.Size;
+        let mut avail_size: Vector2 = window.Viewport.Size;
         if window.ViewportOwned {
-            avail_size = ImVec2::from_floats(f32::MAX, f32::MAX);
+            avail_size = Vector2::from_floats(f32::MAX, f32::MAX);
         }
         let monitor_idx: c_int = window.ViewportAllowPlatformMonitorExtend.clone();
         if monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.Size {
             avail_size = g.PlatformIO.Monitors[monitor_idx].WorkSize;
         }
-        let mut size_auto_fit: ImVec2 = ImClamp(size_desired, size_min, ImMax(size_min, avail_size - style.DisplaySafeAreaPadding * 2.0));
+        let mut size_auto_fit: Vector2 = ImClamp(size_desired, size_min, ImMax(size_min, avail_size - style.DisplaySafeAreaPadding * 2.0));
 
         // When the window cannot fit all contents (either because of constraints, either because screen is too small),
         // we are growing the size on the other axis to compensate for expected scrollbar. FIXME: Might turn bigger than ViewportSize-WindowPadding.
-        let size_auto_fit_after_constraint: ImVec2 = CalcWindowSizeAfterConstraint(g, window, &size_auto_fit);
+        let size_auto_fit_after_constraint: Vector2 = CalcWindowSizeAfterConstraint(g, window, &size_auto_fit);
         let mut will_have_scrollbar_x: bool = (size_auto_fit_after_constraint.x - size_pad.x - 0.0 < size_contents.x && flag_clear(window.Flags.clone(), ImGuiWindowFlags_NoScrollbar) && flag_set(window.Flags.clone(), ImGuiWindowFlags_HorizontalScrollbar)) || flag_set(window.Flags.clone(), ImGuiWindowFlags_AlwaysHorizontalScrollbar);
         let mut will_have_scrollbar_y: bool = (size_auto_fit_after_constraint.y - size_pad.y - decoration_up_height.clone() < size_contents.y && flag_clear(window.Flags.clone(), ImGuiWindowFlags_NoScrollbar)) || flag_set(window.Flags.clone(), ImGuiWindowFlags_AlwaysVerticalScrollbar);
         if will_have_scrollbar_x {
@@ -412,10 +412,10 @@ pub fn CalcWindowAutoFitSize(g: &mut ImguiContext, window: &ImguiWindow, size_co
 
 
 
-pub fn CalcWindowNextAutoFitSize(g: &mut ImguiContext, window: &ImguiWindow) -> ImVec2
+pub fn CalcWindowNextAutoFitSize(g: &mut AppContext, window: &ImguiWindow) -> Vector2
 {
-    let mut size_contents_current: ImVec2 = ImVec2::default();
-    let mut size_contents_ideal: ImVec2 = ImVec2::default();
+    let mut size_contents_current: Vector2 = Vector2::default();
+    let mut size_contents_ideal: Vector2 = Vector2::default();
     CalcWindowContentSizes(window, &size_contents_current, &size_contents_ideal);
     let size_auto_fit = CalcWindowAutoFitSize(g, window, &size_contents_ideal);
     let size_final = CalcWindowSizeAfterConstraint(g, window, &size_auto_fit);
@@ -434,11 +434,11 @@ pub fn GetWindowBgColorIdx(window: &mut ImguiWindow) -> ImGuiCol {
 }
 
 
-pub unsafe fn CalcResizePosSizeFromAnyCorner(window: &mut ImguiWindow, corner_target: &ImVec2, corner_norm: &ImVec2, out_pos: *mut ImVec2, out_size: *mut ImVec2) {
-    let pos_min: ImVec2 = ImLerpVec22(corner_target, &window.position, corner_norm);                // Expected window upper-left
-    let pos_max: ImVec2 = ImLerpVec22(window.position + window.Size, corner_target, corner_norm); // Expected window lower-right
-    let size_expected: ImVec2 = pos_max - pos_min;
-    let size_constrained: ImVec2 = CalcWindowSizeAfterConstraint(g, window, &size_expected);
+pub unsafe fn CalcResizePosSizeFromAnyCorner(window: &mut ImguiWindow, corner_target: &Vector2, corner_norm: &Vector2, out_pos: *mut Vector2, out_size: *mut Vector2) {
+    let pos_min: Vector2 = ImLerpVec22(corner_target, &window.position, corner_norm);                // Expected window upper-left
+    let pos_max: Vector2 = ImLerpVec22(window.position + window.Size, corner_target, corner_norm); // Expected window lower-right
+    let size_expected: Vector2 = pos_max - pos_min;
+    let size_constrained: Vector2 = CalcWindowSizeAfterConstraint(g, window, &size_expected);
     *out_pos = pos_min;
     if corner_norm.x == 0.0 {
         out_pos.x -= (size_constrained.x - size_expected.x);
@@ -453,7 +453,7 @@ pub unsafe fn CalcResizePosSizeFromAnyCorner(window: &mut ImguiWindow, corner_ta
 pub fn GetResizeBorderRect(window: &mut ImguiWindow, border_n: c_int, perp_padding: c_float, thickness: c_float) -> ImRect {
     let mut rect: ImRect = window.Rect();
     if thickness == 0.0 {
-        rect.max -= ImVec2::from_floats(1.0, 1.0);
+        rect.max -= Vector2::from_floats(1.0, 1.0);
     }
     if border_n == ImGuiDir_Left {
         return ImRect(rect.min.x - thickness, rect.min.y + perp_padding, rect.min.x.clone() + thickness.clone(), rect.max.y - perp_padding.clone()); }
@@ -493,7 +493,7 @@ pub unsafe fn GetWindowResizeBorderID(window: &mut ImguiWindow, dir: ImGuiDir) -
 
 // Handle resize for: Resize Grips, Borders, Gamepad
 // Return true when using auto-fit (double click on resize grip)
-pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: &ImVec2, border_held:  *mut c_int, resize_grip_count: c_int, mut resize_grip_col: [u32;4], visibility_rect: &ImRect) -> bool
+pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: &Vector2, border_held:  *mut c_int, resize_grip_count: c_int, mut resize_grip_col: [u32;4], visibility_rect: &ImRect) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     flags: ImGuiWindowFlags = window.Flags.clone();
@@ -511,8 +511,8 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
     let grip_hover_inner_size: c_float =  IM_FLOOR(grip_draw_size * 0.75);
     let grip_hover_outer_size: c_float =  if g.IO.ConfigWindowsResizeFromEdges { WINDOWS_HOVER_PADDING } else { 0.0 };
 
-    pos_target: ImVec2(f32::MAX, f32::MAX);
-    size_target: ImVec2(f32::MAX, f32::MAX);
+    pos_target: Vector2(f32::MAX, f32::MAX);
+    size_target: Vector2(f32::MAX, f32::MAX);
 
     // Clip mouse interaction rectangles within the viewport rectangle (in practice the narrowing is going to happen most of the time).
     // - Not narrowing would mostly benefit the situation where OS windows _without_ decoration have a threshold for hovering when outside their limits.
@@ -534,7 +534,7 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
     for resize_grip_n in 0 .. resize_grip_count
     {
         let def = resize_grip_def[resize_grip_n];
-        let corner: ImVec2 = ImLerp(window.position, window.position + window.Size, def.CornerPosN);
+        let corner: Vector2 = ImLerp(window.position, window.position + window.Size, def.CornerPosN);
 
         // Using the FlattenChilds button flag we make the resize button accessible even if we are hovering over a child window
         let mut hovered = false;
@@ -561,9 +561,9 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
         {
             // Resize from any of the four corners
             // We don't use an incremental MouseDelta but rather compute an absolute target size based on mouse position
-            let clamp_min: ImVec2 = ImVec2::from_floats(if def.CornerPosN.x == 1.0 { visibility_rect.min.x.clone() } else { -f32::MAX }, if def.CornerPosN.y == 1.0 { visibility_rect.min.y.clone() } else { -f32::MAX });
-            let clamp_max: ImVec2 = ImVec2::from_floats(if def.CornerPosN.x == 0.0 { visibility_rect.max.x.clone() } else { f32::MAX }, if def.CornerPosN.y == 0.0 { visibility_rect.max.y.clone() } else { f32::MAX });
-            let mut corner_target: ImVec2 = g.IO.MousePos - g.ActiveIdClickOffset + ImLerp(def.InnerDir * grip_hover_outer_size.clone(), def.InnerDir * -grip_hover_inner_size.clone(), def.CornerPosN); // Corner of the window corresponding to our corner grip
+            let clamp_min: Vector2 = Vector2::from_floats(if def.CornerPosN.x == 1.0 { visibility_rect.min.x.clone() } else { -f32::MAX }, if def.CornerPosN.y == 1.0 { visibility_rect.min.y.clone() } else { -f32::MAX });
+            let clamp_max: Vector2 = Vector2::from_floats(if def.CornerPosN.x == 0.0 { visibility_rect.max.x.clone() } else { f32::MAX }, if def.CornerPosN.y == 0.0 { visibility_rect.max.y.clone() } else { f32::MAX });
+            let mut corner_target: Vector2 = g.IO.MousePos - g.ActiveIdClickOffset + ImLerp(def.InnerDir * grip_hover_outer_size.clone(), def.InnerDir * -grip_hover_inner_size.clone(), def.CornerPosN); // Corner of the window corresponding to our corner grip
             corner_target = ImClamp(corner_target, clamp_min, clamp_max);
             CalcResizePosSizeFromAnyCorner(window, &corner_target, def.CornerPosN, &mut pos_target, &mut size_target);
         }
@@ -600,9 +600,9 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
         }
         if held
         {
-            let clamp_min = ImVec2::from_floats(if border_n == ImGuiDir_Right { visibility_rect.min.x.clone() } else { -f32::MAX }, if border_n == ImGuiDir_Down { visibility_rect.min.y.clone() } else { -f32::MAX });
-            let clamp_max = ImVec2::New(if border_n == ImGuiDir_Left { visibility_rect.max.x.clone() } else { f32::MAX }, if border_n == ImGuiDir_Up { visibility_rect.max.y.clone() } else { f32::MAX });
-            let mut border_target: ImVec2 = window.position;
+            let clamp_min = Vector2::from_floats(if border_n == ImGuiDir_Right { visibility_rect.min.x.clone() } else { -f32::MAX }, if border_n == ImGuiDir_Down { visibility_rect.min.y.clone() } else { -f32::MAX });
+            let clamp_max = Vector2::New(if border_n == ImGuiDir_Left { visibility_rect.max.x.clone() } else { f32::MAX }, if border_n == ImGuiDir_Up { visibility_rect.max.y.clone() } else { f32::MAX });
+            let mut border_target: Vector2 = window.position;
             border_target[axis] = g.IO.MousePos[axis.clone()] - g.ActiveIdClickOffset[axis.clone()] + WINDOWS_HOVER_PADDING;
             border_target = ImClamp(border_target, clamp_min, clamp_max);
             CalcResizePosSizeFromAnyCorner(window, &border_target, ImMin(def.SegmentN1, def.SegmentN2), &mut pos_target, &mut size_target);
@@ -618,7 +618,7 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
     // Not even sure the callback works here.
     if is_not_null(g.NavWindowingTarget) && g.NavWindowingTarget.RootWindowDockTree == window
     {
-        let mut nav_resize_dir = ImVec2::default();
+        let mut nav_resize_dir = Vector2::default();
         if g.NavInputSource == ImGuiInputSource_Keyboard && g.IO.KeyShift.clone() {
             nav_resize_dir = GetKeyVector2d(ImGuiKey_LeftArrow, ImGuiKey_RightArrow, ImGuiKey_UpArrow, ImGuiKey_DownArrow);
         }
@@ -634,7 +634,7 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
             g.NavWindowingToggleLayer = false;
             g.NavDisableMouseHover = true;
             resize_grip_col[0] = GetColorU32(ImGuiCol_ResizeGripActive, 0.0);
-            let accum_floored: ImVec2 = ImFloor(g.NavWindowingAccumDeltaSize);
+            let accum_floored: Vector2 = ImFloor(g.NavWindowingAccumDeltaSize);
             if accum_floored.x != 0.0 || accum_floored.y != 0.0
             {
                 // FIXME-NAV: Should store and accumulate into a separate size buffer to handle sizing constraints properly, right now a constraint will make us stuck.
@@ -669,7 +669,7 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
 //   You can use the "##" or "###" markers to use the same label with different id, or same id with different label. See documentation at the top of this file.
 // - Return false when window is collapsed, so you can early out in your code. You always need to call End() even if false is returned.
 // - Passing 'bool* p_open' displays a Close button on the upper-right corner of the window, the pointed value will be set to false when the button is pressed.
-pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> bool
+pub fn Begin(g: &mut AppContext, name: &String, p_open: Option<&mut bool>) -> bool
 {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.style;
@@ -855,7 +855,7 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
         window.ContentSizeExplicit = g.NextWindowData.ContentSizeVal;
     }
     else if first_begin_of_the_frame {
-    window.ContentSizeExplicit = ImVec2::from_floats(0.0, 0.0);
+    window.ContentSizeExplicit = Vector2::from_floats(0.0, 0.0);
 }
     if flag_set(g.NextWindowData.Flags.clone(), ImGuiNextWindowDataFlags_HasWindowClass) {
         window.WindowClass = g.NextWindowData.WindowClass;
@@ -945,8 +945,8 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
                 if !window_size_y_set_by_api {
                     window.Size.y = 0.0; window.SizeFull.y = 0.0;
                 }
-                window.ContentSize = ImVec2::default();
-                window.ContentSizeIdeal = ImVec2::default();
+                window.ContentSize = Vector2::default();
+                window.ContentSizeIdeal = Vector2::default();
             }
         }
 
@@ -971,7 +971,7 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
             } else { style.WindowBorderSize };
         }
         if !window.DockIsActive && flag_set(flags, ImGuiWindowFlags_ChildWindow) && flag_clear(flags, (ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_Popup)) && window.WindowBorderSize == 0.0 {
-            window.WindowPadding = ImVec2::from_floats(0.0, if flag_set(flags, ImGuiWindowFlags_MenuBar) { style.WindowPadding.y }else { 0.0 });
+            window.WindowPadding = Vector2::from_floats(0.0, if flag_set(flags, ImGuiWindowFlags_MenuBar) { style.WindowPadding.y }else { 0.0 });
         }
         else {
             window.WindowPadding = style.WindowPadding;
@@ -1005,7 +1005,7 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
         // SIZE
 
         // Calculate auto-fit size, handle automatic resize
-        let size_auto_fit: ImVec2 = CalcWindowAutoFitSize(, window, &window.ContentSizeIdeal);
+        let size_auto_fit: Vector2 = CalcWindowAutoFitSize(, window, &window.ContentSizeIdeal);
         let mut use_current_size_for_scrollbar_x: bool =  window_just_created;
         let mut use_current_size_for_scrollbar_y: bool =  window_just_created;
         if flag_set(flags, ImGuiWindowFlags_AlwaysAutoResize) && !window.Collapsed
@@ -1109,7 +1109,7 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
         // When clamping to stay visible, we will enforce that window.position stays inside of visibility_rect.
         let mut viewport_rect: ImRect = ImRect::new(window.Viewport.GetMainRect());
         let mut viewport_work_rect: ImRect = ImRect::new(window.Viewport.GetWorkRect());
-        let visibility_padding: ImVec2 = ImMax(style.DisplayWindowPadding, style.DisplaySafeAreaPadding);
+        let visibility_padding: Vector2 = ImMax(style.DisplayWindowPadding, style.DisplaySafeAreaPadding);
         let mut visibility_rect: ImRect = ImRect::new(viewport_work_rect.min + visibility_padding, viewport_work_rect.max - visibility_padding);
 
         // Clamp position/size so window stays visible within its viewport or monitor
@@ -1229,9 +1229,9 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
         {
             // When reading the current size we need to read it after size constraints have been applied.
             // When we use InnerRect here we are intentionally reading last frame size, same for ScrollbarSizes values before we set them again.
-            let avail_size_from_current_frame: ImVec2 = ImVec2::from_floats(window.SizeFull.x, window.SizeFull.y - decoration_up_height);
-            let avail_size_from_last_frame: ImVec2 = window.InnerRect.GetSize() + window.scrollbarSizes;
-            let needed_size_from_last_frame: ImVec2 = if window_just_created { ImVec2::from_floats(0.0, 0.0) } else { window.ContentSize + window.WindowPadding * 2.0 };
+            let avail_size_from_current_frame: Vector2 = Vector2::from_floats(window.SizeFull.x, window.SizeFull.y - decoration_up_height);
+            let avail_size_from_last_frame: Vector2 = window.InnerRect.GetSize() + window.scrollbarSizes;
+            let needed_size_from_last_frame: Vector2 = if window_just_created { Vector2::from_floats(0.0, 0.0) } else { window.ContentSize + window.WindowPadding * 2.0 };
             let size_x_for_scrollbars: c_float =  if use_current_size_for_scrollbar_x { avail_size_from_current_frame.x } else { avail_size_from_last_frame.x };
             let size_y_for_scrollbars: c_float =  if use_current_size_for_scrollbar_y { avail_size_from_current_frame.y } else { avail_size_from_last_frame.y };
             //scrollbar_y_from_last_frame: bool = window.scrollbarY; // FIXME: May want to use that in the ScrollbarX expression? How many pros vs cons?
@@ -1240,7 +1240,7 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
             if window.scrollbarX && !window.scrollbarY {
                 window.scrollbarY = (needed_size_from_last_frame.y > size_y_for_scrollbars) && flag_clear(flags, ImGuiWindowFlags_NoScrollbar);
             }
-            window.scrollbarSizes = ImVec2::from_floats(if window.scrollbarY { style.ScrollbarSize }else { 0.0 }, if window.scrollbarX { style.ScrollbarSize }else { 0.0 });
+            window.scrollbarSizes = Vector2::from_floats(if window.scrollbarY { style.ScrollbarSize }else { 0.0 }, if window.scrollbarX { style.ScrollbarSize }else { 0.0 });
         }
 
         // UPDATE RECTANGLES (1- THOSE NOT AFFECTED BY SCROLLING)
@@ -1304,7 +1304,7 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
 
         // Apply scrolling
         window.scroll = CalcNextScrollFromScrollTargetAndClamp(window);
-        window.scrollTarget = ImVec2::from_floats(f32::MAX, f32::MAX);
+        window.scrollTarget = Vector2::from_floats(f32::MAX, f32::MAX);
 
         // DRAWING
 
@@ -1381,14 +1381,14 @@ pub fn Begin(g: &mut ImguiContext, name: &String, p_open: Option<&mut bool>) -> 
         // This is used by clipper to compensate and fix the most common use case of large scroll area. Easy and cheap, next best thing compared to switching everything to double or u64.
         let start_pos_highp_x = window.position.x + window.WindowPadding.x - window.scroll.x + window.dc.ColumnsOffset.x;
         let start_pos_highp_y = window.position.y + window.WindowPadding.y - window.scroll.y + decoration_up_height;
-        window.dc.CursorStartPos  = ImVec2::from_floats(start_pos_highp_x, start_pos_highp_y);
-        window.dc.CursorStartPosLossyness = ImVec2::from_floats((start_pos_highp_x - window.dc.CursorStartPos.x), (start_pos_highp_y - window.dc.CursorStartPos.y));
+        window.dc.CursorStartPos  = Vector2::from_floats(start_pos_highp_x, start_pos_highp_y);
+        window.dc.CursorStartPosLossyness = Vector2::from_floats((start_pos_highp_x - window.dc.CursorStartPos.x), (start_pos_highp_y - window.dc.CursorStartPos.y));
         window.dc.cursor_pos = window.dc.CursorStartPos;
         window.dc.cursor_pos_prev_line = window.dc.cursor_pos;
         window.dc.CursorMaxPos = window.dc.CursorStartPos;
         window.dc.IdealMaxPos = window.dc.CursorStartPos;
-        window.dc.CurrLineSize = ImVec2::from_floats(0.0, 0.0);
-        window.dc.PrevLineSize = ImVec2::from_floats(0.0, 0.0);
+        window.dc.CurrLineSize = Vector2::from_floats(0.0, 0.0);
+        window.dc.PrevLineSize = Vector2::from_floats(0.0, 0.0);
         window.dc.CurrLineTextBaseOffset = 0.0;
         window.dc.PrevLineTextBaseOffset = 0.0;
         window.dc.IsSameLine = false;

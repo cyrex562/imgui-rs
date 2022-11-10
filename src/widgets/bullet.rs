@@ -4,7 +4,7 @@ use crate::layout::layout_ops::same_line;
 use crate::rect::ImRect;
 use crate::drawing::render_ops::RenderBullet;
 use crate::style_ops::GetColorU32;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
 use crate::GImGui;
@@ -27,7 +27,7 @@ pub unsafe fn Bullet() {
         .max(g.FontSize);
     let mut bb: ImRect = ImRect::new(
         window.dc.cursor_pos,
-        window.dc.cursor_pos + ImVec2::from_floats(g.FontSize, line_height),
+        window.dc.cursor_pos + Vector2::from_floats(g.FontSize, line_height),
     );
     ItemSize(g, &bb.GetSize(), 0.0);
     if !ItemAdd(g, &mut bb, 0, None, 0) {
@@ -39,7 +39,7 @@ pub unsafe fn Bullet() {
     text_col: u32 = GetColorU32(ImGuiCol_Text, 0.0);
     RenderBullet(
         &window.DrawList,
-        bb.min + ImVec2::from_floats(style.FramePadding.x + g.FontSize * 0.5, line_height * 0.5),
+        bb.min + Vector2::from_floats(style.FramePadding.x + g.FontSize * 0.5, line_height * 0.5),
         text_col,
     );
     same_line(g, 0.0, style.FramePadding.x * 2.0);

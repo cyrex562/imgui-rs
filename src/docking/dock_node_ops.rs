@@ -40,7 +40,7 @@ use crate::settings_ops::MarkIniSettingsDirty;
 use crate::widgets::tab_bar_flags::{ImGuiTabBarFlags_AutoSelectNewTabs, ImGuiTabBarFlags_DockNode, ImGuiTabBarFlags_IsFocused, ImGuiTabBarFlags_NoCloseWithMiddleMouseButton, ImGuiTabBarFlags_Reorderable, ImGuiTabBarFlags_SaveSettings};
 use crate::widgets::tab_item::ImGuiTabItem;
 use crate::core::utils::{flag_clear, flag_set, ImQsort, is_not_null};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use crate::window::find::IsWindowWithinBeginStackOf;
 use crate::window::focus::FocusWindow;
@@ -623,7 +623,7 @@ pub unsafe fn DockNodeUpdate(node: *mut ImGuiDockNode) {
             window_flags |= ImGuiWindowFlags_NoTitleBar;
 
             SetNextWindowBgAlpha(0.0); // Don't set ImGuiWindowFlags_NoBackground because it disables borders
-            PushStyleVar(crate::style_var::ImGuiStyleVar_WindowPadding, ImVec2::from_floats(0.0, 0.0));
+            PushStyleVar(crate::style_var::ImGuiStyleVar_WindowPadding, Vector2::from_floats(0.0, 0.0));
             Begin(g, window_label, null_mut());
             PopStyleVar();
             beginned_into_host_window = true;
@@ -796,9 +796,9 @@ pub unsafe fn DockNodeUpdateWindowMenu(node: *mut ImGuiDockNode, tab_bar: *mut I
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut ret_tab_id: ImguiHandle = 0;
     if g.style.WindowMenuButtonPosition == ImGuiDir_Left {
-        SetNextWindowPos(, &ImVec2::from_floats(node.Pos.x, &node.Pos.y + GetFrameHeight()), ImGuiCond_Always, &ImVec2::from_floats(0.0, 0.0));
+        SetNextWindowPos(, &Vector2::from_floats(node.Pos.x, &node.Pos.y + GetFrameHeight()), ImGuiCond_Always, &Vector2::from_floats(0.0, 0.0));
     } else {
-        SetNextWindowPos(, &ImVec2::from_floats(node.Pos.x + node.Size.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, &ImVec2::from_floats(1.0, 0.0));
+        SetNextWindowPos(, &Vector2::from_floats(node.Pos.x + node.Size.x, node.Pos.y + GetFrameHeight()), ImGuiCond_Always, &Vector2::from_floats(1.0, 0.0));
     }
     if BeginPopup(str_to_const_c_char_ptr("#WindowMenu"), 0) {
         node.IsFocused = true;
@@ -946,8 +946,8 @@ pub unsafe fn DockNodeUpdateTabBar(node: *mut ImGuiDockNode, host_window: &mut I
     // title_bar_rect, tab_bar_rect;
     let mut title_bar_rect = ImRect::default();
     let mut tab_bar_rect = ImRect::default();
-    let mut window_menu_button_pos = ImVec2::default();
-    let mut close_button_pos = ImVec2::default();
+    let mut window_menu_button_pos = Vector2::default();
+    let mut close_button_pos = Vector2::default();
     DockNodeCalcTabBarLayout(node, &mut title_bar_rect, &mut tab_bar_rect, &mut window_menu_button_pos, &mut close_button_pos);
 
     // Submit new tabs, they will be added as Unsorted and sorted below based on relative DockOrder value.
@@ -1243,8 +1243,8 @@ pub unsafe fn DockNodeCalcTabBarLayout(
     node: *const ImGuiDockNode,
     out_title_rect: *mut ImRect,
     out_tab_bar_rect: *mut ImRect,
-    out_window_menu_button_pos: *mut ImVec2,
-    out_close_button_pos: *mut ImVec2) {
+    out_window_menu_button_pos: *mut Vector2,
+    out_close_button_pos: *mut Vector2) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let style = &mut g.style;
 
@@ -1256,24 +1256,24 @@ pub unsafe fn DockNodeCalcTabBarLayout(
 
     let button_sz: c_float = g.FontSize;
 
-    let mut window_menu_button_pos: ImVec2 = r.min;
+    let mut window_menu_button_pos: Vector2 = r.min;
     r.min.x += style.FramePadding.x;
     r.max.x -= style.FramePadding.x;
     if node.HasCloseButton {
         r.max.x -= button_sz;
-        if out_close_button_pos { *out_close_button_pos = ImVec2::from_floats(r.max.x - style.FramePadding.x, r.min.y); }
+        if out_close_button_pos { *out_close_button_pos = Vector2::from_floats(r.max.x - style.FramePadding.x, r.min.y); }
     }
     if node.HasWindowMenuButton && style.WindowMenuButtonPosition == ImGuiDir_Left {
         r.min.x += button_sz + style.ItemInnerSpacing.x;
     } else if node.HasWindowMenuButton && style.WindowMenuButtonPosition == ImGuiDir_Right {
         r.max.x -= button_sz + style.FramePadding.x;
-        window_menu_button_pos = ImVec2::from_floats(r.max.x, r.min.y);
+        window_menu_button_pos = Vector2::from_floats(r.max.x, r.min.y);
     }
     if out_tab_bar_rect { *out_tab_bar_rect = r; }
     if out_window_menu_button_pos { *out_window_menu_button_pos = window_menu_button_pos; }
 }
 
-pub unsafe fn DockNodeCalcSplitRects(pos_old: &mut ImVec2, size_old: &mut ImVec2, pos_new: &mut ImVec2, size_new: &mut ImVec2, dir: ImGuiDir, size_new_desired: ImVec2) {
+pub unsafe fn DockNodeCalcSplitRects(pos_old: &mut Vector2, size_old: &mut Vector2, pos_new: &mut Vector2, size_new: &mut Vector2, dir: ImGuiDir, size_new_desired: Vector2) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let dock_spacing: c_float = g.style.ItemInnerSpacing.x;
     const axis: ImGuiAxis = if dir == ImGuiDir_Left || dir == ImGuiDir_Right { IM_GUI_AXIS_X } else { IM_GUI_AXIS_Y };
@@ -1300,28 +1300,28 @@ pub unsafe fn DockNodeCalcSplitRects(pos_old: &mut ImVec2, size_old: &mut ImVec2
 }
 
 // Retrieve the drop rectangles for a given direction or for the center + perform hit testing.
-pub unsafe fn DockNodeCalcDropRectsAndTestMousePos(parent: &mut ImRect, dir: ImGuiDir, out_r: &mut ImRect, outer_docking: bool, test_mouse_pos: *mut ImVec2) -> bool {
+pub unsafe fn DockNodeCalcDropRectsAndTestMousePos(parent: &mut ImRect, dir: ImGuiDir, out_r: &mut ImRect, outer_docking: bool, test_mouse_pos: *mut Vector2) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     let parent_smaller_axis: c_float = ImMin(parent.GetWidth(), parent.GetHeight());
     let hs_for_central_nodes: c_float = ImMin(g.FontSize * 1.5, ImMax(g.FontSize * 0.5, parent_smaller_axis / 8.0));
     let mut hs_w: c_float = 0.0; // Half-size, longer axis
     let mut hs_h: c_float = 0.0; // Half-size, smaller axis
-    off: ImVec2; // Distance from edge or center
+    off: Vector2; // Distance from edge or center
     if outer_docking {
         //hs_w = ImFloor(ImClamp(parent_smaller_axis - hs_for_central_nodes * 4.0, g.FontSize * 0.5, g.FontSize * 8.0));
         //hs_h = ImFloor(hs_w * 0.150f32);
         //off = ImVec2::new(ImFloor(parent.GetWidth() * 0.5 - GetFrameHeightWithSpacing() * 1.4 - hs_h), ImFloor(parent.GetHeight() * 0.5 - GetFrameHeightWithSpacing() * 1.4 - hs_h));
         hs_w = ImFloor(hs_for_central_nodes * 1.5);
         hs_h = ImFloor(hs_for_central_nodes * 0.8);
-        off = ImVec2::from_floats(ImFloor(parent.GetWidth() * 0.5 - hs_h), ImFloor(parent.GetHeight() * 0.5 - hs_h));
+        off = Vector2::from_floats(ImFloor(parent.GetWidth() * 0.5 - hs_h), ImFloor(parent.GetHeight() * 0.5 - hs_h));
     } else {
         hs_w = ImFloor(hs_for_central_nodes);
         hs_h = ImFloor(hs_for_central_nodes * 0.9);
-        off = ImVec2::from_floats(ImFloor(hs_w * 2.4), ImFloor(hs_w * 2.4));
+        off = Vector2::from_floats(ImFloor(hs_w * 2.4), ImFloor(hs_w * 2.4));
     }
 
-    let c: ImVec2 = ImFloor(parent.GetCenter());
+    let c: Vector2 = ImFloor(parent.GetCenter());
     if dir == ImGuiDir_None { *out_r = ImRect(c.x - hs_w, c.y - hs_w, c.x + hs_w, c.y + hs_w); } else if dir == ImGuiDir_Up { *out_r = ImRect(c.x - hs_w, c.y - off.y - hs_h, c.x + hs_w, c.y - off.y + hs_h); } else if dir == ImGuiDir_Down { *out_r = ImRect(c.x - hs_w, c.y + off.y - hs_h, c.x + hs_w, c.y + off.y + hs_h); } else if dir == ImGuiDir_Left { *out_r = ImRect(c.x - off.x - hs_h, c.y - hs_w, c.x - off.x + hs_h, c.y + hs_w); } else if dir == ImGuiDir_Right { *out_r = ImRect(c.x + off.x - hs_h, c.y - hs_w, c.x + off.x + hs_h, c.y + hs_w); }
 
     if test_mouse_pos == None {
@@ -1332,7 +1332,7 @@ pub unsafe fn DockNodeCalcDropRectsAndTestMousePos(parent: &mut ImRect, dir: ImG
     if !outer_docking {
         // Custom hit testing for the 5-way selection, designed to reduce flickering when moving diagonally between sides
         hit_r.Expand(ImFloor(hs_w * 0.3));
-        let mouse_delta: ImVec2 = (*test_mouse_pos - c);
+        let mouse_delta: Vector2 = (*test_mouse_pos - c);
         let mouse_delta_len2: c_float = ImLengthSqr(mouse_delta);
         let r_threshold_center: c_float = hs_w * 1.4;
         let r_threshold_sides: c_float = hs_w * (1.4 + 1.20);
@@ -1505,7 +1505,7 @@ pub unsafe fn DockNodePreviewDockRender(
         // Compute target tab bar geometry so we can locate our preview tabs
         let mut tab_bar_rect: ImRect = ImRect::default();
         DockNodeCalcTabBarLayout(&data.FutureNode, None, &mut tab_bar_rect, None, null_mut());
-        let mut tab_pos: ImVec2 = tab_bar_rect.min;
+        let mut tab_pos: Vector2 = tab_bar_rect.min;
         if host_node.is_null() == false && host_node.TabBar.is_null() == false {
             if !host_node.IsHiddenTabBar() && !host_node.IsNoTabBar() {
                 tab_pos.x += host_node.TabBar.WidthAllTabs + g.style.ItemInnerSpacing.x;
@@ -1534,7 +1534,7 @@ pub unsafe fn DockNodePreviewDockRender(
             }
 
             // Calculate the tab bounding box for each payload window
-            let tab_size: ImVec2 = TabItemCalcSize(payload_window.Name, payload_window.HasCloseButton);
+            let tab_size: Vector2 = TabItemCalcSize(payload_window.Name, payload_window.HasCloseButton);
             let mut tab_bb: ImRect = ImRect::new(tab_pos.x, tab_pos.y, tab_pos.x + tab_size.x, tab_pos.y + tab_size.y);
             tab_pos.x += tab_size.x + g.style.ItemInnerSpacing.x;
             overlay_col_text: u32 = GetColorU32(payload_window.DockStyle.Colors[ImGuiWindowDockStyleCol_Text], 0.0);
@@ -1568,14 +1568,14 @@ pub unsafe fn DockNodePreviewDockRender(
             let overlay_col = if data.SplitDir == dir && data.IsSplitDirExplicit { overlay_col_drop_hovered } else { overlay_col_drop };
             // for (let overlay_n: c_int = 0; overlay_n < overlay_draw_lists_count; overlay_n++)
             {
-                let center: ImVec2 = ImFloor(draw_r_in.GetCenter());
+                let center: Vector2 = ImFloor(draw_r_in.GetCenter());
                 overlay_draw_lists[overlay_n].AddRectFilled(draw_r.min, draw_r.max, overlay_col, overlay_rounding);
                 overlay_draw_lists[overlay_n].AddRect(draw_r_in.min, draw_r_in.max, overlay_col_lines, overlay_rounding);
                 if dir == ImGuiDir_Left || dir == ImGuiDir_Right {
-                    overlay_draw_lists[overlay_n].AddLine(ImVec2::from_floats(center.x, draw_r_in.min.y), ImVec2::from_floats(center.x, draw_r_in.max.y), overlay_col_lines);
+                    overlay_draw_lists[overlay_n].AddLine(Vector2::from_floats(center.x, draw_r_in.min.y), Vector2::from_floats(center.x, draw_r_in.max.y), overlay_col_lines);
                 }
                 if dir == ImGuiDir_Up || dir == ImGuiDir_Down {
-                    overlay_draw_lists[overlay_n].AddLine(ImVec2::from_floats(draw_r_in.min.x, center.y), ImVec2::from_floats(draw_r_in.max.x, center.y), overlay_col_lines);
+                    overlay_draw_lists[overlay_n].AddLine(Vector2::from_floats(draw_r_in.min.x, center.y), Vector2::from_floats(draw_r_in.max.x, center.y), overlay_col_lines);
                 }
             }
         }
@@ -1599,7 +1599,7 @@ pub unsafe fn DockNodePreviewDockRender(
 // - DockNodeTreeFindNodeByPos()
 //-----------------------------------------------------------------------------
 
-pub unsafe fn DockNodeTreeSplit(ctx: *mut crate::core::context::ImguiContext, parent_node: *mut ImGuiDockNode, split_axis: ImGuiAxis, split_inheritor_child_idx: c_int, split_ratio: c_float, new_node: *mut ImGuiDockNode) {
+pub unsafe fn DockNodeTreeSplit(ctx: *mut crate::core::context::AppContext, parent_node: *mut ImGuiDockNode, split_axis: ImGuiAxis, split_inheritor_child_idx: c_int, split_ratio: c_float, new_node: *mut ImGuiDockNode) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(split_axis != IM_GUI_AXIS_NONE);
 
@@ -1645,7 +1645,7 @@ pub unsafe fn DockNodeTreeSplit(ctx: *mut crate::core::context::ImguiContext, pa
     }
 }
 
-pub unsafe fn DockNodeTreeMerge(ctx: *mut crate::core::context::ImguiContext, parent_node: *mut ImGuiDockNode, merge_lead_child: *mut ImGuiDockNode) {
+pub unsafe fn DockNodeTreeMerge(ctx: *mut crate::core::context::AppContext, parent_node: *mut ImGuiDockNode, merge_lead_child: *mut ImGuiDockNode) {
     // When called from DockContextProcessUndockNode() it is possible that one of the child is NULL.
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let child_0: *mut ImGuiDockNode = parent_node.ChildNodes[0];
@@ -1658,7 +1658,7 @@ pub unsafe fn DockNodeTreeMerge(ctx: *mut crate::core::context::ImguiContext, pa
     }
     // IMGUI_DEBUG_LOG_DOCKING("[docking] DockNodeTreeMerge: 0x{} + 0x{} back into parent 0x{}\n", child_0 ? child_0.ID : 0, child_1 ? child_1.ID : 0, parent_node.ID);
 
-    let backup_last_explicit_size: ImVec2 = parent_node.SizeRef;
+    let backup_last_explicit_size: Vector2 = parent_node.SizeRef;
     DockNodeMoveChildNodes(parent_node, merge_lead_child);
     if (child_0) {
         DockNodeMoveWindows(parent_node, child_0); // Generally only 1 of the 2 child node will have windows
@@ -1694,7 +1694,7 @@ pub unsafe fn DockNodeTreeMerge(ctx: *mut crate::core::context::ImguiContext, pa
 
 // Update Pos/Size for a node hierarchy (don't affect child Windows yet)
 // (Depth-first, Pre-Order)
-pub unsafe fn DockNodeTreeUpdatePosSize(node: *mut ImGuiDockNode, pos: ImVec2, size: ImVec2, only_write_to_single_node: *mut ImGuiDockNode) {
+pub unsafe fn DockNodeTreeUpdatePosSize(node: *mut ImGuiDockNode, pos: Vector2, size: Vector2, only_write_to_single_node: *mut ImGuiDockNode) {
     // During the regular dock node update we write to all nodes.
     // 'only_write_to_single_node' is only set when turning a node visible mid-frame and we need its size right-away.
     let write_to_node: bool = only_write_to_single_node == None || only_write_to_single_node == node;
@@ -1709,9 +1709,9 @@ pub unsafe fn DockNodeTreeUpdatePosSize(node: *mut ImGuiDockNode, pos: ImVec2, s
 
     let child_0: *mut ImGuiDockNode = node.ChildNodes[0];
     let child_1: *mut ImGuiDockNode = node.ChildNodes[1];
-    let child_0_pos: ImVec2 = pos;
+    let child_0_pos: Vector2 = pos;
     let child_1_pos = pos;
-    let child_0_size: ImVec2 = size;
+    let child_0_size: Vector2 = size;
     let child_1_size = size;
 
     let child_0_is_toward_single_node: bool = (only_write_to_single_node != None && DockNodeIsInHierarchyOf(only_write_to_single_node, child_0));
@@ -1940,7 +1940,7 @@ pub unsafe fn DockNodeTreeFindFallbackLeafNode(node: *mut ImGuiDockNode) -> *mut
 }
 
 // DockNodeTreeFindVisibleNodeByPos:*mut ImGuiDockNode(node:*mut ImGuiDockNode, pos: ImVec2)
-pub unsafe fn DockNodeTreeFindVisibleNodeByPos(node: *mut ImGuiDockNode, pos: ImVec2) -> *mut ImGuiDockNode {
+pub unsafe fn DockNodeTreeFindVisibleNodeByPos(node: *mut ImGuiDockNode, pos: Vector2) -> *mut ImGuiDockNode {
     if !node.IsVisible {
         return None;
     }

@@ -1,12 +1,12 @@
 #![allow(non_snake_case)]
 
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::item::item_ops::{ItemAdd, ItemSize};
 use crate::layout::layout_type::{ImGuiLayoutType, ImGuiLayoutType_Vertical};
 use crate::core::math_ops::ImMax;
 use crate::rect::ImRect;
 use crate::widgets::shrink_width_item::ImGuiShrinkWidthItem;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
 use crate::GImGui;
@@ -18,7 +18,7 @@ use std::ptr::null;
 //      offset_from_start_x != 0 : align to specified x position (relative to window/group left)
 //      spacing_w < 0            : use default spacing if pos_x == 0, no spacing if pos_x != 0
 //      spacing_w >= 0           : enforce spacing amount
-pub fn same_line(g: &mut ImguiContext, offset_from_start_x: c_float, mut spacing_w: c_float) {
+pub fn same_line(g: &mut AppContext, offset_from_start_x: c_float, mut spacing_w: c_float) {
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
         return;
@@ -46,15 +46,15 @@ pub fn same_line(g: &mut ImguiContext, offset_from_start_x: c_float, mut spacing
     window.dc.is_same_line = true;
 }
 
-pub fn spacing(g: &mut ImguiContext) {
+pub fn spacing(g: &mut AppContext) {
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
         return;
     }
-    ItemSize(g, &ImVec2::from_ints(0, 0), 0.0);
+    ItemSize(g, &Vector2::from_ints(0, 0), 0.0);
 }
 
-pub fn Dummy(g: &mut ImguiContext, size: &ImVec2) {
+pub fn Dummy(g: &mut AppContext, size: &Vector2) {
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
         return;
@@ -65,7 +65,7 @@ pub fn Dummy(g: &mut ImguiContext, size: &ImVec2) {
     ItemAdd(g, &mut bb, 0, None, 0);
 }
 
-pub fn NewLine(g: &mut ImguiContext) {
+pub fn NewLine(g: &mut AppContext) {
     let mut window = g.current_window_mut().unwrap();
     if window.skip_items {
         return;
@@ -76,9 +76,9 @@ pub fn NewLine(g: &mut ImguiContext) {
     window.dc.is_same_line = false;
     if window.dc.curr_line_size.y > 0.0 {
         // In the event that we are on a line with items that is smaller that FontSize high, we will preserve its height.
-        ItemSize(g, &ImVec2::from_ints(0, 0), 0.0);
+        ItemSize(g, &Vector2::from_ints(0, 0), 0.0);
     } else {
-        ItemSize(g, &ImVec2::from_floats(0.0, g.FontSize), 0.0);
+        ItemSize(g, &Vector2::from_floats(0.0, g.FontSize), 0.0);
     }
     window.dc.LayoutType = backup_layout_type;
 }

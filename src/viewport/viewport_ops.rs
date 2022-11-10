@@ -3,7 +3,7 @@
 use std::borrow::BorrowMut;
 use std::ptr::null_mut;
 use libc::{c_void, memcmp};
-use crate::{hash_string, imgui::GImGui, ImguiContext, rect::ImRect, viewport::ImguiViewport, window::{ImguiWindow, window_flags::{ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip}}};
+use crate::{hash_string, imgui::GImGui, AppContext, rect::ImRect, viewport::Viewport, window::{ImguiWindow, window_flags::{ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoFocusOnAppearing, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoNavInputs, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip}}};
 use crate::backend_flags::IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT;
 use crate::context_ops::GetPlatformIO;
 use crate::core::config_flags::{ImGuiConfigFlags_DpiEnableScaleViewports, ImGuiConfigFlags_ViewportsEnable};
@@ -12,7 +12,7 @@ use crate::input_ops::{IsAnyMouseDown, IsMousePosValid};
 use crate::io::io_ops::GetIO;
 use crate::core::math_ops::{ImMax, ImMin};
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::nav_ops::NavCalcPreferredRefPos;
 use crate::window::next_window_data_flags::ImGuiNextWindowDataFlags_HasViewport;
 use crate::platform_io::ImguiPlatformIo;
@@ -27,7 +27,7 @@ use crate::window::ops::{BringWindowToDisplayFront, IsWindowActiveAndVisible, Sc
 use crate::window::window_flags::ImGuiWindowFlags;
 
 // static c_void SetupViewportDrawData(viewport: *mut ImGuiViewport, Vec<ImDrawList*>* draw_lists)
-pub fn SetupViewportDrawData(viewport: *mut ImguiViewport, draw_lists: *mut Vec<*mut ImDrawList>) {
+pub fn SetupViewportDrawData(viewport: *mut Viewport, draw_lists: *mut Vec<*mut ImDrawList>) {
     // When minimized, we report draw_data.DisplaySize as zero to be consistent with non-viewport mode,
     // and to allow applications/backends to easily skip rendering.
     // FIXME: Note that we however do NOT attempt to report "zero drawlist / vertices" into the ImDrawData structure.
@@ -43,7 +43,7 @@ pub fn SetupViewportDrawData(viewport: *mut ImguiViewport, draw_lists: *mut Vec<
     draw_data.CmdListsCount = draw_lists.Size;
     draw_data.TotalVtxCount = draw_data.TotalIdxCount = 0;
     draw_data.DisplayPos = viewport.Pos;
-    draw_data.DisplaySize = if is_minimized { ImVec2::new2(0.0, 0.0) } else { viewport.Size };
+    draw_data.DisplaySize = if is_minimized { Vector2::new2(0.0, 0.0) } else { viewport.Size };
     draw_data.FramebufferScale = io.DisplayFramebufferScale; // FIXME-VIEWPORT: This may vary on a per-monitor/viewport basis?
     draw_data.OwnerViewport = viewport;
     // for (let n: c_int = 0; n < draw_lists.Size; n++)
@@ -84,14 +84,14 @@ pub fn SetupViewportDrawData(viewport: *mut ImguiViewport, draw_lists: *mut Vec<
 // - DestroyPlatformWindows()
 //-----------------------------------------------------------------------------
 
-pub unsafe fn GetMainViewport() -> &mut ImguiViewport
+pub unsafe fn GetMainViewport() -> &mut Viewport
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.Viewports[0].borrow_mut();
 }
 
 // FIXME: This leaks access to viewports not listed in PlatformIO.Viewports[]. Problematic? (#4236)
-pub unsafe fn FindViewportByID(id: ImguiHandle) -> *mut ImguiViewport
+pub unsafe fn FindViewportByID(id: ImguiHandle) -> *mut Viewport
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // for (let n: c_int = 0; n < g.Viewports.len(); n++)
@@ -104,7 +104,7 @@ pub unsafe fn FindViewportByID(id: ImguiHandle) -> *mut ImguiViewport
     return None;
 }
 
-pub unsafe fn FindViewportByPlatformHandle(platform_handle: *mut c_void) -> *mut ImguiViewport
+pub unsafe fn FindViewportByPlatformHandle(platform_handle: *mut c_void) -> *mut Viewport
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // for (let i: c_int = 0; i != g.Viewports.len(); i++)
@@ -117,7 +117,7 @@ pub unsafe fn FindViewportByPlatformHandle(platform_handle: *mut c_void) -> *mut
     return None;
 }
 
-pub unsafe fn SetCurrentViewport(current_window: &mut ImguiWindow, viewport: *mut ImguiViewport)
+pub unsafe fn SetCurrentViewport(current_window: &mut ImguiWindow, viewport: *mut Viewport)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // current_window;
@@ -138,11 +138,11 @@ pub unsafe fn SetCurrentViewport(current_window: &mut ImguiWindow, viewport: *mu
     }
 }
 
-pub unsafe fn SetWindowViewport(window: &mut ImguiWindow, viewport: *mut ImguiViewport)
+pub unsafe fn SetWindowViewport(window: &mut ImguiWindow, viewport: *mut Viewport)
 {
     // Abandon viewport
     if (window.ViewportOwned && window.Viewport.Window == window){
-        window.Viewport.Size = ImVec2::from_floats(0.0, 0.0);}
+        window.Viewport.Size = Vector2::from_floats(0.0, 0.0);}
 
     window.Viewport = viewport;
     window.ViewportId = viewport.ID;
@@ -162,7 +162,7 @@ pub unsafe fn GetWindowAlwaysWantOwnViewport(window: &mut ImguiWindow) -> bool
     return false;
 }
 
-pub unsafe fn UpdateTryMergeWindowIntoHostViewport(window: &mut ImguiWindow, viewport: *mut ImguiViewport) -> bool
+pub unsafe fn UpdateTryMergeWindowIntoHostViewport(window: &mut ImguiWindow, viewport: *mut Viewport) -> bool
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (window.Viewport == viewport){
@@ -189,7 +189,7 @@ pub unsafe fn UpdateTryMergeWindowIntoHostViewport(window: &mut ImguiWindow, vie
     }
 
     // Move to the existing viewport, Move child/hosted windows as well (FIXME-OPT: iterate child)
-    let mut old_viewport: *mut ImguiViewport =  window.Viewport;
+    let mut old_viewport: *mut Viewport =  window.Viewport;
     if (window.ViewportOwned){
         // for (let n: c_int = 0; n < g.Windows.len(); n++)
         for n in 0 .. g.Windows.len()
@@ -211,7 +211,7 @@ pub unsafe fn UpdateTryMergeWindowIntoHostViewports(window: &mut ImguiWindow) ->
 
 // Translate Dear ImGui windows when a Host Viewport has been moved
 // (This additionally keeps windows at the same place when ImGuiConfigFlags_ViewportsEnable is toggled!)
-pub unsafe fn TranslateWindowsInViewport(viewport: *mut ImguiViewport, old_pos: &ImVec2, new_pos: &ImVec2)
+pub unsafe fn TranslateWindowsInViewport(viewport: *mut Viewport, old_pos: &Vector2, new_pos: &Vector2)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(viewport.Window == NULL && (viewport.Flags & ImGuiViewportFlags_CanHostOtherWindows));
@@ -223,7 +223,7 @@ pub unsafe fn TranslateWindowsInViewport(viewport: *mut ImguiViewport, old_pos: 
     // and so the window will appear to teleport when releasing the mouse.
     let translate_all_windows: bool = (g.ConfigFlagsCurrFrame & ImGuiConfigFlags_ViewportsEnable) != (g.ConfigFlagsLastFrame & ImGuiConfigFlags_ViewportsEnable);
     let mut test_still_fit_rect: ImRect = ImRect::new(old_pos, old_pos + viewport.Size);
-    let delta_pos: ImVec2 = new_pos - old_pos;
+    let delta_pos: Vector2 = new_pos - old_pos;
     // for (let window_n: c_int = 0; window_n < g.Windows.len(); window_n++)
     for window_n in 0 .. g.Windows.len()
     { // FIXME-OPT
@@ -235,7 +235,7 @@ pub unsafe fn TranslateWindowsInViewport(viewport: *mut ImguiViewport, old_pos: 
 }
 
 // Scale all windows (position, size). Use when e.g. changing DPI. (This is a lossy operation!)
-pub unsafe fn ScaleWindowsInViewport(viewport: *mut ImguiViewport, scale: c_float)
+pub unsafe fn ScaleWindowsInViewport(viewport: *mut Viewport, scale: c_float)
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     if (viewport.Window)
@@ -255,14 +255,14 @@ pub unsafe fn ScaleWindowsInViewport(viewport: *mut ImguiViewport, scale: c_floa
 // If the backend doesn't set MouseLastHoveredViewport or doesn't honor ImGuiViewportFlags_NoInputs, we do a search ourselves.
 // A) It won't take account of the possibility that non-imgui windows may be in-between our dragged window and our target window.
 // B) It requires Platform_GetWindowFocus to be implemented by backend.
-pub unsafe fn FindHoveredViewportFromPlatformWindowStack(mouse_platform_pos: &ImVec2) -> *mut ImguiViewport
+pub unsafe fn FindHoveredViewportFromPlatformWindowStack(mouse_platform_pos: &Vector2) -> *mut Viewport
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut best_candidate: *mut ImguiViewport =  None;
+    let mut best_candidate: *mut Viewport =  None;
     // for (let n: c_int = 0; n < g.Viewports.len(); n++)
     for n in 0 .. g.Viewports.len()
     {
-        let mut viewport: *mut ImguiViewport =  g.Viewports[n];
+        let mut viewport: *mut Viewport =  g.Viewports[n];
         if (!(viewport.Flags & (ImGuiViewportFlags_NoInputs | ImGuiViewportFlags_Minimized)) && viewport.get_main_rect().Contains(mouse_platform_pos)){
             if (best_candidate == None || best_candidate.last_front_most_stamp_count < viewport.last_front_most_stamp_count){
                 best_candidate = viewport;}}
@@ -284,7 +284,7 @@ pub unsafe fn UpdateViewportsNewFrame()
         // for (let n: c_int = 0; n < g.Viewports.len(); n++)
         for n in 0 .. g.Viewports.len()
         {
-            let mut viewport: *mut ImguiViewport =  g.Viewports[n];
+            let mut viewport: *mut Viewport =  g.Viewports[n];
             let platform_funcs_available: bool = viewport.PlatformWindowCreated;
             if (g.PlatformIO.Platform_GetWindowMinimized && platform_funcs_available)
             {
@@ -299,11 +299,11 @@ pub unsafe fn UpdateViewportsNewFrame()
 
     // Create/update main viewport with current platform position.
     // FIXME-VIEWPORT: Size is driven by backend/user code for backward-compatibility but we should aim to make this more consistent.
-    let mut main_viewport: *mut ImguiViewport =  g.Viewports[0];
+    let mut main_viewport: *mut Viewport =  g.Viewports[0];
     // IM_ASSERT(main_viewport.ID == IMGUI_VIEWPORT_DEFAULT_ID);
     // IM_ASSERT(main_viewport.Window == NULL);
-    let main_viewport_pos: ImVec2 = if viewports_enabled { g.PlatformIO.Platform_GetWindowPos(main_viewport)} else {ImVec2::from_floats(0.0, 0.0)};
-    let main_viewport_size: ImVec2 = g.IO.DisplaySize;
+    let main_viewport_pos: Vector2 = if viewports_enabled { g.PlatformIO.Platform_GetWindowPos(main_viewport)} else { Vector2::from_floats(0.0, 0.0)};
+    let main_viewport_size: Vector2 = g.IO.DisplaySize;
     if (viewports_enabled && (main_viewport.Flags & ImGuiViewportFlags_Minimized))
     {
         main_viewport_pos = main_viewport.Pos;    // Preserve last pos/size when minimized (FIXME: We don't do the same for Size outside of the viewport path)
@@ -317,7 +317,7 @@ pub unsafe fn UpdateViewportsNewFrame()
     // for (let n: c_int = 0; n < g.Viewports.len(); n++)
     for n in 0 .. g.Viewports.len()
     {
-        let mut viewport: *mut ImguiViewport =  g.Viewports[n];
+        let mut viewport: *mut Viewport =  g.Viewports[n];
         viewport.Idx = n;
 
         // Erase unused viewports
@@ -349,7 +349,7 @@ pub unsafe fn UpdateViewportsNewFrame()
         // Lock down space taken by menu bars and status bars, reset the offset for functions like BeginMainMenuBar() to alter them again.
         viewport.WorkOffsetMin = viewport.BuildWorkOffsetMin;
         viewport.WorkOffsetMax = viewport.BuildWorkOffsetMax;
-        viewport.BuildWorkOffsetMin = viewport.BuildWorkOffsetMax = ImVec2::from_floats(0.0, 0.0);
+        viewport.BuildWorkOffsetMin = viewport.BuildWorkOffsetMax = Vector2::from_floats(0.0, 0.0);
         viewport.UpdateWorkRect();
 
         // Reset alpha every frame. Users of transparency (docking) needs to request a lower alpha back.
@@ -357,7 +357,7 @@ pub unsafe fn UpdateViewportsNewFrame()
 
         // Translate Dear ImGui windows when a Host Viewport has been moved
         // (This additionally keeps windows at the same place when ImGuiConfigFlags_ViewportsEnable is toggled!)
-        let viewport_delta_pos: ImVec2 = viewport.Pos - viewport.LastPos;
+        let viewport_delta_pos: Vector2 = viewport.Pos - viewport.LastPos;
         if ((viewport.Flags & ImGuiViewportFlags_CanHostOtherWindows) && (viewport_delta_pos.x != 0.0 || viewport_delta_pos.y != 0.0)){
             TranslateWindowsInViewport(viewport, &viewport.LastPos, &viewport.Pos);}
 
@@ -405,7 +405,7 @@ pub unsafe fn UpdateViewportsNewFrame()
 
     // Mouse handling: decide on the actual mouse viewport for this frame between the active/focused viewport and the hovered viewport.
     // Note that 'viewport_hovered' should skip over any viewport that has the ImGuiViewportFlags_NoInputs flags set.
-    let mut viewport_hovered: *mut ImguiViewport =  None;
+    let mut viewport_hovered: *mut Viewport =  None;
     if (g.IO.BackendFlags & IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT)
     {
         viewport_hovered = if g.IO.MouseHoveredViewport { FindViewportByID(g.IO.MouseHoveredViewport)} else {None};
@@ -456,7 +456,7 @@ pub unsafe fn UpdateViewportsEndFrame()
     // for (let i: c_int = 0; i < g.Viewports.len(); i++)
     for i in 0 .. g.Viewports.len()
     {
-        let mut viewport: *mut ImguiViewport =  g.Viewports[i];
+        let mut viewport: *mut Viewport =  g.Viewports[i];
         viewport.LastPos = viewport.Pos;
         if (viewport.LastFrameActive < g.FrameCount || viewport.Size.x <= 0.0 || viewport.Size.y <= 0.0){
             if (i > 0){ // Always include main viewport in the list
@@ -471,7 +471,7 @@ pub unsafe fn UpdateViewportsEndFrame()
 }
 
 // FIXME: We should ideally refactor the system to call this every frame (we currently don't)
-pub unsafe fn AddUpdateViewport(window: &mut ImguiWindow, id: ImguiHandle, pos: &ImVec2, size: &ImVec2, flags: ImGuiVIewportFlags) -> *mut ImguiViewport
+pub unsafe fn AddUpdateViewport(window: &mut ImguiWindow, id: ImguiHandle, pos: &Vector2, size: &Vector2, flags: ImGuiVIewportFlags) -> *mut Viewport
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // IM_ASSERT(id != 0);
@@ -487,7 +487,7 @@ pub unsafe fn AddUpdateViewport(window: &mut ImguiWindow, id: ImguiHandle, pos: 
             flags |= ImGuiViewportFlags_NoFocusOnAppearing;}
     }
 
-    let mut viewport: *mut ImguiViewport =  FindViewportByID(id);
+    let mut viewport: *mut Viewport =  FindViewportByID(id);
     if (viewport)
     {
         // Always update for main viewport as we are already pulling correct platform pos/size (see #4900)
@@ -534,7 +534,7 @@ pub unsafe fn AddUpdateViewport(window: &mut ImguiWindow, id: ImguiHandle, pos: 
     return viewport;
 }
 
-pub unsafe fn DestroyViewport(viewport: *mut ImguiViewport)
+pub unsafe fn DestroyViewport(viewport: *mut Viewport)
 {
     // Clear references to this viewport in windows (window.ViewportId becomes the master data)
     let g = GImGui; // ImGuiContext& g = *GImGui;
@@ -567,7 +567,7 @@ pub unsafe fn WindowSelectViewport(window: &mut ImguiWindow)
     window.ViewportAllowPlatformMonitorExtend = -1;
 
     // Restore main viewport if multi-viewport is not supported by the backend
-    let mut main_viewport: *mut ImguiViewport =  GetMainViewport();
+    let mut main_viewport: *mut Viewport =  GetMainViewport();
     if (!(g.ConfigFlagsCurrFrame & ImGuiConfigFlags_ViewportsEnable))
     {
         SetWindowViewport(window, main_viewport);
@@ -652,7 +652,7 @@ pub unsafe fn WindowSelectViewport(window: &mut ImguiWindow)
         {
             // We need to take account of the possibility that mouse may become invalid.
             // Popups/Tooltip always set ViewportAllowPlatformMonitorExtend so GetWindowAllowedExtentRect() will return full monitor bounds.
-            let mouse_ref: ImVec2 = if flags & ImGuiWindowFlags_Tooltip { g.IO.MousePos} else { g.BeginPopupStack.last().unwrap().OpenMousePos};
+            let mouse_ref: Vector2 = if flags & ImGuiWindowFlags_Tooltip { g.IO.MousePos} else { g.BeginPopupStack.last().unwrap().OpenMousePos};
             let mut use_mouse_ref: bool =  (g.NavDisableHighlight || !g.NavDisableMouseHover || !g.NavWindow);
             let mut mouse_valid: bool =  IsMousePosValid(&mouse_re0f32);
             if ((window.Appearing || (flags & (ImGuiWindowFlags_Tooltip | ImGuiWindowFlags_ChildMenu))) && (!use_mouse_ref || mouse_valid)){
@@ -797,7 +797,7 @@ pub unsafe fn UpdatePlatformWindows()
     // for (let i: c_int = 1; i < g.Viewports.len(); i++)
     for i in 1 .. g.Viewports.len()
     {
-        let mut viewport: *mut ImguiViewport =  g.Viewports[i];
+        let mut viewport: *mut Viewport =  g.Viewports[i];
 
         // Destroy platform window if the viewport hasn't been submitted or if it is hosting a hidden window
         // (the implicit/fallback Debug##Default window will be registering its viewport then be disabled, causing a dummy DestroyPlatformWindow to be made each frame)
@@ -823,7 +823,7 @@ pub unsafe fn UpdatePlatformWindows()
             if (g.PlatformIO.Renderer_CreateWindow != null_mut()){
                 g.PlatformIO.Renderer_CreateWindow(viewport);}
             viewport.LastNameHash = 0;
-            viewport.LastPlatformPos = viewport.LastPlatformSize = ImVec2::from_floats(f32::MAX, f32::MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/Size below, before Platform_ShowWindow (FIXME: Is that necessary?)
+            viewport.LastPlatformPos = viewport.LastPlatformSize = Vector2::from_floats(f32::MAX, f32::MAX); // By clearing those we'll enforce a call to Platform_SetWindowPos/Size below, before Platform_ShowWindow (FIXME: Is that necessary?)
             viewport.LastRendererSize = viewport.Size;                                       // We don't need to call Renderer_SetWindowSize() as it is expected Renderer_CreateWindow() already did it.
             viewport.PlatformWindowCreated = true;
         }
@@ -888,11 +888,11 @@ pub unsafe fn UpdatePlatformWindows()
     // FIXME-VIEWPORT: We should use this information to also set dear imgui-side focus, allowing us to handle os-level alt+tab.
     if (g.PlatformIO.Platform_GetWindowFocus != null_mut())
     {
-        let mut focused_viewport: *mut ImguiViewport =  None;
+        let mut focused_viewport: *mut Viewport =  None;
         // for (let n: c_int = 0; n < g.Viewports.len() && focused_viewport == None; n++)
         for n in 0 .. g.Viewports.len()
         {
-            let mut viewport: *mut ImguiViewport =  g.Viewports[n];
+            let mut viewport: *mut Viewport =  g.Viewports[n];
             if (viewport.PlatformWindowCreated){
                 if (g.PlatformIO.Platform_GetWindowFocus(viewport)){
                     focused_viewport = viewport;}}
@@ -947,7 +947,7 @@ pub unsafe fn RenderPlatformWindowsDefault(platform_render_arg: *mut c_void, ren
     }
 }
 
-pub unsafe fn FindPlatformMonitorForPos(pos: &ImVec2) -> c_int
+pub unsafe fn FindPlatformMonitorForPos(pos: &Vector2) -> c_int
 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     // for (let monitor_n: c_int = 0; monitor_n < g.PlatformIO.Monitors.Size; monitor_n++)
@@ -999,13 +999,13 @@ pub unsafe fn FindPlatformMonitorForRect(rect: &ImRect) -> c_int
 }
 
 // Update monitor from viewport rectangle (we'll use this info to clamp windows and save windows lost in a removed monitor)
-pub unsafe fn UpdateViewportPlatformMonitor(viewport: *mut ImguiViewport)
+pub unsafe fn UpdateViewportPlatformMonitor(viewport: *mut Viewport)
 {
     viewport.PlatformMonitor = FindPlatformMonitorForRect(&viewport.get_main_rect());
 }
 
 // Return value is always != NULL, but don't hold on it across frames.
-pub fn viewport_platform_monitor_mut(g: &mut ImguiContext, viewport_p: &mut ImguiViewport) -> &mut ImGuiPlatformMonitor {
+pub fn viewport_platform_monitor_mut(g: &mut AppContext, viewport_p: &mut Viewport) -> &mut ImGuiPlatformMonitor {
     let mut viewport = viewport_p;
     let monitor_idx = viewport.PlatformMonitor;
     if monitor_idx >= 0 && monitor_idx < g.PlatformIO.Monitors.Size {
@@ -1014,7 +1014,7 @@ pub fn viewport_platform_monitor_mut(g: &mut ImguiContext, viewport_p: &mut Imgu
     return &mut g.FallbackMonitor;
 }
 
-pub fn destroy_platform_window(g: &mut ImguiContext, viewport: &mut ImguiViewport)
+pub fn destroy_platform_window(g: &mut AppContext, viewport: &mut Viewport)
 {
     if viewport.PlatformWindowCreated
     {
@@ -1039,7 +1039,7 @@ pub fn destroy_platform_window(g: &mut ImguiContext, viewport: &mut ImguiViewpor
     viewport.clear_request_flags();
 }
 
-pub fn DestroyPlatformWindows(g: &mut ImguiContext)
+pub fn DestroyPlatformWindows(g: &mut AppContext)
 {
     // We call the destroy window on every viewport (including the main viewport, index 0) to give a chance to the backend
     // to clear any data they may have stored in e.g. PlatformUserData, RendererUserData.

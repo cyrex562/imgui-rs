@@ -19,7 +19,7 @@ pub type ImTextureID = *mut c_void;
 // #ifndef ImDrawIdx
 // typedef unsigned short ImDrawIdx;   // Default: 16-bit (for maximum compatibility with renderer backends)
 // #endif
-pub type ImDrawIdx = size_t;
+pub type DrawIndex = size_t;
 
 // Scalar data types
 // typedef unsigned int        ImguiHandle;// A unique ID used by widgets (typically the result of hashing a stack of string)

@@ -21,7 +21,7 @@ use crate::style_ops::GetColorU32;
 use crate::widgets::tooltip_ops::{BeginTooltip, EndTooltip};
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::flag_clear;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::focus::FocusWindow;
 use crate::window::ImguiWindow;
 use crate::{hash_string, GImGui};
@@ -340,8 +340,8 @@ pub unsafe fn AcceptDragDropPayload(
     flags |= (g.DragDropSourceFlags & ImGuiDragDropFlags_AcceptNoDrawDefaultRect); // Source can also inhibit the preview (useful for external sources that lives for 1 frame)
     if flag_clear(flags, ImGuiDragDropFlags_AcceptNoDrawDefaultRect) && payload.Preview {
         window.DrawList.AddRect(
-            r.Min - ImVec2::from_floats(3.5, 3.5),
-            r.Max + ImVec2::from_floats(3.5, 3.5),
+            r.Min - Vector2::from_floats(3.5, 3.5),
+            r.Max + Vector2::from_floats(3.5, 3.5),
             GetColorU32(ImGuiCol_DragDropTarget, 0.0),
             0.0,
         );

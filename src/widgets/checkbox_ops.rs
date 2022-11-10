@@ -11,7 +11,7 @@ use crate::drawing::render_ops::{RenderCheckMark, RenderFrame, RenderNavHighligh
 use crate::style_ops::GetColorU32;
 use crate::text_ops::CalcTextSize;
 use crate::core::type_defs::ImguiHandle;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
 use crate::{button_ops, GImGui};
@@ -27,13 +27,13 @@ pub unsafe fn Checkbox(label: &String, v: &mut bool) -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let setyle = &mut g.style;
     let mut id: ImguiHandle = window.id_from_str(label, );
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
 
     let square_sz: c_float = GetFrameHeight();
-    let pos: ImVec2 = window.dc.cursor_pos;
+    let pos: Vector2 = window.dc.cursor_pos;
     let mut total_bb: ImRect = ImRect::new(
         pos,
-        pos + ImVec2::from_floats(
+        pos + Vector2::from_floats(
             square_sz
                 + (if label_size.x > 0.0 {
                     style.ItemInnerSpacing.x + label_size.x
@@ -64,7 +64,7 @@ pub unsafe fn Checkbox(label: &String, v: &mut bool) -> bool {
         MarkItemEdited(g, id);
     }
 
-    let mut check_bb: ImRect = ImRect::new(pos, pos + ImVec2::from_floats(square_sz, square_sz));
+    let mut check_bb: ImRect = ImRect::new(pos, pos + Vector2::from_floats(square_sz, square_sz));
     RenderNavHighlight(, &total_bb, id, 0);
     RenderFrame(
         check_bb.min,
@@ -89,7 +89,7 @@ pub unsafe fn Checkbox(label: &String, v: &mut bool) -> bool {
     if mixed_value {
         // Undocumented tristate/mixed/indeterminate checkbox (#2644)
         // This may seem awkwardly designed because the aim is to make ImGuiItemFlags_MixedValue supported by all widgets (not just checkbox)
-        let pad = ImVec2::from_floats(
+        let pad = Vector2::from_floats(
             ImMax(1.0, IM_FLOOR(square_sz / 3.60)),
             ImMax(1.0, IM_FLOOR(square_sz / 3.60)),
         );
@@ -104,13 +104,13 @@ pub unsafe fn Checkbox(label: &String, v: &mut bool) -> bool {
         let pad: c_float = ImMax(1.0, IM_FLOOR(square_sz / 6.0));
         RenderCheckMark(
             &mut window.DrawList,
-            check_bb.min + ImVec2::from_floats(pad, pad),
+            check_bb.min + Vector2::from_floats(pad, pad),
             check_col,
             square_sz - pad * 2.0,
         );
     }
 
-    let label_pos: ImVec2 = ImVec2::from_floats(
+    let label_pos: Vector2 = Vector2::from_floats(
         check_bb.max.x + style.ItemInnerSpacing.x,
         check_bb.min.y + style.FramePadding.y,
     );

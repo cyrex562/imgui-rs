@@ -7,7 +7,7 @@ use crate::drawing::render_ops::{RenderFrame, RenderNavHighlight};
 use crate::style_ops::{GetColorU32, GetColorU32FromImVec4};
 use crate::style_var::ImGuiStyleVar_FramePadding;
 use crate::core::type_defs::{ImguiHandle, ImTextureID};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
@@ -32,9 +32,9 @@ use libc::windows::{c_float, c_int};
 
 pub unsafe fn Image(
     user_texture_id: ImTextureID,
-    size: &ImVec2,
-    uv0: &ImVec2,
-    uv1: &ImVec2,
+    size: &Vector2,
+    uv0: &Vector2,
+    uv1: &Vector2,
     tint_col: &ImVec4,
     border_col: &ImVec4,
 ) {
@@ -45,7 +45,7 @@ pub unsafe fn Image(
 
     let mut bb: ImRect = ImRect::new(window.dc.cursor_pos, window.dc.cursor_pos + size);
     if border_col.w > 0.0 {
-        bb.max += ImVec2::from_floats(2.0, 2.0);
+        bb.max += Vector2::from_floats(2.0, 2.0);
     }
     ItemSize(g, &bb.GetSize(), 0.0);
     if !ItemAdd(g, &mut bb, 0, None, 0) {
@@ -58,8 +58,8 @@ pub unsafe fn Image(
             .AddRect(&bb.min, &bb.max, GetColorU32FromImVec4(border_col), 0.0);
         window.DrawList.AddImage(
             user_texture_id,
-            bb.min + ImVec2::from_ints(1, 1),
-            bb.max - ImVec2::from_floats(1.0, 1.0),
+            bb.min + Vector2::from_ints(1, 1),
+            bb.max - Vector2::from_floats(1.0, 1.0),
             uv0,
             uv1,
             GetColorU32FromImVec4(tint_col),
@@ -81,9 +81,9 @@ pub unsafe fn Image(
 pub unsafe fn ImageButtonEx(
     id: ImguiHandle,
     texture_id: ImTextureID,
-    size: &ImVec2,
-    uv0: &ImVec2,
-    uv1: &ImVec2,
+    size: &Vector2,
+    uv0: &Vector2,
+    uv1: &Vector2,
     bg_col: &ImVec4,
     tint_col: &ImVec4,
 ) -> bool {
@@ -93,7 +93,7 @@ pub unsafe fn ImageButtonEx(
         return false;
     }
 
-    let padding: ImVec2 = g.style.FramePadding;
+    let padding: Vector2 = g.style.FramePadding;
     let mut bb: ImRect = ImRect::new(
         window.dc.cursor_pos,
         window.dc.cursor_pos + size + padding * 2.0,
@@ -157,9 +157,9 @@ pub unsafe fn ImageButtonEx(
 pub unsafe fn ImageButton(
     str_id: &str,
     user_texture_id: ImTextureID,
-    size: &ImVec2,
-    uv0: &ImVec2,
-    uv1: &ImVec2,
+    size: &Vector2,
+    uv0: &Vector2,
+    uv1: &Vector2,
     bg_col: &ImVec4,
     tint_col: &ImVec4,
 ) -> bool {
@@ -187,9 +187,9 @@ pub unsafe fn ImageButton(
 // If you need to change padding with new ImageButton() you can use PushStyleVar(ImGuiStyleVar_FramePadding, value), consistent with other Button functions.
 pub unsafe fn ImageButton2(
     user_texture_id: ImTextureID,
-    size: &ImVec2,
-    uv0: &ImVec2,
-    uv1: &ImVec2,
+    size: &Vector2,
+    uv0: &Vector2,
+    uv1: &Vector2,
     frame_padding: c_int,
     bg_col: &ImVec4,
     tint_col: &ImVec4,
@@ -208,7 +208,7 @@ pub unsafe fn ImageButton2(
     if frame_padding >= 0 {
         PushStyleVar(
             ImGuiStyleVar_FramePadding,
-            ImVec2::from_floats(frame_padding as c_float, frame_padding as c_float),
+            Vector2::from_floats(frame_padding as c_float, frame_padding as c_float),
         );
     }
     let mut ret: bool = ImageButtonEx(id, user_texture_id, size, uv0, uv1, bg_col, tint_col);

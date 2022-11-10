@@ -8,7 +8,7 @@ use crate::item::item_status_flags::{
 };
 use crate::core::math_ops::ImMax;
 use crate::rect::ImRect;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::GImGui;
 use std::ptr::null_mut;
 
@@ -38,7 +38,7 @@ pub unsafe fn BeginGroup() {
         window.dc.cursor_pos.x - window.position.x - window.dc.ColumnsOffset.x;
     window.dc.indent = window.dc.group_offset.clone();
     window.dc.CursorMaxPos = window.dc.cursor_pos;
-    window.dc.CurrLineSize = ImVec2::from_floats(0.0, 0.0);
+    window.dc.CurrLineSize = Vector2::from_floats(0.0, 0.0);
     if g.LogEnabled {
         g.LogLinePosY = -f32::MAX;
     } // To enforce a carriage return

@@ -1,15 +1,15 @@
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::rect::ImRect;
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::{flag_clear, is_not_null};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ops::GetWindowDisplayLayer;
 use crate::window::window_flags::{
     ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_Modal,
     ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoResize,
 };
 use crate::window::{ops, ImguiWindow};
-use crate::{hash_string, GImGui, ImguiViewport};
+use crate::{hash_string, GImGui, Viewport};
 use libc::{c_char, c_float, c_int};
 use std::ptr::null_mut;
 
@@ -57,7 +57,7 @@ pub unsafe fn FindHoveredWindows() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Special handling for the window being moved: Ignore the mouse viewport check (because it may reset/lose its viewport during the undocking frame)
-    let mut moving_window_viewport: *mut ImguiViewport = if !(g.MovingWindow.is_null()) {
+    let mut moving_window_viewport: *mut Viewport = if !(g.MovingWindow.is_null()) {
         g.Movingwindow.Viewport
     } else {
         None
@@ -72,8 +72,8 @@ pub unsafe fn FindHoveredWindows() {
         hovered_window = g.MovingWindow;
     }
 
-    let padding_regular: ImVec2 = g.style.TouchExtraPadding.clone();
-    let padding_for_resize: ImVec2 = if g.IO.ConfigWindowsResizeFromEdges {
+    let padding_regular: Vector2 = g.style.TouchExtraPadding.clone();
+    let padding_for_resize: Vector2 = if g.IO.ConfigWindowsResizeFromEdges {
         g.WindowsHoverPadding.clone()
     } else {
         padding_regular
@@ -111,11 +111,11 @@ pub unsafe fn FindHoveredWindows() {
         // Support for one rectangular hole in any given window
         // FIXME: Consider generalizing hit-testing override (with more generic data, callback, etc.) (#1512)
         if window.HitTestHoleSize.x != 0 {
-            let hole_pos = ImVec2::from_floats(
+            let hole_pos = Vector2::from_floats(
                 window.position.x + window.HitTestHoleOffset.x,
                 window.position.y + window.HitTestHoleOffset.y,
             );
-            let hole_size = ImVec2::from_floats(
+            let hole_size = Vector2::from_floats(
                 window.HitTestHoleSize.x as c_float,
                 window.HitTestHoleSize.y as c_float,
             );
@@ -149,7 +149,7 @@ pub unsafe fn FindHoveredWindows() {
     }
 }
 
-pub fn FindWindowByID(g: &mut ImguiContext, id: ImguiHandle) -> Option<&mut ImguiWindow> {
+pub fn FindWindowByID(g: &mut AppContext, id: ImguiHandle) -> Option<&mut ImguiWindow> {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     // return g.WindowsById.GetVoidPtr(id) as *mut ImGuiWindow;
     for win in g.Windows.iter_mut() {
@@ -160,7 +160,7 @@ pub fn FindWindowByID(g: &mut ImguiContext, id: ImguiHandle) -> Option<&mut Imgu
     None
 }
 
-pub fn FindWindowByName(g: &mut ImguiContext, name: &String) -> Option<&mut ImguiWindow> {
+pub fn FindWindowByName(g: &mut AppContext, name: &String) -> Option<&mut ImguiWindow> {
     let mut id: ImguiHandle = hash_string(name, 0);
     return FindWindowByID(g, id);
 }

@@ -1,4 +1,4 @@
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::core::condition::{
     ImGuiCond, ImGuiCond_Always, ImGuiCond_Appearing, ImGuiCond_FirstUseEver, ImGuiCond_None,
     ImGuiCond_Once,
@@ -21,17 +21,17 @@ use crate::window::next_window_data_flags::{
 use crate::rect::ImRect;
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::{flag_clear, flag_set, is_not_null};
-use crate::core::vec2::{ImVec2, ImVec2ih};
+use crate::core::vec2::{Vector2, ImVec2ih};
 use crate::window::find::{FindWindowByName, GetCombinedRootWindow, IsWindowChildOf};
 use crate::window::focus::FocusWindow;
 use crate::window::ops::{GetCurrentWindow, IsWindowContentHoverable};
 use crate::window::window_flags::ImGuiWindowFlags_NoNavFocus;
 use crate::window::ImguiWindow;
-use crate::{GImGui, ImguiViewport};
+use crate::{GImGui, Viewport};
 use libc::{c_char, c_float, c_void};
 use std::ptr::null_mut;
 
-pub fn IsWindowHovered(g: &mut ImguiContext, flags: ImGuiHoveredFlags) -> bool {
+pub fn IsWindowHovered(g: &mut AppContext, flags: ImGuiHoveredFlags) -> bool {
     // IM_ASSERT((flags & (ImGuiHoveredFlags_AllowWhenOverlapped | ImGuiHoveredFlags_AllowWhenDisabled)) == 0);   // Flags not supported by this function
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut ref_window = &g.HoveredWindow;
@@ -127,13 +127,13 @@ pub unsafe fn GetWindowHeight() -> f32 {
     return window.Size.y;
 }
 
-pub unsafe fn GetWindowPos() -> ImVec2 {
+pub unsafe fn GetWindowPos() -> Vector2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = g.current_window_mut().unwrap();
     return window.position;
 }
 
-pub unsafe fn SetWindowPos(window: &mut ImguiWindow, pos: &ImVec2, cond: ImGuiCond) {
+pub unsafe fn SetWindowPos(window: &mut ImguiWindow, pos: &Vector2, cond: ImGuiCond) {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if cond != ImGuiCond_None && flag_clear(window.SetWindowPosAllowFlags, cond) {
         return;
@@ -142,12 +142,12 @@ pub unsafe fn SetWindowPos(window: &mut ImguiWindow, pos: &ImVec2, cond: ImGuiCo
     // IM_ASSERT(cond == 0 || ImIsPowerOfTwo(cond)); // Make sure the user doesn't attempt to combine multiple condition flags.
     window.SetWindowPosAllowFlags &=
         !(ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing);
-    window.SetWindowPosVal = ImVec2::from_floats(f32::MAX, f32::MAX);
+    window.SetWindowPosVal = Vector2::from_floats(f32::MAX, f32::MAX);
 
     // Set
-    let old_pos: ImVec2 = window.position;
+    let old_pos: Vector2 = window.position;
     window.position = ImFloor(pos);
-    let offset: ImVec2 = window.position - old_pos;
+    let offset: Vector2 = window.position - old_pos;
     if offset.x == 0.0 && offset.y == 0.0 {
         return;
     }
@@ -159,24 +159,24 @@ pub unsafe fn SetWindowPos(window: &mut ImguiWindow, pos: &ImVec2, cond: ImGuiCo
     window.dc.cursor_start_pos += offset;
 }
 
-pub unsafe fn SetWindowPos2(pos: &ImVec2, cond: ImGuiCond) {
+pub unsafe fn SetWindowPos2(pos: &Vector2, cond: ImGuiCond) {
     let mut window = g.current_window_mut().unwrap();
     SetWindowPos(window, pos, cond);
 }
 
-pub unsafe fn SetWindowPos3(name: *const c_char, pos: &ImVec2, cond: ImGuiCond) {
+pub unsafe fn SetWindowPos3(name: *const c_char, pos: &Vector2, cond: ImGuiCond) {
     let mut window: &mut ImguiWindow = FindWindowByName(name);
     if is_not_null(window) {
         SetWindowPos(window, pos, cond);
     }
 }
 
-pub unsafe fn GetWindowSize() -> ImVec2 {
+pub unsafe fn GetWindowSize() -> Vector2 {
     let mut window = g.current_window_mut().unwrap();
     return window.Size;
 }
 
-pub unsafe fn SetWindowSize(window: &mut ImguiWindow, size: &ImVec2, cond: ImGuiCond) {
+pub unsafe fn SetWindowSize(window: &mut ImguiWindow, size: &Vector2, cond: ImGuiCond) {
     // Test condition (NB: bit 0 is always true) and clear flags for next time
     if cond != ImGuiCond_None && flag_clear(window.SetWindowSizeAllowFlags, cond) {
         return;
@@ -187,7 +187,7 @@ pub unsafe fn SetWindowSize(window: &mut ImguiWindow, size: &ImVec2, cond: ImGui
         !(ImGuiCond_Once | ImGuiCond_FirstUseEver | ImGuiCond_Appearing);
 
     // Set
-    let old_size: ImVec2 = window.SizeFull;
+    let old_size: Vector2 = window.SizeFull;
     window.AutoFitFramesX = if size.x <= 0.0 { 2 } else { 0 };
     window.AutoFitFramesY = if size.y <= 0.0 { 2 } else { 0 };
     if size.x <= 0.0 {
@@ -205,11 +205,11 @@ pub unsafe fn SetWindowSize(window: &mut ImguiWindow, size: &ImVec2, cond: ImGui
     }
 }
 
-pub unsafe fn SetWindowSize2(size: &ImVec2, cond: ImGuiCond) {
+pub unsafe fn SetWindowSize2(size: &Vector2, cond: ImGuiCond) {
     SetWindowSize(GimGui.CurrentWindow, size, cond);
 }
 
-pub unsafe fn SetWindowSize3(name: *const c_char, size: &ImVec2, cond: ImGuiCond) {
+pub unsafe fn SetWindowSize3(name: *const c_char, size: &Vector2, cond: ImGuiCond) {
     let mut window: &mut ImguiWindow = FindWindowByName(name);
     if is_not_null(window) {
         SetWindowSize(window, size, cond);
@@ -228,7 +228,7 @@ pub unsafe fn SetWindowCollapsed(window: &mut ImguiWindow, collapsed: bool, cond
     window.Collapsed = collapsed;
 }
 
-pub unsafe fn SetWindowHitTestHole(window: &mut ImguiWindow, pos: &ImVec2, size: &ImVec2) {
+pub unsafe fn SetWindowHitTestHole(window: &mut ImguiWindow, pos: &Vector2, size: &Vector2) {
     // IM_ASSERT(window.HitTestHoleSize.x == 0);     // We don't support multiple holes/hit test filters
     window.HitTestHoleSize = ImVec2ih(size);
     window.HitTestHoleOffset = ImVec2ih(pos - window.position);
@@ -272,10 +272,10 @@ pub unsafe fn SetWindowFocus2(name: *const c_char) {
 }
 
 pub fn SetNextWindowPos(
-    g: &mut ImguiContext,
-    pos: &ImVec2,
+    g: &mut AppContext,
+    pos: &Vector2,
     cond: ImGuiCond,
-    pivot: Option<ImVec2>,
+    pivot: Option<Vector2>,
 ) {
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasPos;
     g.NextWindowData.PosVal = pos.clone();
@@ -289,9 +289,9 @@ pub fn SetNextWindowPos(
 }
 
 pub fn SetNextWindowSizeConstraints(
-    g: &mut ImguiContext,
-    size_min: &ImVec2,
-    size_max: &ImVec2,
+    g: &mut AppContext,
+    size_min: &Vector2,
+    size_max: &Vector2,
     custom_callback: ImGuiSizeCallback,
     custom_callback_user_data: Option<&Vec<u8>>,
 ) {
@@ -304,13 +304,13 @@ pub fn SetNextWindowSizeConstraints(
 
 // Content size = inner scrollable rectangle, padded with WindowPadding.
 // SetNextWindowContentSize(ImVec2::new(100,100) + ImGuiWindowFlags_AlwaysAutoResize will always allow submitting a 100x100 item.
-pub unsafe fn SetNextWindowContentSize(size: &ImVec2) {
+pub unsafe fn SetNextWindowContentSize(size: &Vector2) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasContentSize;
     g.NextWindowData.ContentSizeVal = ImFloor(size);
 }
 
-pub unsafe fn SetNextWindowScroll(scroll: &ImVec2) {
+pub unsafe fn SetNextWindowScroll(scroll: &Vector2) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     g.NextWindowData.Flags |= ImGuiNextWindowDataFlags_HasScroll;
     g.NextWindowData.ScrollVal = scroll.clone();
@@ -369,7 +369,7 @@ pub unsafe fn GetWindowDpiScale() -> f32 {
 }
 
 // GetWindowViewport: *mut ImGuiViewport()
-pub unsafe fn GetWindowViewport() -> *mut ImguiViewport {
+pub unsafe fn GetWindowViewport() -> *mut Viewport {
     let g = GImGui; // ImGuiContext& g = *GImGui;
                     // IM_ASSERT(g.CurrentViewport != NULL && g.CurrentViewport == g.Currentwindow.Viewport);
     return g.CurrentViewport;
@@ -388,7 +388,7 @@ pub unsafe fn GetFontSize() -> f32 {
 }
 
 // GetFontTexUvWhitePixel: ImVec2()
-pub unsafe fn GetFontTexUvWhitePixel() -> ImVec2 {
+pub unsafe fn GetFontTexUvWhitePixel() -> Vector2 {
     let g = GImGui; // ImGuiContext& g = *GImGui;
     return g.DrawListSharedData.TexUvWhitePixel;
 }

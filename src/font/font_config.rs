@@ -2,7 +2,7 @@
 
 use crate::font::ImFont;
 use crate::core::type_defs::ImWchar;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use libc::{c_char, c_float, c_int, c_uint, c_void, size_t};
 
 #[derive(Default, Debug, Clone, Copy)]
@@ -23,7 +23,7 @@ pub struct ImFontConfig {
     // 1        // Rasterize at higher quality for sub-pixel positioning. This is not really useful as we don't use sub-pixel positions on the Y axis.
     pub PixelSnapH: bool,
     // false    // Align every glyph to pixel boundary. Useful e.g. if you are merging a non-pixel aligned font with the default font. If enabled, you can set OversampleH/V to 1.
-    pub GlyphExtraSpacing: ImVec2,
+    pub GlyphExtraSpacing: Vector2,
     // 0, 0     // Extra spacing (in pixels) between glyphs. Only X axis is supported for now.
     pub GlyphOffset: usize,
     // 0, 0     // Offset all glyphs from this font input.

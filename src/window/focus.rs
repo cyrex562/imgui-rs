@@ -1,4 +1,4 @@
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::core::direction::{ImGuiDir_Down, ImGuiDir_None, ImGuiDir_Up};
 use crate::docking::dock_node::ImGuiDockNode;
 use crate::nav_layer::ImGuiNavLayer_Main;
@@ -195,7 +195,7 @@ pub unsafe fn SetKeyboardFocusHere(offset: c_int) {
     }
 }
 
-pub fn SetItemDefaultFocus(g: &mut ImguiContext) {
+pub fn SetItemDefaultFocus(g: &mut AppContext) {
     let mut window = g.current_window_mut().unwrap();
     if !window.Appearing {
         return;

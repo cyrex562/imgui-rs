@@ -39,7 +39,7 @@ use crate::text_flags::ImGuiTextFlags_None;
 use crate::text_ops::CalcTextSize;
 use crate::core::type_defs::ImguiHandle;
 use crate::core::utils::{flag_clear, flag_set};
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::focus::FocusWindow;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
@@ -313,15 +313,15 @@ pub unsafe fn DragScalar<T>(
     let mut id: ImguiHandle = window.id_from_str(label, );
     let w: c_float = CalcItemWidth(g);
 
-    let label_size: ImVec2 = CalcTextSize(, label, true, 0.0);
+    let label_size: Vector2 = CalcTextSize(, label, true, 0.0);
     let mut frame_bb: ImRect = ImRect::new(
         window.dc.cursor_pos,
-        window.dc.cursor_pos + ImVec2::from_floats(w, label_size.y + style.FramePadding.y * 2.0),
+        window.dc.cursor_pos + Vector2::from_floats(w, label_size.y + style.FramePadding.y * 2.0),
     );
     let mut total_bb: ImRect = ImRect::new(
         frame_bb.min,
         frame_bb.max
-            + ImVec2::from_floats(
+            + Vector2::from_floats(
                 if label_size.x > 0.0 {
                     style.ItemInnerSpacing.x + label_size.x
                 } else {
@@ -480,8 +480,8 @@ pub unsafe fn DragScalar<T>(
         // LogSetNextTextDecoration("{", "}");
     }
     let clip_rect = ImRect::from_vec2(
-        &ImVec2::from_floats(0.5, 0.5),
-        &ImVec2::from_floats(0.5, 0.5),
+        &Vector2::from_floats(0.5, 0.5),
+        &Vector2::from_floats(0.5, 0.5),
     );
     RenderTextClipped(
         &frame_bb.min,
@@ -494,7 +494,7 @@ pub unsafe fn DragScalar<T>(
 
     if label_size.x > 0.0 {
         RenderText(
-            ImVec2::from_floats(
+            Vector2::from_floats(
                 frame_bb.max.x + style.ItemInnerSpacing.x,
                 frame_bb.min.y + style.FramePadding.y,
             ),

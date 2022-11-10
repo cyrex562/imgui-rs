@@ -9,7 +9,7 @@ use crate::color::ImGuiCol_COUNT;
 use crate::core::direction::{ImGuiDir, ImGuiDir_Left, ImGuiDir_Right};
 use crate::style_ops::StyleColorsDark;
 use crate::core::type_defs::ImGuiDir;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
 use libc::c_float;
 
@@ -25,15 +25,15 @@ pub struct ImguiStyle {
     // Global alpha applies to everything in Dear ImGui.
     pub DisabledAlpha: c_float,
     // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
-    pub WindowPadding: ImVec2,
+    pub WindowPadding: Vector2,
     // Padding within a window.
     pub WindowRounding: c_float,
     // Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
     pub WindowBorderSize: c_float,
     // Thickness of border around windows. Generally set to 0.0 or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-    pub WindowMinSize: ImVec2,
+    pub WindowMinSize: Vector2,
     // Minimum window size. This is a global setting. If you want to constraint individual windows, use SetNextWindowSizeConstraints().
-    pub WindowTitleAlign: ImVec2,
+    pub WindowTitleAlign: Vector2,
     // Alignment for title bar text. Defaults to (0.0,0.5) for left-aligned,vertically centered.
     pub WindowMenuButtonPosition: ImGuiDir,
     // Side of the collapsing/docking button in the title bar (None/Left/Right). Defaults to ImGuiDir_Left.
@@ -45,19 +45,19 @@ pub struct ImguiStyle {
     // Radius of popup window corners rounding. (Note that tooltip windows use WindowRounding)
     pub PopupBorderSize: c_float,
     // Thickness of border around popup/tooltip windows. Generally set to 0.0 or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-    pub FramePadding: ImVec2,
+    pub FramePadding: Vector2,
     // Padding within a framed rectangle (used by most widgets).
     pub FrameRounding: c_float,
     // Radius of frame corners rounding. Set to 0.0 to have rectangular frame (used by most widgets).
     pub FrameBorderSize: c_float,
     // Thickness of border around frames. Generally set to 0.0 or 1.0f. (Other values are not well tested and more CPU/GPU costly).
-    pub item_spacing: ImVec2,
+    pub item_spacing: Vector2,
     // Horizontal and vertical spacing between widgets/lines.
-    pub ItemInnerSpacing: ImVec2,
+    pub ItemInnerSpacing: Vector2,
     // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label).
-    pub CellPadding: ImVec2,
+    pub CellPadding: Vector2,
     // Padding within a table cell
-    pub TouchExtraPadding: ImVec2,
+    pub TouchExtraPadding: Vector2,
     // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
     pub indent_spacing: c_float,
     // Horizontal indentation when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
@@ -81,13 +81,13 @@ pub struct ImguiStyle {
     // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0 to always show when hovering, set to f32::MAX to never show close button unless selected.
     pub ColorButtonPosition: ImGuiDir,
     // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
-    pub ButtonTextAlign: ImVec2,
+    pub ButtonTextAlign: Vector2,
     // Alignment of button text when button is larger than text. Defaults to (0.5, 0.5) (centered).
-    pub SelectableTextAlign: ImVec2,
+    pub SelectableTextAlign: Vector2,
     // Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
-    pub DisplayWindowPadding: ImVec2,
+    pub DisplayWindowPadding: Vector2,
     // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-    pub DisplaySafeAreaPadding: ImVec2,
+    pub DisplaySafeAreaPadding: Vector2,
     // If you cannot see the edges of your screen (e.g. on a TV) increase the safe area padding. Apply to popups/tooltips as well regular windows. NB: Prefer configuring your TV sets correctly!
     pub MouseCursorScale: c_float,
     // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). We apply per-monitor DPI scaling over this scale. May be removed later.
@@ -115,23 +115,23 @@ impl ImguiStyle {
         };
         out.Alpha = 1.0; // Global alpha applies to everything in Dear ImGui.
         out.DisabledAlpha = 0.60; // Additional alpha multiplier applied by BeginDisabled(). Multiply over current value of Alpha.
-        out.WindowPadding = ImVec2::from_floats(8, 8); // Padding within a window
+        out.WindowPadding = Vector2::from_floats(8, 8); // Padding within a window
         out.WindowRounding = 0.0; // Radius of window corners rounding. Set to 0.0 to have rectangular windows. Large values tend to lead to variety of artifacts and are not recommended.
         out.WindowBorderSize = 1.0; // Thickness of border around windows. Generally set to 0.0 or 1.0f. Other values not well tested.
-        out.WindowMinSize = ImVec2::from_floats(32, 32); // Minimum window size
-        out.WindowTitleAlign = ImVec2::from_floats(0.0, 0.5); // Alignment for title bar text
+        out.WindowMinSize = Vector2::from_floats(32, 32); // Minimum window size
+        out.WindowTitleAlign = Vector2::from_floats(0.0, 0.5); // Alignment for title bar text
         out.WindowMenuButtonPosition = ImGuiDir_Left; // Position of the collapsing/docking button in the title bar (left/right). Defaults to ImGuiDir_Left.
         out.ChildRounding = 0.0; // Radius of child window corners rounding. Set to 0.0 to have rectangular child windows
         out.ChildBorderSize = 1.0; // Thickness of border around child windows. Generally set to 0.0 or 1.0f. Other values not well tested.
         out.PopupRounding = 0.0; // Radius of popup window corners rounding. Set to 0.0 to have rectangular child windows
         out.PopupBorderSize = 1.0; // Thickness of border around popup or tooltip windows. Generally set to 0.0 or 1.0f. Other values not well tested.
-        out.FramePadding = ImVec2::from_floats(4, 3); // Padding within a framed rectangle (used by most widgets)
+        out.FramePadding = Vector2::from_floats(4, 3); // Padding within a framed rectangle (used by most widgets)
         out.FrameRounding = 0.0; // Radius of frame corners rounding. Set to 0.0 to have rectangular frames (used by most widgets).
         out.FrameBorderSize = 0.0; // Thickness of border around frames. Generally set to 0.0 or 1.0f. Other values not well tested.
-        out.item_spacing = ImVec2::from_floats(8, 4); // Horizontal and vertical spacing between widgets/lines
-        out.ItemInnerSpacing = ImVec2::from_floats(4, 4); // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
-        out.CellPadding = ImVec2::from_floats(4, 2); // Padding within a table cell
-        out.TouchExtraPadding = ImVec2::from_floats(0, 0); // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
+        out.item_spacing = Vector2::from_floats(8, 4); // Horizontal and vertical spacing between widgets/lines
+        out.ItemInnerSpacing = Vector2::from_floats(4, 4); // Horizontal and vertical spacing between within elements of a composed widget (e.g. a slider and its label)
+        out.CellPadding = Vector2::from_floats(4, 2); // Padding within a table cell
+        out.TouchExtraPadding = Vector2::from_floats(0, 0); // Expand reactive bounding box for touch-based system where touch position is not accurate enough. Unfortunately we don't sort widgets so priority on overlap will always be given to the first widget. So don't grow this too much!
         out.indent_spacing = 21f32; // Horizontal spacing when e.g. entering a tree node. Generally == (FontSize + FramePadding.x*2).
         out.ColumnsMinSpacing = 6f32; // Minimum horizontal spacing between two columns. Preferably > (FramePadding.x + 1).
         out.crollbarSize = 14.0; // Width of the vertical scrollbar, Height of the horizontal scrollbar
@@ -143,10 +143,10 @@ impl ImguiStyle {
         out.TabBorderSize = 0.0; // Thickness of border around tabs.
         out.TabMinWidthForCloseButton = 0.0; // Minimum width for close button to appears on an unselected tab when hovered. Set to 0.0 to always show when hovering, set to f32::MAX to never show close button unless selected.
         out.ColorButtonPosition = ImGuiDir_Right; // Side of the color button in the ColorEdit4 widget (left/right). Defaults to ImGuiDir_Right.
-        out.ButtonTextAlign = ImVec2::from_floats(0.5, 0.5); // Alignment of button text when button is larger than text.
-        out.SelectableTextAlign = ImVec2::from_floats(0.0, 0.0); // Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
-        out.DisplayWindowPadding = ImVec2::from_floats(19, 19); // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
-        out.DisplaySafeAreaPadding = ImVec2::from_floats(3, 3); // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
+        out.ButtonTextAlign = Vector2::from_floats(0.5, 0.5); // Alignment of button text when button is larger than text.
+        out.SelectableTextAlign = Vector2::from_floats(0.0, 0.0); // Alignment of selectable text. Defaults to (0.0, 0.0) (top-left aligned). It's generally important to keep this left-aligned if you want to lay multiple items on a same line.
+        out.DisplayWindowPadding = Vector2::from_floats(19, 19); // Window position are clamped to be visible within the display area or monitors by at least this amount. Only applies to regular windows.
+        out.DisplaySafeAreaPadding = Vector2::from_floats(3, 3); // If you cannot see the edge of your screen (e.g. on a TV) increase the safe area padding. Covers popups/tooltips as well regular windows.
         out.MouseCursorScale = 1.0; // Scale software rendered mouse cursor (when io.MouseDrawCursor is enabled). May be removed later.
         out.AntiAliasedLines = true; // Enable anti-aliased lines/borders. Disable if you are really tight on CPU/GPU.
         out.AntiAliasedLinesUseTex = true; // Enable anti-aliased lines/borders using textures where possible. Require backend to render with bilinear filtering (NOT point/nearest filtering).

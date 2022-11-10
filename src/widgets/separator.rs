@@ -11,7 +11,7 @@ use crate::style_ops::GetColorU32;
 use crate::table::ImGuiTable;
 use crate::tables::{PopColumnsBackground, PushColumnsBackground};
 use crate::core::utils::flag_set;
-use crate::core::vec2::ImVec2;
+use crate::core::vec2::Vector2;
 use crate::window::ops::GetCurrentWindow;
 use crate::window::ImguiWindow;
 use crate::GImGui;
@@ -35,18 +35,18 @@ pub unsafe fn SeparatorEx(flags: ImGuiSeparatorFlags) {
         let y1: c_float = window.dc.cursor_pos.y;
         let y2: c_float = window.dc.cursor_pos.y + window.dc.CurrLineSize.y;
         let mut bb: ImRect = ImRect::new(
-            ImVec2::from_floats(window.dc.cursor_pos.x, y1),
-            ImVec2::from_floats(window.dc.cursor_pos.x + thickness_draw, y2),
+            Vector2::from_floats(window.dc.cursor_pos.x, y1),
+            Vector2::from_floats(window.dc.cursor_pos.x + thickness_draw, y2),
         );
-        ItemSize(g, &ImVec2::from_floats(thickness_layout, 0.0), 0.0);
+        ItemSize(g, &Vector2::from_floats(thickness_layout, 0.0), 0.0);
         if !ItemAdd(g, &mut bb, 0, None, 0) {
             return;
         }
 
         // Draw
         window.DrawList.AddLine(
-            &ImVec2::from_floats(bb.min.x, bb.min.y),
-            &ImVec2::from_floats(bb.min.x, bb.max.y),
+            &Vector2::from_floats(bb.min.x, bb.min.y),
+            &Vector2::from_floats(bb.min.x, bb.max.y),
             GetColorU32(ImGuiCol_Separator, 0.0),
             0.0,
         );
@@ -82,16 +82,16 @@ pub unsafe fn SeparatorEx(flags: ImGuiSeparatorFlags) {
         // We don't provide our width to the layout so that it doesn't get feed back into AutoFit
         // FIXME: This prevents ->CursorMaxPos based bounding box evaluation from working (e.g. TableEndCell)
         let mut bb: ImRect = ImRect::new(
-            ImVec2::from_floats(x1, window.dc.cursor_pos.y),
-            ImVec2::from_floats(x2, window.dc.cursor_pos.y + thickness_draw),
+            Vector2::from_floats(x1, window.dc.cursor_pos.y),
+            Vector2::from_floats(x2, window.dc.cursor_pos.y + thickness_draw),
         );
-        ItemSize(g, &ImVec2::from_floats(0.0, thickness_layout), 0.0);
+        ItemSize(g, &Vector2::from_floats(0.0, thickness_layout), 0.0);
         let item_visible: bool = ItemAdd(g, &mut bb, 0, None, 0);
         if item_visible {
             // Draw
             window.DrawList.AddLine(
                 &bb.min,
-                &ImVec2::from_floats(bb.max.x, bb.min.y),
+                &Vector2::from_floats(bb.max.x, bb.min.y),
                 GetColorU32(ImGuiCol_Separator, 0.0),
                 0.0,
             );

@@ -19,7 +19,7 @@
 use std::ptr::null_mut;
 use libc::{c_char, memcpy, size_t, sscanf, strlen};
 use crate::{close_file, hash_string, imgui::GImGui, window::window_settings::ImGuiWindowSettings};
-use crate::core::context::ImguiContext;
+use crate::core::context::AppContext;
 use crate::core::file_ops::{ImFileLoadToMemory, ImFileWrite, open_file};
 use crate::core::settings_handler::SettingsHandler;
 use crate::core::string_ops::str_to_const_c_char_ptr;
@@ -62,7 +62,7 @@ pub unsafe fn UpdateSettings()
     }
 }
 
-pub unsafe fn mark_ini_setings_dirty2(g: &mut ImguiContext, window: &mut ImguiWindow) {
+pub unsafe fn mark_ini_setings_dirty2(g: &mut AppContext, window: &mut ImguiWindow) {
     if flag_clear(window.Flags, ImGuiWindowFlags_NoSavedSettings) {
         if g.SettingsDirtyTimer <= 0.0 {
             g.SettingsDirtyTimer = g.IO.IniSavingRate;
@@ -116,7 +116,7 @@ pub unsafe fn FindOrCreateWindowSettings(name: *const c_char) -> *mut ImGuiWindo
     return CreateNewWindowSettings(name);
 }
 
-pub fn AddSettingsHandler(g: &mut ImguiContext, handler: &SettingsHandler)
+pub fn AddSettingsHandler(g: &mut AppContext, handler: &SettingsHandler)
 {
     // IM_ASSERT(FindSettingsHandler(handler->TypeName) == NULL);
     g.settings_handlers.push(handler.clone());
@@ -234,7 +234,7 @@ pub unsafe fn LoadIniSettingsFromMemory(ini_data: *const c_char, ini_size: size_
             g.SettingsHandlers[handler_n].ApplyAllFn(&g, &g.SettingsHandlers[handler_n]);
 }
 
-pub fn save_ini_settings_to_disk(g: &mut ImguiContext, ini_filename: &String)
+pub fn save_ini_settings_to_disk(g: &mut AppContext, ini_filename: &String)
 {
     g.SettingsDirtyTimer = 0.0;
     if !ini_filename { return ; }
@@ -264,7 +264,7 @@ SaveIniSettingsToMemory: *const c_char(size_t* out_size)
     return g.SettingsIniData.c_str();
 }
 
-pub unsafe fn WindowSettingsHandler_ClearAll(g: &mut ImguiContext, SettingsHandler*)
+pub unsafe fn WindowSettingsHandler_ClearAll(g: &mut AppContext, SettingsHandler*)
 {
     let g =  ctx;
     for (let i: c_int = 0; i != g.Windows.len(); i++)
@@ -272,7 +272,7 @@ pub unsafe fn WindowSettingsHandler_ClearAll(g: &mut ImguiContext, SettingsHandl
     g.SettingsWindows.clear();
 }
 
-static WindowSettingsHandler_ReadOpen: *mut c_void(ImguiContext *, ImGuiSettingsHandler*, name: *const c_char)
+static WindowSettingsHandler_ReadOpen: *mut c_void(AppContext *, ImGuiSettingsHandler*, name: *const c_char)
 {
     settings: *mut ImGuiWindowSettings = FindOrCreateWindowSettings(name);
     let mut id: ImguiHandle =  settings.ID;
@@ -282,7 +282,7 @@ static WindowSettingsHandler_ReadOpen: *mut c_void(ImguiContext *, ImGuiSettings
     return settings;
 }
 
-pub unsafe fn WindowSettingsHandler_ReadLine(ImguiContext*, SettingsHandler*, entry: *mut c_void, line: *const c_char)
+pub unsafe fn WindowSettingsHandler_ReadLine(AppContext*, SettingsHandler*, entry: *mut c_void, line: *const c_char)
 {
     settings: *mut ImGuiWindowSettings = (ImGuiWindowSettings*)entry;
     x: c_int, y;
@@ -299,7 +299,7 @@ pub unsafe fn WindowSettingsHandler_ReadLine(ImguiContext*, SettingsHandler*, en
 }
 
 // Apply to existing windows (if any)
-pub unsafe fn WindowSettingsHandler_ApplyAll(g: &mut ImguiContext, SettingsHandler*)
+pub unsafe fn WindowSettingsHandler_ApplyAll(g: &mut AppContext, SettingsHandler*)
 {
     let g =  ctx;
     for (settings: *mut ImGuiWindowSettings = g.SettingsWindows.begin(); settings != None; settings = g.SettingsWindows.next_chunk(settings))
@@ -311,7 +311,7 @@ pub unsafe fn WindowSettingsHandler_ApplyAll(g: &mut ImguiContext, SettingsHandl
         }
 }
 
-pub unsafe fn WindowSettingsHandler_WriteAll(g: &mut ImguiContext, SettingsHandler* handler, ImGuiTextBuffer* buf)
+pub unsafe fn WindowSettingsHandler_WriteAll(g: &mut AppContext, SettingsHandler* handler, ImGuiTextBuffer* buf)
 {
     // Gather data from windows that were active during this session
     // (if a window wasn't opened in this session we preserve its settings)
