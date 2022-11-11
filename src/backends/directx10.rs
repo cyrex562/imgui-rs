@@ -46,6 +46,7 @@ use std::ffi::c_void;
 use std::mem;
 use std::ptr::null_mut;
 use libc::{c_float, c_uint};
+use windows::core::IUnknown;
 use windows::Win32::Foundation::RECT;
 use windows::Win32::Graphics::Direct3D10::{D3D10_BIND_INDEX_BUFFER, D3D10_BIND_SHADER_RESOURCE, D3D10_BIND_VERTEX_BUFFER, D3D10_BUFFER_DESC, D3D10_COMPARISON_ALWAYS, D3D10_CPU_ACCESS_WRITE, D3D10_FILTER_MIN_MAG_MIP_LINEAR, D3D10_MAP_WRITE_DISCARD, D3D10_SAMPLER_DESC, D3D10_SHADER_RESOURCE_VIEW_DESC, D3D10_SUBRESOURCE_DATA, D3D10_TEXTURE2D_DESC, D3D10_TEXTURE_ADDRESS_WRAP, D3D10_USAGE_DEFAULT, D3D10_USAGE_DYNAMIC, D3D10_VIEWPORT, D3D10_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE, ID3D10BlendState, ID3D10Buffer, ID3D10DepthStencilState, ID3D10Device, ID3D10GeometryShader, ID3D10InputLayout, ID3D10PixelShader, ID3D10RasterizerState, ID3D10SamplerState, ID3D10ShaderResourceView, ID3D10Texture2D, ID3D10VertexShader};
 use windows::Win32::Graphics::Direct3D::{D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST, D3D10_SRV_DIMENSION_TEXTURE2D, ID3DBlob};
@@ -502,8 +503,18 @@ pub unsafe fn    ImGui_ImplDX10_CreateDeviceObjects(g: &mut AppContext) -> bool
             }";
 
         // ID3DBlob* vertexShaderBlob;
-        let vertexShaderBlob: *mut ID3DBlob = null_mut();
-        if D3DCompile(vertexShader.as_bytes(), vertexShader.len(), None, NULL, NULL, "main", "vs_4_0", 0,  &vertexShaderBlob, None) {
+        let vertexShaderBlob: ID3DBlob = ();
+        if D3DCompile(
+            vertexShader.as_bytes(),
+            None,
+            None,
+            None,
+            "main",
+            "vs_4_0",
+            0,
+            0,
+            &mut Some(vertexShaderBlob),
+            None) {
             return false;
         }
         // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in (const char*)pErrorBlob.GetBufferPointer(). Make sure to Release() the blob!
