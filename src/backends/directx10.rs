@@ -46,12 +46,12 @@ use std::ffi::c_void;
 use std::mem;
 use std::ptr::null_mut;
 use libc::{c_float, c_uint};
-use windows::core::IUnknown;
-use windows::Win32::Foundation::RECT;
-use windows::Win32::Graphics::Direct3D10::{D3D10_BIND_INDEX_BUFFER, D3D10_BIND_SHADER_RESOURCE, D3D10_BIND_VERTEX_BUFFER, D3D10_BUFFER_DESC, D3D10_COMPARISON_ALWAYS, D3D10_CPU_ACCESS_WRITE, D3D10_FILTER_MIN_MAG_MIP_LINEAR, D3D10_MAP_WRITE_DISCARD, D3D10_SAMPLER_DESC, D3D10_SHADER_RESOURCE_VIEW_DESC, D3D10_SUBRESOURCE_DATA, D3D10_TEXTURE2D_DESC, D3D10_TEXTURE_ADDRESS_WRAP, D3D10_USAGE_DEFAULT, D3D10_USAGE_DYNAMIC, D3D10_VIEWPORT, D3D10_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE, ID3D10BlendState, ID3D10Buffer, ID3D10DepthStencilState, ID3D10Device, ID3D10GeometryShader, ID3D10InputLayout, ID3D10PixelShader, ID3D10RasterizerState, ID3D10SamplerState, ID3D10ShaderResourceView, ID3D10Texture2D, ID3D10VertexShader};
+use windows::core::{IUnknown, PCSTR};
+use windows::Win32::Foundation::{BOOL, RECT};
+use windows::Win32::Graphics::Direct3D10::{D3D10_BIND_CONSTANT_BUFFER, D3D10_BIND_INDEX_BUFFER, D3D10_BIND_SHADER_RESOURCE, D3D10_BIND_VERTEX_BUFFER, D3D10_BLEND_DESC, D3D10_BLEND_INV_SRC_ALPHA, D3D10_BLEND_ONE, D3D10_BLEND_OP_ADD, D3D10_BLEND_SRC_ALPHA, D3D10_BUFFER_DESC, D3D10_COLOR_WRITE_ENABLE_ALL, D3D10_COMPARISON_ALWAYS, D3D10_CPU_ACCESS_WRITE, D3D10_CULL_NONE, D3D10_DEPTH_STENCIL_DESC, D3D10_DEPTH_WRITE_MASK_ALL, D3D10_FILL_SOLID, D3D10_FILTER_MIN_MAG_MIP_LINEAR, D3D10_INPUT_ELEMENT_DESC, D3D10_INPUT_PER_VERTEX_DATA, D3D10_MAP_WRITE_DISCARD, D3D10_RASTERIZER_DESC, D3D10_SAMPLER_DESC, D3D10_SHADER_RESOURCE_VIEW_DESC, D3D10_STENCIL_OP_KEEP, D3D10_SUBRESOURCE_DATA, D3D10_TEXTURE2D_DESC, D3D10_TEXTURE_ADDRESS_WRAP, D3D10_USAGE_DEFAULT, D3D10_USAGE_DYNAMIC, D3D10_VIEWPORT, D3D10_VIEWPORT_AND_SCISSORRECT_OBJECT_COUNT_PER_PIPELINE, ID3D10BlendState, ID3D10Buffer, ID3D10DepthStencilState, ID3D10Device, ID3D10GeometryShader, ID3D10InputLayout, ID3D10PixelShader, ID3D10RasterizerState, ID3D10SamplerState, ID3D10ShaderResourceView, ID3D10Texture2D, ID3D10VertexShader};
 use windows::Win32::Graphics::Direct3D::{D3D10_PRIMITIVE_TOPOLOGY_TRIANGLELIST, D3D10_SRV_DIMENSION_TEXTURE2D, ID3DBlob};
-use windows::Win32::Graphics::Direct3D::Fxc::D3DCompile;
-use windows::Win32::Graphics::Dxgi::Common::{DXGI_FORMAT, DXGI_FORMAT_R16_UINT, DXGI_FORMAT_R32_UINT, DXGI_FORMAT_R8G8B8A8_UNORM};
+use windows::Win32::Graphics::Direct3D::Fxc::{D3DCompile, D3DCreateBlob};
+use windows::Win32::Graphics::Dxgi::Common::{DXGI_FORMAT, DXGI_FORMAT_R16_UINT, DXGI_FORMAT_R32_UINT, DXGI_FORMAT_R32G32_FLOAT, DXGI_FORMAT_R8G8B8A8_UNORM};
 use windows::Win32::Graphics::Dxgi::IDXGIFactory;
 use crate::core::context::AppContext;
 use crate::core::type_defs::DrawIndex;
@@ -503,8 +503,8 @@ pub unsafe fn    ImGui_ImplDX10_CreateDeviceObjects(g: &mut AppContext) -> bool
             }";
 
         // ID3DBlob* vertexShaderBlob;
-        let vertexShaderBlob: ID3DBlob = ();
-        if D3DCompile(
+        let vertexShaderBlob: ID3DBlob = D3DCreateBlob(0)?;
+        D3DCompile(
             vertexShader.as_bytes(),
             None,
             None,
@@ -514,45 +514,58 @@ pub unsafe fn    ImGui_ImplDX10_CreateDeviceObjects(g: &mut AppContext) -> bool
             0,
             0,
             &mut Some(vertexShaderBlob),
-            None) {
-            return false;
-        }
+            None)?;
         // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in (const char*)pErrorBlob.GetBufferPointer(). Make sure to Release() the blob!
-        if (bd.pd3dDevice.CreateVertexShader(vertexShaderBlob.GetBufferPointer(), vertexShaderBlob.GetBufferSize(), &bd.pVertexShader) != S_OK)
-        {
-            vertexShaderBlob.Release();
-            return false;
-        }
+        bd.pd3dDevice.CreateVertexShader(vertexShaderBlob.GetBufferPointer(), vertexShaderBlob.GetBufferSize(), &bd.pVertexShader)?;
 
         // Create the input layout
-        D3D10_INPUT_ELEMENT_DESC local_layout[] =
-        {
-            { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0, IM_OFFSETOF(ImDrawVert, pos), D3D10_INPUT_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0, IM_OFFSETOF(ImDrawVert, uv),  D3D10_INPUT_PER_VERTEX_DATA, 0 },
-            { "COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, IM_OFFSETOF(ImDrawVert, col), D3D10_INPUT_PER_VERTEX_DATA, 0 },
-        };
-        if (bd.pd3dDevice.CreateInputLayout(local_layout, 3, vertexShaderBlob.GetBufferPointer(), vertexShaderBlob.GetBufferSize(), &bd.pInputLayout) != S_OK)
-        {
-            vertexShaderBlob.Release();
-            return false;
-        }
+        let local_layout: [D3D10_INPUT_ELEMENT_DESC;3] =
+        [
+            D3D10_INPUT_ELEMENT_DESC{
+                SemanticName: PCSTR::from_raw("POSITION".as_ptr()),
+                SemanticIndex: 0,
+                Format: DXGI_FORMAT_R32G32_FLOAT,
+                InputSlot: 0,
+                AlignedByteOffset: IM_OFFSETOF(ImDrawVert, pos),
+                InputSlotClass: D3D10_INPUT_PER_VERTEX_DATA,
+                InstanceDataStepRate: 0 },
+            D3D10_INPUT_ELEMENT_DESC{
+                SemanticName: PCSTR::from_raw("TEXCOORD".as_ptr()),
+                SemanticIndex: 0,
+                Format: DXGI_FORMAT_R32G32_FLOAT,
+                InputSlot: 0,
+                AlignedByteOffset: IM_OFFSETOF(ImDrawVert, uv),
+                InputSlotClass: D3D10_INPUT_PER_VERTEX_DATA,
+                InstanceDataStepRate: 0 },
+            D3D10_INPUT_ELEMENT_DESC{
+                SemanticName: PCSTR::from_raw("COLOR".as_ptr()),
+                SemanticIndex: 0,
+                Format: DXGI_FORMAT_R8G8B8A8_UNORM,
+                InputSlot: 0,
+                AlignedByteOffset: IM_OFFSETOF(ImDrawVert, col),
+                InputSlotClass: D3D10_INPUT_PER_VERTEX_DATA,
+                InstanceDataStepRate: 0 },
+        ];
+        bd.pInputLayout = Some(bd.pd3dDevice.unwrap().CreateInputLayout(
+            &local_layout,
+            vertexShaderBlob.GetBufferPointer().into())?);
         vertexShaderBlob.Release();
 
         // Create the constant buffer
         {
-            D3D10_BUFFER_DESC desc;
+            let mut desc = D3D10_BUFFER_DESC::default();
             desc.ByteWidth = sizeof(VERTEX_CONSTANT_BUFFER_DX10);
             desc.Usage = D3D10_USAGE_DYNAMIC;
-            desc.BindFlags = D3D10_BIND_CONSTANT_BUFFER;
-            desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE;
+            desc.BindFlags = D3D10_BIND_CONSTANT_BUFFER.0 as u32;
+            desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE.0 as u32;
             desc.MiscFlags = 0;
-            bd.pd3dDevice.CreateBuffer(&desc, NULL, &bd.pVertexConstantBuffer);
+            bd.pVertexConstantBuffer = Some(bd.pd3dDevice.unwrap().CreateBuffer(&desc, None).unwrap());
         }
     }
 
     // Create the pixel shader
     {
-        static const char* pixelShader =
+        let pixelShader =
             "struct PS_INPUT\
             {\
             float4 pos : SV_POSITION;\
@@ -568,71 +581,76 @@ pub unsafe fn    ImGui_ImplDX10_CreateDeviceObjects(g: &mut AppContext) -> bool
             return out_col; \
             }";
 
-        ID3DBlob* pixelShaderBlob;
-        if (FAILED(D3DCompile(pixelShader, strlen(pixelShader), NULL, NULL, NULL, "main", "ps_4_0", 0, 0, &pixelShaderBlob, NULL)))
-            return false; // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in (const char*)pErrorBlob.GetBufferPointer(). Make sure to Release() the blob!
-        if (bd.pd3dDevice.CreatePixelShader(pixelShaderBlob.GetBufferPointer(), pixelShaderBlob.GetBufferSize(), &bd.pPixelShader) != S_OK)
-        {
-            pixelShaderBlob.Release();
-            return false;
-        }
+        let pixelShaderBlob = D3DCreateBlob(0).unwrap();
+        D3DCompile(pixelShader.as_bytes(),  None, None, None, "main", "ps_4_0", 0, 0, &mut Some(pixelShaderBlob), None)?;
+            // return false; // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in (const char*)pErrorBlob.GetBufferPointer(). Make sure to Release() the blob!
+        bd.pd3dDevice.CreatePixelShader(pixelShaderBlob.GetBufferPointer(), pixelShaderBlob.GetBufferSize(), &bd.pPixelShader)?;
         pixelShaderBlob.Release();
     }
 
     // Create the blending setup
     {
-        D3D10_BLEND_DESC desc;
-        ZeroMemory(&desc, sizeof(desc));
-        desc.AlphaToCoverageEnable = false;
-        desc.BlendEnable[0] = true;
+        let mut desc = D3D10_BLEND_DESC::default();
+        // ZeroMemory(&desc, sizeof(desc));
+        desc.AlphaToCoverageEnable = BOOL::from(false);
+        desc.BlendEnable[0] = BOOL::from(true);
         desc.SrcBlend = D3D10_BLEND_SRC_ALPHA;
         desc.DestBlend = D3D10_BLEND_INV_SRC_ALPHA;
         desc.BlendOp = D3D10_BLEND_OP_ADD;
         desc.SrcBlendAlpha = D3D10_BLEND_ONE;
         desc.DestBlendAlpha = D3D10_BLEND_INV_SRC_ALPHA;
         desc.BlendOpAlpha = D3D10_BLEND_OP_ADD;
-        desc.RenderTargetWriteMask[0] = D3D10_COLOR_WRITE_ENABLE_ALL;
+        desc.RenderTargetWriteMask[0] = D3D10_COLOR_WRITE_ENABLE_ALL.0 as u8;
         bd.pd3dDevice.CreateBlendState(&desc, &bd.pBlendState);
     }
 
     // Create the rasterizer state
     {
-        D3D10_RASTERIZER_DESC desc;
-        ZeroMemory(&desc, sizeof(desc));
+        let mut desc = D3D10_RASTERIZER_DESC::default();
+        // ZeroMemory(&desc, sizeof(desc));
         desc.FillMode = D3D10_FILL_SOLID;
         desc.CullMode = D3D10_CULL_NONE;
-        desc.ScissorEnable = true;
-        desc.DepthClipEnable = true;
+        desc.ScissorEnable = BOOL::from(true);
+        desc.DepthClipEnable = BOOL::from(true);
         bd.pd3dDevice.CreateRasterizerState(&desc, &bd.pRasterizerState);
     }
 
     // Create depth-stencil State
     {
-        D3D10_DEPTH_STENCIL_DESC desc;
-        ZeroMemory(&desc, sizeof(desc));
-        desc.DepthEnable = false;
+        let mut desc = D3D10_DEPTH_STENCIL_DESC::default();
+        // ZeroMemory(&desc, sizeof(desc));
+        desc.DepthEnable = BOOL::from(false);
         desc.DepthWriteMask = D3D10_DEPTH_WRITE_MASK_ALL;
         desc.DepthFunc = D3D10_COMPARISON_ALWAYS;
-        desc.StencilEnable = false;
-        desc.FrontFace.StencilFailOp = desc.FrontFace.StencilDepthFailOp = desc.FrontFace.StencilPassOp = D3D10_STENCIL_OP_KEEP;
+        desc.StencilEnable = BOOL::from(false);
+        desc.FrontFace.StencilPassOp = D3D10_STENCIL_OP_KEEP;
+        desc.FrontFace.StencilDepthFailOp = desc.FrontFace.StencilPassOp;
+        desc.FrontFace.StencilFailOp = desc.FrontFace.StencilDepthFailOp;
         desc.FrontFace.StencilFunc = D3D10_COMPARISON_ALWAYS;
         desc.BackFace = desc.FrontFace;
         bd.pd3dDevice.CreateDepthStencilState(&desc, &bd.pDepthStencilState);
     }
 
-    ImGui_ImplDX10_CreateFontsTexture();
+    ImGui_ImplDX10_CreateFontsTexture(g);
 
     return true;
 }
 
-void    ImGui_ImplDX10_InvalidateDeviceObjects()
+pub unsafe fn    ImGui_ImplDX10_InvalidateDeviceObjects(g: &mut AppContext)
 {
-    ImGui_ImplDX10_Data* bd = ImGui_ImplDX10_GetBackendData();
-    if (!bd.pd3dDevice)
+    let bd = ImGui_ImplDX10_GetBackendData(g);
+    if (bd.pd3dDevice.is_none()) {
         return;
+    }
 
-    if (bd.pFontSampler)           { bd.pFontSampler.Release(); bd.pFontSampler = NULL; }
-    if (bd.pFontTextureView)       { bd.pFontTextureView.Release(); bd.pFontTextureView = NULL; Imgui::GetIO().Fonts.SetTexID(NULL); } // We copied bd.pFontTextureView to io.Fonts.TexID so let's clear that as well.
+    if (bd.pFontSampler.is_some())           {
+        bd.pFontSampler.unwrap().Release();
+        bd.pFontSampler = None;
+    }
+    if (bd.pFontTextureView.is_some())       {
+        bd.pFontTextureView.unwrap().Release();
+        bd.pFontTextureView = None;
+        GetIO().Fonts.unwrap().SetTexID(None ); } // We copied bd.pFontTextureView to io.Fonts.TexID so let's clear that as well.
     if (bd.pIB)                    { bd.pIB.Release(); bd.pIB = NULL; }
     if (bd.pVB)                    { bd.pVB.Release(); bd.pVB = NULL; }
     if (bd.pBlendState)            { bd.pBlendState.Release(); bd.pBlendState = NULL; }
