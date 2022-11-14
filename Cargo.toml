@@ -19,7 +19,7 @@ ron = "0.8"
 #serde = "1.0.147"
 
 [dependencies.windows]
-version = "0.40"
+version = "0.43"
 features = [
     "Win32_Graphics_Direct3D",
     "Win32_Graphics_Direct3D9",
