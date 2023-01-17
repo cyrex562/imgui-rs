@@ -1,12 +1,12 @@
-#include "../src/input_source.rs"
-#include "node_editor.h"
-#include <nodes_h.rs>
+// #include "../src/input_source.rs"
+// #include "node_editor.h"
+// #include <nodes_h.rs>
 
 
-#include <SDL_scancode.h>
+// #include <SDL_scancode.h>
 
-#include <algorithm>
-#include <vector>
+// #include <algorithm>
+// #include <vector>
 
 namespace example {
 namespace {

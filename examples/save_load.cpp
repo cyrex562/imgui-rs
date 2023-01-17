@@ -1,17 +1,17 @@
-#include "node_editor.h"
+// #include "node_editor.h"
 
-#include "../src/input_source.rs"
-#include <nodes_h.rs>
+// #include "../src/input_source.rs"
+// #include <nodes_h.rs>
 
 
-#include <SDL_keycode.h>
+// #include <SDL_keycode.h>
 
-#include <algorithm>
-#include <cassert>
-#include <fstream>
-#include <ios> // for std::streamsize
-#include <stddef.h>
-#include <vector>
+// #include <algorithm>
+// #include <cassert>
+// #include <fstream>
+// #include <ios> // for std::streamsize
+// #include <stddef.h>
+// #include <vector>
 
 namespace example {
 namespace {

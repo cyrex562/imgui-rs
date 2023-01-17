@@ -98,15 +98,15 @@ ShowExampleAppCustomRendering()
 #ifndef IMGUI_DISABLE
 
 // System includes
-#include <ctype.h>  // toupper
-#include <limits.h> // INT_MIN, INT_MAX
-#include <math.h>   // sqrtf, powf, cosf, sinf, floorf, ceilf
-#include <stdio.h>  // vsnprintf, sscanf, printf
-#include <stdlib.h> // None, malloc, free, atoi
+// #include <ctype.h>  // toupper
+// #include <limits.h> // INT_MIN, INT_MAX
+// #include <math.h>   // sqrtf, powf, cosf, sinf, floorf, ceilf
+// #include <stdio.h>  // vsnprintf, sscanf, printf
+// #include <stdlib.h> // None, malloc, free, atoi
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
-#include <stddef.h>                       // intptr_t
+// #include <stddef.h>                       // intptr_t
 #else
-#include <stdint.h> // intptr_t
+// #include <stdint.h> // intptr_t
 #endif
 
 // Visual Studio warnings

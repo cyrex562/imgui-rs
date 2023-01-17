@@ -91,16 +91,16 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include "imgui.h"
-#include "imgui_impl_opengl3.h"
-#include <stdio.h>
+// #include "imgui.h"
+// #include "imgui_impl_opengl3.h"
+// #include <stdio.h>
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
-#include <stddef.h>     // intptr_t
+// #include <stddef.h>     // intptr_t
 #else
-#include <stdint.h>     // intptr_t
+// #include <stdint.h>     // intptr_t
 #endif
 #if defined(__APPLE__)
-#include <TargetConditionals.h>
+// #include <TargetConditionals.h>
 #endif
 
 // Clang warnings with -Weverything
@@ -116,21 +116,21 @@
 // GL includes
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #if (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV))
-#include <OpenGLES/ES2/gl.h>    // Use GL ES 2
+// #include <OpenGLES/ES2/gl.h>    // Use GL ES 2
 #else
-#include <GLES2/gl2.h>          // Use GL ES 2
+// #include <GLES2/gl2.h>          // Use GL ES 2
 #endif
 #if defined(__EMSCRIPTEN__)
 #ifndef GL_GLEXT_PROTOTYPES
 #define GL_GLEXT_PROTOTYPES
 #endif
-#include <GLES2/gl2ext.h>
+// #include <GLES2/gl2ext.h>
 #endif
 #elif defined(IMGUI_IMPL_OPENGL_ES3)
 #if (defined(__APPLE__) && (TARGET_OS_IOS || TARGET_OS_TV))
-#include <OpenGLES/ES3/gl.h>    // Use GL ES 3
+// #include <OpenGLES/ES3/gl.h>    // Use GL ES 3
 #else
-#include <GLES3/gl3.h>          // Use GL ES 3
+// #include <GLES3/gl3.h>          // Use GL ES 3
 #endif
 #elif !defined(IMGUI_IMPL_OPENGL_LOADER_CUSTOM)
 // Modern desktop OpenGL doesn't have a standard portable header file to load OpenGL function pointers.
@@ -141,7 +141,7 @@
 // - You can temporarily use an unstripped version. See https://github.com/dearimgui/gl3w_stripped/releases
 // Changes to this backend using new APIs should be accompanied by a regenerated stripped loader version.
 #define IMGL3W_IMPL
-#include "imgui_impl_opengl3_loader.h"
+// #include "imgui_impl_opengl3_loader.h"
 #endif
 
 // Vertex arrays are not supported on ES2/WebGL1 unless Emscripten which uses an extension
@@ -542,7 +542,7 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
                     continue;
 
                 // Apply scissor/clipping rectangle (Y is inverted in OpenGL)
-                glScissor((int)clip_min.x, (int)((float)fb_height - clip_max.y), (int)(clip_max.x - clip_min.x), (int)(clip_max.y - clip_min.y));
+                glScissor((int)clip_min.x, (int)(fb_height - clip_max.y), (int)(clip_max.x - clip_min.x), (int)(clip_max.y - clip_min.y));
 
                 // Bind texture, Draw
                 glBindTexture(GL_TEXTURE_2D, (GLuint)(intptr_t)pcmd->GetTexID());

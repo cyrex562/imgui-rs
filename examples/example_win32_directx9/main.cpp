@@ -3,11 +3,11 @@
 // the top of imgui.cpp. Read online:
 // https://github.com/ocornut/imgui/tree/master/docs
 
-#include "imgui.h"
-#include "imgui_impl_dx9.h"
-#include "imgui_impl_win32.h"
-#include <d3d9.h>
-#include <tchar.h>
+// #include "imgui.h"
+// #include "imgui_impl_dx9.h"
+// #include "imgui_impl_win32.h"
+// #include <d3d9.h>
+// #include <tchar.h>
 
 // data
 static LPDIRECT3D9 g_pD3D = None;

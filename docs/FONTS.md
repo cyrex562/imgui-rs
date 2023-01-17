@@ -177,7 +177,7 @@ So you can use `ICON_FA_SEARCH` as a string that will render as a "Search" icon.
 Example Setup:
 ```cpp
 // merge icons into default tool font
-#include "IconsFontAwesome.h"
+// #include "IconsFontAwesome.h"
 ImGuiIO& io = ImGui::GetIO();
 io.fonts->add_font_default();
 

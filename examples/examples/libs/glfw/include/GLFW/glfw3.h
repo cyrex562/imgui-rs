@@ -119,8 +119,8 @@ extern "C" {
  * The OS X OpenGL header blocks the definition of ptrdiff_t by glext.h.
  * Include it unconditionally to avoid surprising side-effects.
  */
-#include <stddef.h>
-#include <stdint.h>
+// #include <stddef.h>
+// #include <stdint.h>
 
 /* Include the chosen client API headers.
  */

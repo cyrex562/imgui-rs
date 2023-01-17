@@ -24,7 +24,7 @@ freely, subject to the following restrictions:
    3. This notice may not be removed or altered from any source
    distribution.
 */
-#include <stdint.h>
+// #include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {

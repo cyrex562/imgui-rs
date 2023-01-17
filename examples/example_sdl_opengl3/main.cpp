@@ -3,15 +3,15 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl3.h"
-#include <stdio.h>
-#include <SDL.h>
+// #include "imgui.h"
+// #include "imgui_impl_sdl.h"
+// #include "imgui_impl_opengl3.h"
+// #include <stdio.h>
+// #include <SDL.h>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
-#include <SDL_opengles2.h>
+// #include <SDL_opengles2.h>
 #else
-#include <SDL_opengl.h>
+// #include <SDL_opengl.h>
 #endif
 
 // Main code

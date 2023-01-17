@@ -63,8 +63,8 @@
 //  2016-10-18: Vulkan: Add location decorators & change to use structs as in/out in glsl, update embedded spv (produced with glslangValidator -x). Null the released resources.
 //  2016-08-27: Vulkan: Fix Vulkan example for use when a depth buffer is active.
 
-#include "imgui_impl_vulkan_h.rs"
-#include <stdio.h>
+// #include "vulkan_backend"
+// #include <stdio.h>
 
 // Visual Studio warnings
 #ifdef _MSC_VER
@@ -437,8 +437,8 @@ static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkPipeline 
         VkViewport viewport;
         viewport.x = 0;
         viewport.y = 0;
-        viewport.width = (float)fb_width;
-        viewport.height = (float)fb_height;
+        viewport.width = fb_width;
+        viewport.height = fb_height;
         viewport.minDepth = 0.0f;
         viewport.maxDepth = 1.0f;
         vkCmdSetViewport(command_buffer, 0, 1, &viewport);
@@ -453,8 +453,8 @@ static void ImGui_ImplVulkan_SetupRenderState(ImDrawData* draw_data, VkPipeline 
         float translate[2];
         translate[0] = -1.0f - draw_data->DisplayPos.x * scale[0];
         translate[1] = -1.0f - draw_data->DisplayPos.y * scale[1];
-        vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(float) * 0, sizeof(float) * 2, scale);
-        vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof(float) * 2, sizeof(float) * 2, translate);
+        vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof * 0, sizeof * 2, scale);
+        vkCmdPushConstants(command_buffer, bd->PipelineLayout, VK_SHADER_STAGE_VERTEX_BIT, sizeof * 2, sizeof * 2, translate);
     }
 }
 
@@ -560,8 +560,8 @@ void ImGui_ImplVulkan_RenderDrawData(ImDrawData* draw_data, VkCommandBuffer comm
                 // Clamp to viewport as vkCmdSetScissor() won't accept values that are off bounds
                 if (clip_min.x < 0.0f) { clip_min.x = 0.0f; }
                 if (clip_min.y < 0.0f) { clip_min.y = 0.0f; }
-                if (clip_max.x > fb_width) { clip_max.x = (float)fb_width; }
-                if (clip_max.y > fb_height) { clip_max.y = (float)fb_height; }
+                if (clip_max.x > fb_width) { clip_max.x = fb_width; }
+                if (clip_max.y > fb_height) { clip_max.y = fb_height; }
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
@@ -820,8 +820,8 @@ static void ImGui_ImplVulkan_CreatePipelineLayout(VkDevice device, const VkAlloc
     ImGui_ImplVulkan_CreateDescriptorSetLayout(device, allocator);
     VkPushConstantRange push_constants[1] = {};
     push_constants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-    push_constants[0].offset = sizeof(float) * 0;
-    push_constants[0].size = sizeof(float) * 4;
+    push_constants[0].offset = sizeof * 0;
+    push_constants[0].size = sizeof * 4;
     VkDescriptorSetLayout set_layout[1] = { bd->DescriptorSetLayout };
     VkPipelineLayoutCreateInfo layout_info = {};
     layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -983,8 +983,8 @@ bool ImGui_ImplVulkan_CreateDeviceObjects()
         // Constants: we are using 'vec2 offset' and 'vec2 scale' instead of a full 3d projection matrix
         VkPushConstantRange push_constants[1] = {};
         push_constants[0].stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
-        push_constants[0].offset = sizeof(float) * 0;
-        push_constants[0].size = sizeof(float) * 4;
+        push_constants[0].offset = sizeof * 0;
+        push_constants[0].size = sizeof * 4;
         VkDescriptorSetLayout set_layout[1] = { bd->DescriptorSetLayout };
         VkPipelineLayoutCreateInfo layout_info = {};
         layout_info.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
@@ -1673,7 +1673,7 @@ static void ImGui_ImplVulkan_RenderWindow(ImGuiViewport* viewport, void*)
         }
         {
             ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
-            memcpy(&wd->ClearValue.color.float32[0], &clear_color, 4 * sizeof(float));
+            memcpy(&wd->ClearValue.color.float32[0], &clear_color, 4 * sizeof);
 
             VkRenderPassBeginInfo info = {};
             info.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;

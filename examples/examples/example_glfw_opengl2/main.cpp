@@ -7,14 +7,14 @@
 // **Prefer using the code in the example_glfw_opengl2/ folder**
 // See imgui_impl_glfw.cpp for details.
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl2.h"
-#include <stdio.h>
+// #include "imgui.h"
+// #include "imgui_impl_glfw.h"
+// #include "imgui_impl_opengl2.h"
+// #include <stdio.h>
 #ifdef __APPLE__
 #define GL_SILENCE_DEPRECATION
 #endif
-#include <GLFW/glfw3.h>
+// #include <GLFW/glfw3.h>
 
 // [Win32] Our example includes a copy of glfw3.lib pre-compiled with VS2010 to maximize ease of testing and compatibility with old VS compilers.
 // To link with VS2010-era libraries, VS2015+ requires linking with legacy_stdio_definitions.lib, which we do using this pragma.

@@ -7,13 +7,13 @@
 // It is possible to combine both code into a single source file that will compile properly on Desktop and using Emscripten.
 // See https://github.com/ocornut/imgui/pull/2492 as an example on how to do just that.
 
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl3.h"
-#include <stdio.h>
-#include <emscripten.h>
-#include <SDL.h>
-#include <SDL_opengles2.h>
+// #include "imgui.h"
+// #include "imgui_impl_sdl.h"
+// #include "imgui_impl_opengl3.h"
+// #include <stdio.h>
+// #include <emscripten.h>
+// #include <SDL.h>
+// #include <SDL_opengles2.h>
 
 // Emscripten requires to have full control over the main loop. We're going to store our SDL book-keeping variables globally.
 // Having a single function that acts as a loop prevents us to store state in the stack of said function. So we need some location for this.

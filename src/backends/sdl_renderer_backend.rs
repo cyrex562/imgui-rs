@@ -24,16 +24,16 @@
 //  2021-10-06: Backup and restore modified ClipRect/Viewport.
 //  2021-09-21: Initial version.
 
-#include "imgui.h"
-#include "imgui_impl_sdlrenderer.h"
+// #include "imgui.h"
+// #include "imgui_impl_sdlrenderer.h"
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
-#include <stddef.h>     // intptr_t
+// #include <stddef.h>     // intptr_t
 #else
-#include <stdint.h>     // intptr_t
+// #include <stdint.h>     // intptr_t
 #endif
 
 // SDL
-#include <SDL.h>
+// #include <SDL.h>
 #if !SDL_VERSION_ATLEAST(2,0,17)
 #error This backend requires SDL 2.0.17+ because of SDL_RenderGeometry() function
 #endif
@@ -166,8 +166,8 @@ void ImGui_ImplSDLRenderer_RenderDrawData(ImDrawData* draw_data)
                 ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
                 if (clip_min.x < 0.0f) { clip_min.x = 0.0f; }
                 if (clip_min.y < 0.0f) { clip_min.y = 0.0f; }
-                if (clip_max.x > fb_width) { clip_max.x = (float)fb_width; }
-                if (clip_max.y > fb_height) { clip_max.y = (float)fb_height; }
+                if (clip_max.x > fb_width) { clip_max.x = fb_width; }
+                if (clip_max.y > fb_height) { clip_max.y = fb_height; }
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 

@@ -14,9 +14,9 @@
 //   vcpkg install freeglut --triplet=x64-windows   ; for win64
 //   vcpkg integrate install                        ; register include and libs in Visual Studio
 
-#include "imgui.h"
-#include "imgui_impl_glut.h"
-#include "imgui_impl_opengl2.h"
+// #include "imgui.h"
+// #include "imgui_impl_glut.h"
+// #include "imgui_impl_opengl2.h"
 #ifdef __APPLE__
     #include <GLUT/glut.h>
 #else

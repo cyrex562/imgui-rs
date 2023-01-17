@@ -1,7 +1,7 @@
-use crate::backends::{directx10, directx9};
+use crate::backends::{dx10_renderer_backend, dx9_renderer_backend};
 
 pub enum BackendRendererUserData {
     None,
-    Directx9(directx9::DirectxData),
-    Directx10(directx10::DirectxData)
+    Directx9(dx9_renderer_backend::DirectxData),
+    Directx10(dx10_renderer_backend::DirectxData)
 }

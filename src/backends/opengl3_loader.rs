@@ -75,7 +75,7 @@ typedef signed   long  int     khronos_ssize_t;
 typedef signed   __int64       khronos_int64_t;
 typedef unsigned __int64       khronos_uint64_t;
 #elif (defined(__clang__) || defined(__GNUC__)) && (__cplusplus < 201100)
-#include <stdint.h>
+// #include <stdint.h>
 typedef          int64_t       khronos_int64_t;
 typedef          uint64_t      khronos_uint64_t;
 #else
@@ -102,7 +102,7 @@ extern "C" {
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
-#include <windows.h>
+// #include <windows.h>
 #endif
 #ifndef APIENTRY
 #define APIENTRY
@@ -598,7 +598,7 @@ GL3W_API extern union GL3WProcs imgl3wProcs;
 extern "C" {
 #endif
 
-#include <stdlib.h>
+// #include <stdlib.h>
 
 #define ARRAY_SIZE(x)  (sizeof(x) / sizeof((x)[0]))
 
@@ -606,7 +606,7 @@ extern "C" {
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN 1
 #endif
-#include <windows.h>
+// #include <windows.h>
 
 static HMODULE libgl;
 typedef PROC(__stdcall* GL3WglGetProcAddr)(LPCSTR);
@@ -631,7 +631,7 @@ static GL3WglProc get_proc(const char *proc)
     return res;
 }
 #elif defined(__APPLE__)
-#include <dlfcn.h>
+// #include <dlfcn.h>
 
 static void *libgl;
 static int open_libgl(void)
@@ -651,7 +651,7 @@ static GL3WglProc get_proc(const char *proc)
     return res;
 }
 #else
-#include <dlfcn.h>
+// #include <dlfcn.h>
 
 static void *libgl;
 static GL3WglProc (*glx_get_proc_address)(const GLubyte *);

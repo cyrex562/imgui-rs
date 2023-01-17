@@ -3,16 +3,16 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
-#include "imgui_impl_wgpu.h"
-#include <stdio.h>
-#include <emscripten.h>
-#include <emscripten/html5.h>
-#include <emscripten/html5_webgpu.h>
-#include <GLFW/glfw3.h>
-#include <webgpu/webgpu.h>
-#include <webgpu/webgpu_cpp.h>
+// #include "imgui.h"
+// #include "imgui_impl_glfw.h"
+// #include "imgui_impl_wgpu.h"
+// #include <stdio.h>
+// #include <emscripten.h>
+// #include <emscripten/html5.h>
+// #include <emscripten/html5_webgpu.h>
+// #include <GLFW/glfw3.h>
+// #include <webgpu/webgpu.h>
+// #include <webgpu/webgpu_cpp.h>
 
 // Global WebGPU required states
 static WGPUDevice    wgpu_device = None;

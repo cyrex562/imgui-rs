@@ -7,12 +7,12 @@
 // **Prefer using the code in the example_sdl_opengl3/ folder**
 // See imgui_impl_sdl.cpp for details.
 
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_opengl2.h"
-#include <stdio.h>
-#include <SDL.h>
-#include <SDL_opengl.h>
+// #include "imgui.h"
+// #include "imgui_impl_sdl.h"
+// #include "imgui_impl_opengl2.h"
+// #include <stdio.h>
+// #include <SDL.h>
+// #include <SDL_opengl.h>
 
 // Main code
 int main(int, char**)

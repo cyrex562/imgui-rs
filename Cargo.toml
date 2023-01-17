@@ -16,10 +16,9 @@ fern = "0.6.1"
 libc = "0.2"
 bitfield = "0.14"
 ron = "0.8"
-#serde = "1.0.147"
 
 [dependencies.windows]
-version = "0.40"
+version = "0.44.0"
 features = [
     "Win32_Graphics_Direct3D",
     "Win32_Graphics_Direct3D9",
@@ -38,11 +37,13 @@ features = [
     "Win32",
 ]
 
+[dependencies.sdl2]
+version = "0.35.2"
+features = ["bundled", "gfx", "image", "mixer", "use-pkgconfig", 'static-link', "ttf"]
+
 [dependencies.serde]
 version = "1.0.147"
-features = [
-    "derive"
-]
+features = ["derive"]
 
 [lib]
 path = "src/lib.rs"

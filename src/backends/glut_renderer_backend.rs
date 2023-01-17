@@ -28,12 +28,12 @@
 //  2018-11-30: Misc: Setting up io.BackendPlatformName so it can be displayed in the About Window.
 //  2018-03-22: Added GLUT Platform binding.
 
-#include "imgui.h"
-#include "imgui_impl_glut.h"
+// #include "imgui.h"
+// #include "imgui_impl_glut.h"
 #ifdef __APPLE__
-#include <GLUT/glut.h>
+// #include <GLUT/glut.h>
 #else
-#include <GL/freeglut.h>
+// #include <GL/freeglut.h>
 #endif
 
 #ifdef _MSC_VER
@@ -264,7 +264,7 @@ void ImGui_ImplGLUT_SpecialUpFunc(int key, int x, int y)
 void ImGui_ImplGLUT_MouseFunc(int glut_button, int state, int x, int y)
 {
     ImGuiIO& io = Imgui::GetIO();
-    io.AddMousePosEvent((float)x, (float)y);
+    io.AddMousePosEvent(x, y);
     int button = -1;
     if (glut_button == GLUT_LEFT_BUTTON) button = 0;
     if (glut_button == GLUT_RIGHT_BUTTON) button = 1;
@@ -277,7 +277,7 @@ void ImGui_ImplGLUT_MouseFunc(int glut_button, int state, int x, int y)
 void ImGui_ImplGLUT_MouseWheelFunc(int button, int dir, int x, int y)
 {
     ImGuiIO& io = Imgui::GetIO();
-    io.AddMousePosEvent((float)x, (float)y);
+    io.AddMousePosEvent(x, y);
     if (dir != 0)
         io.AddMouseWheelEvent(0.0f, dir > 0 ? 1.0f : -1.0f);
     (void)button; // Unused
@@ -287,11 +287,11 @@ void ImGui_ImplGLUT_MouseWheelFunc(int button, int dir, int x, int y)
 void ImGui_ImplGLUT_ReshapeFunc(int w, int h)
 {
     ImGuiIO& io = Imgui::GetIO();
-    io.DisplaySize = ImVec2((float)w, (float)h);
+    io.DisplaySize = ImVec2(w, h);
 }
 
 void ImGui_ImplGLUT_MotionFunc(int x, int y)
 {
     ImGuiIO& io = Imgui::GetIO();
-    io.AddMousePosEvent((float)x, (float)y);
+    io.AddMousePosEvent(x, y);
 }

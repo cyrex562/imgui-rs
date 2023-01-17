@@ -13,22 +13,22 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
-#include "imgui.h"
-#include "imgui_impl_win32.h"
+// #include "imgui.h"
+// #include "imgui_impl_win32.h"
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
 #endif
-#include <windows.h>
-#include <windowsx.h> // GET_X_LPARAM(), GET_Y_LPARAM()
-#include <tchar.h>
-#include <dwmapi.h>
+// #include <windows.h>
+// #include <windowsx.h> // GET_X_LPARAM(), GET_Y_LPARAM()
+// #include <tchar.h>
+// #include <dwmapi.h>
 
 // Configuration flags to add in your imconfig.h file:
 //#define IMGUI_IMPL_WIN32_DISABLE_GAMEPAD              // Disable gamepad support. This was meaningful before <1.81 but we now load XInput dynamically so the option is now less relevant.
 
 // Using XInput for gamepad (will load DLL dynamically)
 #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
-#include <xinput.h>
+// #include <xinput.h>
 typedef DWORD (WINAPI *PFN_XInputGetCapabilities)(DWORD, DWORD, XINPUT_CAPABILITIES*);
 typedef DWORD (WINAPI *PFN_XInputGetState)(DWORD, XINPUT_STATE*);
 #endif
@@ -295,7 +295,7 @@ static void ImGui_ImplWin32_UpdateMouseData()
             POINT mouse_pos = mouse_screen_pos;
             if (!(io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable))
                 ::ScreenToClient(bd->hWnd, &mouse_pos);
-            io.AddMousePosEvent((float)mouse_pos.x, (float)mouse_pos.y);
+            io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
         }
     }
 
@@ -341,7 +341,7 @@ static void ImGui_ImplWin32_UpdateGamepads()
 
     #define IM_SATURATE(V)                      (V < 0.0f ? 0.0f : V > 1.0f ? 1.0f : V)
     #define MAP_BUTTON(KEY_NO, BUTTON_ENUM)     { io.AddKeyEvent(KEY_NO, (gamepad.wButtons & BUTTON_ENUM) != 0); }
-    #define MAP_ANALOG(KEY_NO, VALUE, V0, V1)   { float vn = (float)(VALUE - V0) / (float)(V1 - V0); io.AddKeyAnalogEvent(KEY_NO, vn > 0.10f, IM_SATURATE(vn)); }
+    #define MAP_ANALOG(KEY_NO, VALUE, V0, V1)   { float vn = (VALUE - V0) / (V1 - V0); io.AddKeyAnalogEvent(KEY_NO, vn > 0.10f, IM_SATURATE(vn)); }
     MAP_BUTTON(ImGuiKey_GamepadStart,           XINPUT_GAMEPAD_START);
     MAP_BUTTON(ImGuiKey_GamepadBack,            XINPUT_GAMEPAD_BACK);
     MAP_BUTTON(ImGuiKey_GamepadFaceLeft,        XINPUT_GAMEPAD_X);
@@ -378,10 +378,10 @@ static BOOL CALLBACK ImGui_ImplWin32_UpdateMonitors_EnumFunc(HMONITOR monitor, H
     if (!::GetMonitorInfo(monitor, &info))
         return TRUE;
     ImGuiPlatformMonitor imgui_monitor;
-    imgui_monitor.MainPos = ImVec2((float)info.rcMonitor.left, (float)info.rcMonitor.top);
-    imgui_monitor.MainSize = ImVec2((float)(info.rcMonitor.right - info.rcMonitor.left), (float)(info.rcMonitor.bottom - info.rcMonitor.top));
-    imgui_monitor.WorkPos = ImVec2((float)info.rcWork.left, (float)info.rcWork.top);
-    imgui_monitor.WorkSize = ImVec2((float)(info.rcWork.right - info.rcWork.left), (float)(info.rcWork.bottom - info.rcWork.top));
+    imgui_monitor.MainPos = ImVec2(info.rcMonitor.left, info.rcMonitor.top);
+    imgui_monitor.MainSize = ImVec2((info.rcMonitor.right - info.rcMonitor.left), (info.rcMonitor.bottom - info.rcMonitor.top));
+    imgui_monitor.WorkPos = ImVec2(info.rcWork.left, info.rcWork.top);
+    imgui_monitor.WorkSize = ImVec2((info.rcWork.right - info.rcWork.left), (info.rcWork.bottom - info.rcWork.top));
     imgui_monitor.DpiScale = ImGui_ImplWin32_GetDpiScaleForMonitor(monitor);
     ImGuiPlatformIO& io = Imgui::GetPlatformIO();
     if (info.dwFlags & MONITORINFOF_PRIMARY)
@@ -408,14 +408,14 @@ void    ImGui_ImplWin32_NewFrame()
     // Setup display size (every frame to accommodate for window resizing)
     RECT rect = { 0, 0, 0, 0 };
     ::GetClientRect(bd->hWnd, &rect);
-    io.DisplaySize = ImVec2((float)(rect.right - rect.left), (float)(rect.bottom - rect.top));
+    io.DisplaySize = ImVec2((rect.right - rect.left), (rect.bottom - rect.top));
     if (bd->WantUpdateMonitors)
         ImGui_ImplWin32_UpdateMonitors();
 
     // Setup time step
     INT64 current_time = 0;
     ::QueryPerformanceCounter((LARGE_INTEGER*)&current_time);
-    io.DeltaTime = (float)(current_time - bd->Time) / bd->TicksPerSecond;
+    io.DeltaTime = (current_time - bd->Time) / bd->TicksPerSecond;
     bd->Time = current_time;
 
     // Update OS mouse position
@@ -595,7 +595,7 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
         POINT mouse_pos = { (LONG)GET_X_LPARAM(lParam), (LONG)GET_Y_LPARAM(lParam) };
         if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
             ::ClientToScreen(hwnd, &mouse_pos);
-        io.AddMousePosEvent((float)mouse_pos.x, (float)mouse_pos.y);
+        io.AddMousePosEvent(mouse_pos.x, mouse_pos.y);
         break;
     }
     case WM_MOUSELEAVE:
@@ -637,10 +637,10 @@ IMGUI_IMPL_API LRESULT ImGui_ImplWin32_WndProcHandler(HWND hwnd, UINT msg, WPARA
         return 0;
     }
     case WM_MOUSEWHEEL:
-        io.AddMouseWheelEvent(0.0f, (float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA);
+        io.AddMouseWheelEvent(0.0f, GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA);
         return 0;
     case WM_MOUSEHWHEEL:
-        io.AddMouseWheelEvent((float)GET_WHEEL_DELTA_WPARAM(wParam) / (float)WHEEL_DELTA, 0.0f);
+        io.AddMouseWheelEvent(GET_WHEEL_DELTA_WPARAM(wParam) / WHEEL_DELTA, 0.0f);
         return 0;
     case WM_KEYDOWN:
     case WM_KEYUP:
@@ -957,7 +957,7 @@ static ImVec2 ImGui_ImplWin32_GetWindowPos(ImGuiViewport* viewport)
     IM_ASSERT(vd->Hwnd != 0);
     POINT pos = { 0, 0 };
     ::ClientToScreen(vd->Hwnd, &pos);
-    return ImVec2((float)pos.x, (float)pos.y);
+    return ImVec2(pos.x, pos.y);
 }
 
 static void ImGui_ImplWin32_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)

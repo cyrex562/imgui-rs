@@ -57,8 +57,8 @@
 //  2017-08-25: Inputs: MousePos set to -FLT_MAX,-FLT_MAX when mouse is unavailable/missing (instead of -1,-1).
 //  2016-10-15: Misc: Added a void* user_data parameter to Clipboard function handlers.
 
-#include "imgui.h"
-#include "imgui_impl_glfw.h"
+// #include "imgui.h"
+// #include "imgui_impl_glfw.h"
 
 // Clang warnings with -Weverything
 #if defined(__clang__)
@@ -71,16 +71,16 @@
 #endif
 
 // GLFW
-#include <GLFW/glfw3.h>
+// #include <GLFW/glfw3.h>
 
 #ifdef _WIN32
 #undef APIENTRY
 #define GLFW_EXPOSE_NATIVE_WIN32
-#include <GLFW/glfw3native.h>   // for glfwGetWin32Window()
+// #include <GLFW/glfw3native.h>   // for glfwGetWin32Window()
 #endif
 #ifdef __APPLE__
 #define GLFW_EXPOSE_NATIVE_COCOA
-#include <GLFW/glfw3native.h>   // for glfwGetCocoaWindow()
+// #include <GLFW/glfw3native.h>   // for glfwGetCocoaWindow()
 #endif
 
 #define GLFW_HAS_WINDOW_TOPMOST       (GLFW_VERSION_MAJOR * 1000 + GLFW_VERSION_MINOR * 100 >= 3200) // 3.2+ GLFW_FLOATING
@@ -324,7 +324,7 @@ void ImGui_ImplGlfw_ScrollCallback(GLFWwindow* window, double xoffset, double yo
         bd->PrevUserCallbackScroll(window, xoffset, yoffset);
 
     ImGuiIO& io = Imgui::GetIO();
-    io.AddMouseWheelEvent((float)xoffset, (float)yoffset);
+    io.AddMouseWheelEvent(xoffset, yoffset);
 }
 
 static int ImGui_ImplGlfw_TranslateUntranslatedKey(int key, int scancode)
@@ -406,8 +406,8 @@ void ImGui_ImplGlfw_CursorPosCallback(GLFWwindow* window, double x, double y)
         x += window_x;
         y += window_y;
     }
-    io.AddMousePosEvent((float)x, (float)y);
-    bd->LastValidMousePos = ImVec2((float)x, (float)y);
+    io.AddMousePosEvent(x, y);
+    bd->LastValidMousePos = ImVec2(x, y);
 }
 
 // Workaround: X11 seems to send spurious Leave/Enter events which would make us lose our position,
@@ -641,8 +641,8 @@ static void ImGui_ImplGlfw_UpdateMouseData()
                     mouse_x += window_x;
                     mouse_y += window_y;
                 }
-                bd->LastValidMousePos = ImVec2((float)mouse_x, (float)mouse_y);
-                io.AddMousePosEvent((float)mouse_x, (float)mouse_y);
+                bd->LastValidMousePos = ImVec2(mouse_x, mouse_y);
+                io.AddMousePosEvent(mouse_x, mouse_y);
             }
         }
 
@@ -765,15 +765,15 @@ static void ImGui_ImplGlfw_UpdateMonitors()
         int x, y;
         glfwGetMonitorPos(glfw_monitors[n], &x, &y);
         const GLFWvidmode* vid_mode = glfwGetVideoMode(glfw_monitors[n]);
-        monitor.MainPos = monitor.WorkPos = ImVec2((float)x, (float)y);
-        monitor.MainSize = monitor.WorkSize = ImVec2((float)vid_mode->width, (float)vid_mode->height);
+        monitor.MainPos = monitor.WorkPos = ImVec2(x, y);
+        monitor.MainSize = monitor.WorkSize = ImVec2(vid_mode->width, vid_mode->height);
 #if GLFW_HAS_MONITOR_WORK_AREA
         int w, h;
         glfwGetMonitorWorkarea(glfw_monitors[n], &x, &y, &w, &h);
         if (w > 0 && h > 0) // Workaround a small GLFW issue reporting zero on monitor changes: https://github.com/glfw/glfw/pull/1761
         {
-            monitor.WorkPos = ImVec2((float)x, (float)y);
-            monitor.WorkSize = ImVec2((float)w, (float)h);
+            monitor.WorkPos = ImVec2(x, y);
+            monitor.WorkSize = ImVec2(w, h);
         }
 #endif
 #if GLFW_HAS_PER_MONITOR_DPI
@@ -798,15 +798,15 @@ void ImGui_ImplGlfw_NewFrame()
     int display_w, display_h;
     glfwGetWindowSize(bd->Window, &w, &h);
     glfwGetFramebufferSize(bd->Window, &display_w, &display_h);
-    io.DisplaySize = ImVec2((float)w, (float)h);
+    io.DisplaySize = ImVec2(w, h);
     if (w > 0 && h > 0)
-        io.DisplayFramebufferScale = ImVec2((float)display_w / (float)w, (float)display_h / (float)h);
+        io.DisplayFramebufferScale = ImVec2(display_w / w, display_h / h);
     if (bd->WantUpdateMonitors)
         ImGui_ImplGlfw_UpdateMonitors();
 
     // Setup time step
     double current_time = glfwGetTime();
-    io.DeltaTime = bd->Time > 0.0 ? (float)(current_time - bd->Time) : (float)(1.0f / 60.0f);
+    io.DeltaTime = bd->Time > 0.0 ? (current_time - bd->Time) : (1.0f / 60.0f);
     bd->Time = current_time;
 
     ImGui_ImplGlfw_UpdateMouseData();
@@ -1013,7 +1013,7 @@ static ImVec2 ImGui_ImplGlfw_GetWindowPos(ImGuiViewport* viewport)
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     int x = 0, y = 0;
     glfwGetWindowPos(vd->Window, &x, &y);
-    return ImVec2((float)x, (float)y);
+    return ImVec2(x, y);
 }
 
 static void ImGui_ImplGlfw_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
@@ -1028,7 +1028,7 @@ static ImVec2 ImGui_ImplGlfw_GetWindowSize(ImGuiViewport* viewport)
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     int w = 0, h = 0;
     glfwGetWindowSize(vd->Window, &w, &h);
-    return ImVec2((float)w, (float)h);
+    return ImVec2(w, h);
 }
 
 static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)

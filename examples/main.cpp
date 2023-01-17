@@ -1,18 +1,18 @@
-#include "node_editor.h"
+// #include "node_editor.h"
 
-#include "../src/input_source.rs"
+// #include "../src/input_source.rs"
 
-#include <imgui_impl_sdl.h>
-#include <imgui_impl_opengl3.h>
-#include <nodes_h.rs>
-#include <SDL2/SDL.h>
+// #include <imgui_impl_sdl.h>
+// #include <imgui_impl_opengl3.h>
+// #include <nodes_h.rs>
+// #include <SDL2/SDL.h>
 #if defined(IMGUI_IMPL_OPENGL_ES2)
-#include <SDL2/SDL_opengles2.h>
+// #include <SDL2/SDL_opengles2.h>
 #else
-#include <SDL2/SDL_opengl.h>
+// #include <SDL2/SDL_opengl.h>
 #endif
 
-#include <stdio.h>
+// #include <stdio.h>
 
 int main(int, char**)
 {

@@ -3,13 +3,13 @@
 // If you are new to Dear ImGui, read documentation from the docs/ folder + read the top of imgui.cpp.
 // Read online: https://github.com/ocornut/imgui/tree/master/docs
 
-#include "imgui.h"
-#include "imgui_impl_sdl.h"
-#include "imgui_impl_dx11.h"
-#include <d3d11.h>
-#include <stdio.h>
-#include <SDL.h>
-#include <SDL_syswm.h>
+// #include "imgui.h"
+// #include "imgui_impl_sdl.h"
+// #include "imgui_impl_dx11.h"
+// #include <d3d11.h>
+// #include <stdio.h>
+// #include <SDL.h>
+// #include <SDL_syswm.h>
 
 // data
 static ID3D11Device*            g_pd3dDevice = None;

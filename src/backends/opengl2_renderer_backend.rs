@@ -37,12 +37,12 @@
 //  2016-09-10: OpenGL: Uploading font texture as RGBA32 to increase compatibility with users shaders (not ideal).
 //  2016-09-05: OpenGL: Fixed save and restore of current scissor rectangle.
 
-#include "imgui.h"
-#include "imgui_impl_opengl2.h"
+// #include "imgui.h"
+// #include "imgui_impl_opengl2.h"
 #if defined(_MSC_VER) && _MSC_VER <= 1500 // MSVC 2008 or earlier
-#include <stddef.h>     // intptr_t
+// #include <stddef.h>     // intptr_t
 #else
-#include <stdint.h>     // intptr_t
+// #include <stdint.h>     // intptr_t
 #endif
 
 // Include OpenGL header (without an OpenGL loader) requires a bit of fiddling
@@ -54,9 +54,9 @@
 #endif
 #if defined(__APPLE__)
 #define GL_SILENCE_DEPRECATION
-#include <OpenGL/gl.h>
+// #include <OpenGL/gl.h>
 #else
-#include <GL/gl.h>
+// #include <GL/gl.h>
 #endif
 
 struct ImGui_ImplOpenGL2_Data
