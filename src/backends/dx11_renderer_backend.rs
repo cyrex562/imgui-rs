@@ -251,7 +251,7 @@ void ImGui_ImplDX11_RenderDrawData(ImDrawData* draw_data)
     // (Because we merged all buffers into a single one, we maintain our own offset into them)
     int global_idx_offset = 0;
     int global_vtx_offset = 0;
-    ImVec2 clip_off = draw_data->DisplayPos;
+    clip_off: ImVec2 = draw_data->DisplayPos;
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
@@ -270,8 +270,8 @@ void ImGui_ImplDX11_RenderDrawData(ImDrawData* draw_data)
             else
             {
                 // Project scissor/clipping rectangles into framebuffer space
-                ImVec2 clip_min(pcmd->ClipRect.x - clip_off.x, pcmd->ClipRect.y - clip_off.y);
-                ImVec2 clip_max(pcmd->ClipRect.z - clip_off.x, pcmd->ClipRect.w - clip_off.y);
+                clip_min: ImVec2(pcmd->ClipRect.x - clip_off.x, pcmd->ClipRect.y - clip_off.y);
+                clip_max: ImVec2(pcmd->ClipRect.z - clip_off.x, pcmd->ClipRect.w - clip_off.y);
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
@@ -387,7 +387,7 @@ bool    ImGui_ImplDX11_CreateDeviceObjects()
 
     // Create the vertex shader
     {
-        static const char* vertexShader =
+        static vertexShader: *const c_char =
             "cbuffer vertexBuffer : register(b0) \
             {\
               float4x4 ProjectionMatrix; \
@@ -452,7 +452,7 @@ bool    ImGui_ImplDX11_CreateDeviceObjects()
 
     // Create the pixel shader
     {
-        static const char* pixelShader =
+        static pixelShader: *const c_char =
             "struct PS_INPUT\
             {\
             float4 pos : SV_POSITION;\
@@ -676,7 +676,7 @@ static void ImGui_ImplDX11_DestroyWindow(ImGuiViewport* viewport)
     viewport->RendererUserData = NULL;
 }
 
-static void ImGui_ImplDX11_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
+static void ImGui_ImplDX11_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
 {
     ImGui_ImplDX11_Data* bd = ImGui_ImplDX11_GetBackendData();
     ImGui_ImplDX11_ViewportData* vd = (ImGui_ImplDX11_ViewportData*)viewport->RendererUserData;

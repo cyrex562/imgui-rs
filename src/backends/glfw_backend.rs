@@ -159,12 +159,12 @@ static void ImGui_ImplGlfw_InitPlatformInterface();
 static void ImGui_ImplGlfw_ShutdownPlatformInterface();
 
 // Functions
-static const char* ImGui_ImplGlfw_GetClipboardText(void* user_data)
+static ImGui_ImplGlfw_GetClipboardText: *const c_char(void* user_data)
 {
     return glfwGetClipboardString((GLFWwindow*)user_data);
 }
 
-static void ImGui_ImplGlfw_SetClipboardText(void* user_data, const char* text)
+static void ImGui_ImplGlfw_SetClipboardText(void* user_data, text: *const c_char)
 {
     glfwSetClipboardString((GLFWwindow*)user_data, text);
 }
@@ -337,7 +337,7 @@ static int ImGui_ImplGlfw_TranslateUntranslatedKey(int key, int scancode)
     // This won't cover edge cases but this is at least going to cover common cases.
     if (key >= GLFW_KEY_KP_0 && key <= GLFW_KEY_KP_EQUAL)
         return key;
-    const char* key_name = glfwGetKeyName(key, scancode);
+    key_name: *const c_char = glfwGetKeyName(key, scancode);
     if (key_name && key_name[0] != 0 && key_name[1] == 0)
     {
         const char char_names[] = "`-=[]\\,;\'./";
@@ -346,7 +346,7 @@ static int ImGui_ImplGlfw_TranslateUntranslatedKey(int key, int scancode)
         if (key_name[0] >= '0' && key_name[0] <= '9')               { key = GLFW_KEY_0 + (key_name[0] - '0'); }
         else if (key_name[0] >= 'A' && key_name[0] <= 'Z')          { key = GLFW_KEY_A + (key_name[0] - 'A'); }
         else if (key_name[0] >= 'a' && key_name[0] <= 'z')          { key = GLFW_KEY_A + (key_name[0] - 'a'); }
-        else if (const char* p = strchr(char_names, key_name[0]))   { key = char_keys[p - char_names]; }
+        else if (p: *const c_char = strchr(char_names, key_name[0]))   { key = char_keys[p - char_names]; }
     }
     // if (action == GLFW_PRESS) printf("key %d scancode %d name '%s'\n", key, scancode, key_name);
 #else
@@ -609,7 +609,7 @@ static void ImGui_ImplGlfw_UpdateMouseData()
     }
 
     ImGuiID mouse_viewport_id = 0;
-    const ImVec2 mouse_pos_prev = io.MousePos;
+    const mouse_pos_prev: ImVec2 = io.MousePos;
     for (int n = 0; n < platform_io.Viewports.Size; n++)
     {
         ImGuiViewport* viewport = platform_io.Viewports[n];
@@ -1008,7 +1008,7 @@ static void ImGui_ImplGlfw_ShowWindow(ImGuiViewport* viewport)
     glfwShowWindow(vd->Window);
 }
 
-static ImVec2 ImGui_ImplGlfw_GetWindowPos(ImGuiViewport* viewport)
+static ImGui_ImplGlfw_GetWindowPos: ImVec2(ImGuiViewport* viewport)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     int x = 0, y = 0;
@@ -1016,14 +1016,14 @@ static ImVec2 ImGui_ImplGlfw_GetWindowPos(ImGuiViewport* viewport)
     return ImVec2(x, y);
 }
 
-static void ImGui_ImplGlfw_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
+static void ImGui_ImplGlfw_SetWindowPos(ImGuiViewport* viewport, pos: ImVec2)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     vd->IgnoreWindowPosEventFrame = Imgui::GetFrameCount();
     glfwSetWindowPos(vd->Window, (int)pos.x, (int)pos.y);
 }
 
-static ImVec2 ImGui_ImplGlfw_GetWindowSize(ImGuiViewport* viewport)
+static ImGui_ImplGlfw_GetWindowSize: ImVec2(ImGuiViewport* viewport)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     int w = 0, h = 0;
@@ -1031,7 +1031,7 @@ static ImVec2 ImGui_ImplGlfw_GetWindowSize(ImGuiViewport* viewport)
     return ImVec2(w, h);
 }
 
-static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
+static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
 #if __APPLE__ && !GLFW_HAS_OSX_WINDOW_POS_FIX
@@ -1048,7 +1048,7 @@ static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
     glfwSetWindowSize(vd->Window, (int)size.x, (int)size.y);
 }
 
-static void ImGui_ImplGlfw_SetWindowTitle(ImGuiViewport* viewport, const char* title)
+static void ImGui_ImplGlfw_SetWindowTitle(ImGuiViewport* viewport, title: *const c_char)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     glfwSetWindowTitle(vd->Window, title);

@@ -433,7 +433,7 @@ impl IoContext {
     }
 
     // void ImGuiIO::AddInputCharactersUTF8(const char* utf8_chars)
-    pub unsafe fn AddInputCharactersUTF8(&mut self, mut utf8_chars: *char)
+    pub unsafe fn AddInputCharactersUTF8(&mut self, mut utf8_chars: *const c_char)
     {
         if !self.AppAcceptingEvents {
             return;

@@ -150,7 +150,7 @@ bool    ImGui_ImplWin32_Init(void* hwnd)
 
     // Dynamically load XInput library
 #ifndef IMGUI_IMPL_WIN32_DISABLE_GAMEPAD
-    const char* xinput_dll_names[] =
+    xinput_dll_names: *const c_char[] =
     {
         "xinput1_4.dll",   // Windows 8+
         "xinput1_3.dll",   // DirectX SDK
@@ -960,7 +960,7 @@ static ImVec2 ImGui_ImplWin32_GetWindowPos(ImGuiViewport* viewport)
     return ImVec2(pos.x, pos.y);
 }
 
-static void ImGui_ImplWin32_SetWindowPos(ImGuiViewport* viewport, ImVec2 pos)
+static void ImGui_ImplWin32_SetWindowPos(ImGuiViewport* viewport, pos: ImVec2)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -978,7 +978,7 @@ static ImVec2 ImGui_ImplWin32_GetWindowSize(ImGuiViewport* viewport)
     return ImVec2(float(rect.right - rect.left), float(rect.bottom - rect.top));
 }
 
-static void ImGui_ImplWin32_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
+static void ImGui_ImplWin32_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -1010,7 +1010,7 @@ static bool ImGui_ImplWin32_GetWindowMinimized(ImGuiViewport* viewport)
     return ::IsIconic(vd->Hwnd) != 0;
 }
 
-static void ImGui_ImplWin32_SetWindowTitle(ImGuiViewport* viewport, const char* title)
+static void ImGui_ImplWin32_SetWindowTitle(ImGuiViewport* viewport, title: *const c_char)
 {
     // ::SetWindowTextA() doesn't properly handle UTF-8 so we explicitely convert our string.
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;

@@ -237,7 +237,7 @@ struct ImGui_ImplOpenGL3_VtxAttribState
 #endif
 
 // Functions
-bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
+bool    ImGui_ImplOpenGL3_Init(glsl_version: *const c_char)
 {
     ImGuiIO& io = Imgui::GetIO();
     IM_ASSERT(io.BackendRendererUserData == NULL && "Already initialized a renderer backend!");
@@ -265,14 +265,14 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
     if (major == 0 && minor == 0)
     {
         // Query GL_VERSION in desktop GL 2.x, the string will start with "<major>.<minor>"
-        const char* gl_version = (const char*)glGetString(GL_VERSION);
+        gl_version: *const c_char = (const char*)glGetString(GL_VERSION);
         sscanf(gl_version, "%d.%d", &major, &minor);
     }
     bd->GlVersion = (GLuint)(major * 100 + minor * 10);
 
     // Query vendor to enable glBufferSubData kludge
 #ifdef _WIN32
-    if (const char* vendor = (const char*)glGetString(GL_VENDOR))
+    if (vendor: *const c_char = (const char*)glGetString(GL_VENDOR))
         if (strncmp(vendor, "Intel", 5) == 0)
             bd->UseBufferSubData = true;
 #endif
@@ -317,7 +317,7 @@ bool    ImGui_ImplOpenGL3_Init(const char* glsl_version)
     glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
     for (GLint i = 0; i < num_extensions; i++)
     {
-        const char* extension = (const char*)glGetStringi(GL_EXTENSIONS, i);
+        extension: *const c_char = (const char*)glGetStringi(GL_EXTENSIONS, i);
         if (extension != NULL && strcmp(extension, "GL_ARB_clip_control") == 0)
             bd->HasClipOrigin = true;
     }
@@ -486,8 +486,8 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
     ImGui_ImplOpenGL3_SetupRenderState(draw_data, fb_width, fb_height, vertex_array_object);
 
     // Will project scissor/clipping rectangles into framebuffer space
-    ImVec2 clip_off = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
-    ImVec2 clip_scale = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
+    clip_off: ImVec2 = draw_data->DisplayPos;         // (0,0) unless using multi-viewports
+    clip_scale: ImVec2 = draw_data->FramebufferScale; // (1,1) unless using retina display which are often (2,2)
 
     // Render command lists
     for (int n = 0; n < draw_data->CmdListsCount; n++)
@@ -536,8 +536,8 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
             else
             {
                 // Project scissor/clipping rectangles into framebuffer space
-                ImVec2 clip_min((pcmd->ClipRect.x - clip_off.x) * clip_scale.x, (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
-                ImVec2 clip_max((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
+                clip_min: ImVec2((pcmd->ClipRect.x - clip_off.x) * clip_scale.x, (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
+                clip_max: ImVec2((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
@@ -643,7 +643,7 @@ void ImGui_ImplOpenGL3_DestroyFontsTexture()
 }
 
 // If you get an error please report on github. You may try different GL context version or GLSL version. See GL<>GLSL version table at the top of this file.
-static bool CheckShader(GLuint handle, const char* desc)
+static bool CheckShader(GLuint handle, desc: *const c_char)
 {
     ImGui_ImplOpenGL3_Data* bd = ImGui_ImplOpenGL3_GetBackendData();
     GLint status = 0, log_length = 0;
@@ -662,7 +662,7 @@ static bool CheckShader(GLuint handle, const char* desc)
 }
 
 // If you get an error please report on GitHub. You may try different GL context version or GLSL version.
-static bool CheckProgram(GLuint handle, const char* desc)
+static bool CheckProgram(GLuint handle, desc: *const c_char)
 {
     ImGui_ImplOpenGL3_Data* bd = ImGui_ImplOpenGL3_GetBackendData();
     GLint status = 0, log_length = 0;

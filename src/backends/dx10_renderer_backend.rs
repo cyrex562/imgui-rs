@@ -789,7 +789,7 @@ static void ImGui_ImplDX10_DestroyWindow(ImGuiViewport* viewport)
     viewport.RendererUserData = NULL;
 }
 
-static void ImGui_ImplDX10_SetWindowSize(ImGuiViewport* viewport, ImVec2 size)
+static void ImGui_ImplDX10_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
 {
     ImGui_ImplDX10_Data* bd = ImGui_ImplDX10_GetBackendData();
     ImGui_ImplDX10_ViewportData* vd = (ImGui_ImplDX10_ViewportData*)viewport.RendererUserData;
