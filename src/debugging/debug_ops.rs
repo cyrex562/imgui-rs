@@ -136,7 +136,7 @@ pub fn DebugHookIdInfo(g: &mut AppContext, id: ImguiHandle, data_type: ImGuiData
             todo!()
         },
         ImGuiDataType_Pointer => {
-            // ImFormatString(info.Desc.as_mut_ptr(), IM_ARRAYSIZE(info.Desc), "(void*)0x{}", data_id);
+            // ImFormatString(info.Desc.as_mut_ptr(), IM_ARRAYSIZE(info.Desc), "0x{}", data_id);
             todo!()
         },
 

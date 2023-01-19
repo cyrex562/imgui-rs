@@ -64,7 +64,7 @@ pub unsafe fn ImStrdupcpy(mut dst: *mut c_char, p_dst_size: *mut size_t, src: * 
 
 // const char* ImStrchrRange(const char* str, const char* str_end, char c)
 pub unsafe fn ImStrchrRange(str_start: * c_char, str_end: * c_char, c: c_char) -> * c_char {
-    // const char* p = (const char*)memchr(str, c, str_end - str);
+    // const char* p = memchr(str, c, str_end - str);
     // return p;
     libc::memchr(str_start, c as c_int, str_end - str_start) as * c_char
 }
@@ -83,7 +83,7 @@ pub unsafe fn ImStrlenW(str_begin: * ImWchar) -> i32 {
 // Find end-of-line. Return pointer will point to either first \n, either str_end.
 // const char* ImStreolRange(const char* str, const char* str_end)
 pub unsafe fn ImStreolRange(str_begin: * c_char, str_end: * c_char) -> * c_char {
-    // const char* p = (const char*)memchr(str, '\n', str_end - str);
+    // const char* p = memchr(str, '\n', str_end - str);
     let p = libc::memchr(str_begin, '\n' as c_int, str_end - str_begin);
     // return p ? p : str_end;
     return if !p.is_null() {

@@ -46,7 +46,7 @@ pub struct DirectxData {
 }
 
 impl DirectxData {
-    //     ImGui_ImplDX9_Data()        { memset((void*)this, 0, sizeof(*this)); VertexBufferSize = 5000; IndexBufferSize = 10000;}
+    //     ImGui_ImplDX9_Data()        { memset(this, 0, sizeof(*this)); VertexBufferSize = 5000; IndexBufferSize = 10000;}
     pub fn new() -> Self {
         Self {
             d3d_device: null_mut(),

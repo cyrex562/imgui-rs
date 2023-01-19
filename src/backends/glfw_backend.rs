@@ -138,7 +138,7 @@ struct ImGui_ImplGlfw_Data
     GLFWcharfun             PrevUserCallbackChar;
     GLFWmonitorfun          PrevUserCallbackMonitor;
 
-    ImGui_ImplGlfw_Data()   { memset((void*)this, 0, sizeof(*this)); }
+    ImGui_ImplGlfw_Data()   { memset(this, 0, sizeof(*this)); }
 };
 
 // Backend data stored in io.BackendPlatformUserData to allow support for multiple Dear ImGui contexts
@@ -499,7 +499,7 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
 
     // Setup backend capabilities flags
     ImGui_ImplGlfw_Data* bd = IM_NEW(ImGui_ImplGlfw_Data)();
-    io.BackendPlatformUserData = (void*)bd;
+    io.BackendPlatformUserData = bd;
     io.BackendPlatformName = "imgui_impl_glfw";
     io.BackendFlags |= ImGuiBackendFlags_HasMouseCursors;         // We can honor GetMouseCursor() values (optional)
     io.BackendFlags |= ImGuiBackendFlags_HasSetMousePos;          // We can honor io.WantSetMousePos requests (optional, rarely used)
@@ -549,11 +549,11 @@ static bool ImGui_ImplGlfw_Init(GLFWwindow* window, bool install_callbacks, Glfw
 
     // Our mouse update function expect PlatformHandle to be filled for the main viewport
     ImGuiViewport* main_viewport = Imgui::GetMainViewport();
-    main_viewport->PlatformHandle = (void*)bd->Window;
+    main_viewport->PlatformHandle = bd->Window;
 #ifdef _WIN32
     main_viewport->PlatformHandleRaw = glfwGetWin32Window(bd->Window);
 #elif defined(__APPLE__)
-    main_viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(bd->Window);
+    main_viewport->PlatformHandleRaw = glfwGetCocoaWindow(bd->Window);
 #endif
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         ImGui_ImplGlfw_InitPlatformInterface();
@@ -894,15 +894,15 @@ static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
     glfwWindowHint(GLFW_FLOATING, (viewport->Flags & ImGuiViewportFlags_TopMost) ? true : false);
 #endif
     GLFWwindow* share_window = (bd->ClientApi == GlfwClientApi_OpenGL) ? bd->Window : NULL;
-    vd->Window = glfwCreateWindow((int)viewport->Size.x, (int)viewport->Size.y, "No Title Yet", NULL, share_window);
+    vd->Window = glfwCreateWindow(viewport->Size.x, viewport->Size.y, "No Title Yet", NULL, share_window);
     vd->WindowOwned = true;
-    viewport->PlatformHandle = (void*)vd->Window;
+    viewport->PlatformHandle = vd->Window;
 #ifdef _WIN32
     viewport->PlatformHandleRaw = glfwGetWin32Window(vd->Window);
 #elif defined(__APPLE__)
-    viewport->PlatformHandleRaw = (void*)glfwGetCocoaWindow(vd->Window);
+    viewport->PlatformHandleRaw = glfwGetCocoaWindow(vd->Window);
 #endif
-    glfwSetWindowPos(vd->Window, (int)viewport->Pos.x, (int)viewport->Pos.y);
+    glfwSetWindowPos(vd->Window, viewport->Pos.x, viewport->Pos.y);
 
     // Install GLFW callbacks for secondary viewports
     glfwSetWindowFocusCallback(vd->Window, ImGui_ImplGlfw_WindowFocusCallback);
@@ -1020,7 +1020,7 @@ static void ImGui_ImplGlfw_SetWindowPos(ImGuiViewport* viewport, pos: ImVec2)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     vd->IgnoreWindowPosEventFrame = Imgui::GetFrameCount();
-    glfwSetWindowPos(vd->Window, (int)pos.x, (int)pos.y);
+    glfwSetWindowPos(vd->Window, pos.x, pos.y);
 }
 
 static ImGui_ImplGlfw_GetWindowSize: ImVec2(ImGuiViewport* viewport)
@@ -1045,7 +1045,7 @@ static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
     glfwSetWindowPos(vd->Window, x, y - height + size.y);
 #endif
     vd->IgnoreWindowSizeEventFrame = Imgui::GetFrameCount();
-    glfwSetWindowSize(vd->Window, (int)size.x, (int)size.y);
+    glfwSetWindowSize(vd->Window, size.x, size.y);
 }
 
 static void ImGui_ImplGlfw_SetWindowTitle(ImGuiViewport* viewport, title: *const c_char)
@@ -1130,7 +1130,7 @@ static int ImGui_ImplGlfw_CreateVkSurface(ImGuiViewport* viewport, ImU64 vk_inst
     IM_UNUSED(bd);
     IM_ASSERT(bd->ClientApi == GlfwClientApi_Vulkan);
     VkResult err = glfwCreateWindowSurface((VkInstance)vk_instance, vd->Window, (const VkAllocationCallbacks*)vk_allocator, (VkSurfaceKHR*)out_vk_surface);
-    return (int)err;
+    return err;
 }
 #endif // GLFW_HAS_VULKAN
 
@@ -1166,7 +1166,7 @@ static void ImGui_ImplGlfw_InitPlatformInterface()
     vd->Window = bd->Window;
     vd->WindowOwned = false;
     main_viewport->PlatformUserData = vd;
-    main_viewport->PlatformHandle = (void*)bd->Window;
+    main_viewport->PlatformHandle = bd->Window;
 }
 
 static void ImGui_ImplGlfw_ShutdownPlatformInterface()

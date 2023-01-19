@@ -95,7 +95,7 @@ pub struct DirectxData
     pub VertexBufferSize: i32,
     // int                         IndexBufferSize;
     pub IndexBufferSize: i32,
-    // ImGui_ImplDX10_Data()       { memset((void*)this, 0, sizeof(*this)); VertexBufferSize = 5000; IndexBufferSize = 10000; }
+    // ImGui_ImplDX10_Data()       { memset(this, 0, sizeof(*this)); VertexBufferSize = 5000; IndexBufferSize = 10000; }
 }
 
 struct VERTEX_CONSTANT_BUFFER_DX10
@@ -515,7 +515,7 @@ pub unsafe fn    ImGui_ImplDX10_CreateDeviceObjects(g: &mut AppContext) -> bool
             0,
             &mut Some(vertexShaderBlob),
             None)?;
-        // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in (const char*)pErrorBlob.GetBufferPointer(). Make sure to Release() the blob!
+        // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in pErrorBlob.GetBufferPointer(). Make sure to Release() the blob!
         bd.pd3dDevice.CreateVertexShader(vertexShaderBlob.GetBufferPointer(), vertexShaderBlob.GetBufferSize(), &bd.pVertexShader)?;
 
         // Create the input layout
@@ -583,7 +583,7 @@ pub unsafe fn    ImGui_ImplDX10_CreateDeviceObjects(g: &mut AppContext) -> bool
 
         let pixelShaderBlob = D3DCreateBlob(0).unwrap();
         D3DCompile(pixelShader.as_bytes(),  None, None, None, "main", "ps_4_0", 0, 0, &mut Some(pixelShaderBlob), None)?;
-            // return false; // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in (const char*)pErrorBlob.GetBufferPointer(). Make sure to Release() the blob!
+            // return false; // NB: Pass ID3DBlob* pErrorBlob to D3DCompile() to get error showing in pErrorBlob.GetBufferPointer(). Make sure to Release() the blob!
         bd.pd3dDevice.CreatePixelShader(pixelShaderBlob.GetBufferPointer(), pixelShaderBlob.GetBufferSize(), &bd.pPixelShader)?;
         pixelShaderBlob.Release();
     }
@@ -669,7 +669,7 @@ bool    ImGui_ImplDX10_Init(ID3D10Device* device)
 
     // Setup backend capabilities flags
     ImGui_ImplDX10_Data* bd = IM_NEW(ImGui_ImplDX10_Data)();
-    io.BackendRendererUserData = (void*)bd;
+    io.BackendRendererUserData = bd;
     io.BackendRendererName = "imgui_impl_dx10";
     io.BackendFlags |= IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VTX_OFFSET;  // We can honor the ImDrawCmd::VtxOffset field, allowing for large meshes.
     io.BackendFlags |= IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VIEWPORTS;  // We can create multi-viewports on the Renderer side (optional)
