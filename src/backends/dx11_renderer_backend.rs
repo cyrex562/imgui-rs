@@ -621,7 +621,7 @@ struct ImGui_ImplDX11_ViewportData
     ~ImGui_ImplDX11_ViewportData()  { IM_ASSERT(SwapChain == NULL && RTView == NULL); }
 };
 
-static void ImGui_ImplDX11_CreateWindow(ImGuiViewport* viewport)
+static void ImGui_ImplDX11_CreateWindow(viewport: *mut ImGuiViewport)
 {
     ImGui_ImplDX11_Data* bd = ImGui_ImplDX11_GetBackendData();
     ImGui_ImplDX11_ViewportData* vd = IM_NEW(ImGui_ImplDX11_ViewportData)();
@@ -660,7 +660,7 @@ static void ImGui_ImplDX11_CreateWindow(ImGuiViewport* viewport)
     }
 }
 
-static void ImGui_ImplDX11_DestroyWindow(ImGuiViewport* viewport)
+static void ImGui_ImplDX11_DestroyWindow(viewport: *mut ImGuiViewport)
 {
     // The main viewport (owned by the application) will always have RendererUserData == NULL since we didn't create the data for it.
     if (ImGui_ImplDX11_ViewportData* vd = (ImGui_ImplDX11_ViewportData*)viewport->RendererUserData)
@@ -676,7 +676,7 @@ static void ImGui_ImplDX11_DestroyWindow(ImGuiViewport* viewport)
     viewport->RendererUserData = NULL;
 }
 
-static void ImGui_ImplDX11_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
+static void ImGui_ImplDX11_SetWindowSize(viewport: *mut ImGuiViewport, size: ImVec2)
 {
     ImGui_ImplDX11_Data* bd = ImGui_ImplDX11_GetBackendData();
     ImGui_ImplDX11_ViewportData* vd = (ImGui_ImplDX11_ViewportData*)viewport->RendererUserData;
@@ -696,7 +696,7 @@ static void ImGui_ImplDX11_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
     }
 }
 
-static void ImGui_ImplDX11_RenderWindow(ImGuiViewport* viewport, void*)
+static void ImGui_ImplDX11_RenderWindow(viewport: *mut ImGuiViewport, void*)
 {
     ImGui_ImplDX11_Data* bd = ImGui_ImplDX11_GetBackendData();
     ImGui_ImplDX11_ViewportData* vd = (ImGui_ImplDX11_ViewportData*)viewport->RendererUserData;
@@ -707,7 +707,7 @@ static void ImGui_ImplDX11_RenderWindow(ImGuiViewport* viewport, void*)
     ImGui_ImplDX11_RenderDrawData(viewport->DrawData);
 }
 
-static void ImGui_ImplDX11_SwapBuffers(ImGuiViewport* viewport, void*)
+static void ImGui_ImplDX11_SwapBuffers(viewport: *mut ImGuiViewport, void*)
 {
     ImGui_ImplDX11_ViewportData* vd = (ImGui_ImplDX11_ViewportData*)viewport->RendererUserData;
     vd->SwapChain->Present(0, 0); // Present without vsync

@@ -83,7 +83,7 @@ pub struct Viewport {
     // When our create your own backend for a custom engine, it is possible that both Renderer and Platform will be handled
     // by the same system and you may not need to use all the UserData/Handle fields.
     // The library never uses those fields, they are merely storage to facilitate backend implementation.
-    pub RendererUserData:ViewportRendererUserData,
+    pub RendererUserData: *mut c_void, //ViewportRendererUserData,
     // void* to hold custom data structure for the renderer (e.g. swap chain, framebuffers etc.). generally set by your Renderer_CreateWindow function.
     pub PlatformUserData: *mut c_void,
     // void* to hold custom data structure for the OS / platform (e.g. windowing info, render context). generally set by your Platform_CreateWindow function.

@@ -612,7 +612,7 @@ static void ImGui_ImplGlfw_UpdateMouseData()
     const mouse_pos_prev: ImVec2 = io.MousePos;
     for (int n = 0; n < platform_io.Viewports.Size; n++)
     {
-        ImGuiViewport* viewport = platform_io.Viewports[n];
+        viewport: *mut ImGuiViewport = platform_io.Viewports[n];
         GLFWwindow* window = (GLFWwindow*)viewport->PlatformHandle;
 
 #ifdef __EMSCRIPTEN__
@@ -836,7 +836,7 @@ struct ImGui_ImplGlfw_ViewportData
 
 static void ImGui_ImplGlfw_WindowCloseCallback(GLFWwindow* window)
 {
-    if (ImGuiViewport* viewport = Imgui::FindViewportByPlatformHandle(window))
+    if (viewport: *mut ImGuiViewport = Imgui::FindViewportByPlatformHandle(window))
         viewport->PlatformRequestClose = true;
 }
 
@@ -848,7 +848,7 @@ static void ImGui_ImplGlfw_WindowCloseCallback(GLFWwindow* window)
 // ignore recent glfwSetWindowXXX() calls.
 static void ImGui_ImplGlfw_WindowPosCallback(GLFWwindow* window, int, int)
 {
-    if (ImGuiViewport* viewport = Imgui::FindViewportByPlatformHandle(window))
+    if (viewport: *mut ImGuiViewport = Imgui::FindViewportByPlatformHandle(window))
     {
         if (ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData)
         {
@@ -863,7 +863,7 @@ static void ImGui_ImplGlfw_WindowPosCallback(GLFWwindow* window, int, int)
 
 static void ImGui_ImplGlfw_WindowSizeCallback(GLFWwindow* window, int, int)
 {
-    if (ImGuiViewport* viewport = Imgui::FindViewportByPlatformHandle(window))
+    if (viewport: *mut ImGuiViewport = Imgui::FindViewportByPlatformHandle(window))
     {
         if (ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData)
         {
@@ -876,7 +876,7 @@ static void ImGui_ImplGlfw_WindowSizeCallback(GLFWwindow* window, int, int)
     }
 }
 
-static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
+static void ImGui_ImplGlfw_CreateWindow(viewport: *mut ImGuiViewport)
 {
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
     ImGui_ImplGlfw_ViewportData* vd = IM_NEW(ImGui_ImplGlfw_ViewportData)();
@@ -922,7 +922,7 @@ static void ImGui_ImplGlfw_CreateWindow(ImGuiViewport* viewport)
     }
 }
 
-static void ImGui_ImplGlfw_DestroyWindow(ImGuiViewport* viewport)
+static void ImGui_ImplGlfw_DestroyWindow(viewport: *mut ImGuiViewport)
 {
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
     if (ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData)
@@ -960,7 +960,7 @@ static LRESULT CALLBACK WndProcNoInputs(HWND hWnd, UINT msg, WPARAM wParam, LPAR
         // The ImGuiViewportFlags_NoInputs flag is set while dragging a viewport, as want to detect the window behind the one we are dragging.
         // If you cannot easily access those viewport flags from your windowing/event code: you may manually synchronize its state e.g. in
         // your main loop after calling UpdatePlatformWindows(). Iterate all viewports/platform windows and pass the flag to your windowing system.
-        ImGuiViewport* viewport = (ImGuiViewport*)::GetPropA(hWnd, "IMGUI_VIEWPORT");
+        viewport: *mut ImGuiViewport = (ImGuiViewport*)::GetPropA(hWnd, "IMGUI_VIEWPORT");
         if (viewport->Flags & ImGuiViewportFlags_NoInputs)
             return HTTRANSPARENT;
     }
@@ -968,7 +968,7 @@ static LRESULT CALLBACK WndProcNoInputs(HWND hWnd, UINT msg, WPARAM wParam, LPAR
 }
 #endif
 
-static void ImGui_ImplGlfw_ShowWindow(ImGuiViewport* viewport)
+static void ImGui_ImplGlfw_ShowWindow(viewport: *mut ImGuiViewport)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
 
@@ -1008,7 +1008,7 @@ static void ImGui_ImplGlfw_ShowWindow(ImGuiViewport* viewport)
     glfwShowWindow(vd->Window);
 }
 
-static ImGui_ImplGlfw_GetWindowPos: ImVec2(ImGuiViewport* viewport)
+static ImGui_ImplGlfw_GetWindowPos: ImVec2(viewport: *mut ImGuiViewport)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     int x = 0, y = 0;
@@ -1016,14 +1016,14 @@ static ImGui_ImplGlfw_GetWindowPos: ImVec2(ImGuiViewport* viewport)
     return ImVec2(x, y);
 }
 
-static void ImGui_ImplGlfw_SetWindowPos(ImGuiViewport* viewport, pos: ImVec2)
+static void ImGui_ImplGlfw_SetWindowPos(viewport: *mut ImGuiViewport, pos: ImVec2)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     vd->IgnoreWindowPosEventFrame = Imgui::GetFrameCount();
     glfwSetWindowPos(vd->Window, pos.x, pos.y);
 }
 
-static ImGui_ImplGlfw_GetWindowSize: ImVec2(ImGuiViewport* viewport)
+static ImGui_ImplGlfw_GetWindowSize: ImVec2(viewport: *mut ImGuiViewport)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     int w = 0, h = 0;
@@ -1031,7 +1031,7 @@ static ImGui_ImplGlfw_GetWindowSize: ImVec2(ImGuiViewport* viewport)
     return ImVec2(w, h);
 }
 
-static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
+static void ImGui_ImplGlfw_SetWindowSize(viewport: *mut ImGuiViewport, size: ImVec2)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
 #if __APPLE__ && !GLFW_HAS_OSX_WINDOW_POS_FIX
@@ -1048,13 +1048,13 @@ static void ImGui_ImplGlfw_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
     glfwSetWindowSize(vd->Window, size.x, size.y);
 }
 
-static void ImGui_ImplGlfw_SetWindowTitle(ImGuiViewport* viewport, title: *const c_char)
+static void ImGui_ImplGlfw_SetWindowTitle(viewport: *mut ImGuiViewport, title: *const c_char)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     glfwSetWindowTitle(vd->Window, title);
 }
 
-static void ImGui_ImplGlfw_SetWindowFocus(ImGuiViewport* viewport)
+static void ImGui_ImplGlfw_SetWindowFocus(viewport: *mut ImGuiViewport)
 {
 #if GLFW_HAS_FOCUS_WINDOW
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
@@ -1065,27 +1065,27 @@ static void ImGui_ImplGlfw_SetWindowFocus(ImGuiViewport* viewport)
 #endif
 }
 
-static bool ImGui_ImplGlfw_GetWindowFocus(ImGuiViewport* viewport)
+static bool ImGui_ImplGlfw_GetWindowFocus(viewport: *mut ImGuiViewport)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     return glfwGetWindowAttrib(vd->Window, GLFW_FOCUSED) != 0;
 }
 
-static bool ImGui_ImplGlfw_GetWindowMinimized(ImGuiViewport* viewport)
+static bool ImGui_ImplGlfw_GetWindowMinimized(viewport: *mut ImGuiViewport)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     return glfwGetWindowAttrib(vd->Window, GLFW_ICONIFIED) != 0;
 }
 
 #if GLFW_HAS_WINDOW_ALPHA
-static void ImGui_ImplGlfw_SetWindowAlpha(ImGuiViewport* viewport, float alpha)
+static void ImGui_ImplGlfw_SetWindowAlpha(viewport: *mut ImGuiViewport, float alpha)
 {
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
     glfwSetWindowOpacity(vd->Window, alpha);
 }
 #endif
 
-static void ImGui_ImplGlfw_RenderWindow(ImGuiViewport* viewport, void*)
+static void ImGui_ImplGlfw_RenderWindow(viewport: *mut ImGuiViewport, void*)
 {
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
@@ -1093,7 +1093,7 @@ static void ImGui_ImplGlfw_RenderWindow(ImGuiViewport* viewport, void*)
         glfwMakeContextCurrent(vd->Window);
 }
 
-static void ImGui_ImplGlfw_SwapBuffers(ImGuiViewport* viewport, void*)
+static void ImGui_ImplGlfw_SwapBuffers(viewport: *mut ImGuiViewport, void*)
 {
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;
@@ -1123,7 +1123,7 @@ struct VkAllocationCallbacks;
 enum VkResult { VK_RESULT_MAX_ENUM = 0x7FFFFFFF };
 #endif // VULKAN_H_
 extern "C" { extern GLFWAPI VkResult glfwCreateWindowSurface(VkInstance instance, GLFWwindow* window, const VkAllocationCallbacks* allocator, VkSurfaceKHR* surface); }
-static int ImGui_ImplGlfw_CreateVkSurface(ImGuiViewport* viewport, ImU64 vk_instance, const void* vk_allocator, ImU64* out_vk_surface)
+static int ImGui_ImplGlfw_CreateVkSurface(viewport: *mut ImGuiViewport, ImU64 vk_instance, const void* vk_allocator, ImU64* out_vk_surface)
 {
     ImGui_ImplGlfw_Data* bd = ImGui_ImplGlfw_GetBackendData();
     ImGui_ImplGlfw_ViewportData* vd = (ImGui_ImplGlfw_ViewportData*)viewport->PlatformUserData;

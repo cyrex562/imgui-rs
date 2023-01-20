@@ -451,7 +451,7 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
                     continue;
 
                 // Apply scissor/clipping rectangle, Draw
-                wgpuRenderPassEncoderSetScissorRect(pass_encoder, (uint32_t)clip_min.x, (uint32_t)clip_min.y, (uint32_t)(clip_max.x - clip_min.x), (uint32_t)(clip_max.y - clip_min.y));
+                wgpuRenderPassEncoderSetScissorRect(pass_encoder, clip_min.x, clip_min.y, (clip_max.x - clip_min.x), (clip_max.y - clip_min.y));
                 wgpuRenderPassEncoderDrawIndexed(pass_encoder, pcmd->ElemCount, 1, pcmd->IdxOffset + global_idx_offset, pcmd->VtxOffset + global_vtx_offset, 0);
             }
         }
@@ -504,8 +504,8 @@ static void ImGui_ImplWGPU_CreateFontsTexture()
         layout.offset = 0;
         layout.bytesPerRow = width * size_pp;
         layout.rowsPerImage = height;
-        WGPUExtent3D size = { (uint32_t)width, (uint32_t)height, 1 };
-        wgpuQueueWriteTexture(g_defaultQueue, &dst_view, pixels, (uint32_t)(width * size_pp * height), &layout, &size);
+        WGPUExtent3D size = { width, height, 1 };
+        wgpuQueueWriteTexture(g_defaultQueue, &dst_view, pixels, (width * size_pp * height), &layout, &size);
     }
 
     // Create the associated sampler
@@ -559,7 +559,7 @@ bool ImGui_ImplWGPU_CreateDeviceObjects()
     graphics_pipeline_desc.layout = nullptr; // Use automatic layout generation
 
     // Create the vertex shader
-    WGPUProgrammableStageDescriptor vertex_shader_desc = ImGui_ImplWGPU_CreateShaderModule(__glsl_shader_vert_spv, sizeof(__glsl_shader_vert_spv) / sizeof(uint32_t));
+    WGPUProgrammableStageDescriptor vertex_shader_desc = ImGui_ImplWGPU_CreateShaderModule(__glsl_shader_vert_spv, sizeof(__glsl_shader_vert_spv) / sizeof);
     graphics_pipeline_desc.vertex.module = vertex_shader_desc.module;
     graphics_pipeline_desc.vertex.entryPoint = vertex_shader_desc.entryPoint;
 
@@ -581,7 +581,7 @@ bool ImGui_ImplWGPU_CreateDeviceObjects()
     graphics_pipeline_desc.vertex.buffers = buffer_layouts;
 
     // Create the pixel shader
-    WGPUProgrammableStageDescriptor pixel_shader_desc = ImGui_ImplWGPU_CreateShaderModule(__glsl_shader_frag_spv, sizeof(__glsl_shader_frag_spv) / sizeof(uint32_t));
+    WGPUProgrammableStageDescriptor pixel_shader_desc = ImGui_ImplWGPU_CreateShaderModule(__glsl_shader_frag_spv, sizeof(__glsl_shader_frag_spv) / sizeof);
 
     // Create the blending setup
     WGPUBlendState blend_state = {};

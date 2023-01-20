@@ -883,7 +883,7 @@ void    ImGui_ImplOpenGL3_DestroyDeviceObjects()
 // If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
 //--------------------------------------------------------------------------------------------------------
 
-static void ImGui_ImplOpenGL3_RenderWindow(ImGuiViewport* viewport, void*)
+static void ImGui_ImplOpenGL3_RenderWindow(viewport: *mut ImGuiViewport, void*)
 {
     if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
     {

@@ -839,7 +839,7 @@ void ImGui_ImplDX12_NewFrame()
 // If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
 //--------------------------------------------------------------------------------------------------------
 
-static void ImGui_ImplDX12_CreateWindow(ImGuiViewport* viewport)
+static void ImGui_ImplDX12_CreateWindow(viewport: *mut ImGuiViewport)
 {
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
     ImGui_ImplDX12_ViewportData* vd = IM_NEW(ImGui_ImplDX12_ViewportData)(bd->numFramesInFlight);
@@ -959,7 +959,7 @@ static void ImGui_WaitForPendingOperations(ImGui_ImplDX12_ViewportData* vd)
     }
 }
 
-static void ImGui_ImplDX12_DestroyWindow(ImGuiViewport* viewport)
+static void ImGui_ImplDX12_DestroyWindow(viewport: *mut ImGuiViewport)
 {
     // The main viewport (owned by the application) will always have RendererUserData == NULL since we didn't create the data for it.
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
@@ -986,7 +986,7 @@ static void ImGui_ImplDX12_DestroyWindow(ImGuiViewport* viewport)
     viewport->RendererUserData = NULL;
 }
 
-static void ImGui_ImplDX12_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
+static void ImGui_ImplDX12_SetWindowSize(viewport: *mut ImGuiViewport, size: ImVec2)
 {
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
     ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->RendererUserData;
@@ -1009,7 +1009,7 @@ static void ImGui_ImplDX12_SetWindowSize(ImGuiViewport* viewport, size: ImVec2)
     }
 }
 
-static void ImGui_ImplDX12_RenderWindow(ImGuiViewport* viewport, void*)
+static void ImGui_ImplDX12_RenderWindow(viewport: *mut ImGuiViewport, void*)
 {
     ImGui_ImplDX12_Data* bd = ImGui_ImplDX12_GetBackendData();
     ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->RendererUserData;
@@ -1049,7 +1049,7 @@ static void ImGui_ImplDX12_RenderWindow(ImGuiViewport* viewport, void*)
     vd->CommandQueue->Signal(vd->Fence, ++vd->FenceSignaledValue);
 }
 
-static void ImGui_ImplDX12_SwapBuffers(ImGuiViewport* viewport, void*)
+static void ImGui_ImplDX12_SwapBuffers(viewport: *mut ImGuiViewport, void*)
 {
     ImGui_ImplDX12_ViewportData* vd = (ImGui_ImplDX12_ViewportData*)viewport->RendererUserData;
 
