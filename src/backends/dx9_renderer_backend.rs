@@ -22,8 +22,8 @@ use crate::drawing::draw_data::ImDrawData;
 use crate::font::font_atlas::ImFontAtlas;
 use crate::io::backend_renderer_user_data::BackendRendererUserData;
 use crate::io::io_ops::GetIO;
-use crate::viewport::Viewport;
-use crate::viewport::viewport_flags::ImGuiViewportFlags_NoRendererClear;
+use crate::viewport::ImguiViewport;
+use crate::viewport::viewport_flags::ImguiViewportFlags_NoRendererClear;
 use crate::viewport::viewport_renderer_user_data::ViewportRendererUserData;
 
 pub const D3D_OK: u32 = 0;
@@ -583,7 +583,7 @@ pub unsafe fn new_frame(ctx: &mut AppContext) {
 // If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
 //--------------------------------------------------------------------------------------------------------
 
-pub unsafe fn create_window(g: &mut AppContext, viewport: &mut Viewport) {
+pub unsafe fn create_window(g: &mut AppContext, viewport: &mut ImguiViewport) {
     let bd = get_backend_data(g);
     // let vd = libc::malloc(mem::size_of::<ImGui_ImplDX9_ViewportData>()) as *mut ImGui_ImplDX9_ViewportData;//IM_NEW(ImGui_ImplDX9_ViewportData)();
     let mut vd: &mut ViewportData = &mut ViewportData::default();
@@ -612,7 +612,7 @@ pub unsafe fn create_window(g: &mut AppContext, viewport: &mut Viewport) {
     viewport.RendererUserData = ViewportRendererUserData::Dx9ViewportData(vd);
 }
 
-pub unsafe fn destroy_window(viewport: &mut Viewport) {
+pub unsafe fn destroy_window(viewport: &mut ImguiViewport) {
     // The main viewport (owned by the application) will always have RendererUserData == NULL since we didn't create the data for it.
     let mut vd: &mut ViewportData = &mut ViewportData::default();
     if let ViewportRendererUserData::Dx9ViewportData(&mut x) = viewport.RendererUserData {
@@ -625,7 +625,7 @@ pub unsafe fn destroy_window(viewport: &mut Viewport) {
     viewport.RendererUserData = ViewportRendererUserData::Unset;
 }
 
-pub unsafe fn set_window_size(g: &mut AppContext, viewport: &mut Viewport, size: Vector2) {
+pub unsafe fn set_window_size(g: &mut AppContext, viewport: &mut ImguiViewport, size: Vector2) {
     let bd = get_backend_data(g);
     let mut vd: &mut ViewportData = &mut ViewportData::default();
     // let vd: &mut ImGui_ImplDX9_Data = viewport.RendererUserData.into();
@@ -654,7 +654,7 @@ pub fn D3DCOLOR_RGBA(r: c_int, g: c_int, b: c_int, a: c_int) -> D3DCOLOR {
     D3DCOLOR::from_le_bytes(bytes)
 }
 
-pub unsafe fn render_window(g: &mut AppContext, viewport: &mut Viewport) {
+pub unsafe fn render_window(g: &mut AppContext, viewport: &mut ImguiViewport) {
     let bd = get_backend_data(g);
     let mut vd: &mut ViewportData = &mut ViewportData::default();
     if let ViewportRendererUserData::Dx9ViewportData(&mut x) = viewport.RendererUserData {
@@ -671,7 +671,7 @@ pub unsafe fn render_window(g: &mut AppContext, viewport: &mut Viewport) {
     bd.d3d_device.SetRenderTarget(0, render_target)?;
     bd.d3d_device.SetDepthStencilSurface(NULL)?;
 
-    if flag_clear(viewport.Flags, ImGuiViewportFlags_NoRendererClear) {
+    if flag_clear(viewport.Flags, ImguiViewportFlags_NoRendererClear) {
         let clear_col_dx = D3DCOLOR_RGBA((clear_color.x * 255.0), (clear_color.y * 255.0), (clear_color.z * 255.0), (clear_color.w * 255.0));
         let prects: D3DRECT = D3DRECT::default();
         bd.d3d_device.Clear(0, &prects, D3DCLEAR_TARGET as u32, clear_col_dx, 1.0, 0)?;
@@ -687,7 +687,7 @@ pub unsafe fn render_window(g: &mut AppContext, viewport: &mut Viewport) {
     if (last_depth_stencil) { last_depth_stencil.Release(); }
 }
 
-pub unsafe fn swap_buffers(g: &mut AppContext, viewport: &mut Viewport) {
+pub unsafe fn swap_buffers(g: &mut AppContext, viewport: &mut ImguiViewport) {
     // ImGui_ImplDX9_ViewportData* vd = (ImGui_ImplDX9_ViewportData*)viewport.RendererUserData;
     let mut vd: &mut ViewportData = &mut ViewportData::default();
     if let ViewportRendererUserData::Dx9ViewportData(&mut x) = viewport.RendererUserData {

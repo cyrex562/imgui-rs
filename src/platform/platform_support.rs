@@ -136,7 +136,7 @@ pub unsafe fn SetClipboardTextFn_DefaultImpl(*mut c_void, text: &String)
 // #pragma comment(lib, "imm32")
 // #endif
 
-pub unsafe fn SetPlatformImeDataFn_DefaultImpl(viewport: *mut ImGuiViewport, ImGuiPlatformImeData* data)
+pub unsafe fn SetPlatformImeDataFn_DefaultImpl(viewport: *mut ImguiViewport, ImGuiPlatformImeData* data)
 {
     // Notify OS Input Method Editor of text input position
     HWND hwnd = (HWND)viewport.PlatformHandleRaw;
@@ -165,6 +165,6 @@ pub unsafe fn SetPlatformImeDataFn_DefaultImpl(viewport: *mut ImGuiViewport, ImG
 
 // #else
 
-pub unsafe fn SetPlatformImeDataFn_DefaultImpl(ImGuiViewport*, ImGuiPlatformImeData*) {}
+pub unsafe fn SetPlatformImeDataFn_DefaultImpl(ImguiViewport*, ImGuiPlatformImeData*) {}
 
 // #endif

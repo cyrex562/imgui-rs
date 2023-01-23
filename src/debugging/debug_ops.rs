@@ -24,7 +24,7 @@ use crate::drawing::draw_flags::ImDrawFlags_Closed;
 use crate::drawing::draw_list::ImDrawList;
 use crate::drawing::draw_list_flags::ImDrawListFlags_AntiAliasedLines;
 use crate::draw_list_ops::{GetForegroundDrawList, GetForegroundDrawList2};
-use crate::drawing::draw_vert::DrawVertex;
+use crate::drawing::draw_vert::ImguiDrawVertex;
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;
 use crate::font::font_glyph::ImFontGlyph;
@@ -33,7 +33,7 @@ use crate::widgets::hovered_flags::ImGuiHoveredFlags_DelayShort;
 use crate::core::id_ops::pop_win_id_from_stack;
 use crate::image_ops::Image;
 use crate::imgui::GImGui;
-use crate::Viewport;
+use crate::ImguiViewport;
 use crate::input_num_ops::InputText;
 use crate::input_ops::{GetInputSourceName, IsKeyDown, IsKeyPressed, IsMouseClicked, IsMouseHoveringRect, SetMouseCursor};
 use crate::input_text::InputTextMultiline;
@@ -78,7 +78,7 @@ use crate::core::type_defs::{ImguiHandle, ImGuiTableColumnIdx};
 use crate::core::utils::{flag_clear, flag_set, GetVersion};
 use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
-use crate::viewport::viewport_flags::{ImGuiViewportFlags_CanHostOtherWindows, ImGuiViewportFlags_IsPlatformMonitor, ImGuiViewportFlags_Minimized, ImGuiViewportFlags_NoAutoMerge, ImGuiViewportFlags_NoDecoration, ImGuiViewportFlags_NoFocusOnAppearing, ImGuiViewportFlags_NoFocusOnClick, ImGuiViewportFlags_NoInputs, ImGuiViewportFlags_NoRendererClear, ImGuiViewportFlags_NoTaskBarIcon, ImGuiViewportFlags_OwnedByApp, ImGuiViewportFlags_TopMost};
+use crate::viewport::viewport_flags::{ImguiViewportFlags_CanHostOtherWindows, ImguiViewportFlags_IsPlatformMonitor, ImguiViewportFlags_Minimized, ImguiViewportFlags_NoAutoMerge, ImguiViewportFlags_NoDecoration, ImguiViewportFlags_NoFocusOnAppearing, ImguiViewportFlags_NoFocusOnClick, ImguiViewportFlags_NoInputs, ImguiViewportFlags_NoRendererClear, ImguiViewportFlags_NoTaskBarIcon, ImguiViewportFlags_OwnedByApp, ImguiViewportFlags_TopMost};
 use crate::viewport::viewport_ops::GetMainViewport;
 use crate::viewport::widget_ops::{PopTextWrapPos, PushTextWrapPos};
 use crate::widgets::{GetTreeNodeToLabelSpacing, Selectable, SetNextItemOpen, TabBarQueueReorder, TreeNode, TreeNodeEx, TreeNodeEx2, TreePop};
@@ -208,14 +208,14 @@ pub unsafe fn DebugCheckVersionAndDataLayout(version: *const c_char, sz_io: size
 
 // #ifndef IMGUI_DISABLE_DEBUG_TOOLS
 
-pub fn DebugRenderViewportThumbnail(g: &mut AppContext, draw_list: &mut ImDrawList, viewport: &mut Viewport, bb: &mut ImRect)
+pub fn DebugRenderViewportThumbnail(g: &mut AppContext, draw_list: &mut ImDrawList, viewport: &mut ImguiViewport, bb: &mut ImRect)
 {
     // let g = GImGui; // ImGuiContext& g = *GImGui;
     let mut window = &mut g.CurrentWindow;
 
     let mut scale = bb.GetSize() / viewport.Size;
     let off = bb.min - viewport.Pos * scale;
-    let alpha_mul: c_float =  if flag_set(viewport.Flags, ImGuiViewportFlags_Minimized) { 0.3 } else { 1.0 };
+    let alpha_mul: c_float =  if flag_set(viewport.Flags, ImguiViewportFlags_Minimized) { 0.3 } else { 1.0 };
     window.DrawList.AddRectFilled(&bb.min, &bb.max, GetColorU32(ImGuiCol_Border, alpha_mul * 0.4), 0.0, 0);
     // for (let i: c_int = 0; i != g.Windows.len(); i++)
     // for i in 0 .. g.Windows.len()
@@ -269,7 +269,7 @@ pub fn RenderViewportsThumbnails(g: &mut AppContext)
     Dummy(g, bb_full.GetSize() * SCALE);
 }
 
-pub fn ViewportComparerByFrontMostStampCount(lhs: &Viewport, rhs: &Viewport) -> c_int
+pub fn ViewportComparerByFrontMostStampCount(lhs: &ImguiViewport, rhs: &ImguiViewport) -> c_int
 {
     rhs.last_front_most_stamp_count - lhs.last_front_most_stamp_count
 }
@@ -648,7 +648,7 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
         // for (let viewport_i: c_int = 0; viewport_i < g.Viewports.len(); viewport_i++)
         for viewport in g.Viewports.iter_mut()
         {
-            // let mut viewport: *mut ImGuiViewport =  g.Viewports[viewport_i];
+            // let mut viewport: *mut ImguiViewport =  g.Viewports[viewport_i];
             let mut viewport_has_drawlist: bool =  false;
             // for (let layer_i: c_int = 0; layer_i < IM_ARRAYSIZE(viewport.DrawDataBuilder.Layers); layer_i++)
             for layer in viewport.DrawDataBuilder.Layers.iter()
@@ -694,13 +694,13 @@ pub unsafe fn ShowMetricsWindow(p_open: &mut bool)
         BulletText(format!("MouseViewport: {} (UserHovered {}, LastHovered {})", if g.MouseViewport { g.MouseViewport.ID }else{ 0}, g.IO.MouseHoveredViewport, if g.MouseLastHoveredViewport { g.MouseLastHoveredViewport.ID} else {0}));
         if TreeNode(String::from("Inferred Z order (front-to-back)"), String::from(""))
         {
-            // static Vec<*mut ImGuiViewportP> viewports;
-            let mut viewports: Vec<Viewport> = vec![];
+            // static Vec<*mut ImguiViewportP> viewports;
+            let mut viewports: Vec<ImguiViewport> = vec![];
             viewports.reserve(g.Viewports.len());
             // memcpy(viewports.Data, g.Viewports.Data, g.Viewports.size_in_bytes());
             viewports.clone_from_slice(&g.Viewports);
             if viewports.Size > 1 {
-                // ImQsort(viewports.Data, viewports.Size, sizeof(ImGuiViewport *), ViewportComparerByFrontMostStampCount);
+                // ImQsort(viewports.Data, viewports.Size, sizeof(ImguiViewport *), ViewportComparerByFrontMostStampCount);
                 viewports.sort_by(ViewportComparerByFrontMostStampCount);
             }
             // for (let i: c_int = 0; i < viewports.Size; i++)
@@ -1151,7 +1151,7 @@ pub unsafe fn DebugNodeDockNode(node:&mut ImGuiDockNode, label: String)
 // [DEBUG] Display contents of ImDrawList
 // Note that both 'window' and 'viewport' may be NULL here. Viewport is generally null of destroyed popups which previously owned a viewport.
 pub unsafe fn DebugNodeDrawList(window: Option<&mut ImguiWindow>,
-                                viewport: Option<&mut Viewport>,
+                                viewport: Option<&mut ImguiViewport>,
                                 draw_list: &ImDrawList,
                                 label: String)
 {
@@ -1486,7 +1486,7 @@ pub unsafe fn DebugNodeTabBar(tab_bar: &mut ImGuiTabBar, label: String)
     }
 }
 
-pub unsafe fn DebugNodeViewport(viewport: &mut Viewport)
+pub unsafe fn DebugNodeViewport(viewport: &mut ImguiViewport)
 {
     SetNextItemOpen(true, ImGuiCond_Once);
     if TreeNode(viewport.ID.to_string(), format!("Viewport #{}, ID: 0x{}, Parent: 0x{}, Window: \"{}\"", viewport.Idx, viewport.ID, viewport.ParentViewportId, if viewport.Window { viewport.window.Name } else { "N/A" }))
@@ -1498,19 +1498,19 @@ pub unsafe fn DebugNodeViewport(viewport: &mut Viewport)
             viewport.PlatformMonitor, viewport.DpiScale * 100));
         if viewport.Idx > 0 { same_line(g, 0.0, 0.0); if SmallButton(String::from("Reset Pos")) { viewport.Pos = Vector2::from_ints(200, 200); viewport.UpdateWorkRect(); if viewport.Window{ viewport.window.position = viewport.Pos;} } }
         BulletText(format!("Flags: {} ={}{}{}{}{}{}{}{}{}{}{}{}", viewport.Flags,
-            //(flags & ImGuiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard
-            if flag_set(flags, ImGuiViewportFlags_IsPlatformMonitor) { " IsPlatformMonitor"} else {""},
-            if flag_set(flags, ImGuiViewportFlags_OwnedByApp) { " OwnedByApp" } else {""},
-            if flag_set(flags, ImGuiViewportFlags_NoDecoration) { " NoDecoration"} else {""},
-            if flag_set(flags, ImGuiViewportFlags_NoTaskBarIcon) { " NoTaskBarIcon" }else{""},
-            if flag_set(flags, ImGuiViewportFlags_NoFocusOnAppearing) { " NoFocusOnAppearing" }else {""},
-            if flag_set(flags, ImGuiViewportFlags_NoFocusOnClick) { " NoFocusOnClick"} else {""},
-            if flag_set(flags, ImGuiViewportFlags_NoInputs) { " NoInputs"} else {""},
-            if flag_set(flags, ImGuiViewportFlags_NoRendererClear) { " NoRendererClear"} else {""},
-            if flag_set(flags, ImGuiViewportFlags_TopMost) { " TopMost"} else {""},
-            if flag_set(flags, ImGuiViewportFlags_Minimized) { " Minimized"} else {""},
-            if flag_set(flags, ImGuiViewportFlags_NoAutoMerge) { " NoAutoMerge"} else {""},
-            if flag_set(flags, ImGuiViewportFlags_CanHostOtherWindows) { " CanHostOtherWindows" }else { "" }));
+            //(flags & ImguiViewportFlags_IsPlatformWindow) ? " IsPlatformWindow" : "", // Omitting because it is the standard
+            if flag_set(flags, ImguiViewportFlags_IsPlatformMonitor) { " IsPlatformMonitor"} else {""},
+            if flag_set(flags, ImguiViewportFlags_OwnedByApp) { " OwnedByApp" } else {""},
+            if flag_set(flags, ImguiViewportFlags_NoDecoration) { " NoDecoration"} else {""},
+            if flag_set(flags, ImguiViewportFlags_NoTaskBarIcon) { " NoTaskBarIcon" }else{""},
+            if flag_set(flags, ImguiViewportFlags_NoFocusOnAppearing) { " NoFocusOnAppearing" }else {""},
+            if flag_set(flags, ImguiViewportFlags_NoFocusOnClick) { " NoFocusOnClick"} else {""},
+            if flag_set(flags, ImguiViewportFlags_NoInputs) { " NoInputs"} else {""},
+            if flag_set(flags, ImguiViewportFlags_NoRendererClear) { " NoRendererClear"} else {""},
+            if flag_set(flags, ImguiViewportFlags_TopMost) { " TopMost"} else {""},
+            if flag_set(flags, ImguiViewportFlags_Minimized) { " Minimized"} else {""},
+            if flag_set(flags, ImguiViewportFlags_NoAutoMerge) { " NoAutoMerge"} else {""},
+            if flag_set(flags, ImguiViewportFlags_CanHostOtherWindows) { " CanHostOtherWindows" }else { "" }));
         // for (let layer_i: c_int = 0; layer_i < IM_ARRAYSIZE(viewport.DrawDataBuilder.Layers); layer_i++)
         for layer_i in 0 .. viewport.DrawDataBuilder.Layers.len()
         {

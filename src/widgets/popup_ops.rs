@@ -45,7 +45,7 @@ use crate::window::window_flags::{
     ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip,
 };
 use crate::window::ImguiWindow;
-use crate::{GImGui, Viewport};
+use crate::{GImGui, ImguiViewport};
 use libc::{c_char, c_float, c_int};
 use std::ptr::{null, null_mut};
 
@@ -403,7 +403,7 @@ pub unsafe fn BeginPopupModal(
     // (this won't really last as settings will kick in, and is mostly for backward compatibility. user may do the same themselves)
     // FIXME: Should test for (PosCond & window.SetWindowPosAllowFlags) with the upcoming window.
     if ((g.NextWindowData.Flags & ImGuiNextWindowDataFlags_HasPos) == 0) {
-        let viewport: *const Viewport = if window.WasActive {
+        let viewport: *const ImguiViewport = if window.WasActive {
             window.Viewport
         } else {
             GetMainViewport()

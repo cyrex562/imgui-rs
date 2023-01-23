@@ -27,7 +27,7 @@ use crate::window::focus::FocusWindow;
 use crate::window::ops::{GetCurrentWindow, IsWindowContentHoverable};
 use crate::window::window_flags::ImGuiWindowFlags_NoNavFocus;
 use crate::window::ImguiWindow;
-use crate::{GImGui, Viewport};
+use crate::{GImGui, ImguiViewport};
 use libc::{c_char, c_float, c_void};
 use std::ptr::null_mut;
 
@@ -368,8 +368,8 @@ pub unsafe fn GetWindowDpiScale() -> f32 {
     return g.CurrentDpiScale;
 }
 
-// GetWindowViewport: *mut ImGuiViewport()
-pub unsafe fn GetWindowViewport() -> *mut Viewport {
+// GetWindowViewport: *mut ImguiViewport()
+pub unsafe fn GetWindowViewport() -> *mut ImguiViewport {
     let g = GImGui; // ImGuiContext& g = *GImGui;
                     // IM_ASSERT(g.CurrentViewport != NULL && g.CurrentViewport == g.Currentwindow.Viewport);
     return g.CurrentViewport;

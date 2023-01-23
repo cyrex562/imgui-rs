@@ -101,7 +101,7 @@ use crate::io::IoContext;
 use crate::io::key::{ImGuiKey, ImGuiKey_0, ImGuiKey_1, ImGuiKey_2, ImGuiKey_3, ImGuiKey_4, ImGuiKey_5, ImGuiKey_6, ImGuiKey_7, ImGuiKey_8, ImGuiKey_9, ImGuiKey_A, ImGuiKey_Apostrophe, ImGuiKey_B, ImGuiKey_Backslash, ImGuiKey_Backspace, ImGuiKey_C, ImGuiKey_CapsLock, ImGuiKey_Comma, ImGuiKey_D, ImGuiKey_Delete, ImGuiKey_DownArrow, ImGuiKey_E, ImGuiKey_End, ImGuiKey_Enter, ImGuiKey_Equal, ImGuiKey_Escape, ImGuiKey_F, ImGuiKey_F1, ImGuiKey_F10, ImGuiKey_F11, ImGuiKey_F12, ImGuiKey_F2, ImGuiKey_F3, ImGuiKey_F4, ImGuiKey_F5, ImGuiKey_F6, ImGuiKey_F7, ImGuiKey_F8, ImGuiKey_F9, ImGuiKey_G, ImGuiKey_GamepadBack, ImGuiKey_GamepadDpadDown, ImGuiKey_GamepadDpadLeft, ImGuiKey_GamepadDpadRight, ImGuiKey_GamepadDpadUp, ImGuiKey_GamepadFaceDown, ImGuiKey_GamepadFaceLeft, ImGuiKey_GamepadFaceRight, ImGuiKey_GamepadFaceUp, ImGuiKey_GamepadL1, ImGuiKey_GamepadL2, ImGuiKey_GamepadL3, ImGuiKey_GamepadLStickDown, ImGuiKey_GamepadLStickLeft, ImGuiKey_GamepadLStickRight, ImGuiKey_GamepadLStickUp, ImGuiKey_GamepadR1, ImGuiKey_GamepadR2, ImGuiKey_GamepadR3, ImGuiKey_GamepadRStickDown, ImGuiKey_GamepadRStickLeft, ImGuiKey_GamepadRStickRight, ImGuiKey_GamepadRStickUp, ImGuiKey_GamepadStart, ImGuiKey_GraveAccent, ImGuiKey_H, ImGuiKey_Home, ImGuiKey_I, ImGuiKey_Insert, ImGuiKey_J, ImGuiKey_K, ImGuiKey_Keypad0, ImGuiKey_Keypad1, ImGuiKey_Keypad2, ImGuiKey_Keypad3, ImGuiKey_Keypad4, ImGuiKey_Keypad5, ImGuiKey_Keypad6, ImGuiKey_Keypad7, ImGuiKey_Keypad8, ImGuiKey_Keypad9, ImGuiKey_KeypadAdd, ImGuiKey_KeypadDecimal, ImGuiKey_KeypadDivide, ImGuiKey_KeypadEnter, ImGuiKey_KeypadEqual, ImGuiKey_KeypadMultiply, ImGuiKey_KeypadSubtract, ImGuiKey_L, ImGuiKey_LeftAlt, ImGuiKey_LeftArrow, ImGuiKey_LeftBracket, ImGuiKey_LeftCtrl, ImGuiKey_LeftShift, ImGuiKey_LeftSuper, ImGuiKey_M, ImGuiKey_Menu, ImGuiKey_Minus, ImGuiKey_ModAlt, ImGuiKey_ModCtrl, ImGuiKey_ModShift, ImGuiKey_ModSuper, ImGuiKey_N, ImGuiKey_None, ImGuiKey_NumLock, ImGuiKey_O, ImGuiKey_P, ImGuiKey_PageDown, ImGuiKey_PageUp, ImGuiKey_Pause, ImGuiKey_Period, ImGuiKey_PrintScreen, ImGuiKey_Q, ImGuiKey_R, ImGuiKey_RightAlt, ImGuiKey_RightArrow, ImGuiKey_RightBracket, ImGuiKey_RightCtrl, ImGuiKey_RightShift, ImGuiKey_RightSuper, ImGuiKey_S, ImGuiKey_ScrollLock, ImGuiKey_Semicolon, ImGuiKey_Slash, ImGuiKey_Space, ImGuiKey_T, ImGuiKey_Tab, ImGuiKey_U, ImGuiKey_UpArrow, ImGuiKey_V, ImGuiKey_W, ImGuiKey_X, ImGuiKey_Y, ImGuiKey_Z};
 use crate::io::mouse_cursor::{ImGuiMouseCursor, ImGuiMouseCursor_Arrow, ImGuiMouseCursor_COUNT, ImGuiMouseCursor_Hand, ImGuiMouseCursor_None, ImGuiMouseCursor_NotAllowed, ImGuiMouseCursor_ResizeAll, ImGuiMouseCursor_ResizeEW, ImGuiMouseCursor_ResizeNESW, ImGuiMouseCursor_ResizeNS, ImGuiMouseCursor_ResizeNWSE, ImGuiMouseCursor_TextInput};
 use crate::platform::platform_monitor::PlatformMonitor;
-use crate::viewport::viewport_flags::{ImGuiViewportFlags_NoDecoration, ImGuiViewportFlags_NoFocusOnAppearing, ImGuiViewportFlags_NoTaskBarIcon, ImGuiViewportFlags_TopMost};
+use crate::viewport::viewport_flags::{ImguiViewportFlags_NoDecoration, ImguiViewportFlags_NoFocusOnAppearing, ImguiViewportFlags_NoTaskBarIcon, ImguiViewportFlags_TopMost};
 use crate::viewport::viewport_ops::{DestroyPlatformWindows, FindViewportByPlatformHandle, GetMainViewport};
 
 // #if SDL_VERSION_ATLEAST(2,0,4) && !defined(__EMSCRIPTEN__) && !defined(__ANDROID__) && !(defined(__APPLE__) && TARGET_OS_IOS) && !defined(__amigaos4__)
@@ -840,7 +840,7 @@ pub fn ImGui_ImplSDL2_NewFrame()
 // If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
 //--------------------------------------------------------------------------------------------------------
 
-// Helper structure we store in the void* RenderUserData field of each ImGuiViewport to easily retrieve our backend data.
+// Helper structure we store in the void* RenderUserData field of each ImguiViewport to easily retrieve our backend data.
 #[derive(Default,Debug,Clone)]
 pub struct ImGui_ImplSDL2_ViewportData
 {
@@ -867,7 +867,7 @@ impl ImGui_ImplSDL2_ViewportData {
     }
 }
 
-pub fn ImGui_ImplSDL2_CreateWindow(viewport: *mut ImGuiViewport)
+pub fn ImGui_ImplSDL2_CreateWindow(viewport: *mut ImguiViewport)
 {
     let mut bd = ImGui_ImplSDL2_GetBackendData();
     let mut vd: *mut ImGui_ImplSDL2_ViewportData = unsafe { libc::malloc(mem::size_of::<ImGui_ImplSDL2_ViewportData>()) } as *mut ImGui_ImplSDL2_ViewportData;
@@ -894,14 +894,14 @@ pub fn ImGui_ImplSDL2_CreateWindow(viewport: *mut ImGuiViewport)
     };
     unsafe { sdl_flags |= SDL_GetWindowFlags(bd.Window) & SDL_WINDOW_ALLOW_HIGHDPI; }
     sdl_flags |= SDL_WINDOW_HIDDEN;
-    sdl_flags |= if viewport.Flags & ImGuiViewportFlags_NoDecoration != 0 { SDL_WINDOW_BORDERLESS } else { 0 };
-    sdl_flags |= if (viewport.Flags & ImGuiViewportFlags_NoDecoration)!= 0 { 0 } else { SDL_WINDOW_RESIZABLE };
+    sdl_flags |= if viewport.Flags & ImguiViewportFlags_NoDecoration != 0 { SDL_WINDOW_BORDERLESS } else { 0 };
+    sdl_flags |= if (viewport.Flags & ImguiViewportFlags_NoDecoration)!= 0 { 0 } else { SDL_WINDOW_RESIZABLE };
 // #if !defined(_WIN32)
     // See SDL hack in ImGui_ImplSDL2_ShowWindow().
-    sdl_flags |= if (viewport.Flags & ImGuiViewportFlags_NoTaskBarIcon) != 0 { SDL_WINDOW_SKIP_TASKBAR } else { 0 };
+    sdl_flags |= if (viewport.Flags & ImguiViewportFlags_NoTaskBarIcon) != 0 { SDL_WINDOW_SKIP_TASKBAR } else { 0 };
 // #endif
 // #if SDL_HAS_ALWAYS_ON_TOP
-    sdl_flags |= if (viewport.Flags & ImGuiViewportFlags_TopMost) != 0 { SDL_WINDOW_ALWAYS_ON_TOP } else { 0 };
+    sdl_flags |= if (viewport.Flags & ImguiViewportFlags_TopMost) != 0 { SDL_WINDOW_ALWAYS_ON_TOP } else { 0 };
 // #endif
     unsafe { vd.Window = SDL_CreateWindow(CString::from("No Title Yet").as_ptr(), viewport.Pos.x, viewport.Pos.y, viewport.Size.x, viewport.Size.y, sdl_flags); }
     vd.WindowOwned = true;
@@ -938,7 +938,7 @@ pub fn ImGui_ImplSDL2_CreateWindow(viewport: *mut ImGuiViewport)
     }
 }
 
-pub fn ImGui_ImplSDL2_DestroyWindow(viewport: *mut ImGuiViewport)
+pub fn ImGui_ImplSDL2_DestroyWindow(viewport: *mut ImguiViewport)
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     if vd.is_null() == false
@@ -956,7 +956,7 @@ pub fn ImGui_ImplSDL2_DestroyWindow(viewport: *mut ImGuiViewport)
     viewport.PlatformUserData = viewport.PlatformHandle = null_mut();
 }
 
-pub fn ImGui_ImplSDL2_ShowWindow(viewport: *mut ImGuiViewport)
+pub fn ImGui_ImplSDL2_ShowWindow(viewport: *mut ImguiViewport)
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
 // #if defined(_WIN32)
@@ -964,7 +964,7 @@ pub fn ImGui_ImplSDL2_ShowWindow(viewport: *mut ImGuiViewport)
 
     // SDL hack: Hide icon from task bar
     // Note: SDL 2.0.6+ has a SDL_WINDOW_SKIP_TASKBAR flag which is supported under Windows but the way it create the window breaks our seamless transition.
-    if viewport.Flags & ImGuiViewportFlags_NoTaskBarIcon
+    if viewport.Flags & ImguiViewportFlags_NoTaskBarIcon
     {
         let ex_style = GetWindowLong(hwnd, GWL_EXSTYLE);
         ex_style &= !WS_EX_APPWINDOW;
@@ -973,7 +973,7 @@ pub fn ImGui_ImplSDL2_ShowWindow(viewport: *mut ImGuiViewport)
     }
 
     // SDL hack: SDL always activate/focus windows :/
-    if viewport.Flags & ImGuiViewportFlags_NoFocusOnAppearing
+    if viewport.Flags & ImguiViewportFlags_NoFocusOnAppearing
     {
         ShowWindow(hwnd, SW_SHOWNA);
         return;
@@ -983,7 +983,7 @@ pub fn ImGui_ImplSDL2_ShowWindow(viewport: *mut ImGuiViewport)
     unsafe { SDL_ShowWindow(vd.Window); }
 }
 
-pub fn ImGui_ImplSDL2_GetWindowPos(viewport: *mut ImGuiViewport) -> ImVec2
+pub fn ImGui_ImplSDL2_GetWindowPos(viewport: *mut ImguiViewport) -> ImVec2
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     // int x = 0, y = 0;
@@ -993,13 +993,13 @@ pub fn ImGui_ImplSDL2_GetWindowPos(viewport: *mut ImGuiViewport) -> ImVec2
     return ImVec2(x, y);
 }
 
-pub fn ImGui_ImplSDL2_SetWindowPos(viewport: *mut ImGuiViewport, pos: ImVec2)
+pub fn ImGui_ImplSDL2_SetWindowPos(viewport: *mut ImguiViewport, pos: ImVec2)
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     unsafe { SDL_SetWindowPosition(vd.Window, pos.x, pos.y); }
 }
 
-pub fn ImGui_ImplSDL2_GetWindowSize(viewport: *mut ImGuiViewport) -> ImVec2
+pub fn ImGui_ImplSDL2_GetWindowSize(viewport: *mut ImguiViewport) -> ImVec2
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     // int w = 0, h = 0;
@@ -1009,20 +1009,20 @@ pub fn ImGui_ImplSDL2_GetWindowSize(viewport: *mut ImGuiViewport) -> ImVec2
     return ImVec2(w, h);
 }
 
-pub fn ImGui_ImplSDL2_SetWindowSize(viewport: *mut ImGuiViewport, size: ImVec2)
+pub fn ImGui_ImplSDL2_SetWindowSize(viewport: *mut ImguiViewport, size: ImVec2)
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     unsafe { SDL_SetWindowSize(vd.Window, size.x, size.y); }
 }
 
-pub fn ImGui_ImplSDL2_SetWindowTitle(viewport: *mut ImGuiViewport, title: *const c_char)
+pub fn ImGui_ImplSDL2_SetWindowTitle(viewport: *mut ImguiViewport, title: *const c_char)
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     unsafe { SDL_SetWindowTitle(vd.Window, title); }
 }
 
 // #if SDL_HAS_WINDOW_ALPHA
-pub fn ImGui_ImplSDL2_SetWindowAlpha(viewport: *mut ImGuiViewport, alpha: f32)
+pub fn ImGui_ImplSDL2_SetWindowAlpha(viewport: *mut ImguiViewport, alpha: f32)
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     unsafe { SDL_SetWindowOpacity(vd.Window, alpha); }
@@ -1030,25 +1030,25 @@ pub fn ImGui_ImplSDL2_SetWindowAlpha(viewport: *mut ImGuiViewport, alpha: f32)
 // #endif
 
 
-pub fn ImGui_ImplSDL2_SetWindowFocus(viewport: *mut ImGuiViewport)
+pub fn ImGui_ImplSDL2_SetWindowFocus(viewport: *mut ImguiViewport)
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     unsafe { SDL_RaiseWindow(vd.Window); }
 }
 
-pub fn ImGui_ImplSDL2_GetWindowFocus(viewport: *mut ImGuiViewport) -> bool
+pub fn ImGui_ImplSDL2_GetWindowFocus(viewport: *mut ImguiViewport) -> bool
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     unsafe { return (SDL_GetWindowFlags(vd.Window) & SDL_WINDOW_INPUT_FOCUS) != 0; }
 }
 
-pub fn ImGui_ImplSDL2_GetWindowMinimized(viewport: *mut ImGuiViewport) -> bool
+pub fn ImGui_ImplSDL2_GetWindowMinimized(viewport: *mut ImguiViewport) -> bool
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     unsafe { return (SDL_GetWindowFlags(vd.Window) & SDL_WINDOW_MINIMIZED) != 0; }
 }
 
-pub fn ImGui_ImplSDL2_RenderWindow(viewport: *mut ImGuiViewport)
+pub fn ImGui_ImplSDL2_RenderWindow(viewport: *mut ImguiViewport)
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     if (vd.GLContext) {
@@ -1056,7 +1056,7 @@ pub fn ImGui_ImplSDL2_RenderWindow(viewport: *mut ImGuiViewport)
     }
 }
 
-pub fn ImGui_ImplSDL2_SwapBuffers(viewport: *mut ImGuiViewport)
+pub fn ImGui_ImplSDL2_SwapBuffers(viewport: *mut ImguiViewport)
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     if vd.GLContext
@@ -1070,7 +1070,7 @@ pub fn ImGui_ImplSDL2_SwapBuffers(viewport: *mut ImGuiViewport)
 // SDL is graceful enough to _not_ need <vulkan/vulkan.h> so we can safely include this.
 // #if SDL_HAS_VULKAN
 // #include <SDL_vulkan.h>
-pub fn ImGui_ImplSDL2_CreateVkSurface(viewport: *mut ImGuiViewport, vk_instance: u64, vk_allocator: *mut c_void, out_vk_surface: *mut u64) -> i32
+pub fn ImGui_ImplSDL2_CreateVkSurface(viewport: *mut ImguiViewport, vk_instance: u64, vk_allocator: *mut c_void, out_vk_surface: *mut u64) -> i32
 {
     let mut vd = viewport.PlatformUserData as *mut ImGui_ImplSDL2_ViewportData;
     // (void)vk_allocator;

@@ -12,6 +12,6 @@ pub type ImGuiBackendFlags = i32;
 
     // [BETA] Viewports
     pub const IM_GUI_BACKEND_FLAGS_PLATFORM_HAS_VIEWPORTS: ImGuiBackendFlags =  1 << 10;  // Backend Platform supports multiple viewports.
-    pub const IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT: ImGuiBackendFlags = 1 << 11;  // Backend Platform supports calling io.AddMouseViewportEvent() with the viewport under the mouse. IF POSSIBLE; ignore viewports with the ImGuiViewportFlags_NoInputs flag (Win32 backend; GLFW 3.30+ backend can do this; SDL backend cannot). If this cannot be done; Dear ImGui needs to use a flawed heuristic to find the viewport under.
+    pub const IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT: ImGuiBackendFlags = 1 << 11;  // Backend Platform supports calling io.AddMouseViewportEvent() with the viewport under the mouse. IF POSSIBLE; ignore viewports with the ImguiViewportFlags_NoInputs flag (Win32 backend; GLFW 3.30+ backend can do this; SDL backend cannot). If this cannot be done; Dear ImGui needs to use a flawed heuristic to find the viewport under.
     pub const IM_GUI_BACKEND_FLAGS_RENDERER_HAS_VIEWPORTS: ImGuiBackendFlags =  1 << 12;  // Backend Renderer supports multiple viewports.
 // };

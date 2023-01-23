@@ -18,7 +18,7 @@ use crate::core::type_defs::ImguiHandle;
 use crate::core::vec2::Vector2;
 use crate::window::{find, focus, ImguiWindow, render};
 use crate::window_flags::{ImGuiWindowFlags, ImGuiWindowFlags_AlwaysAutoResize, ImGuiWindowFlags_AlwaysHorizontalScrollbar, ImGuiWindowFlags_AlwaysVerticalScrollbar, ImGuiWindowFlags_ChildMenu, ImGuiWindowFlags_ChildWindow, ImGuiWindowFlags_DockNodeHost, ImGuiWindowFlags_HorizontalScrollbar, ImGuiWindowFlags_MenuBar, ImGuiWindowFlags_Modal, ImGuiWindowFlags_NoBackground, ImGuiWindowFlags_NoBringToFrontOnFocus, ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoResize, ImGuiWindowFlags_NoSavedSettings, ImGuiWindowFlags_NoScrollbar, ImGuiWindowFlags_NoTitleBar, ImGuiWindowFlags_Popup, ImGuiWindowFlags_Tooltip};
-use crate::{Viewport, hash_string};
+use crate::{ImguiViewport, hash_string};
 use libc::{c_char, c_float, c_int, c_short, c_void, size_t, strcmp};
 use std::ptr::{null, null_mut};
 use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
@@ -226,7 +226,7 @@ pub fn SetWindowConditionAllowFlags(window: &mut ImguiWindow, flags: ImGuiCond, 
 
 pub fn ApplyWindowSettings(window: &mut ImguiWindow, settings: *mut ImGuiWindowSettings)
 {
-    let main_viewport: *const Viewport = GetMainViewport();
+    let main_viewport: *const ImguiViewport = GetMainViewport();
     window.ViewportPos = main_viewport.Pos;
     if settings.ViewportId
     {
@@ -280,7 +280,7 @@ pub fn CreateNewWindow(g: &mut AppContext, name: &String, flags: ImGuiWindowFlag
 
 
     // Default/arbitrary window position. Use SetNextWindowPos() with the appropriate condition flag to change the initial position of a window.
-    let main_viewport: *const Viewport = GetMainViewport();
+    let main_viewport: *const ImguiViewport = GetMainViewport();
     window.position = main_viewport.Pos + Vector2::from_floats(60.0, 60.0);
     window.ViewportPos = main_viewport.Pos;
 
@@ -520,7 +520,7 @@ pub unsafe fn UpdateWindowManualResize(window: &mut ImguiWindow, size_auto_fit: 
     // - When decoration are enabled we typically benefit from that distance, but then our resize elements would be conflicting with OS resize elements, so we also narrow.
     // - Note that we are unable to tell if the platform setup allows hovering with a distance threshold (on Win32, decorated window have such threshold).
     // We only clip interaction so we overwrite window.ClipRect, cannot call PushClipRect() yet as DrawList is not yet setup.
-    let clip_with_viewport_rect: bool = flag_clear(g.IO.BackendFlags.clone() , ImGuiBackendFlags_HasMouseHoveredViewport) || (g.IO.MouseHoveredViewport != window.ViewportId) || flag_clear(window.Viewport.Flags.clone() , ImGuiViewportFlags_NoDecoration);
+    let clip_with_viewport_rect: bool = flag_clear(g.IO.BackendFlags.clone() , ImGuiBackendFlags_HasMouseHoveredViewport) || (g.IO.MouseHoveredViewport != window.ViewportId) || flag_clear(window.Viewport.Flags.clone() , ImguiViewportFlags_NoDecoration);
     if clip_with_viewport_rect {
         window.ClipRect = window.Viewport.get_main_rect().ToVec4();
     }
@@ -1085,11 +1085,11 @@ pub fn Begin(g: &mut AppContext, name: &String, p_open: Option<&mut bool>) -> bo
         }
 
         // Late create viewport if we don't fit within our current host viewport.
-        if (window.ViewportAllowPlatformMonitorExtend >= 0 && !window.ViewportOwned && !(window.Viewport.Flags & ImGuiViewportFlags_Minimized)) {
+        if (window.ViewportAllowPlatformMonitorExtend >= 0 && !window.ViewportOwned && !(window.Viewport.Flags & ImguiViewportFlags_Minimized)) {
             if (!window.Viewport.GetMainRect().Contains(window.Rect())) {
                 // This is based on the assumption that the DPI will be known ahead (same as the DPI of the selection done in UpdateSelectWindowViewport)
-                //old_viewport: *mut ImGuiViewport = window.Viewport;
-                window.Viewport = AddUpdateViewport(window, window.ID, window.position, window.Size, ImGuiViewportFlags_NoFocusOnAppearing);
+                //old_viewport: *mut ImguiViewport = window.Viewport;
+                window.Viewport = AddUpdateViewport(window, window.ID, window.position, window.Size, ImguiViewportFlags_NoFocusOnAppearing);
 
                 // FIXME-DPI
                 //IM_ASSERT(old_viewport.DpiScale == window.Viewport->DpiScale); // FIXME-DPI: Something went wrong

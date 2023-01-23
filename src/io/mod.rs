@@ -18,7 +18,7 @@ use crate::core::vec2::Vector2;
 use crate::font::font_atlas::ImFontAtlas;
 use crate::io::backend_renderer_user_data::BackendRendererUserData;
 use crate::platform::platform_ime_data::ImGuiPlatformImeData;
-use crate::viewport::Viewport;
+use crate::viewport::ImguiViewport;
 
 pub mod input_event;
 pub mod input_event_type;
@@ -90,11 +90,11 @@ pub struct IoContext {
 
     // Viewport options (when ImGuiConfigFlags_ViewportsEnable is set)
     pub ConfigViewportsNoAutoMerge: bool,
-    // = false;         // Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it. May also set ImGuiViewportFlags_NoAutoMerge on individual viewport.
+    // = false;         // Set to make all floating imgui windows always create their own viewport. Otherwise, they are merged into the main host viewports when overlapping it. May also set ImguiViewportFlags_NoAutoMerge on individual viewport.
     pub ConfigViewportsNoTaskBarIcon: bool,
-    // = false          // Disable default OS task bar icon flag for secondary viewports. When a viewport doesn't want a task bar icon, ImGuiViewportFlags_NoTaskBarIcon will be set on it.
+    // = false          // Disable default OS task bar icon flag for secondary viewports. When a viewport doesn't want a task bar icon, ImguiViewportFlags_NoTaskBarIcon will be set on it.
     pub ConfigViewportsNoDecoration: bool,
-    // = true           // Disable default OS window decoration flag for secondary viewports. When a viewport doesn't want window decorations, ImGuiViewportFlags_NoDecoration will be set on it. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).
+    // = true           // Disable default OS window decoration flag for secondary viewports. When a viewport doesn't want window decorations, ImguiViewportFlags_NoDecoration will be set on it. Enabling decoration can create subsequent issues at OS levels (e.g. minimum window size).
     pub ConfigViewportsNoDefaultParent: bool, // = false          // Disable default OS parenting to main viewport for secondary viewports. By default, viewports are marked with ParentViewportId = <main_viewport>, expecting the platform backend to setup a parent/child relationship between the OS windows (some backend may ignore this). Set to true if you want the default to be 0, then all viewports will be top-level OS windows.
 
     // Miscellaneous options
@@ -139,7 +139,7 @@ pub struct IoContext {
     // Optional: Notify OS Input Method Editor of the screen position of your cursor for
     // text input position (e.g. when using Japanese/Chinese IME on Windows)
     // (default to use native imm32 api on Windows)
-    pub set_platform_ime_fn: Option<fn(viewport: &mut Viewport, data: &mut  ImGuiPlatformImeData)>,
+    pub set_platform_ime_fn: Option<fn(viewport: &mut ImguiViewport, data: &mut  ImGuiPlatformImeData)>,
     //------------------------------------------------------------------
     // Input - Call before calling NewFrame()
     //------------------------------------------------------------------
@@ -212,7 +212,7 @@ pub struct IoContext {
     pub MouseWheelH: c_float,
     // Mouse wheel Horizontal. Most users don't have a mouse with an horizontal wheel, may not be filled by all backends.
     pub MouseHoveredViewport: ImguiHandle,
-    // (Optional) Modify using io.AddMouseViewportEvent(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ImGuiViewportFlags_NoInputs flag is much better (few backends can handle that). Set io.BackendFlags |= IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows).
+    // (Optional) Modify using io.AddMouseViewportEvent(). With multi-viewports: viewport the OS mouse is hovering. If possible _IGNORING_ viewports with the ImguiViewportFlags_NoInputs flag is much better (few backends can handle that). Set io.BackendFlags |= IM_GUI_BACKEND_FLAGS_HAS_MOUSE_HOVERED_VIEWPORT if you can provide this info. If you don't imgui will infer the value using the rectangles and last focused time of the viewports it knows about (ignoring other OS windows).
     pub KeyCtrl: bool,
     // Keyboard modifier down: Control
     pub KeyShift: bool,

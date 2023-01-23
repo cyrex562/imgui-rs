@@ -2,7 +2,7 @@ use std::ptr::{null, null_mut};
 use libc::{c_char, c_float, c_int};
 use crate::color::{IM_COL32_A_MASK, IM_COL32_A_SHIFT, ImGuiCol_Border, ImGuiCol_Button, ImGuiCol_ButtonActive, ImGuiCol_ButtonHovered, ImGuiCol_MenuBarBg, ImGuiCol_ModalWindowDimBg, ImGuiCol_NavWindowingDimBg, ImGuiCol_NavWindowingHighlight, ImGuiCol_SeparatorActive, ImGuiCol_Text, ImGuiCol_TitleBg, ImGuiCol_TitleBgActive, ImGuiCol_TitleBgCollapsed};
 use crate::core::direction::{ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right};
-use crate::{GImGui, Viewport};
+use crate::{GImGui, ImguiViewport};
 use crate::core::axis::{IM_GUI_AXIS_X, IM_GUI_AXIS_Y};
 use crate::drawing::draw_flags::{ImDrawFlags_None, ImDrawFlags_RoundCornersBottom, ImDrawFlags_RoundCornersTop};
 use crate::drawing::draw_list::ImDrawList;
@@ -153,7 +153,7 @@ pub unsafe fn RenderDimmedBackgroundBehindWindow(window: &mut ImguiWindow, col: 
         return;
     }
 
-    let mut viewport: *mut Viewport = window.Viewport;
+    let mut viewport: *mut ImguiViewport = window.Viewport;
     let viewport_rect: ImRect = viewport.get_main_rect();
 
     // Draw behind window by moving the draw command at the FRONT of the draw list
@@ -217,7 +217,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
         return;
     }
 
-    let mut viewports_already_dimmed: [*mut Viewport; 2] = [None, None];
+    let mut viewports_already_dimmed: [*mut ImguiViewport; 2] = [None, None];
     if dim_bg_for_modal {
         // Draw dimming behind modal or a begin stack child, whichever comes first in draw order.
         let mut dim_behind_window: &mut ImguiWindow =
@@ -251,7 +251,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
 
         // Draw border around CTRL+Tab target window
         let mut window: &mut ImguiWindow = g.NavWindowingTargetAnim;
-        ImGuiViewport * viewport = window.Viewport;
+        ImguiViewport * viewport = window.Viewport;
         let distance: c_float = g.FontSize;
         let mut bb: ImRect = window.Rect();
         bb.Expand(distance);
@@ -276,7 +276,7 @@ pub unsafe fn RenderDimmedBackgrounds() {
     // Draw dimming background on _other_ viewports than the ones our windows are in
     // for (let viewport_n: c_int = 0; viewport_n < g.Viewports.Size; viewport_n++)
     for viewport_n in 0..g.Viewports.len() {
-        let mut viewport: *mut Viewport = g.Viewports[viewport_n];
+        let mut viewport: *mut ImguiViewport = g.Viewports[viewport_n];
         if viewport == viewports_already_dimmed[0] || viewport == viewports_already_dimmed[1] {
             continue;
         }

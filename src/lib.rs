@@ -13,8 +13,8 @@ use crate::settings_ops::{
 };
 use crate::tables::TableSettingsAddSettingsHandler;
 use core::type_defs::INVALID_IMGUI_HANDLE;
-use crate::viewport::Viewport;
-use viewport::viewport_flags::ImGuiViewportFlags_OwnedByApp;
+use crate::viewport::ImguiViewport;
+use viewport::viewport_flags::ImguiViewportFlags_OwnedByApp;
 use viewport::viewport_ops::DestroyPlatformWindows;
 use core::context::AppContext;
 use core::context_hook::IM_GUI_CONTEXT_HOOK_TYPE_SHUTDOWN;
@@ -65,11 +65,11 @@ pub fn initialize(g: &mut AppContext) {
     TableSettingsAddSettingsHandler(g);
 
     // Create default viewport
-    let mut viewport: *mut Viewport = IM_NEW(ImGuiViewportP)();
+    let mut viewport: *mut ImguiViewport = IM_NEW(ImguiViewportP)();
     viewport.ID = IMGUI_VIEWPORT_DEFAULT_ID;
     viewport.Idx = 0;
     viewport.PlatformWindowCreated = true;
-    viewport.Flags = ImGuiViewportFlags_OwnedByApp;
+    viewport.Flags = ImguiViewportFlags_OwnedByApp;
     g.Viewports.push(viewport);
     g.TempBuffer.resize(1024 * 3 + 1, 0);
     g.PlatformIO.Viewports.push(g.Viewports[0]);

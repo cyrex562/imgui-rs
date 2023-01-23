@@ -19,7 +19,7 @@ use crate::drawing::draw_list_flags::{
 };
 use crate::drawing::draw_list_shared_data::Imgui_DrawListSharedData;
 use crate::drawing::draw_list_splitter::ImDrawListSplitter;
-use crate::drawing::draw_vert::DrawVertex;
+use crate::drawing::draw_vert::ImguiDrawVertex;
 use crate::drawing::draw::ImDrawCallback;
 use crate::drawing::draw_cmd::ImDrawCmd;
 use crate::font::ImFont;
@@ -53,7 +53,7 @@ pub struct ImDrawList {
     // Draw commands. Typically 1 command = 1 GPU draw call, unless the command is a callback.
     pub IdxBuffer: Vec<DrawIndex>,
     // Index buffer. Each command consume ImDrawCmd::ElemCount of those
-    pub VtxBuffer: Vec<DrawVertex>,
+    pub VtxBuffer: Vec<ImguiDrawVertex>,
     // Vertex buffer.
     pub Flags: ImDrawListFlags, // Flags, you may poke into these to adjust anti-aliasing settings per-primitive.
     // [Internal, used while building lists]
@@ -63,7 +63,7 @@ pub struct ImDrawList {
     // Pointer to shared draw data (you can use GetDrawListSharedData() to get the one from current ImGui context)
     pub _OwnerName: String,
     // Pointer to owner window's name for debugging
-    pub _VtxWritePtr: *mut DrawVertex,
+    pub _VtxWritePtr: *mut ImguiDrawVertex,
     // [Internal] point within VtxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
     pub _IdxWritePtr: *mut DrawIndex,
     // [Internal] point within IdxBuffer.Data after each add command (to avoid using the ImVector<> operators too much)
@@ -1469,7 +1469,7 @@ impl ImDrawList {
 
         let vtx_buffer_old_size: size_t = self.VtxBuffer.len();
         self.VtxBuffer
-            .resize_with(vtx_buffer_old_size + vtx_count, DrawVertex::default());
+            .resize_with(vtx_buffer_old_size + vtx_count, ImguiDrawVertex::default());
         self._VtxWritePtr = self.VtxBuffer.Data + vtx_buffer_old_size;
 
         let idx_buffer_old_size: size_t = self.IdxBuffer.len();

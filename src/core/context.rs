@@ -54,7 +54,7 @@ use crate::core::type_defs::{
 };
 use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
-use crate::viewport::Viewport;
+use crate::viewport::ImguiViewport;
 use crate::widgets::combo_preview_data::ImGuiComboPreviewData;
 use crate::window::window_settings::ImGuiWindowSettings;
 use crate::window::window_stack_data::ImGuiWindowStackData;
@@ -237,7 +237,7 @@ pub struct AppContext {
     pub BeginMenuCount: Vec<c_int>,
     // Active viewports (always 1+, and generally 1 unless multi-viewports are enabled).
     // Each viewports hold their copy of ImDrawData.
-    pub Viewports: HashMap<ImguiHandle, Viewport>,
+    pub Viewports: HashMap<ImguiHandle, ImguiViewport>,
     pub CurrentDpiScale: c_float,
     // We track changes of viewport (happening in Begin) so we can call
     // Platform_OnChangedViewport()
@@ -591,9 +591,9 @@ impl AppContext {
             BeginMenuCount: vec![],
 
             CurrentDpiScale: 0.0,
-            CurrentViewport: Viewport::default(),
-            MouseViewport: Viewport::default(),
-            MouseLastHoveredViewport: Viewport::default(),
+            CurrentViewport: ImguiViewport::default(),
+            MouseViewport: ImguiViewport::default(),
+            MouseLastHoveredViewport: ImguiViewport::default(),
             PlatformLastFocusedViewportId: 0,
             ViewportFrontMostStampCount: 0,
 

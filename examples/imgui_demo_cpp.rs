@@ -368,7 +368,7 @@ pub unsafe fn ShowDemoWindow(p_open: *mut bool)
 
     // We specify a default position/size in case there's no data in the .ini file.
     // We only do it to make the demo applications a little more welcoming, but typically this isn't required.
-    main_viewport: *const ImGuiViewport = GetMainViewport();
+    main_viewport: *const ImguiViewport = GetMainViewport();
     SetNextWindowPos(ImVec2::new(main_viewport.WorkPos.x + 650, main_viewport.WorkPos.y + 20), ImGuiCond_FirstUseEver);
     SetNextWindowSize(ImVec2::new(550, 680), ImGuiCond_FirstUseEver);
 
@@ -6069,7 +6069,7 @@ pub unsafe fn ShowAboutWindow(p_open: *mut bool)
 
         Text("Dear ImGui {} ({})", IMGUI_VERSION, IMGUI_VERSION_NUM);
         Separator();
-        Text("sizeof: {}, sizeof(ImDrawIdx): {}, sizeof(ImDrawVert): {}", sizeof, sizeof, sizeof(ImDrawVert));
+        Text("sizeof: {}, sizeof(ImDrawIdx): {}, sizeof(ImDrawVert): {}", sizeof, sizeof, sizeof(ImguiDrawVertex));
         Text("define: __cplusplus={}", __cplusplus);
 // #ifdef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
         Text("define: IMGUI_DISABLE_OBSOLETE_FUNCTIONS");
@@ -7476,7 +7476,7 @@ pub unsafe fn ShowExampleAppSimpleOverlay(bool* p_open)
     if (location >= 0)
     {
         let PAD: c_float =  10.0;
-        let viewport: *const ImGuiViewport = GetMainViewport();
+        let viewport: *const ImguiViewport = GetMainViewport();
         let work_pos: ImVec2 = viewport.WorkPos; // Use work area to avoid menu-bar/task-bar, if any!
         let work_size: ImVec2 = viewport.WorkSize;
         window_pos: ImVec2, window_pos_pivot;
@@ -7531,7 +7531,7 @@ pub unsafe fn ShowExampleAppFullscreen(bool* p_open)
 
     // We demonstrate using the full viewport area or the work area (without menu-bars, task-bars etc.)
     // Based on your use case you may want one of the other.
-    let viewport: *const ImGuiViewport = GetMainViewport();
+    let viewport: *const ImguiViewport = GetMainViewport();
     SetNextWindowPos(if use_work_area { viewport.WorkPos} else {viewport.Pos});
     SetNextWindowSize(if use_work_area { viewport.WorkSize} else {viewport.Size});
 
@@ -7564,7 +7564,7 @@ pub unsafe fn ShowExampleAppFullscreen(bool* p_open)
 // Read FAQ section "How can I have multiple widgets with the same label?" for details.
 pub unsafe fn ShowExampleAppWindowTitles(bool*)
 {
-    let viewport: *const ImGuiViewport = GetMainViewport();
+    let viewport: *const ImguiViewport = GetMainViewport();
     let base_pos: ImVec2 = viewport.Pos;
 
     // By default, Windows are uniquely identified by their title.
@@ -7876,7 +7876,7 @@ pub unsafe fn ShowExampleAppDockSpace(bool* p_open)
     window_flags: ImGuiWindowFlags = ImGuiWindowFlags_MenuBar | ImGuiWindowFlags_NoDocking;
     if (opt_fullscreen)
     {
-        let viewport: *const ImGuiViewport = GetMainViewport();
+        let viewport: *const ImguiViewport = GetMainViewport();
         SetNextWindowPos(viewport.WorkPos);
         SetNextWindowSize(viewport.WorkSize);
         SetNextWindowViewport(viewport.ID);

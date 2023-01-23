@@ -2,11 +2,11 @@
 
 use std::collections::HashMap;
 use crate::drawing::draw_list::ImDrawList;
-use crate::drawing::draw_vert::DrawVertex;
+use crate::drawing::draw_vert::ImguiDrawVertex;
 use crate::drawing::draw_cmd::ImDrawCmd;
 use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
-use crate::viewport::Viewport;
+use crate::viewport::ImguiViewport;
 use libc::{c_int, size_t};
 use std::ptr::null_mut;
 use crate::core::type_defs::{ImguiHandle, INVALID_IMGUI_HANDLE};
@@ -55,7 +55,7 @@ impl ImDrawData {
     // void  DeIndexAllBuffers();                    // Helper to convert all buffers from indexed to non-indexed, in case you cannot render indexed. Note: this is slow and most likely a waste of resources. Always prefer indexed rendering!
     pub fn DeIndexAllBuffers(&mut self) {
         // Vec<ImDrawVert> new_vtx_buffer;
-        let mut new_vtx_buffer: Vec<DrawVertex> = vec![];
+        let mut new_vtx_buffer: Vec<ImguiDrawVertex> = vec![];
         self.TotalVtxCount = 0;
         self.TotalIdxCount = 0;
         // for (let i: c_int = 0; i < CmdListsCount; i++)

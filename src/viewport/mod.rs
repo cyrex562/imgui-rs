@@ -1,4 +1,4 @@
-// struct ImGuiViewportP : public ImGuiViewport
+// struct ImguiViewportP : public ImguiViewport
 #![allow(non_snake_case)]
 
 // - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
@@ -15,7 +15,7 @@ use crate::core::math_ops::ImMax;
 use crate::rect::ImRect;
 use crate::core::type_defs::ImguiHandle;
 use crate::core::vec2::Vector2;
-use viewport_flags::ImGuiViewportFlags;
+use viewport_flags::ImguiViewportFlags;
 use crate::window::ImguiWindow;
 use crate::INVALID_IMGUI_HANDLE;
 use libc::{c_float, c_int, c_short, c_void};
@@ -30,7 +30,7 @@ pub mod viewport_renderer_user_data;
 mod viewport_platform_handle;
 
 
-pub struct Viewport {
+pub struct ImguiViewport {
     pub Idx: c_int,
     pub LastFrameActive: c_int,
     // Last frame number this viewport was activated by a window
@@ -44,7 +44,7 @@ pub struct Viewport {
     pub PlatformMonitor: c_short,
     pub PlatformWindowCreated: bool,
     pub window: ImguiHandle,
-    // Set when the viewport is owned by a window (and ImGuiViewportFlags_CanHostOtherWindows is NOT set)
+    // Set when the viewport is owned by a window (and ImguiViewportFlags_CanHostOtherWindows is NOT set)
     // Last frame number the background (0) and foreground (1) draw lists were used
     pub DrawListsLastFrame: [c_int; 2],
     // Convenience background (0) and foreground (1) draw lists. We use them to draw software mouser cursor when io.MouseDrawCursor is set and to draw most debug overlays.
@@ -63,8 +63,8 @@ pub struct Viewport {
     pub BuildWorkOffsetMax: Vector2, // Work Area: Offset being built during current frame. Generally <= 0.0.
     pub ID: ImguiHandle,
     // Unique identifier for the viewport
-    pub Flags: ImGuiViewportFlags,
-    // See ImGuiViewportFlags_
+    pub Flags: ImguiViewportFlags,
+    // See ImguiViewportFlags_
     pub Pos: Vector2,
     // Main Area: Position of the viewport (Dear ImGui coordinates are the same as OS desktop/native coordinates)
     pub Size: Vector2,
@@ -98,7 +98,7 @@ pub struct Viewport {
     pub PlatformRequestClose: bool, // Platform window requested closure (e.g. window was moved by the OS / host window manager, e.g. pressing ALT-F4)
 }
 
-impl Viewport {
+impl ImguiViewport {
     pub fn get_center(&self) -> Vector2 {
         Vector2::from_floats(
             self.Pos.x + self.Size.x * 0.5,

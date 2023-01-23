@@ -9,7 +9,7 @@ use crate::window::window_flags::{
     ImGuiWindowFlags_NoMouseInputs, ImGuiWindowFlags_NoResize,
 };
 use crate::window::{ops, ImguiWindow};
-use crate::{hash_string, GImGui, Viewport};
+use crate::{hash_string, GImGui, ImguiViewport};
 use libc::{c_char, c_float, c_int};
 use std::ptr::null_mut;
 
@@ -57,7 +57,7 @@ pub unsafe fn FindHoveredWindows() {
     let g = GImGui; // ImGuiContext& g = *GImGui;
 
     // Special handling for the window being moved: Ignore the mouse viewport check (because it may reset/lose its viewport during the undocking frame)
-    let mut moving_window_viewport: *mut Viewport = if !(g.MovingWindow.is_null()) {
+    let mut moving_window_viewport: *mut ImguiViewport = if !(g.MovingWindow.is_null()) {
         g.Movingwindow.Viewport
     } else {
         None

@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use crate::core::vec2::Vector2;
-use crate::Viewport;
+use crate::ImguiViewport;
 use libc::{c_char, c_float, c_void};
 use crate::platform::platform_monitor::PlatformMonitor;
 
@@ -26,67 +26,67 @@ pub struct PlatformIo {
     // Platform functions are typically called before their Renderer counterpart, apart from Destroy which are called the other way.
 
     // Platform function --------------------------------------------------- Called by -----
-    // void    (*Platform_CreateWindow)(vp: *mut ImGuiViewport);                    // . . U . .  // Create a new platform window for the given viewport
-    pub Platform_CreateWindow: fn(vp: *mut Viewport),
+    // void    (*Platform_CreateWindow)(vp: *mut ImguiViewport);                    // . . U . .  // Create a new platform window for the given viewport
+    pub Platform_CreateWindow: fn(vp: *mut ImguiViewport),
 
-    // void    (*Platform_DestroyWindow)(vp: *mut ImGuiViewport);                   // N . U . D  //
-    pub Platform_DestroyWindow: fn(vp: *mut Viewport),
+    // void    (*Platform_DestroyWindow)(vp: *mut ImguiViewport);                   // N . U . D  //
+    pub Platform_DestroyWindow: fn(vp: *mut ImguiViewport),
 
-    // void    (*Platform_ShowWindow)(vp: *mut ImGuiViewport);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
-    pub Platform_ShowWindow: fn(vp: *mut Viewport),
+    // void    (*Platform_ShowWindow)(vp: *mut ImguiViewport);                      // . . U . .  // Newly created windows are initially hidden so SetWindowPos/Size/Title can be called on them before showing the window
+    pub Platform_ShowWindow: fn(vp: *mut ImguiViewport),
 
-    // void    (*Platform_SetWindowPos)(vp: *mut ImGuiViewport, pos: ImVec2);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
-    pub Platform_SetWindowPos: fn(vp: *mut Viewport, pos: Vector2),
+    // void    (*Platform_SetWindowPos)(vp: *mut ImguiViewport, pos: ImVec2);        // . . U . .  // Set platform window position (given the upper-left corner of client area)
+    pub Platform_SetWindowPos: fn(vp: *mut ImguiViewport, pos: Vector2),
 
-    // ImVec2  (*Platform_GetWindowPos)(vp: *mut ImGuiViewport);                    // N . . . .  //
-    pub Platform_GetWindowPos: fn(vp: *mut Viewport) -> Vector2,
+    // ImVec2  (*Platform_GetWindowPos)(vp: *mut ImguiViewport);                    // N . . . .  //
+    pub Platform_GetWindowPos: fn(vp: *mut ImguiViewport) -> Vector2,
 
-    // void    (*Platform_SetWindowSize)(vp: *mut ImGuiViewport, size: ImVec2);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
-    pub Platform_SetWindowSize: fn(vp: *mut Viewport, size: Vector2),
+    // void    (*Platform_SetWindowSize)(vp: *mut ImguiViewport, size: ImVec2);      // . . U . .  // Set platform window client area size (ignoring OS decorations such as OS title bar etc.)
+    pub Platform_SetWindowSize: fn(vp: *mut ImguiViewport, size: Vector2),
 
-    // ImVec2  (*Platform_GetWindowSize)(vp: *mut ImGuiViewport);                   // N . . . .  // Get platform window client area size
-    pub Platform_GetWindowSize: fn(vp: *mut Viewport) -> Vector2,
+    // ImVec2  (*Platform_GetWindowSize)(vp: *mut ImguiViewport);                   // N . . . .  // Get platform window client area size
+    pub Platform_GetWindowSize: fn(vp: *mut ImguiViewport) -> Vector2,
 
-    // void    (*Platform_SetWindowFocus)(vp: *mut ImGuiViewport);                  // N . . . .  // Move window to front and set input focus
-    pub Platform_SetWindowFocus: fn(vp: *mut Viewport),
+    // void    (*Platform_SetWindowFocus)(vp: *mut ImguiViewport);                  // N . . . .  // Move window to front and set input focus
+    pub Platform_SetWindowFocus: fn(vp: *mut ImguiViewport),
 
-    // bool    (*Platform_GetWindowFocus)(vp: *mut ImGuiViewport);                  // . . U . .  //
-    pub Platform_GetWindowFocus: fn(vp: *mut Viewport) -> bool,
+    // bool    (*Platform_GetWindowFocus)(vp: *mut ImguiViewport);                  // . . U . .  //
+    pub Platform_GetWindowFocus: fn(vp: *mut ImguiViewport) -> bool,
 
-    // bool    (*Platform_GetWindowMinimized)(vp: *mut ImGuiViewport);              // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
-    pub Platform_GetWindowMinimized: fn(vp: *mut Viewport) -> bool,
+    // bool    (*Platform_GetWindowMinimized)(vp: *mut ImguiViewport);              // N . . . .  // Get platform window minimized state. When minimized, we generally won't attempt to get/set size and contents will be culled more easily
+    pub Platform_GetWindowMinimized: fn(vp: *mut ImguiViewport) -> bool,
 
-    // void    (*Platform_SetWindowTitle)(vp: *mut ImGuiViewport, const char* str); // . . U . .  // Set platform window title (given an UTF-8 string)
-    pub Platform_SetWindowTitle: fn(vp: *mut Viewport, title: *const c_char),
+    // void    (*Platform_SetWindowTitle)(vp: *mut ImguiViewport, const char* str); // . . U . .  // Set platform window title (given an UTF-8 string)
+    pub Platform_SetWindowTitle: fn(vp: *mut ImguiViewport, title: *const c_char),
 
-    // void    (*Platform_SetWindowAlpha)(vp: *mut ImGuiViewport, float alpha);     // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
-    pub Platform_SetWindowAlpha: fn(vp: *mut Viewport, alpha: c_float),
+    // void    (*Platform_SetWindowAlpha)(vp: *mut ImguiViewport, float alpha);     // . . U . .  // (Optional) Setup global transparency (not per-pixel transparency)
+    pub Platform_SetWindowAlpha: fn(vp: *mut ImguiViewport, alpha: c_float),
 
-    // void    (*Platform_UpdateWindow)(vp: *mut ImGuiViewport);                    // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
-    pub Platform_UpdateWindow: fn(vp: *mut Viewport),
+    // void    (*Platform_UpdateWindow)(vp: *mut ImguiViewport);                    // . . U . .  // (Optional) Called by UpdatePlatformWindows(). Optional hook to allow the platform backend from doing general book-keeping every frame.
+    pub Platform_UpdateWindow: fn(vp: *mut ImguiViewport),
 
-    // void    (*Platform_RenderWindow)(vp: *mut ImGuiViewport, void* render_arg);  // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    pub Platform_RenderWindow: fn(vp: *mut Viewport, render_arg: *mut c_void),
+    // void    (*Platform_RenderWindow)(vp: *mut ImguiViewport, void* render_arg);  // . . . R .  // (Optional) Main rendering (platform side! This is often unused, or just setting a "current" context for OpenGL bindings). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    pub Platform_RenderWindow: fn(vp: *mut ImguiViewport, render_arg: *mut c_void),
 
-    // void    (*Platform_SwapBuffers)(vp: *mut ImGuiViewport, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
-    pub Platform_SwapBuffers: fn(vp: *mut Viewport, render_arg: *mut c_void),
+    // void    (*Platform_SwapBuffers)(vp: *mut ImguiViewport, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers (platform side! This is often unused!). 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    pub Platform_SwapBuffers: fn(vp: *mut ImguiViewport, render_arg: *mut c_void),
 
-    // float   (*Platform_GetWindowDpiScale)(vp: *mut ImGuiViewport);               // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0 = 96 DPI.
+    // float   (*Platform_GetWindowDpiScale)(vp: *mut ImguiViewport);               // N . . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Return DPI scale for this viewport. 1.0 = 96 DPI.
 
-    // void    (*Platform_OnChangedViewport)(vp: *mut ImGuiViewport);               // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
+    // void    (*Platform_OnChangedViewport)(vp: *mut ImguiViewport);               // . F . . .  // (Optional) [BETA] FIXME-DPI: DPI handling: Called during Begin() every time the viewport we are outputting into changes, so backend has a chance to swap fonts to adjust style.
 
-    // int     (*Platform_CreateVkSurface)(vp: *mut ImGuiViewport, u64 vk_inst, const void* vk_allocators, u64* out_vk_surface); // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
+    // int     (*Platform_CreateVkSurface)(vp: *mut ImguiViewport, u64 vk_inst, const void* vk_allocators, u64* out_vk_surface); // (Optional) For a Vulkan Renderer to call into Platform code (since the surface creation needs to tie them both).
 
     // (Optional) Renderer functions (e.g. DirectX, OpenGL, Vulkan)
-    // void    (*Renderer_CreateWindow)(vp: *mut ImGuiViewport);                    // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
+    // void    (*Renderer_CreateWindow)(vp: *mut ImguiViewport);                    // . . U . .  // Create swap chain, frame buffers etc. (called after Platform_CreateWindow)
 
-    // void    (*Renderer_DestroyWindow)(vp: *mut ImGuiViewport);                   // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
+    // void    (*Renderer_DestroyWindow)(vp: *mut ImguiViewport);                   // N . U . D  // Destroy swap chain, frame buffers etc. (called before Platform_DestroyWindow)
 
-    // void    (*Renderer_SetWindowSize)(vp: *mut ImGuiViewport, size: ImVec2);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
+    // void    (*Renderer_SetWindowSize)(vp: *mut ImguiViewport, size: ImVec2);      // . . U . .  // Resize swap chain, frame buffers etc. (called after Platform_SetWindowSize)
 
-    // void    (*Renderer_RenderWindow)(vp: *mut ImGuiViewport, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport.DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    // void    (*Renderer_RenderWindow)(vp: *mut ImguiViewport, void* render_arg);  // . . . R .  // (Optional) Clear framebuffer, setup render target, then render the viewport.DrawData. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
 
-    // void    (*Renderer_SwapBuffers)(vp: *mut ImGuiViewport, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
+    // void    (*Renderer_SwapBuffers)(vp: *mut ImguiViewport, void* render_arg);   // . . . R .  // (Optional) Call Present/SwapBuffers. 'render_arg' is the value passed to RenderPlatformWindowsDefault().
 
     // (Optional) Monitor list
     // - Updated by: app/backend. Update every frame to dynamically support changing monitor or DPI configuration.
@@ -100,7 +100,7 @@ pub struct PlatformIo {
 
     // Viewports list (the list is updated by calling EndFrame or Render)
     // (in the future we will attempt to organize this feature to remove the need for a "main viewport")
-    // ImVector<ImGuiViewport*>        Viewports;                              // Main viewports, followed by all secondary viewports.
-    pub Viewports: Vec<Viewport>,
+    // ImVector<ImguiViewport*>        Viewports;                              // Main viewports, followed by all secondary viewports.
+    pub Viewports: Vec<ImguiViewport>,
     // ImGuiPlatformIO()               { memset(this, 0, sizeof(*this)); }     // Zero clear
 }

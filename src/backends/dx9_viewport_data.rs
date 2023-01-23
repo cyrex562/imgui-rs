@@ -1,6 +1,6 @@
 use windows::Win32::Graphics::Direct3D9::{D3DPRESENT_PARAMETERS, IDirect3DSwapChain9};
 
-// Helper structure we store in the void* RenderUserData field of each ImGuiViewport to easily retrieve our backend data.
+// Helper structure we store in the void* RenderUserData field of each ImguiViewport to easily retrieve our backend data.
 #[derive(Default,Debug,Clone)]
 pub struct ViewportData
 {

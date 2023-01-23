@@ -588,7 +588,7 @@ pub unsafe fn DockContextProcessDock(g: &mut AppContext, req: *mut ImGuiDockRequ
 // Solution:
 //   When undocking a window we currently force its maximum size to 90% of the host viewport or monitor.
 // Reevaluate this when we implement preserving docked/undocked size ("docking_wip/undocked_size" branch).
-pub unsafe fn FixLargeWindowsWhenUndocking(size: &ImVec2, ref_viewport: *mut ImGuiViewport) -> ImVec2
+pub unsafe fn FixLargeWindowsWhenUndocking(size: &ImVec2, ref_viewport: *mut ImguiViewport) -> ImVec2
 {
     if (ref_viewport == null_mut()){
         return size;}

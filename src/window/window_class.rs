@@ -4,7 +4,7 @@ use crate::docking::dock_node_flags::ImGuiDockNodeFlags;
 use crate::window::next_window_data_flags::ImGuiNextWindowDataFlags_HasWindowClass;
 use crate::widgets::tab_item_flags::ImGuiTabItemFlags;
 use crate::core::type_defs::ImguiHandle;
-use crate::viewport::viewport_flags::ImGuiViewportFlags;
+use crate::viewport::viewport_flags::ImguiViewportFlags;
 use crate::GImGui;
 
 // [ALPHA] Rarely used / very advanced uses only. Use with SetNextWindowClass() and DockSpace() functions.
@@ -20,9 +20,9 @@ pub struct ImGuiWindowClass {
     // User data. 0 = Default class (unclassed). Windows of different classes cannot be docked with each others.
     pub ParentViewportId: ImguiHandle,
     // Hint for the platform backend. -1: use default. 0: request platform backend to not parent the platform. != 0: request platform backend to create a parent<>child relationship between the platform windows. Not conforming backends are free to e.g. parent every viewport to the main viewport or not.
-    pub ViewportFlagsOverrideSet: ImGuiViewportFlags,
+    pub ViewportFlagsOverrideSet: ImguiViewportFlags,
     // Viewport flags to set when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
-    pub ViewportFlagsOverrideClear: ImGuiViewportFlags,
+    pub ViewportFlagsOverrideClear: ImguiViewportFlags,
     // Viewport flags to clear when a window of this class owns a viewport. This allows you to enforce OS decoration or task bar icon, override the defaults on a per-window basis.
     pub TabItemFlagsOverrideSet: ImGuiTabItemFlags,
     // [EXPERIMENTAL] TabItem flags to set when a window of this class gets submitted into a dock node tab bar. May use with ImGuiTabItemFlags_Leading or ImGuiTabItemFlags_Trailing.

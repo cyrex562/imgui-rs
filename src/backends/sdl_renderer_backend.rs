@@ -206,10 +206,10 @@ pub fn ImGui_ImplSDLRenderer_RenderDrawData(draw_data: *mut ImDrawData)
                 let mut  r: SDL_Rect = SDL_Rect{ x: (clip_min.x), y: (clip_min.y), w: (clip_max.x - clip_min.x), h: (clip_max.y - clip_min.y) };
                 unsafe { SDL_RenderSetClipRect(bd.SDLRenderer, &r); }
 
-                let mut xy = ((vtx_buffer + pcmd.VtxOffset) + IM_OFFSETOF(ImDrawVert, pos));
-                let mut uv = ((vtx_buffer + pcmd.VtxOffset) + IM_OFFSETOF(ImDrawVert, uv));
+                let mut xy = ((vtx_buffer + pcmd.VtxOffset) + IM_OFFSETOF(ImguiDrawVertex, pos));
+                let mut uv = ((vtx_buffer + pcmd.VtxOffset) + IM_OFFSETOF(ImguiDrawVertex, uv));
 // #if SDL_VERSION_ATLEAST(2,0,19)
-                let mut color: *mut SDL_Color = ((vtx_buffer + pcmd.VtxOffset) + IM_OFFSETOF(ImDrawVert, col)); // SDL 2.0.19+
+                let mut color: *mut SDL_Color = ((vtx_buffer + pcmd.VtxOffset) + IM_OFFSETOF(ImguiDrawVertex, col)); // SDL 2.0.19+
 // #else
 //                 const int* color = (const int*)((vtx_buffer + pcmd.VtxOffset) + IM_OFFSETOF(ImDrawVert, col)); // SDL 2.0.17 and 2.0.18
 // #endif
@@ -217,9 +217,9 @@ pub fn ImGui_ImplSDLRenderer_RenderDrawData(draw_data: *mut ImDrawData)
                 // Bind texture, Draw
 				let tex: *mut SDL_Texture = pcmd.GetTexID();
                 SDL_RenderGeometryRaw(bd.SDLRenderer, tex,
-                    xy, sizeof(ImDrawVert),
-                    color, sizeof(ImDrawVert),
-                    uv, sizeof(ImDrawVert),
+                    xy, sizeof(ImguiDrawVertex),
+                    color, sizeof(ImguiDrawVertex),
+                    uv, sizeof(ImguiDrawVertex),
                     cmd_list.VtxBuffer.Size - pcmd.VtxOffset,
                     idx_buffer + pcmd.IdxOffset, pcmd.ElemCount, sizeof(ImDrawIdx));
             }

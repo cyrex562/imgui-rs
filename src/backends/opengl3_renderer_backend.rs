@@ -419,9 +419,9 @@ static void ImGui_ImplOpenGL3_SetupRenderState(ImDrawData* draw_data, int fb_wid
     glEnableVertexAttribArray(bd->AttribLocationVtxPos);
     glEnableVertexAttribArray(bd->AttribLocationVtxUV);
     glEnableVertexAttribArray(bd->AttribLocationVtxColor);
-    glVertexAttribPointer(bd->AttribLocationVtxPos,   2, GL_FLOAT,         GL_FALSE, sizeof(ImDrawVert), (GLvoid*)IM_OFFSETOF(ImDrawVert, pos));
-    glVertexAttribPointer(bd->AttribLocationVtxUV,    2, GL_FLOAT,         GL_FALSE, sizeof(ImDrawVert), (GLvoid*)IM_OFFSETOF(ImDrawVert, uv));
-    glVertexAttribPointer(bd->AttribLocationVtxColor, 4, GL_UNSIGNED_BYTE, GL_TRUE,  sizeof(ImDrawVert), (GLvoid*)IM_OFFSETOF(ImDrawVert, col));
+    glVertexAttribPointer(bd->AttribLocationVtxPos,   2, GL_FLOAT,         GL_FALSE, sizeof(ImguiDrawVertex), (GLvoid*)IM_OFFSETOF(ImguiDrawVertex, pos));
+    glVertexAttribPointer(bd->AttribLocationVtxUV,    2, GL_FLOAT,         GL_FALSE, sizeof(ImguiDrawVertex), (GLvoid*)IM_OFFSETOF(ImguiDrawVertex, uv));
+    glVertexAttribPointer(bd->AttribLocationVtxColor, 4, GL_UNSIGNED_BYTE, GL_TRUE,  sizeof(ImguiDrawVertex), (GLvoid*)IM_OFFSETOF(ImguiDrawVertex, col));
 }
 
 // OpenGL3 Render function.
@@ -498,7 +498,7 @@ void    ImGui_ImplOpenGL3_RenderDrawData(ImDrawData* draw_data)
         // - On Intel windows drivers we got reports that regular glBufferData() led to accumulating leaks when using multi-viewports, so we started using orphaning + glBufferSubData(). (See https://github.com/ocornut/imgui/issues/4468)
         // - On NVIDIA drivers we got reports that using orphaning + glBufferSubData() led to glitches when using multi-viewports.
         // - OpenGL drivers are in a very sorry state in 2022, for now we are switching code path based on vendors.
-        const GLsizeiptr vtx_buffer_size = (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImDrawVert);
+        const GLsizeiptr vtx_buffer_size = (GLsizeiptr)cmd_list->VtxBuffer.Size * sizeof(ImguiDrawVertex);
         const GLsizeiptr idx_buffer_size = (GLsizeiptr)cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx);
         if (bd->UseBufferSubData)
         {
@@ -883,9 +883,9 @@ void    ImGui_ImplOpenGL3_DestroyDeviceObjects()
 // If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
 //--------------------------------------------------------------------------------------------------------
 
-static void ImGui_ImplOpenGL3_RenderWindow(viewport: *mut ImGuiViewport, void*)
+static void ImGui_ImplOpenGL3_RenderWindow(viewport: *mut ImguiViewport, void*)
 {
-    if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
+    if (!(viewport->Flags & ImguiViewportFlags_NoRendererClear))
     {
         ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);

@@ -57,7 +57,7 @@ use crate::core::context::AppContext;
 use crate::core::type_defs::DrawIndex;
 use crate::core::vec2::Vector2;
 use crate::drawing::draw_data::ImDrawData;
-use crate::drawing::draw_vert::DrawVertex;
+use crate::drawing::draw_vert::ImguiDrawVertex;
 use crate::io::backend_renderer_user_data::BackendRendererUserData;
 use crate::io::io_ops::GetIO;
 
@@ -139,7 +139,7 @@ pub unsafe fn ImGui_ImplDX10_SetupRenderState(
     // device.RSSetViewports(&vp);
 
     // Bind shader and vertex buffers
-    let stride = mem::size_of::<DrawVertex>();
+    let stride = mem::size_of::<ImguiDrawVertex>();
    let mut offset = 0;
     device.IASetInputLayout(&bd.pInputLayout);
     device.IASetVertexBuffers(0, 1, &bd.pVB, &stride as *const u32, &offset);
@@ -183,7 +183,7 @@ pub unsafe fn ImGui_ImplDX10_RenderDrawData(ctx: &mut AppContext, draw_data: &mu
         let mut desc = D3D10_BUFFER_DESC::default();
         // memset(&desc, 0, sizeof(D3D10_BUFFER_DESC));
         desc.Usage = D3D10_USAGE_DYNAMIC;
-        desc.ByteWidth = (bd.VertexBufferSize * mem::size_of::<DrawVertex>()) as u32;
+        desc.ByteWidth = (bd.VertexBufferSize * mem::size_of::<ImguiDrawVertex>()) as u32;
         desc.BindFlags = D3D10_BIND_VERTEX_BUFFER.0 as u32;
         desc.CPUAccessFlags = D3D10_CPU_ACCESS_WRITE.0 as u32;
         desc.MiscFlags = 0;
@@ -209,7 +209,7 @@ pub unsafe fn ImGui_ImplDX10_RenderDrawData(ctx: &mut AppContext, draw_data: &mu
 
     // Copy and convert all vertices into a single contiguous buffer
     // ImDrawVert* vtx_dst = NULL;
-    let mut vtx_dst: *mut DrawVertex = null_mut();
+    let mut vtx_dst: *mut ImguiDrawVertex = null_mut();
     // ImDrawIdx* idx_dst = NULL;
     let mut idx_dst: *mut DrawIndex = null_mut();
     bd.pVB.unwrap().Map(D3D10_MAP_WRITE_DISCARD, 0, &mut vtx_dst as *mut *mut c_void)?;
@@ -218,7 +218,7 @@ pub unsafe fn ImGui_ImplDX10_RenderDrawData(ctx: &mut AppContext, draw_data: &mu
     for cmd_list in draw_data.CmdLists.values_mut()
     {
         // const ImDrawList* cmd_list = draw_data.CmdLists[n];
-        libc::memcpy(vtx_dst as *mut c_void, cmd_list.VtxBuffer.as_mut_ptr() as *mut c_void, cmd_list.VtxBuffer.Size * sizeof(ImDrawVert));
+        libc::memcpy(vtx_dst as *mut c_void, cmd_list.VtxBuffer.as_mut_ptr() as *mut c_void, cmd_list.VtxBuffer.Size * sizeof(ImguiDrawVertex));
 
         libc::memcpy(idx_dst as *mut c_void, cmd_list.IdxBuffer.as_mut_ptr() as *mut c_void, cmd_list.IdxBuffer.Size * sizeof(ImDrawIdx));
 
@@ -526,7 +526,7 @@ pub unsafe fn    ImGui_ImplDX10_CreateDeviceObjects(g: &mut AppContext) -> bool
                 SemanticIndex: 0,
                 Format: DXGI_FORMAT_R32G32_FLOAT,
                 InputSlot: 0,
-                AlignedByteOffset: IM_OFFSETOF(ImDrawVert, pos),
+                AlignedByteOffset: IM_OFFSETOF(ImguiDrawVertex, pos),
                 InputSlotClass: D3D10_INPUT_PER_VERTEX_DATA,
                 InstanceDataStepRate: 0 },
             D3D10_INPUT_ELEMENT_DESC{
@@ -534,7 +534,7 @@ pub unsafe fn    ImGui_ImplDX10_CreateDeviceObjects(g: &mut AppContext) -> bool
                 SemanticIndex: 0,
                 Format: DXGI_FORMAT_R32G32_FLOAT,
                 InputSlot: 0,
-                AlignedByteOffset: IM_OFFSETOF(ImDrawVert, uv),
+                AlignedByteOffset: IM_OFFSETOF(ImguiDrawVertex, uv),
                 InputSlotClass: D3D10_INPUT_PER_VERTEX_DATA,
                 InstanceDataStepRate: 0 },
             D3D10_INPUT_ELEMENT_DESC{
@@ -542,7 +542,7 @@ pub unsafe fn    ImGui_ImplDX10_CreateDeviceObjects(g: &mut AppContext) -> bool
                 SemanticIndex: 0,
                 Format: DXGI_FORMAT_R8G8B8A8_UNORM,
                 InputSlot: 0,
-                AlignedByteOffset: IM_OFFSETOF(ImDrawVert, col),
+                AlignedByteOffset: IM_OFFSETOF(ImguiDrawVertex, col),
                 InputSlotClass: D3D10_INPUT_PER_VERTEX_DATA,
                 InstanceDataStepRate: 0 },
         ];
@@ -724,7 +724,7 @@ void ImGui_ImplDX10_NewFrame()
 // If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
 //--------------------------------------------------------------------------------------------------------
 
-// Helper structure we store in the void* RenderUserData field of each ImGuiViewport to easily retrieve our backend data.
+// Helper structure we store in the void* RenderUserData field of each ImguiViewport to easily retrieve our backend data.
 struct ImGui_ImplDX10_ViewportData
 {
     IDXGISwapChain*         SwapChain;
@@ -734,7 +734,7 @@ struct ImGui_ImplDX10_ViewportData
     ~ImGui_ImplDX10_ViewportData()  { IM_ASSERT(SwapChain == NULL && RTView == NULL); }
 };
 
-static void ImGui_ImplDX10_CreateWindow(viewport: *mut ImGuiViewport)
+static void ImGui_ImplDX10_CreateWindow(viewport: *mut ImguiViewport)
 {
     ImGui_ImplDX10_Data* bd = ImGui_ImplDX10_GetBackendData();
     ImGui_ImplDX10_ViewportData* vd = IM_NEW(ImGui_ImplDX10_ViewportData)();
@@ -773,7 +773,7 @@ static void ImGui_ImplDX10_CreateWindow(viewport: *mut ImGuiViewport)
     }
 }
 
-static void ImGui_ImplDX10_DestroyWindow(viewport: *mut ImGuiViewport)
+static void ImGui_ImplDX10_DestroyWindow(viewport: *mut ImguiViewport)
 {
     // The main viewport (owned by the application) will always have RendererUserData == NULL here since we didn't create the data for it.
     if (ImGui_ImplDX10_ViewportData* vd = (ImGui_ImplDX10_ViewportData*)viewport.RendererUserData)
@@ -789,7 +789,7 @@ static void ImGui_ImplDX10_DestroyWindow(viewport: *mut ImGuiViewport)
     viewport.RendererUserData = NULL;
 }
 
-static void ImGui_ImplDX10_SetWindowSize(viewport: *mut ImGuiViewport, size: ImVec2)
+static void ImGui_ImplDX10_SetWindowSize(viewport: *mut ImguiViewport, size: ImVec2)
 {
     ImGui_ImplDX10_Data* bd = ImGui_ImplDX10_GetBackendData();
     ImGui_ImplDX10_ViewportData* vd = (ImGui_ImplDX10_ViewportData*)viewport.RendererUserData;
@@ -809,18 +809,18 @@ static void ImGui_ImplDX10_SetWindowSize(viewport: *mut ImGuiViewport, size: ImV
     }
 }
 
-static void ImGui_ImplDX10_RenderViewport(viewport: *mut ImGuiViewport, void*)
+static void ImGui_ImplDX10_RenderViewport(viewport: *mut ImguiViewport, void*)
 {
     ImGui_ImplDX10_Data* bd = ImGui_ImplDX10_GetBackendData();
     ImGui_ImplDX10_ViewportData* vd = (ImGui_ImplDX10_ViewportData*)viewport.RendererUserData;
     ImVec4 clear_color = ImVec4(0.0, 0.0, 0.0, 1.0);
     bd.pd3dDevice.OMSetRenderTargets(1, &vd.RTView, NULL);
-    if (!(viewport.Flags & ImGuiViewportFlags_NoRendererClear))
+    if (!(viewport.Flags & ImguiViewportFlags_NoRendererClear))
         bd.pd3dDevice.ClearRenderTargetView(vd.RTView, (float*)&clear_color);
     ImGui_ImplDX10_RenderDrawData(viewport.DrawData);
 }
 
-static void ImGui_ImplDX10_SwapBuffers(viewport: *mut ImGuiViewport, void*)
+static void ImGui_ImplDX10_SwapBuffers(viewport: *mut ImguiViewport, void*)
 {
     ImGui_ImplDX10_ViewportData* vd = (ImGui_ImplDX10_ViewportData*)viewport.RendererUserData;
     vd.SwapChain.Present(0, 0); // Present without vsync

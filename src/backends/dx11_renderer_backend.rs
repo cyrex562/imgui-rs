@@ -97,7 +97,7 @@ static void ImGui_ImplDX11_SetupRenderState(ImDrawData* draw_data, ID3D11DeviceC
     ctx->RSSetViewports(1, &vp);
 
     // Setup shader and vertex buffers
-    unsigned int stride = sizeof(ImDrawVert);
+    unsigned int stride = sizeof(ImguiDrawVertex);
     unsigned int offset = 0;
     ctx->IASetInputLayout(bd->pInputLayout);
     ctx->IASetVertexBuffers(0, 1, &bd->pVB, &stride, &offset);
@@ -137,7 +137,7 @@ void ImGui_ImplDX11_RenderDrawData(ImDrawData* draw_data)
         D3D11_BUFFER_DESC desc;
         memset(&desc, 0, sizeof(D3D11_BUFFER_DESC));
         desc.Usage = D3D11_USAGE_DYNAMIC;
-        desc.ByteWidth = bd->VertexBufferSize * sizeof(ImDrawVert);
+        desc.ByteWidth = bd->VertexBufferSize * sizeof(ImguiDrawVertex);
         desc.BindFlags = D3D11_BIND_VERTEX_BUFFER;
         desc.CPUAccessFlags = D3D11_CPU_ACCESS_WRITE;
         desc.MiscFlags = 0;
@@ -164,12 +164,12 @@ void ImGui_ImplDX11_RenderDrawData(ImDrawData* draw_data)
         return;
     if (ctx->Map(bd->pIB, 0, D3D11_MAP_WRITE_DISCARD, 0, &idx_resource) != S_OK)
         return;
-    ImDrawVert* vtx_dst = (ImDrawVert*)vtx_resource.pData;
+    ImguiDrawVertex* vtx_dst = (ImguiDrawVertex*)vtx_resource.pData;
     ImDrawIdx* idx_dst = (ImDrawIdx*)idx_resource.pData;
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+        memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImguiDrawVertex));
         memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
         vtx_dst += cmd_list->VtxBuffer.Size;
         idx_dst += cmd_list->IdxBuffer.Size;
@@ -427,9 +427,9 @@ bool    ImGui_ImplDX11_CreateDeviceObjects()
         // Create the input layout
         D3D11_INPUT_ELEMENT_DESC local_layout[] =
         {
-            { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0, (UINT)IM_OFFSETOF(ImDrawVert, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0, (UINT)IM_OFFSETOF(ImDrawVert, uv),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
-            { "COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, (UINT)IM_OFFSETOF(ImDrawVert, col), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "POSITION", 0, DXGI_FORMAT_R32G32_FLOAT,   0, (UINT)IM_OFFSETOF(ImguiDrawVertex, pos), D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "TEXCOORD", 0, DXGI_FORMAT_R32G32_FLOAT,   0, (UINT)IM_OFFSETOF(ImguiDrawVertex, uv),  D3D11_INPUT_PER_VERTEX_DATA, 0 },
+            { "COLOR",    0, DXGI_FORMAT_R8G8B8A8_UNORM, 0, (UINT)IM_OFFSETOF(ImguiDrawVertex, col), D3D11_INPUT_PER_VERTEX_DATA, 0 },
         };
         if (bd->pd3dDevice->CreateInputLayout(local_layout, 3, vertexShaderBlob->GetBufferPointer(), vertexShaderBlob->GetBufferSize(), &bd->pInputLayout) != S_OK)
         {
@@ -611,7 +611,7 @@ void ImGui_ImplDX11_NewFrame()
 // If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
 //--------------------------------------------------------------------------------------------------------
 
-// Helper structure we store in the void* RenderUserData field of each ImGuiViewport to easily retrieve our backend data.
+// Helper structure we store in the void* RenderUserData field of each ImguiViewport to easily retrieve our backend data.
 struct ImGui_ImplDX11_ViewportData
 {
     IDXGISwapChain*                 SwapChain;
@@ -621,7 +621,7 @@ struct ImGui_ImplDX11_ViewportData
     ~ImGui_ImplDX11_ViewportData()  { IM_ASSERT(SwapChain == NULL && RTView == NULL); }
 };
 
-static void ImGui_ImplDX11_CreateWindow(viewport: *mut ImGuiViewport)
+static void ImGui_ImplDX11_CreateWindow(viewport: *mut ImguiViewport)
 {
     ImGui_ImplDX11_Data* bd = ImGui_ImplDX11_GetBackendData();
     ImGui_ImplDX11_ViewportData* vd = IM_NEW(ImGui_ImplDX11_ViewportData)();
@@ -660,7 +660,7 @@ static void ImGui_ImplDX11_CreateWindow(viewport: *mut ImGuiViewport)
     }
 }
 
-static void ImGui_ImplDX11_DestroyWindow(viewport: *mut ImGuiViewport)
+static void ImGui_ImplDX11_DestroyWindow(viewport: *mut ImguiViewport)
 {
     // The main viewport (owned by the application) will always have RendererUserData == NULL since we didn't create the data for it.
     if (ImGui_ImplDX11_ViewportData* vd = (ImGui_ImplDX11_ViewportData*)viewport->RendererUserData)
@@ -676,7 +676,7 @@ static void ImGui_ImplDX11_DestroyWindow(viewport: *mut ImGuiViewport)
     viewport->RendererUserData = NULL;
 }
 
-static void ImGui_ImplDX11_SetWindowSize(viewport: *mut ImGuiViewport, size: ImVec2)
+static void ImGui_ImplDX11_SetWindowSize(viewport: *mut ImguiViewport, size: ImVec2)
 {
     ImGui_ImplDX11_Data* bd = ImGui_ImplDX11_GetBackendData();
     ImGui_ImplDX11_ViewportData* vd = (ImGui_ImplDX11_ViewportData*)viewport->RendererUserData;
@@ -696,18 +696,18 @@ static void ImGui_ImplDX11_SetWindowSize(viewport: *mut ImGuiViewport, size: ImV
     }
 }
 
-static void ImGui_ImplDX11_RenderWindow(viewport: *mut ImGuiViewport, void*)
+static void ImGui_ImplDX11_RenderWindow(viewport: *mut ImguiViewport, void*)
 {
     ImGui_ImplDX11_Data* bd = ImGui_ImplDX11_GetBackendData();
     ImGui_ImplDX11_ViewportData* vd = (ImGui_ImplDX11_ViewportData*)viewport->RendererUserData;
     ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
     bd->pd3dDeviceContext->OMSetRenderTargets(1, &vd->RTView, NULL);
-    if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
+    if (!(viewport->Flags & ImguiViewportFlags_NoRendererClear))
         bd->pd3dDeviceContext->ClearRenderTargetView(vd->RTView, (float*)&clear_color);
     ImGui_ImplDX11_RenderDrawData(viewport->DrawData);
 }
 
-static void ImGui_ImplDX11_SwapBuffers(viewport: *mut ImGuiViewport, void*)
+static void ImGui_ImplDX11_SwapBuffers(viewport: *mut ImguiViewport, void*)
 {
     ImGui_ImplDX11_ViewportData* vd = (ImGui_ImplDX11_ViewportData*)viewport->RendererUserData;
     vd->SwapChain->Present(0, 0); // Present without vsync

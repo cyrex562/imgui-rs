@@ -2,7 +2,7 @@
 
 use crate::color::IM_COL32_A_MASK;
 use crate::drawing::draw_list::ImDrawList;
-use crate::drawing::draw_vert::DrawVertex;
+use crate::drawing::draw_vert::ImguiDrawVertex;
 use crate::font_atlas::ImFontAtlas;
 use font_config::ImFontConfig;
 use font_glyph::ImFontGlyph;
@@ -482,7 +482,7 @@ impl ImFont {
         let idx_expected_size: size_t = (draw_list.IdxBuffer.len() + idx_count_max);
         draw_list.PrimReserve(idx_count_max, vtx_count_max);
 
-        vtx_write: *mut DrawVertex = draw_list._VtxWritePtr;
+        vtx_write: *mut ImguiDrawVertex = draw_list._VtxWritePtr;
         ImDrawIdx * idx_write = draw_list._IdxWritePtr;
         let mut vtx_current_idx: size_t = draw_list._VtxCurrentIdx;
 

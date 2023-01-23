@@ -4,7 +4,7 @@ use crate::widgets::activate_flags::{IM_GUI_ACTIVATE_FLAGS_NONE, IM_GUI_ACTIVATE
 use crate::core::config_flags::{ImGuiConfigFlags_NavEnableGamepad, ImGuiConfigFlags_NavEnableKeyboard, ImGuiConfigFlags_NavEnableSetMousePos};
 use crate::core::constants::{NAV_WINDOWING_HIGHLIGHT_DELAY, NAV_WINDOWING_LIST_APPEAR_DELAY};
 use crate::core::direction::{ImGuiDir, ImGuiDir_Down, ImGuiDir_Left, ImGuiDir_None, ImGuiDir_Right, ImGuiDir_Up};
-use crate::{GImGui, Viewport};
+use crate::{GImGui, ImguiViewport};
 use crate::core::axis::{ImGuiAxis, IM_GUI_AXIS_X};
 use crate::backend_flags::{IM_GUI_BACKEND_FLAGS_HAS_GAMEPAD, IM_GUI_BACKEND_FLAGS_HAS_SET_MOUSE_POS};
 use crate::color::color_u32_from_rgba;
@@ -1532,7 +1532,7 @@ pub unsafe fn NavUpdateWindowing()
     // Apply final focus
     if is_not_null(apply_focus_window) && (g.NavWindow == None || apply_focus_window != g.NavWindow.RootWindow)
     {
-        previous_viewport: *mut Viewport = if is_not_null(g.NavWindow) { g.NavWindow.Viewport } else { None };
+        previous_viewport: *mut ImguiViewport = if is_not_null(g.NavWindow) { g.NavWindow.Viewport } else { None };
         ClearActiveID(g);
         NavRestoreHighlightAfterMove();
         apply_focus_window = NavRestoreLastChildNavWindow(apply_focus_window);
@@ -1627,7 +1627,7 @@ pub unsafe fn NavUpdateWindowingOverlay()
     if g.NavWindowingListWindow == None {
         g.NavWindowingListWindow = FindWindowByName(str_to_const_c_char_ptr("###NavWindowingList"), );
     }
-    let viewport: *const Viewport = /*g.NavWindow ? g.Navwindow.Viewport :*/ GetMainViewport();
+    let viewport: *const ImguiViewport = /*g.NavWindow ? g.Navwindow.Viewport :*/ GetMainViewport();
     SetNextWindowSizeConstraints(, &Vector2::from_floats(viewport.Size.x * 0.20, viewport.Size.y * 0.200), &Vector2::from_floats(f32::MAX, f32::MAX), (), null_mut());
     SetNextWindowPos(, &viewport.get_center(), ImGuiCond_Always, &Vector2::from_floats(0.5, 0.5));
     PushStyleVar(ImGuiStyleVar_WindowPadding, g.style.WindowPadding * 2.0);

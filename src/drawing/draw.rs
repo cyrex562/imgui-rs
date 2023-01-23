@@ -31,7 +31,7 @@ use crate::drawing::draw_flags::{
     ImDrawFlags_RoundCornersTopLeft, ImDrawFlags_RoundCornersTopRight,
 };
 use crate::drawing::draw_list::ImDrawList;
-use crate::drawing::draw_vert::DrawVertex;
+use crate::drawing::draw_vert::ImguiDrawVertex;
 use crate::drawing::draw_cmd::ImDrawCmd;
 use crate::font::ImFont;
 use crate::font_atlas::ImFontAtlas;

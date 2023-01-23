@@ -23,7 +23,7 @@ use crate::core::string_ops::ImStrdup;
 use crate::core::type_defs::{ImGuiDir, ImguiHandle};
 use crate::core::vec2::{Vector2, ImVec2ih};
 use crate::core::vec4::ImVec4;
-use crate::viewport::Viewport;
+use crate::viewport::ImguiViewport;
 use crate::docking::win_dock_style::ImGuiWindowDockStyle;
 use crate::window::window_class::ImGuiWindowClass;
 use crate::window::window_flags::ImGuiWindowFlags;
@@ -70,7 +70,7 @@ pub struct ImguiWindow {
     pub FlagsPreviousFrame: ImGuiWindowFlags,
     pub WindowClass: ImGuiWindowClass,
     // Advanced users only. Set with SetNextWindowClass()
-    pub Viewport: Viewport,
+    pub Viewport: ImguiViewport,
     // Always set in Begin(). Inactive windows may have a NULL value here if their viewport was discarded.
     pub ViewportId: ImguiHandle,
     // We backup the viewport id (since the viewport may disappear or never be created if the window is inactive)

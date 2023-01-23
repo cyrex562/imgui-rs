@@ -16,7 +16,7 @@ use crate::drawing::draw_list_flags::{
 use crate::core::error_ops::{ErrorCheckEndFrameSanityChecks, ErrorCheckNewFrameSanityChecks};
 use crate::font::font_atlas_flags::ImFontAtlasFlags_NoBakedLines;
 use crate::font::font_ops::SetCurrentFont;
-use crate::{CallContextHooks, GImGui, Viewport};
+use crate::{CallContextHooks, GImGui, ImguiViewport};
 use libc::{c_float, c_int};
 use std::ptr::null_mut;
 
@@ -137,7 +137,7 @@ pub fn NewFrame(g: &mut AppContext) {
     // Mark rendering data as invalid to prevent user who may have a handle on it to use it.
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
     for n in 0..g.Viewports.len() {
-        let mut viewport: *mut Viewport = g.Viewports[n];
+        let mut viewport: *mut ImguiViewport = g.Viewports[n];
         viewport.DrawData = None;
         viewport.DrawDataP.Clear();
     }

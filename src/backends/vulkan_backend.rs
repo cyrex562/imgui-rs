@@ -120,7 +120,8 @@ use crate::core::config_flags::ImGuiConfigFlags_ViewportsEnable;
 use crate::core::context::AppContext;
 use crate::core::type_defs::ImTextureID;
 use crate::core::vec4::ImVec4;
-use crate::viewport::viewport_flags::ImGuiViewportFlags_NoRendererClear;
+use crate::viewport::ImguiViewport;
+use crate::viewport::viewport_flags::ImguiViewportFlags_NoRendererClear;
 use crate::viewport::viewport_ops::{DestroyPlatformWindows, GetMainViewport};
 
 pub const __glsl_shader_vert_spv: [u32;324] =
@@ -202,7 +203,7 @@ struct ImGui_ImplVulkanH_WindowRenderBuffers
 }
 
 // For multi-viewport support:
-// Helper structure we store in the void* RenderUserData field of each ImGuiViewport to easily retrieve our backend data.
+// Helper structure we store in the void* RenderUserData field of each ImguiViewport to easily retrieve our backend data.
 #[derive(Default,Debug,Clone)]
 struct ImGui_ImplVulkan_ViewportData
 {
@@ -595,7 +596,7 @@ pub fn ImGui_ImplVulkan_RenderDrawData(draw_data: *mut ImDrawData, command_buffe
     if draw_data.TotalVtxCount > 0
     {
         // Create or resize the vertex/index buffers
-        let mut vertex_size = draw_data.TotalVtxCount * std::mem::sizeof::<ImDrawVert>();
+        let mut vertex_size = draw_data.TotalVtxCount * std::mem::sizeof::<ImguiDrawVertex>();
         let mut index_size = draw_data.TotalIdxCount * std::mem::sizeof::<ImDrawIdx>();
         if rb.VertexBuffer == VK_NULL_HANDLE || rb.VertexBufferSize < vertex_size {
             CreateOrResizeBuffer(rb.VertexBuffer, rb.VertexBufferMemory, rb.VertexBufferSize, vertex_size, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
@@ -605,7 +606,7 @@ pub fn ImGui_ImplVulkan_RenderDrawData(draw_data: *mut ImDrawData, command_buffe
         }
 
         // Upload vertex/index data into a single contiguous GPU buffer
-        let mut vtx_dst: *mut ImDrawVert = null_mut();
+        let mut vtx_dst: *mut ImguiDrawVertex = null_mut();
         let mut idx_dst: *mut ImDrawIdx = null_mut();
         let mut err = vk::PFN_vkMapMemory(v.Device, rb.VertexBufferMemory, 0, rb.VertexBufferSize, 0, (&mut vtx_dst));
         check_vk_result(err);
@@ -615,7 +616,7 @@ pub fn ImGui_ImplVulkan_RenderDrawData(draw_data: *mut ImDrawData, command_buffe
         for n in 0 .. draw_data.CmdListsCount
         {
             let cmd_list = draw_data.CmdLists[n];
-            unsafe { libc::memcpy(vtx_dst, cmd_list.VtxBuffer.Data, cmd_list.VtxBuffer.Size * std::mem::sizeof::<ImDrawVert>()); }
+            unsafe { libc::memcpy(vtx_dst, cmd_list.VtxBuffer.Data, cmd_list.VtxBuffer.Size * std::mem::sizeof::<ImguiDrawVertex>()); }
             unsafe { libc::memcpy(idx_dst, cmd_list.IdxBuffer.Data, cmd_list.IdxBuffer.Size * std::mem::sizeof::<ImDrawIdx>()); }
             vtx_dst += cmd_list.VtxBuffer.Size;
             idx_dst += cmd_list.IdxBuffer.Size;
@@ -967,22 +968,22 @@ pub fn ImGui_ImplVulkan_CreatePipeline(device: vk::Device, allocator: *mut vk::A
     stage[1].pName = "main";
 
     let mut binding_desc: [vk::VertexInputBindingDescription;1] = [vk::VertexInputBindingDescription];
-    binding_desc[0].stride = std::mem::sizeof::<ImDrawVert>();
+    binding_desc[0].stride = std::mem::sizeof::<ImguiDrawVertex>();
     binding_desc[0].inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
 
     let mut attribute_desc: [vk::VertexInputAttributeDescription;3] = [vk::VertexInputAttributeDescription{};3];
     attribute_desc[0].location = 0;
     attribute_desc[0].binding = binding_desc[0].binding;
     attribute_desc[0].format = VK_FORMAT_R32G32_SFLOAT;
-    attribute_desc[0].offset = IM_OFFSETOF(ImDrawVert, pos);
+    attribute_desc[0].offset = IM_OFFSETOF(ImguiDrawVertex, pos);
     attribute_desc[1].location = 1;
     attribute_desc[1].binding = binding_desc[0].binding;
     attribute_desc[1].format = VK_FORMAT_R32G32_SFLOAT;
-    attribute_desc[1].offset = IM_OFFSETOF(ImDrawVert, uv);
+    attribute_desc[1].offset = IM_OFFSETOF(ImguiDrawVertex, uv);
     attribute_desc[2].location = 2;
     attribute_desc[2].binding = binding_desc[0].binding;
     attribute_desc[2].format = VK_FORMAT_R8G8B8A8_UNORM;
-    attribute_desc[2].offset = IM_OFFSETOF(ImDrawVert, col);
+    attribute_desc[2].offset = IM_OFFSETOF(ImguiDrawVertex, col);
 
     let mut vertex_info: vk::PipelineVertexInputStateCreateInfo = vk::PipelineVertexInputStateCreateInfo{};
     vertex_info.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
@@ -1215,7 +1216,7 @@ pub fn    ImGui_ImplVulkan_Init(info: *mut ImGui_ImplVulkan_InitInfo, render_pas
     return true;
 }
 
-pub fn ImGui_ImplVulkan_Shutdown()
+pub fn ImGui_ImplVulkan_Shutdown(app_ctx: &mut AppContext)
 {
     let mut bd = ImGui_ImplVulkan_GetBackendData();
     // IM_ASSERT(bd != null_mut() && "No renderer backend to shutdown, or already shutdown?");
@@ -1234,7 +1235,7 @@ pub fn ImGui_ImplVulkan_Shutdown()
     main_viewport.RendererUserData = null_mut();
 
     // Clean up windows
-    ImGui_ImplVulkan_ShutdownPlatformInterface();
+    ImGui_ImplVulkan_ShutdownPlatformInterface(app_ctx);
 
     io.BackendRendererName = null_mut();
     io.BackendRendererUserData = null_mut();
@@ -1738,11 +1739,11 @@ pub fn ImGui_ImplVulkanH_DestroyAllViewportsRenderBuffers(device: vk::Device, al
 // If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
 //--------------------------------------------------------------------------------------------------------
 
-pub fn ImGui_ImplVulkan_CreateWindow(viewport: *mut ImGuiViewport)
+pub fn ImGui_ImplVulkan_CreateWindow(viewport: *mut ImguiViewport)
 {
     let mut bd = ImGui_ImplVulkan_GetBackendData();
     let mut vd = unsafe { libc::malloc(std::mem::size_of::<ImGui_ImplVulkan_ViewportData>()) } as *mut ImGui_ImplVulkan_ViewportData;
-    viewport.RendererUserData = vd;
+    viewport.RendererUserData = vd as *mut c_void;
     let mut wd = &mut vd.Window;
     let mut v = &mut bd.VulkanInitInfo;
 
@@ -1772,12 +1773,12 @@ pub fn ImGui_ImplVulkan_CreateWindow(viewport: *mut ImGuiViewport)
     //printf("[vulkan] Secondary window selected PresentMode = %d\n", wd.PresentMode);
 
     // Create SwapChain, RenderPass, Framebuffer, etc.
-    wd.ClearEnable = if viewport.Flags & ImGuiViewportFlags_NoRendererClear { false } else { true };
-    ImGui_ImplVulkanH_CreateOrResizeWindow(v.Instance, v.PhysicalDevice, v.Device, wd, v.QueueFamily, v.Allocator, viewport.Size.x, viewport.Size.y, v.MinImageCount);
+    wd.ClearEnable = if viewport.Flags & ImguiViewportFlags_NoRendererClear { false } else { true };
+    ImGui_ImplVulkanH_CreateOrResizeWindow(v.Instance, v.PhysicalDevice, v.Device, wd, v.QueueFamily, v.Allocator, viewport.Size.x as i32, viewport.Size.y as i32, v.MinImageCount);
     vd.WindowOwned = true;
 }
 
-pub fn ImGui_ImplVulkan_DestroyWindow(viewport: *mut ImGuiViewport)
+pub fn ImGui_ImplVulkan_DestroyWindow(viewport: *mut ImguiViewport)
 {
     // The main viewport (owned by the application) will always have RendererUserData == NULL since we didn't create the data for it.
     let mut bd = ImGui_ImplVulkan_GetBackendData();
@@ -1789,29 +1790,29 @@ pub fn ImGui_ImplVulkan_DestroyWindow(viewport: *mut ImGuiViewport)
             ImGui_ImplVulkanH_DestroyWindow(v.Instance, v.Device, &mut vd.Window, v.Allocator);
         }
         ImGui_ImplVulkanH_DestroyWindowRenderBuffers(v.Device, &mut vd.RenderBuffers, v.Allocator);
-        unsafe { libc::free(vd); }
+        unsafe { libc::free(vd as *mut c_void); }
     }
     viewport.RendererUserData = null_mut();
 }
 
-pub fn ImGui_ImplVulkan_SetWindowSize(viewport: *mut ImGuiViewport, size: ImVec2)
+pub fn ImGui_ImplVulkan_SetWindowSize(viewport: *mut ImguiViewport, size: ImVec2)
 {
     let mut bd: *mut ImGui_ImplVulkan_Data =  ImGui_ImplVulkan_GetBackendData();
     let mut vd = viewport.RendererUserData;
     // This is NULL for the main viewport (which is left to the user/app to handle)
-    if (vd == null_mut()) { return; }
-    ImGui_ImplVulkan_InitInfo* v = &bd.VulkanInitInfo;
-    vd.Window.ClearEnable = if (viewport.Flags & ImGuiViewportFlags_NoRendererClear) { false } else { true; }
+    if vd == null_mut() { return; }
+    let mut v = &mut bd.VulkanInitInfo;
+    vd.Window.ClearEnable = if viewport.Flags & ImguiViewportFlags_NoRendererClear { false } else { true; };
     ImGui_ImplVulkanH_CreateOrResizeWindow(v.Instance, v.PhysicalDevice, v.Device, &mut vd.Window, v.QueueFamily, v.Allocator, size.x, size.y, v.MinImageCount);
 }
 
-pub fn ImGui_ImplVulkan_RenderWindow(viewport: *mut ImGuiViewport)
+pub fn ImGui_ImplVulkan_RenderWindow(viewport: *mut ImguiViewport)
 {
     let mut bd: *mut ImGui_ImplVulkan_Data =  ImGui_ImplVulkan_GetBackendData();
     ImGui_ImplVulkan_ViewportData* vd = viewport.RendererUserData;
     ImGui_ImplVulkanH_Window* wd = &vd.Window;
     ImGui_ImplVulkan_InitInfo* v = &bd.VulkanInitInfo;
-    let mut err: vk::Result = vk::Result{ 0: 0 };
+    let mut err: vk::Result = vk::Result::from_raw(0);
 
     let mut fd = &mut wd.Frames[wd.FrameIndex];
     let mut fsd = &mut wd.FrameSemaphores[wd.SemaphoreIndex];
@@ -1851,13 +1852,13 @@ pub fn ImGui_ImplVulkan_RenderWindow(viewport: *mut ImGuiViewport)
             info.framebuffer = fd.Framebuffer;
             info.renderArea.extent.width = wd.Width;
             info.renderArea.extent.height = wd.Height;
-            info.clearValueCount = if (viewport.Flags & ImGuiViewportFlags_NoRendererClear) { 0 } else { 1 };
-            info.pClearValues = if (viewport.Flags & ImGuiViewportFlags_NoRendererClear) { null_mut() } else { &wd.ClearValue };
+            info.clearValueCount = if (viewport.Flags & ImguiViewportFlags_NoRendererClear) { 0 } else { 1 };
+            info.pClearValues = if (viewport.Flags & ImguiViewportFlags_NoRendererClear) { null_mut() } else { &wd.ClearValue };
             vk::PFN_vkCmdBeginRenderPass(fd.CommandBuffer, &info, VK_SUBPASS_CONTENTS_INLINE);
         }
     }
 
-    ImGui_ImplVulkan_RenderDrawData(viewport.DrawData, fd.CommandBuffer, wd.Pipeline);
+    ImGui_ImplVulkan_RenderDrawData(&mut viewport.DrawData, fd.CommandBuffer, wd.Pipeline);
 
     {
         vk::PFN_vkCmdEndRenderPass(fd.CommandBuffer);
@@ -1883,14 +1884,14 @@ pub fn ImGui_ImplVulkan_RenderWindow(viewport: *mut ImGuiViewport)
     }
 }
 
-pub fn ImGui_ImplVulkan_SwapBuffers(viewport: *mut ImGuiViewport)
+pub fn ImGui_ImplVulkan_SwapBuffers(viewport: *mut ImguiViewport)
 {
     let mut bd: *mut ImGui_ImplVulkan_Data =  ImGui_ImplVulkan_GetBackendData();
     let mut  vd = &mut viewport.RendererUserData;
    let mut  wd = &mut vd.Window;
     let mut  v = &mut bd.VulkanInitInfo;
 
-    let mut err: vk::Result = vk::Result{ 0: 0 };
+    let mut err: vk::Result = vk::Result::from_raw(0);
     let mut present_index: u32 = wd.FrameIndex;
 
     let mut fsd = &mut wd.FrameSemaphores[wd.SemaphoreIndex];
@@ -1903,7 +1904,7 @@ pub fn ImGui_ImplVulkan_SwapBuffers(viewport: *mut ImGuiViewport)
     info.pImageIndices = &present_index;
     err = vk::PFN_vkQueuePresentKHR(v.Queue, &info);
     if (err == VK_ERROR_OUT_OF_DATE_KHR || err == VK_SUBOPTIMAL_KHR) {
-        ImGui_ImplVulkanH_CreateOrResizeWindow(v.Instance, v.PhysicalDevice, v.Device, &mut vd.Window, v.QueueFamily, v.Allocator, viewport.Size.x, viewport.Size.y, v.MinImageCount);
+        ImGui_ImplVulkanH_CreateOrResizeWindow(v.Instance, v.PhysicalDevice, v.Device, &mut vd.Window, v.QueueFamily, v.Allocator, viewport.Size.x as i32, viewport.Size.y as i32, v.MinImageCount);
     }
     else {
         check_vk_result(err);

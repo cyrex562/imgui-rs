@@ -50,7 +50,7 @@ use crate::core::type_defs::{ImTextureID, ImWchar, ImguiHandle};
 use crate::core::utils::{flag_clear, flag_set};
 use crate::core::vec2::Vector2;
 use crate::core::vec4::ImVec4;
-use crate::viewport::Viewport;
+use crate::viewport::ImguiViewport;
 use crate::viewport::viewport_ops::SetupViewportDrawData;
 use crate::window::ops::IsWindowActiveAndVisible;
 use crate::window::render::RenderDimmedBackgrounds;
@@ -492,7 +492,7 @@ pub unsafe fn RenderMouseCursor(
         ) {
             continue;
         }
-        let mut viewport: *mut Viewport = g.Viewports[n];
+        let mut viewport: *mut ImguiViewport = g.Viewports[n];
         let pos: Vector2 = &base_pos - &offset;
         let scale: c_float = base_scale * viewport.DpiScale;
         if !viewport.get_main_rect().Overlaps(ImRect(
@@ -554,7 +554,7 @@ pub fn Render(g: &mut AppContext) {
     // Add background ImDrawList (for each active viewport)
     // for (let n: c_int = 0; n != g.Viewports.Size; n++)
     for n in 0..g.Viewports.len() {
-        let mut viewport: *mut Viewport = g.Viewports[n];
+        let mut viewport: *mut ImguiViewport = g.Viewports[n];
         viewport.DrawDataBuilder.Clear();
         if viewport.DrawLists[0] != None {
             AddDrawListToDrawData(
@@ -624,7 +624,7 @@ pub fn Render(g: &mut AppContext) {
     g.IO.MetricsRenderIndices = 0;
     // for (let n: c_int = 0; n < g.Viewports.Size; n++)
     for n in 0..g.Viewports.len() {
-        let mut viewport: *mut Viewport = g.Viewports[n];
+        let mut viewport: *mut ImguiViewport = g.Viewports[n];
         viewport.DrawDataBuilder.FlattenIntoSingleLayer();
 
         // Add foreground ImDrawList (for each active viewport)

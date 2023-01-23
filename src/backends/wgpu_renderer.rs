@@ -26,51 +26,74 @@
 // #include <limits.h>
 // #include <webgpu/webgpu.h>
 
-#define HAS_EMSCRIPTEN_VERSION(major, minor, tiny) (__EMSCRIPTEN_major__ > (major) || (__EMSCRIPTEN_major__ == (major) && __EMSCRIPTEN_minor__ > (minor)) || (__EMSCRIPTEN_major__ == (major) && __EMSCRIPTEN_minor__ == (minor) && __EMSCRIPTEN_tiny__ >= (tiny)))
+// #define HAS_EMSCRIPTEN_VERSION(major, minor, tiny) (__EMSCRIPTEN_major__ > (major) || (__EMSCRIPTEN_major__ == (major) && __EMSCRIPTEN_minor__ > (minor)) || (__EMSCRIPTEN_major__ == (major) && __EMSCRIPTEN_minor__ == (minor) && __EMSCRIPTEN_tiny__ >= (tiny)))
 
-#if defined(__EMSCRIPTEN__) && !HAS_EMSCRIPTEN_VERSION(2, 0, 20)
-#error "Requires at least emscripten 2.0.20"
-#endif
+// #if defined(__EMSCRIPTEN__) && !HAS_EMSCRIPTEN_VERSION(2, 0, 20)
+// #error "Requires at least emscripten 2.0.20"
+// #endif
 
 // Dear ImGui prototypes from imgui_internal.h
-extern ImGuiID ImHashData(const void* data_p, size_t data_size, ImU32 seed = 0);
+// extern ImGuiID ImHashData(const void* data_p, size_t data_size, ImU32 seed = 0);
 
 // WebGPU data
-static WGPUDevice               g_wgpuDevice = NULL;
-static WGPUQueue                g_defaultQueue = NULL;
-static WGPUTextureFormat        g_renderTargetFormat = WGPUTextureFormat_Undefined;
-static WGPURenderPipeline       g_pipelineState = NULL;
+// static WGPUDevice               g_wgpuDevice = NULL;
+// static WGPUQueue                g_defaultQueue = NULL;
+// static WGPUTextureFormat        g_renderTargetFormat = WGPUTextureFormat_Undefined;
+// static WGPURenderPipeline       g_pipelineState = NULL;
 
-struct RenderResources
-{
-    WGPUTexture         FontTexture;            // Font texture
-    WGPUTextureView     FontTextureView;        // Texture view for font texture
-    WGPUSampler         Sampler;                // Sampler for the font texture
-    WGPUBuffer          Uniforms;               // Shader uniforms
-    WGPUBindGroup       CommonBindGroup;        // Resources bind-group to bind the common resources to pipeline
-    ImGuiStorage        ImageBindGroups;        // Resources bind-group to bind the font/image resources to pipeline (this is a key->value map)
-    WGPUBindGroup       ImageBindGroup;         // Default font-resource of Dear ImGui
-    WGPUBindGroupLayout ImageBindGroupLayout;   // Cache layout used for the image bind group. Avoids allocating unnecessary JS objects when working with WebASM
-};
-static RenderResources  g_resources;
+use std::ptr::null_mut;
+use wgpu;
+use crate::core::storage::ImGuiStorage;
+use libc::c_void;
+use crate::drawing::draw_vert::ImguiDrawVertex;
 
-struct FrameResources
+#[derive(Default,Debug,Clone)]
+pub struct RenderResources
 {
-    WGPUBuffer  IndexBuffer;
-    WGPUBuffer  VertexBuffer;
-    ImDrawIdx*  IndexBufferHost;
-    ImDrawVert* VertexBufferHost;
-    int         IndexBufferSize;
-    int         VertexBufferSize;
-};
-static FrameResources*  g_pFrameResources = NULL;
-static unsigned int     g_numFramesInFlight = 0;
-static unsigned int     g_frameIndex = UINT_MAX;
+    // WGPUTexture         FontTexture;            // Font texture
+    pub FontTexture: wgpu::Texture,
+    // WGPUTextureView     FontTextureView;        // Texture view for font texture
+    pub FontTextureView: wgpu::TextureView,
+    // WGPUSampler         Sampler;                // Sampler for the font texture
+    pub Sampler: wgpu::Sampler,
+    // WGPUBuffer          Uniforms;               // Shader uniforms
+    pub Uniforms: wgpu::Buffer,
+    // WGPUBindGroup       CommonBindGroup;        // Resources bind-group to bind the common resources to pipeline
+    pub CommonBindGroup: wgpu::BindGroup,
+    // ImGuiStorage        ImageBindGroups;        // Resources bind-group to bind the font/image resources to pipeline (this is a key->value map)
+    pub ImageBindGroups: ImGuiStorage,
+    // WGPUBindGroup       ImageBindGroup;         // Default font-resource of Dear ImGui
+    pub ImageBindGroup: wgpu::BindGroup,
+    // WGPUBindGroupLayout ImageBindGroupLayout;   // Cache layout used for the image bind group. Avoids allocating unnecessary JS objects when working with WebASM
+    pub ImageBindGroupLayout: wgpu::BindGroupLayout,
+}
+// static RenderResources  g_resources;
 
-struct Uniforms
+#[derive(Default,Debug,Clone)]
+pub struct FrameResources
 {
-    float MVP[4][4];
-};
+    // WGPUBuffer  IndexBuffer;
+    pub IndexBuffer: wgpu::Buffer,
+    // WGPUBuffer  VertexBuffer;
+    pub VertexBuffer: wgpu::Buffer,
+    // ImDrawIdx*  IndexBufferHost;
+    pub IndexBufferHost: *mut ImDrawIdx,
+    // ImDrawVert* VertexBufferHost;
+    pub VertexBufferHost: *mut ImguiDrawVertex,
+    // int         IndexBufferSize;
+    pub IndexBufferSize: i32,
+    // int         VertexBufferSize;
+    pub VertexBufferSize: i32,
+}
+// static FrameResources*  g_pFrameResources = NULL;
+// static unsigned int     g_numFramesInFlight = 0;
+// static unsigned int     g_frameIndex = UINT_MAX;
+#[derive(Default,Debug,Clone)]
+pub struct Uniforms
+{
+    // float MVP[4][4];
+    pub MVP: [[f32;4];4]
+}
 
 //-----------------------------------------------------------------------------
 // SHADERS
@@ -78,25 +101,26 @@ struct Uniforms
 
 // glsl_shader.vert, compiled with:
 // # glslangValidator -V -x -o glsl_shader.vert.u32 glsl_shader.vert
-/*
-#version 450 core
-layout(location = 0) in vec2 aPos;
-layout(location = 1) in vec2 aUV;
-layout(location = 2) in vec4 aColor;
-layout(set=0, binding = 0) uniform transform { mat4 mvp; };
+// /*
+// #version 450 core
+// layout(location = 0) in vec2 aPos;
+// layout(location = 1) in vec2 aUV;
+// layout(location = 2) in vec4 aColor;
+// layout(set=0, binding = 0) uniform transform { mat4 mvp; };
+//
+// out gl_PerVertex { vec4 gl_Position; };
+// layout(location = 0) out struct { vec4 Color; vec2 UV; } Out;
+//
+// void main()
+// {
+//     Out.Color = aColor;
+//     Out.UV = aUV;
+//     gl_Position = mvp * vec4(aPos, 0, 1);
+// }
+// */
 
-out gl_PerVertex { vec4 gl_Position; };
-layout(location = 0) out struct { vec4 Color; vec2 UV; } Out;
-
-void main()
-{
-    Out.Color = aColor;
-    Out.UV = aUV;
-    gl_Position = mvp * vec4(aPos, 0, 1);
-}
-*/
-static uint32_t __glsl_shader_vert_spv[] =
-{
+pub const __glsl_shader_vert_spv: [u32;317] =
+[
     0x07230203,0x00010000,0x00080007,0x0000002c,0x00000000,0x00020011,0x00000001,0x0006000b,
     0x00000001,0x4c534c47,0x6474732e,0x3035342e,0x00000000,0x0003000e,0x00000000,0x00000001,
     0x000a000f,0x00000000,0x00000004,0x6e69616d,0x00000000,0x0000000b,0x0000000f,0x00000015,
@@ -137,7 +161,7 @@ static uint32_t __glsl_shader_vert_spv[] =
     0x00000007,0x00000029,0x00000027,0x00000028,0x00000025,0x00000026,0x00050091,0x00000007,
     0x0000002a,0x00000022,0x00000029,0x00050041,0x00000011,0x0000002b,0x0000001b,0x0000000d,
     0x0003003e,0x0000002b,0x0000002a,0x000100fd,0x00010038
-};
+];
 
 // glsl_shader.frag, compiled with:
 // # glslangValidator -V -x -o glsl_shader.frag.u32 glsl_shader.frag
@@ -152,8 +176,8 @@ void main()
     fColor = In.Color * texture(sampler2D(t, s), In.UV.st);
 }
 */
-static uint32_t __glsl_shader_frag_spv[] =
-{
+pub const __glsl_shader_frag_spv: [u32;221] =
+[
     0x07230203,0x00010000,0x00080007,0x00000023,0x00000000,0x00020011,0x00000001,0x0006000b,
     0x00000001,0x4c534c47,0x6474732e,0x3035342e,0x00000000,0x0003000e,0x00000000,0x00000001,
     0x0007000f,0x00000004,0x00000004,0x6e69616d,0x00000000,0x00000009,0x0000000d,0x00030010,
@@ -182,56 +206,71 @@ static uint32_t __glsl_shader_frag_spv[] =
     0x0000000d,0x0000001d,0x0004003d,0x0000000a,0x00000020,0x0000001f,0x00050057,0x00000007,
     0x00000021,0x0000001c,0x00000020,0x00050085,0x00000007,0x00000022,0x00000012,0x00000021,
     0x0003003e,0x00000009,0x00000022,0x000100fd,0x00010038
-};
+];
 
-static void SafeRelease(ImDrawIdx*& res)
+pub fn safe_release_imgui_draw_idx(res: *mut ImDrawIdx)
 {
-    if (res)
-        delete[] res;
-    res = NULL;
+    if res.is_null() == false {
+        unsafe { libc::free(res); }
+    }
+    // res = null_mut();
 }
-static void SafeRelease(ImDrawVert*& res)
+
+pub fn safe_rlease_imgui_draw_vert(res: *mut ImguiDrawVertex)
 {
-    if (res)
-        delete[] res;
-    res = NULL;
+    if res.is_null() == false {
+        unsafe { libc::free(res as *mut c_void); }
+    }
+    // res = null_mut();
 }
-static void SafeRelease(WGPUBindGroupLayout& res)
-{
-    if (res)
-        wgpuBindGroupLayoutRelease(res);
-    res = NULL;
+
+pub fn safe_release_wgpu_bind_grp_layout(res: *mut wgpu::BindGroupLayout) {
+    if res.is_null() == false {
+        unsafe { libc::free(res as *mut c_void); }
+    }
+    // res = null_mut();
 }
-static void SafeRelease(WGPUBindGroup& res)
-{
-    if (res)
-        wgpuBindGroupRelease(res);
-    res = NULL;
+
+pub fn safe_release_wgpu_bind_group(res: *mut wgpu::BindGroup) {
+    if res.is_null() == false {
+        unsafe { libc::free(res as *mut c_void); }
+    }
+    // res = null_mut();
 }
-static void SafeRelease(WGPUBuffer& res)
-{
-    if (res)
-        wgpuBufferRelease(res);
-    res = NULL;
+
+pub fn safe_release_wgpu_buffer(res: *mut wgpu::Buffer) {
+    if res.is_null() == false {
+        unsafe { libc::free(res as *mut c_void); }
+    }
+    // res = null_mut();
 }
-static void SafeRelease(WGPURenderPipeline& res)
-{
-    if (res)
-        wgpuRenderPipelineRelease(res);
-    res = NULL;
+
+pub fn safe_release_wgpu_render_pipeline(res: *mut wgpu::RenderPipeline) {
+    if res.is_null() == false {
+        unsafe { libc::free(res as *mut c_void); }
+    }
+    // res = null_mut();
 }
-static void SafeRelease(WGPUSampler& res)
-{
-    if (res)
-        wgpuSamplerRelease(res);
-    res = NULL;
+
+pub fn safe_release_wgpu_sample(res: *mut wgpu::Sampler) {
+    if res.is_null() == false {
+        unsafe { libc::free(res as *mut c_void); }
+    }
+    // res = null_mut();
 }
-static void SafeRelease(WGPUShaderModule& res)
-{
-    if (res)
-        wgpuShaderModuleRelease(res);
-    res = NULL;
+
+pub fn safe_release_wgpu_shader_module(res: *mut wgpu::ShaderModule) {
+    if res.is_null() == false {
+        unsafe { libc::free(res as *mut c_void); }
+    }
+    // res = null_mut();
 }
+
+pub fn safe_release_wgpu_texture_view(res: *mut wgpu::TextureView) {
+    
+}
+
+
 static void SafeRelease(WGPUTextureView& res)
 {
     if (res)
@@ -314,7 +353,7 @@ static void ImGui_ImplWGPU_SetupRenderState(ImDrawData* draw_data, WGPURenderPas
     wgpuRenderPassEncoderSetViewport(ctx, 0, 0, draw_data->FramebufferScale.x * draw_data->DisplaySize.x, draw_data->FramebufferScale.y * draw_data->DisplaySize.y, 0, 1);
 
     // Bind shader and vertex buffers
-    wgpuRenderPassEncoderSetVertexBuffer(ctx, 0, fr->VertexBuffer, 0, fr->VertexBufferSize * sizeof(ImDrawVert));
+    wgpuRenderPassEncoderSetVertexBuffer(ctx, 0, fr->VertexBuffer, 0, fr->VertexBufferSize * sizeof(ImguiDrawVertex));
     wgpuRenderPassEncoderSetIndexBuffer(ctx, fr->IndexBuffer, sizeof(ImDrawIdx) == 2 ? WGPUIndexFormat_Uint16 : WGPUIndexFormat_Uint32, 0, fr->IndexBufferSize * sizeof(ImDrawIdx));
     wgpuRenderPassEncoderSetPipeline(ctx, g_pipelineState);
     wgpuRenderPassEncoderSetBindGroup(ctx, 0, g_resources.CommonBindGroup, 0, NULL);
@@ -353,14 +392,14 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
             NULL,
             "Dear ImGui Vertex buffer",
             WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex,
-            fr->VertexBufferSize * sizeof(ImDrawVert),
+            fr->VertexBufferSize * sizeof(ImguiDrawVertex),
             false
         };
         fr->VertexBuffer = wgpuDeviceCreateBuffer(g_wgpuDevice, &vb_desc);
         if (!fr->VertexBuffer)
             return;
 
-        fr->VertexBufferHost = new ImDrawVert[fr->VertexBufferSize];
+        fr->VertexBufferHost = new ImguiDrawVertex[fr->VertexBufferSize];
     }
     if (fr->IndexBuffer == NULL || fr->IndexBufferSize < draw_data->TotalIdxCount)
     {
@@ -388,12 +427,12 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
     }
 
     // Upload vertex/index data into a single contiguous GPU buffer
-    ImDrawVert* vtx_dst = (ImDrawVert*)fr->VertexBufferHost;
+    ImguiDrawVertex* vtx_dst = (ImguiDrawVertex*)fr->VertexBufferHost;
     ImDrawIdx* idx_dst = (ImDrawIdx*)fr->IndexBufferHost;
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImDrawVert));
+        memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImguiDrawVertex));
         memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
         vtx_dst += cmd_list->VtxBuffer.Size;
         idx_dst += cmd_list->IdxBuffer.Size;
@@ -566,13 +605,13 @@ bool ImGui_ImplWGPU_CreateDeviceObjects()
     // Vertex input configuration
     WGPUVertexAttribute attribute_desc[] =
     {
-        { WGPUVertexFormat_Float32x2, (uint64_t)IM_OFFSETOF(ImDrawVert, pos), 0 },
-        { WGPUVertexFormat_Float32x2, (uint64_t)IM_OFFSETOF(ImDrawVert, uv),  1 },
-        { WGPUVertexFormat_Unorm8x4,  (uint64_t)IM_OFFSETOF(ImDrawVert, col), 2 },
+        { WGPUVertexFormat_Float32x2, (uint64_t)IM_OFFSETOF(ImguiDrawVertex, pos), 0 },
+        { WGPUVertexFormat_Float32x2, (uint64_t)IM_OFFSETOF(ImguiDrawVertex, uv),  1 },
+        { WGPUVertexFormat_Unorm8x4,  (uint64_t)IM_OFFSETOF(ImguiDrawVertex, col), 2 },
     };
 
     WGPUVertexBufferLayout buffer_layouts[1];
-    buffer_layouts[0].arrayStride = sizeof(ImDrawVert);
+    buffer_layouts[0].arrayStride = sizeof(ImguiDrawVertex);
     buffer_layouts[0].stepMode = WGPUVertexStepMode_Vertex;
     buffer_layouts[0].attributeCount = 3;
     buffer_layouts[0].attributes = attribute_desc;

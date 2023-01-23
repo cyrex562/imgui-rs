@@ -9,7 +9,7 @@ use crate::window::window_flags::ImGuiWindowFlags_DockNodeHost;
 use crate::window::ImguiWindow;
 use crate::window_flags::ImGuiWindowFlags_DockNodeHost;
 use crate::window_ops::{GetWindowDisplayLayer, IsWindowActiveAndVisible};
-use crate::{GImGui, Viewport};
+use crate::{GImGui, ImguiViewport};
 use libc::c_int;
 use std::ptr::null_mut;
 
@@ -17,7 +17,7 @@ use std::ptr::null_mut;
 // ImDrawData* GetDrawData()
 pub unsafe fn GetDrawData() -> *mut ImDrawData {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut viewport: *mut Viewport = g.Viewports[0];
+    let mut viewport: *mut ImguiViewport = g.Viewports[0];
     return if viewport.DrawDataP.Valid {
         &mut viewport.DrawDataP
     } else {
@@ -68,7 +68,7 @@ pub fn AddDrawListToDrawData(out_list: &mut Vec<*mut ImDrawList>, draw_list: *mu
 // static c_void AddWindowToDrawData(window: &mut ImGuiWindow, layer: c_int)
 pub unsafe fn AddWindowToDrawData(window: &mut ImguiWindow, layer: c_int) {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut viewport: *mut Viewport = window.Viewport;
+    let mut viewport: *mut ImguiViewport = window.Viewport;
     g.IO.MetricsRenderWindows += 1;
     if window.Flags & ImGuiWindowFlags_DockNodeHost {
         window.DrawList.ChannelsMerge();

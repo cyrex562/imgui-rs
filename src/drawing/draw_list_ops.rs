@@ -4,13 +4,13 @@ use crate::drawing::draw_list::ImDrawList;
 use crate::draw_list_shared_data::Imgui_DrawListSharedData;
 use crate::imgui::GImGui;
 use crate::core::string_ops::str_to_const_c_char_ptr;
-use crate::viewport::Viewport;
+use crate::viewport::ImguiViewport;
 use libc::c_char;
 use std::ptr::null_mut;
 
-// static ImDrawList* GetViewportDrawList(viewport: *mut ImGuiViewport, drawlist_no: size_t, drawlist_name: *const c_char)
+// static ImDrawList* GetViewportDrawList(viewport: *mut ImguiViewport, drawlist_no: size_t, drawlist_name: *const c_char)
 pub unsafe fn GetViewportDrawList(
-    viewport: Option<&mut Viewport>,
+    viewport: Option<&mut ImguiViewport>,
     drawlist_no: usize,
     drawlist_name: &str,
 ) -> &mut ImDrawList {
@@ -38,8 +38,8 @@ pub unsafe fn GetViewportDrawList(
     return draw_list;
 }
 
-// ImDrawList* GetBackgroundDrawList(viewport: *mut ImGuiViewport)
-pub unsafe fn GetBackgroundDrawList(viewport: *mut Viewport) -> *mut ImDrawList {
+// ImDrawList* GetBackgroundDrawList(viewport: *mut ImguiViewport)
+pub unsafe fn GetBackgroundDrawList(viewport: *mut ImguiViewport) -> *mut ImDrawList {
     return GetViewportDrawList(viewport, 0, str_to_const_c_char_ptr("##Background"));
 }
 
@@ -49,8 +49,8 @@ pub unsafe fn GetBackgroundDrawList2() -> *mut ImDrawList {
     return GetBackgroundDrawList(g.Currentwindow.Viewport);
 }
 
-// ImDrawList* GetForegroundDrawList(viewport: *mut ImGuiViewport)
-pub unsafe fn GetForegroundDrawList(viewport: Option<&mut Viewport>) -> &mut ImDrawList {
+// ImDrawList* GetForegroundDrawList(viewport: *mut ImguiViewport)
+pub unsafe fn GetForegroundDrawList(viewport: Option<&mut ImguiViewport>) -> &mut ImDrawList {
     return GetViewportDrawList(viewport, 1, str_to_const_c_char_ptr("##Foreground"));
 }
 

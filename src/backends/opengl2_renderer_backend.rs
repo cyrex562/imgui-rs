@@ -192,11 +192,11 @@ void ImGui_ImplOpenGL2_RenderDrawData(ImDrawData* draw_data)
     for (int n = 0; n < draw_data->CmdListsCount; n++)
     {
         const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        const ImDrawVert* vtx_buffer = cmd_list->VtxBuffer.Data;
+        const ImguiDrawVertex* vtx_buffer = cmd_list->VtxBuffer.Data;
         const ImDrawIdx* idx_buffer = cmd_list->IdxBuffer.Data;
-        glVertexPointer(2, GL_FLOAT, sizeof(ImDrawVert), (const GLvoid*)(vtx_buffer + IM_OFFSETOF(ImDrawVert, pos)));
-        glTexCoordPointer(2, GL_FLOAT, sizeof(ImDrawVert), (const GLvoid*)(vtx_buffer + IM_OFFSETOF(ImDrawVert, uv)));
-        glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(ImDrawVert), (const GLvoid*)(vtx_buffer + IM_OFFSETOF(ImDrawVert, col)));
+        glVertexPointer(2, GL_FLOAT, sizeof(ImguiDrawVertex), (const GLvoid*)(vtx_buffer + IM_OFFSETOF(ImguiDrawVertex, pos)));
+        glTexCoordPointer(2, GL_FLOAT, sizeof(ImguiDrawVertex), (const GLvoid*)(vtx_buffer + IM_OFFSETOF(ImguiDrawVertex, uv)));
+        glColorPointer(4, GL_UNSIGNED_BYTE, sizeof(ImguiDrawVertex), (const GLvoid*)(vtx_buffer + IM_OFFSETOF(ImguiDrawVertex, col)));
 
         for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
         {
@@ -302,9 +302,9 @@ void    ImGui_ImplOpenGL2_DestroyDeviceObjects()
 // If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
 //--------------------------------------------------------------------------------------------------------
 
-static void ImGui_ImplOpenGL2_RenderWindow(viewport: *mut ImGuiViewport, void*)
+static void ImGui_ImplOpenGL2_RenderWindow(viewport: *mut ImguiViewport, void*)
 {
-    if (!(viewport->Flags & ImGuiViewportFlags_NoRendererClear))
+    if (!(viewport->Flags & ImguiViewportFlags_NoRendererClear))
     {
         ImVec4 clear_color = ImVec4(0.0f, 0.0f, 0.0f, 1.0f);
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);

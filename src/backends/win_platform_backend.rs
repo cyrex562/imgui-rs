@@ -143,7 +143,7 @@ bool    ImGui_ImplWin32_Init(void* hwnd)
     bd->LastMouseCursor = ImGuiMouseCursor_COUNT;
 
     // Our mouse update function expect PlatformHandle to be filled for the main viewport
-    ImGuiViewport* main_viewport = Imgui::GetMainViewport();
+    ImguiViewport* main_viewport = Imgui::GetMainViewport();
     main_viewport->PlatformHandle = main_viewport->PlatformHandleRaw = bd->hWnd;
     if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
         ImGui_ImplWin32_InitPlatformInterface();
@@ -309,7 +309,7 @@ static void ImGui_ImplWin32_UpdateMouseData()
     ImGuiID mouse_viewport_id = 0;
     if (has_mouse_screen_pos)
         if (HWND hovered_hwnd = ::WindowFromPoint(mouse_screen_pos))
-            if (viewport: *mut ImGuiViewport = Imgui::FindViewportByPlatformHandle(hovered_hwnd))
+            if (viewport: *mut ImguiViewport = Imgui::FindViewportByPlatformHandle(hovered_hwnd))
                 mouse_viewport_id = viewport->ID;
     io.AddMouseViewportEvent(mouse_viewport_id);
 }
@@ -839,7 +839,7 @@ float ImGui_ImplWin32_GetDpiScaleForHwnd(void* hwnd)
 // If you are new to dear imgui or creating a new binding for dear imgui, it is recommended that you completely ignore this section first..
 //--------------------------------------------------------------------------------------------------------
 
-// Helper structure we store in the void* RenderUserData field of each ImGuiViewport to easily retrieve our backend data.
+// Helper structure we store in the void* RenderUserData field of each ImguiViewport to easily retrieve our backend data.
 struct ImGui_ImplWin32_ViewportData
 {
     HWND    Hwnd;
@@ -851,23 +851,23 @@ struct ImGui_ImplWin32_ViewportData
     ~ImGui_ImplWin32_ViewportData() { IM_ASSERT(Hwnd == NULL); }
 };
 
-static void ImGui_ImplWin32_GetWin32StyleFromViewportFlags(ImGuiViewportFlags flags, DWORD* out_style, DWORD* out_ex_style)
+static void ImGui_ImplWin32_GetWin32StyleFromViewportFlags(ImguiViewportFlags flags, DWORD* out_style, DWORD* out_ex_style)
 {
-    if (flags & ImGuiViewportFlags_NoDecoration)
+    if (flags & ImguiViewportFlags_NoDecoration)
         *out_style = WS_POPUP;
     else
         *out_style = WS_OVERLAPPEDWINDOW;
 
-    if (flags & ImGuiViewportFlags_NoTaskBarIcon)
+    if (flags & ImguiViewportFlags_NoTaskBarIcon)
         *out_ex_style = WS_EX_TOOLWINDOW;
     else
         *out_ex_style = WS_EX_APPWINDOW;
 
-    if (flags & ImGuiViewportFlags_TopMost)
+    if (flags & ImguiViewportFlags_TopMost)
         *out_ex_style |= WS_EX_TOPMOST;
 }
 
-static void ImGui_ImplWin32_CreateWindow(viewport: *mut ImGuiViewport)
+static void ImGui_ImplWin32_CreateWindow(viewport: *mut ImguiViewport)
 {
     ImGui_ImplWin32_ViewportData* vd = IM_NEW(ImGui_ImplWin32_ViewportData)();
     viewport->PlatformUserData = vd;
@@ -876,7 +876,7 @@ static void ImGui_ImplWin32_CreateWindow(viewport: *mut ImGuiViewport)
     ImGui_ImplWin32_GetWin32StyleFromViewportFlags(viewport->Flags, &vd->DwStyle, &vd->DwExStyle);
     HWND parent_window = NULL;
     if (viewport->ParentViewportId != 0)
-        if (ImGuiViewport* parent_viewport = Imgui::FindViewportByID(viewport->ParentViewportId))
+        if (ImguiViewport* parent_viewport = Imgui::FindViewportByID(viewport->ParentViewportId))
             parent_window = (HWND)parent_viewport->PlatformHandle;
 
     // Create window
@@ -891,7 +891,7 @@ static void ImGui_ImplWin32_CreateWindow(viewport: *mut ImGuiViewport)
     viewport->PlatformHandle = viewport->PlatformHandleRaw = vd->Hwnd;
 }
 
-static void ImGui_ImplWin32_DestroyWindow(viewport: *mut ImGuiViewport)
+static void ImGui_ImplWin32_DestroyWindow(viewport: *mut ImguiViewport)
 {
     ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData();
     if (ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData)
@@ -910,17 +910,17 @@ static void ImGui_ImplWin32_DestroyWindow(viewport: *mut ImGuiViewport)
     viewport->PlatformUserData = viewport->PlatformHandle = NULL;
 }
 
-static void ImGui_ImplWin32_ShowWindow(viewport: *mut ImGuiViewport)
+static void ImGui_ImplWin32_ShowWindow(viewport: *mut ImguiViewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
-    if (viewport->Flags & ImGuiViewportFlags_NoFocusOnAppearing)
+    if (viewport->Flags & ImguiViewportFlags_NoFocusOnAppearing)
         ::ShowWindow(vd->Hwnd, SW_SHOWNA);
     else
         ::ShowWindow(vd->Hwnd, SW_SHOW);
 }
 
-static void ImGui_ImplWin32_UpdateWindow(viewport: *mut ImGuiViewport)
+static void ImGui_ImplWin32_UpdateWindow(viewport: *mut ImguiViewport)
 {
     // (Optional) Update Win32 style if it changed _after_ creation.
     // Generally they won't change unless configuration flags are changed, but advanced uses (such as manually rewriting viewport flags) make this useful.
@@ -935,7 +935,7 @@ static void ImGui_ImplWin32_UpdateWindow(viewport: *mut ImGuiViewport)
     {
         // (Optional) Update TopMost state if it changed _after_ creation
         bool top_most_changed = (vd->DwExStyle & WS_EX_TOPMOST) != (new_ex_style & WS_EX_TOPMOST);
-        HWND insert_after = top_most_changed ? ((viewport->Flags & ImGuiViewportFlags_TopMost) ? HWND_TOPMOST : HWND_NOTOPMOST) : 0;
+        HWND insert_after = top_most_changed ? ((viewport->Flags & ImguiViewportFlags_TopMost) ? HWND_TOPMOST : HWND_NOTOPMOST) : 0;
         UINT swp_flag = top_most_changed ? 0 : SWP_NOZORDER;
 
         // Apply flags and position (since it is affected by flags)
@@ -951,7 +951,7 @@ static void ImGui_ImplWin32_UpdateWindow(viewport: *mut ImGuiViewport)
     }
 }
 
-static ImVec2 ImGui_ImplWin32_GetWindowPos(viewport: *mut ImGuiViewport)
+static ImVec2 ImGui_ImplWin32_GetWindowPos(viewport: *mut ImguiViewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -960,7 +960,7 @@ static ImVec2 ImGui_ImplWin32_GetWindowPos(viewport: *mut ImGuiViewport)
     return ImVec2(pos.x, pos.y);
 }
 
-static void ImGui_ImplWin32_SetWindowPos(viewport: *mut ImGuiViewport, pos: ImVec2)
+static void ImGui_ImplWin32_SetWindowPos(viewport: *mut ImguiViewport, pos: ImVec2)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -969,7 +969,7 @@ static void ImGui_ImplWin32_SetWindowPos(viewport: *mut ImGuiViewport, pos: ImVe
     ::SetWindowPos(vd->Hwnd, NULL, rect.left, rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOACTIVATE);
 }
 
-static ImVec2 ImGui_ImplWin32_GetWindowSize(viewport: *mut ImGuiViewport)
+static ImVec2 ImGui_ImplWin32_GetWindowSize(viewport: *mut ImguiViewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -978,7 +978,7 @@ static ImVec2 ImGui_ImplWin32_GetWindowSize(viewport: *mut ImGuiViewport)
     return ImVec2(float(rect.right - rect.left), float(rect.bottom - rect.top));
 }
 
-static void ImGui_ImplWin32_SetWindowSize(viewport: *mut ImGuiViewport, size: ImVec2)
+static void ImGui_ImplWin32_SetWindowSize(viewport: *mut ImguiViewport, size: ImVec2)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -987,7 +987,7 @@ static void ImGui_ImplWin32_SetWindowSize(viewport: *mut ImGuiViewport, size: Im
     ::SetWindowPos(vd->Hwnd, NULL, 0, 0, rect.right - rect.left, rect.bottom - rect.top, SWP_NOZORDER | SWP_NOMOVE | SWP_NOACTIVATE);
 }
 
-static void ImGui_ImplWin32_SetWindowFocus(viewport: *mut ImGuiViewport)
+static void ImGui_ImplWin32_SetWindowFocus(viewport: *mut ImguiViewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -996,21 +996,21 @@ static void ImGui_ImplWin32_SetWindowFocus(viewport: *mut ImGuiViewport)
     ::SetFocus(vd->Hwnd);
 }
 
-static bool ImGui_ImplWin32_GetWindowFocus(viewport: *mut ImGuiViewport)
+static bool ImGui_ImplWin32_GetWindowFocus(viewport: *mut ImguiViewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
     return ::GetForegroundWindow() == vd->Hwnd;
 }
 
-static bool ImGui_ImplWin32_GetWindowMinimized(viewport: *mut ImGuiViewport)
+static bool ImGui_ImplWin32_GetWindowMinimized(viewport: *mut ImguiViewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
     return ::IsIconic(vd->Hwnd) != 0;
 }
 
-static void ImGui_ImplWin32_SetWindowTitle(viewport: *mut ImGuiViewport, title: *const c_char)
+static void ImGui_ImplWin32_SetWindowTitle(viewport: *mut ImguiViewport, title: *const c_char)
 {
     // ::SetWindowTextA() doesn't properly handle UTF-8 so we explicitely convert our string.
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
@@ -1022,7 +1022,7 @@ static void ImGui_ImplWin32_SetWindowTitle(viewport: *mut ImGuiViewport, title: 
     ::SetWindowTextW(vd->Hwnd, title_w.Data);
 }
 
-static void ImGui_ImplWin32_SetWindowAlpha(viewport: *mut ImGuiViewport, float alpha)
+static void ImGui_ImplWin32_SetWindowAlpha(viewport: *mut ImguiViewport, float alpha)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -1040,7 +1040,7 @@ static void ImGui_ImplWin32_SetWindowAlpha(viewport: *mut ImGuiViewport, float a
     }
 }
 
-static float ImGui_ImplWin32_GetWindowDpiScale(viewport: *mut ImGuiViewport)
+static float ImGui_ImplWin32_GetWindowDpiScale(viewport: *mut ImguiViewport)
 {
     ImGui_ImplWin32_ViewportData* vd = (ImGui_ImplWin32_ViewportData*)viewport->PlatformUserData;
     IM_ASSERT(vd->Hwnd != 0);
@@ -1048,7 +1048,7 @@ static float ImGui_ImplWin32_GetWindowDpiScale(viewport: *mut ImGuiViewport)
 }
 
 // FIXME-DPI: Testing DPI related ideas
-static void ImGui_ImplWin32_OnChangedViewport(viewport: *mut ImGuiViewport)
+static void ImGui_ImplWin32_OnChangedViewport(viewport: *mut ImguiViewport)
 {
     (void)viewport;
 #if 0
@@ -1068,7 +1068,7 @@ static LRESULT CALLBACK ImGui_ImplWin32_WndProcHandler_PlatformWindow(HWND hWnd,
     if (ImGui_ImplWin32_WndProcHandler(hWnd, msg, wParam, lParam))
         return true;
 
-    if (viewport: *mut ImGuiViewport = Imgui::FindViewportByPlatformHandle(hWnd))
+    if (viewport: *mut ImguiViewport = Imgui::FindViewportByPlatformHandle(hWnd))
     {
         switch (msg)
         {
@@ -1082,15 +1082,15 @@ static LRESULT CALLBACK ImGui_ImplWin32_WndProcHandler_PlatformWindow(HWND hWnd,
             viewport->PlatformRequestResize = true;
             break;
         case WM_MOUSEACTIVATE:
-            if (viewport->Flags & ImGuiViewportFlags_NoFocusOnClick)
+            if (viewport->Flags & ImguiViewportFlags_NoFocusOnClick)
                 return MA_NOACTIVATE;
             break;
         case WM_NCHITTEST:
             // Let mouse pass-through the window. This will allow the backend to call io.AddMouseViewportEvent() correctly. (which is optional).
-            // The ImGuiViewportFlags_NoInputs flag is set while dragging a viewport, as want to detect the window behind the one we are dragging.
+            // The ImguiViewportFlags_NoInputs flag is set while dragging a viewport, as want to detect the window behind the one we are dragging.
             // If you cannot easily access those viewport flags from your windowing/event code: you may manually synchronize its state e.g. in
             // your main loop after calling UpdatePlatformWindows(). Iterate all viewports/platform windows and pass the flag to your windowing system.
-            if (viewport->Flags & ImGuiViewportFlags_NoInputs)
+            if (viewport->Flags & ImguiViewportFlags_NoInputs)
                 return HTTRANSPARENT;
             break;
         }
@@ -1138,7 +1138,7 @@ static void ImGui_ImplWin32_InitPlatformInterface()
 
     // Register main window handle (which is owned by the main application, not by us)
     // This is mostly for simplicity and consistency, so that our code (e.g. mouse handling etc.) can use same logic for main and secondary viewports.
-    ImGuiViewport* main_viewport = Imgui::GetMainViewport();
+    ImguiViewport* main_viewport = Imgui::GetMainViewport();
     ImGui_ImplWin32_Data* bd = ImGui_ImplWin32_GetBackendData();
     ImGui_ImplWin32_ViewportData* vd = IM_NEW(ImGui_ImplWin32_ViewportData)();
     vd->Hwnd = bd->hWnd;

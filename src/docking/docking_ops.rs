@@ -173,7 +173,7 @@ DockSpace: ImguiHandle(id: ImguiHandle, size_arg: &ImVec2, ImGuiDockNodeFlags fl
 // The limitation with this call is that your window won't have a menu bar.
 // Even though we could pass window flags, it would also require the user to be able to call BeginMenuBar() somehow meaning we can't Begin/End in a single function.
 // But you can also use BeginMainMenuBar(). If you really want a menu bar inside the same window as the one hosting the dockspace, you will need to copy this code somewhere and tweak it.
-DockSpaceOverViewport: ImguiHandle(*const ImGuiViewport viewport, ImGuiDockNodeFlags dockspace_flags, *const ImGuiWindowClass window_class)
+DockSpaceOverViewport: ImguiHandle(*const ImguiViewport viewport, ImGuiDockNodeFlags dockspace_flags, *const ImGuiWindowClass window_class)
 {
     if viewport == None {
         viewport = GetMainViewport()(); }

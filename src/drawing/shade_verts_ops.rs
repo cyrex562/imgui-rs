@@ -1,7 +1,7 @@
 use libc::{c_float, c_int};
 use crate::color::{IM_COL32_A_MASK, IM_COL32_B_SHIFT, IM_COL32_G_SHIFT, IM_COL32_R_SHIFT};
 use crate::drawing::draw_list::ImDrawList;
-use crate::drawing::draw_vert::DrawVertex;
+use crate::drawing::draw_vert::ImguiDrawVertex;
 use crate::core::math_ops::{ImClamp, ImMax, ImMin, ImMul};
 use crate::core::vec2::Vector2;
 
@@ -10,8 +10,8 @@ pub fn ShadeVertsLinearColorGradientKeepAlpha(draw_list: *mut ImDrawList, vert_s
 {
     let gradient_extent: Vector2 = gradient_p1 - gradient_p0;
     let gradient_inv_length2: c_float =  1 / ImLengthSqr(gradient_extent);
-    let vert_start: *mut DrawVertex = draw_list.VtxBuffer.Data + vert_start_idx;
-    let vert_end: *mut DrawVertex = draw_list.VtxBuffer.Data + vert_end_idx;
+    let vert_start: *mut ImguiDrawVertex = draw_list.VtxBuffer.Data + vert_start_idx;
+    let vert_end: *mut ImguiDrawVertex = draw_list.VtxBuffer.Data + vert_end_idx;
     let col0_r: u32 = (col0 >> IM_COL32_R_SHIFT) & 0xFF;
     let col0_g: u32 = (col0 >> IM_COL32_G_SHIFT) & 0xFF;
     let col0_b: u32 = (col0 >> IM_COL32_B_SHIFT) & 0xFF;
@@ -39,8 +39,8 @@ pub fn ShadeVertsLinearUV(draw_list: *mut ImDrawList, vert_start_idx: c_int, ver
         if size.x != 0.0 { (uv_size.x / size.x) } else { 0 },
         if size.y != 0.0 { (uv_size.y / size.y) } else { 0 });
 
-    let mut vert_start: *mut DrawVertex = draw_list.VtxBuffer.as_mut_ptr() + vert_start_idx;
-    let mut vert_end: *mut DrawVertex = draw_list.VtxBuffer.as_mut_ptr() + vert_end_idx;
+    let mut vert_start: *mut ImguiDrawVertex = draw_list.VtxBuffer.as_mut_ptr() + vert_start_idx;
+    let mut vert_end: *mut ImguiDrawVertex = draw_list.VtxBuffer.as_mut_ptr() + vert_end_idx;
     if clamp
     {
         let min: Vector2 = ImMin(uv_a.clone(), uv_b.clone());

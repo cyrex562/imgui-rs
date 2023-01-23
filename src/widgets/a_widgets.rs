@@ -406,7 +406,7 @@ use crate::window::window_flags::{
 };
 use crate::window::ImguiWindow;
 use crate::{
-    button_ops, data_type_ops, drag, GImGui, hash_string, Viewport,
+    button_ops, data_type_ops, drag, GImGui, hash_string, ImguiViewport,
     input_num_ops, popup_ops, stb, text_ops,
 };
 use crate::{CalcTextSize, GetTextLineHeight, GetTextLineHeightWithSpacing, Text};
@@ -3511,7 +3511,7 @@ pub unsafe fn EndMenuBar() {
 // FIXME: The "rect-cut" aspect of this could be formalized into a lower-level helper (rect-cut: https://halt.software/dead-simple-layouts)
 pub unsafe fn BeginViewportSideBar(
     name: &str,
-    viewport_p: *mut Viewport,
+    viewport_p: *mut ImguiViewport,
     dir: ImGuiDir,
     axis_size: c_float,
     mut window_flags: ImGuiWindowFlags,
@@ -3519,7 +3519,7 @@ pub unsafe fn BeginViewportSideBar(
     // IM_ASSERT(dir != ImGuiDir_None);
 
     let mut bar_window: &mut ImguiWindow = FindWindowByName(name, );
-    let mut viewport: *mut Viewport = (if viewport_p {
+    let mut viewport: *mut ImguiViewport = (if viewport_p {
         viewport_p
     } else {
         GetMainViewport()
@@ -3564,7 +3564,7 @@ pub unsafe fn BeginViewportSideBar(
 
 pub unsafe fn BeginMainMenuBar() -> bool {
     let g = GImGui; // ImGuiContext& g = *GImGui;
-    let mut viewport: *mut Viewport = GetMainViewport();
+    let mut viewport: *mut ImguiViewport = GetMainViewport();
 
     // Notify of viewport change so GetFrameHeight() can be accurate in case of DPI change
     SetCurrentViewport(None, viewport);
