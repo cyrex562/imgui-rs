@@ -15,7 +15,7 @@
 // (minor and older changes stripped away, please see git history for details)
 //  2021-11-29: Passing explicit buffer sizes to wgpuRenderPassEncoderSetVertexBuffer()/wgpuRenderPassEncoderSetIndexBuffer().
 //  2021-08-24: Fix for latest specs.
-//  2021-05-24: Add support for draw_data->FramebufferScale.
+//  2021-05-24: Add support for draw_data.FramebufferScale.
 //  2021-05-19: Replaced direct access to ImDrawCmd::TextureId with a call to ImDrawCmd::GetTexID(). (will become a requirement)
 //  2021-05-16: Update to latest WebGPU specs (compatible with Emscripten 2.0.20 and Chrome Canary 92).
 //  2021-02-18: Change blending equation to preserve alpha in output buffer.
@@ -41,10 +41,13 @@
 // static WGPUTextureFormat        g_renderTargetFormat = WGPUTextureFormat_Undefined;
 // static WGPURenderPipeline       g_pipelineState = NULL;
 
+use std::borrow::Cow;
 use std::ptr::null_mut;
 use wgpu;
 use crate::core::storage::ImGuiStorage;
 use libc::c_void;
+use wgpu::{BindGroup, BindGroupDescriptor, ShaderModuleDescriptorSpirV};
+use crate::drawing::draw_data::ImDrawData;
 use crate::drawing::draw_vert::ImguiDrawVertex;
 
 #[derive(Default,Debug,Clone)]
@@ -60,7 +63,7 @@ pub struct RenderResources
     pub Uniforms: wgpu::Buffer,
     // WGPUBindGroup       CommonBindGroup;        // Resources bind-group to bind the common resources to pipeline
     pub CommonBindGroup: wgpu::BindGroup,
-    // ImGuiStorage        ImageBindGroups;        // Resources bind-group to bind the font/image resources to pipeline (this is a key->value map)
+    // ImGuiStorage        ImageBindGroups;        // Resources bind-group to bind the font/image resources to pipeline (this is a key.value map)
     pub ImageBindGroups: ImGuiStorage,
     // WGPUBindGroup       ImageBindGroup;         // Default font-resource of Dear ImGui
     pub ImageBindGroup: wgpu::BindGroup,
@@ -267,94 +270,95 @@ pub fn safe_release_wgpu_shader_module(res: *mut wgpu::ShaderModule) {
 }
 
 pub fn safe_release_wgpu_texture_view(res: *mut wgpu::TextureView) {
-    
+    if res.is_null() == false {
+        unsafe { libc::free(res as *mut c_void); }
+    }
 }
 
-
-static void SafeRelease(WGPUTextureView& res)
-{
-    if (res)
-        wgpuTextureViewRelease(res);
-    res = NULL;
-}
-static void SafeRelease(WGPUTexture& res)
-{
-    if (res)
-        wgpuTextureRelease(res);
-    res = NULL;
+pub fn safe_release_wgpu_texture(res: *mut wgpu::Texture) {
+    if res.is_null() == false {
+        unsafe { libc::free(res as *mut c_void); }
+    }
 }
 
-static void SafeRelease(RenderResources& res)
-{
-    SafeRelease(res.FontTexture);
-    SafeRelease(res.FontTextureView);
-    SafeRelease(res.Sampler);
-    SafeRelease(res.Uniforms);
-    SafeRelease(res.CommonBindGroup);
-    SafeRelease(res.ImageBindGroup);
-    SafeRelease(res.ImageBindGroupLayout);
-};
-
-static void SafeRelease(FrameResources& res)
-{
-    SafeRelease(res.IndexBuffer);
-    SafeRelease(res.VertexBuffer);
-    SafeRelease(res.IndexBufferHost);
-    SafeRelease(res.VertexBufferHost);
+pub fn safe_release_render_resources(res: *mut RenderResources) {
+    // SafeRelease(res.FontTexture);
+    //     SafeRelease(res.FontTextureView);
+    //     SafeRelease(res.Sampler);
+    //     SafeRelease(res.Uniforms);
+    //     SafeRelease(res.CommonBindGroup);
+    //     SafeRelease(res.ImageBindGroup);
+    //     SafeRelease(res.ImageBindGroupLayout);
 }
 
-static WGPUProgrammableStageDescriptor ImGui_ImplWGPU_CreateShaderModule(uint32_t* binary_data, uint32_t binary_data_size)
-{
-    WGPUShaderModuleSPIRVDescriptor spirv_desc = {};
-    spirv_desc.chain.sType = WGPUSType_ShaderModuleSPIRVDescriptor;
-    spirv_desc.codeSize = binary_data_size;
-    spirv_desc.code = binary_data;
-
-    WGPUShaderModuleDescriptor desc = {};
-    desc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&spirv_desc);
-
-    WGPUProgrammableStageDescriptor stage_desc = {};
-    stage_desc.module = wgpuDeviceCreateShaderModule(g_wgpuDevice, &desc);
-    stage_desc.entryPoint = "main";
-    return stage_desc;
+pub fn safe_release_frame_resources(res: *mut FrameResources) {
+    // SafeRelease(res.IndexBuffer);
+    //     SafeRelease(res.VertexBuffer);
+    //     SafeRelease(res.IndexBufferHost);
+    //     SafeRelease(res.VertexBufferHost);
 }
 
-static WGPUBindGroup ImGui_ImplWGPU_CreateImageBindGroup(WGPUBindGroupLayout layout, WGPUTextureView texture)
+pub fn ImGui_ImplWGPU_CreateShaderModule(device: &mut wgpu::Device, binary_data: *mut u32, binary_data_size: u32) -> wgpu::ShaderModule
 {
-    WGPUBindGroupEntry image_bg_entries[] = { { nullptr, 0, 0, 0, 0, 0, texture } };
-
-    WGPUBindGroupDescriptor image_bg_descriptor = {};
-    image_bg_descriptor.layout = layout;
-    image_bg_descriptor.entryCount = sizeof(image_bg_entries) / sizeof(WGPUBindGroupEntry);
-    image_bg_descriptor.entries = image_bg_entries;
-    return wgpuDeviceCreateBindGroup(g_wgpuDevice, &image_bg_descriptor);
+    // let mut spirv_desc: wgpu::ShaderModuleDescriptorSpirV = wgpu::ShaderModuleDescriptorSpirV{ label: None, source: Default::default() };
+    // spirv_desc.chain.sType = WGPUSType_ShaderModuleSPIRVDescriptor;
+    // spirv_desc.codeSize = binary_data_size;
+    // spirv_desc.code = binary_data;
+    //
+    // WGPUShaderModuleDescriptor desc = {};
+    // desc.nextInChain = reinterpret_cast<WGPUChainedStruct*>(&spirv_desc);
+    //
+    // WGPUProgrammableStageDescriptor stage_desc = {};
+    // stage_desc.module = wgpu::Device::create_shader_module(g_wgpuDevice, &desc);
+    // stage_desc.entryPoint = "main";
+    // return stage_desc;
+    let mut desc: wgpu::ShaderModuleDescriptorSpirV = wgpu::ShaderModuleDescriptorSpirV {
+        label: None,
+        source: Cow::from(binary_data),
+    };
+    let out = unsafe{device::create_shader_module_spirv(desc)};
+    out
 }
 
-static void ImGui_ImplWGPU_SetupRenderState(ImDrawData* draw_data, WGPURenderPassEncoder ctx, FrameResources* fr)
+pub fn ImGui_ImplWGPU_CreateImageBindGroup(device: &mut wgpu::Device, layout: wgpu::BindGroupLayout, texture: wgpu::TextureView) -> wgpu::BindGroup
+{
+     let mut entries: [wgpu::BindGroupEntry;1] = [ wgpu::BindGroupEntry{ binding: 0, resource: wgpu::BindingResource::TextureView(&texture) } ];
+    let descriptor: wgpu::BindGroupDescriptor = wgpu::BindGroupDescriptor{
+        label: None,
+        layout: &layout,
+        entries: &entries,
+    };
+    return device::create_bind_group(&descriptor);
+}
+
+pub fn ImGui_ImplWGPU_SetupRenderState(
+    draw_data: *mut ImDrawData,
+    ctx: wgpu::util::RenderEncoder,
+    fr: *mut FrameResources)
 {
     // Setup orthographic projection matrix into our constant buffer
-    // Our visible imgui space lies from draw_data->DisplayPos (top left) to draw_data->DisplayPos+data_data->DisplaySize (bottom right).
+    // Our visible imgui space lies from draw_data.DisplayPos (top left) to draw_data.DisplayPos+data_data.DisplaySize (bottom right).
     {
-        float L = draw_data->DisplayPos.x;
-        float R = draw_data->DisplayPos.x + draw_data->DisplaySize.x;
-        float T = draw_data->DisplayPos.y;
-        float B = draw_data->DisplayPos.y + draw_data->DisplaySize.y;
-        float mvp[4][4] =
-        {
-            { 2.0f/(R-L),   0.0f,           0.0f,       0.0f },
-            { 0.0f,         2.0f/(T-B),     0.0f,       0.0f },
-            { 0.0f,         0.0f,           0.5f,       0.0f },
-            { (R+L)/(L-R),  (T+B)/(B-T),    0.5f,       1.0f },
-        };
-        wgpuQueueWriteBuffer(g_defaultQueue, g_resources.Uniforms, 0, mvp, sizeof(mvp));
+        let mut L = draw_data.DisplayPos.x;
+        let mut R = draw_data.DisplayPos.x + draw_data.DisplaySize.x;
+        let mut T = draw_data.DisplayPos.y;
+        let mut B = draw_data.DisplayPos.y + draw_data.DisplaySize.y;
+        let mut mvp: [[f32;4];4] =
+        [
+            [ 2.0f32/(R-L),   0.0f32,           0.0f32,       0.0f32 ],
+            [ 0.0f32,         2.0f32/(T-B),     0.0f32,       0.0f32 ],
+            [ 0.0f32,         0.0f32,           0.5f32,       0.0f32 ],
+            [ (R+L)/(L-R),  (T+B)/(B-T),    0.5f32,       1.0f32 ],
+        ];
+        wgpu::QueueWriteBuffer(g_defaultQueue, g_resources.Uniforms, 0, mvp, sizeof(mvp));
     }
 
     // Setup viewport
-    wgpuRenderPassEncoderSetViewport(ctx, 0, 0, draw_data->FramebufferScale.x * draw_data->DisplaySize.x, draw_data->FramebufferScale.y * draw_data->DisplaySize.y, 0, 1);
+    wgpuRenderPassEncoderSetViewport(ctx, 0, 0, draw_data.FramebufferScale.x * draw_data.DisplaySize.x, draw_data.FramebufferScale.y * draw_data.DisplaySize.y, 0, 1);
 
     // Bind shader and vertex buffers
-    wgpuRenderPassEncoderSetVertexBuffer(ctx, 0, fr->VertexBuffer, 0, fr->VertexBufferSize * sizeof(ImguiDrawVertex));
-    wgpuRenderPassEncoderSetIndexBuffer(ctx, fr->IndexBuffer, sizeof(ImDrawIdx) == 2 ? WGPUIndexFormat_Uint16 : WGPUIndexFormat_Uint32, 0, fr->IndexBufferSize * sizeof(ImDrawIdx));
+    wgpuRenderPassEncoderSetVertexBuffer(ctx, 0, fr.VertexBuffer, 0, fr.VertexBufferSize * sizeof(ImguiDrawVertex));
+    wgpuRenderPassEncoderSetIndexBuffer(ctx, fr.IndexBuffer, sizeof(ImDrawIdx) == 2 ? WGPUIndexFormat_Uint16 : WGPUIndexFormat_Uint32, 0, fr.IndexBufferSize * sizeof(ImDrawIdx));
     wgpuRenderPassEncoderSetPipeline(ctx, g_pipelineState);
     wgpuRenderPassEncoderSetBindGroup(ctx, 0, g_resources.CommonBindGroup, 0, NULL);
 
@@ -368,7 +372,7 @@ static void ImGui_ImplWGPU_SetupRenderState(ImDrawData* draw_data, WGPURenderPas
 void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder pass_encoder)
 {
     // Avoid rendering when minimized
-    if (draw_data->DisplaySize.x <= 0.0f || draw_data->DisplaySize.y <= 0.0f)
+    if (draw_data.DisplaySize.x <= 0.0f || draw_data.DisplaySize.y <= 0.0f)
         return;
 
     // FIXME: Assuming that this only gets called once per frame!
@@ -377,70 +381,70 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
     FrameResources* fr = &g_pFrameResources[g_frameIndex % g_numFramesInFlight];
 
     // Create and grow vertex/index buffers if needed
-    if (fr->VertexBuffer == NULL || fr->VertexBufferSize < draw_data->TotalVtxCount)
+    if (fr.VertexBuffer == NULL || fr.VertexBufferSize < draw_data.TotalVtxCount)
     {
-        if (fr->VertexBuffer)
+        if (fr.VertexBuffer)
         {
-            wgpuBufferDestroy(fr->VertexBuffer);
-            wgpuBufferRelease(fr->VertexBuffer);
+            wgpuBufferDestroy(fr.VertexBuffer);
+            wgpuBufferRelease(fr.VertexBuffer);
         }
-        SafeRelease(fr->VertexBufferHost);
-        fr->VertexBufferSize = draw_data->TotalVtxCount + 5000;
+        SafeRelease(fr.VertexBufferHost);
+        fr.VertexBufferSize = draw_data.TotalVtxCount + 5000;
 
         WGPUBufferDescriptor vb_desc =
         {
             NULL,
             "Dear ImGui Vertex buffer",
             WGPUBufferUsage_CopyDst | WGPUBufferUsage_Vertex,
-            fr->VertexBufferSize * sizeof(ImguiDrawVertex),
+            fr.VertexBufferSize * sizeof(ImguiDrawVertex),
             false
         };
-        fr->VertexBuffer = wgpuDeviceCreateBuffer(g_wgpuDevice, &vb_desc);
-        if (!fr->VertexBuffer)
+        fr.VertexBuffer = wgpuDeviceCreateBuffer(g_wgpuDevice, &vb_desc);
+        if (!fr.VertexBuffer)
             return;
 
-        fr->VertexBufferHost = new ImguiDrawVertex[fr->VertexBufferSize];
+        fr.VertexBufferHost = new ImguiDrawVertex[fr.VertexBufferSize];
     }
-    if (fr->IndexBuffer == NULL || fr->IndexBufferSize < draw_data->TotalIdxCount)
+    if (fr.IndexBuffer == NULL || fr.IndexBufferSize < draw_data.TotalIdxCount)
     {
-        if (fr->IndexBuffer)
+        if (fr.IndexBuffer)
         {
-            wgpuBufferDestroy(fr->IndexBuffer);
-            wgpuBufferRelease(fr->IndexBuffer);
+            wgpuBufferDestroy(fr.IndexBuffer);
+            wgpuBufferRelease(fr.IndexBuffer);
         }
-        SafeRelease(fr->IndexBufferHost);
-        fr->IndexBufferSize = draw_data->TotalIdxCount + 10000;
+        SafeRelease(fr.IndexBufferHost);
+        fr.IndexBufferSize = draw_data.TotalIdxCount + 10000;
 
         WGPUBufferDescriptor ib_desc =
         {
             NULL,
             "Dear ImGui Index buffer",
             WGPUBufferUsage_CopyDst | WGPUBufferUsage_Index,
-            fr->IndexBufferSize * sizeof(ImDrawIdx),
+            fr.IndexBufferSize * sizeof(ImDrawIdx),
             false
         };
-        fr->IndexBuffer = wgpuDeviceCreateBuffer(g_wgpuDevice, &ib_desc);
-        if (!fr->IndexBuffer)
+        fr.IndexBuffer = wgpuDeviceCreateBuffer(g_wgpuDevice, &ib_desc);
+        if (!fr.IndexBuffer)
             return;
 
-        fr->IndexBufferHost = new ImDrawIdx[fr->IndexBufferSize];
+        fr.IndexBufferHost = new ImDrawIdx[fr.IndexBufferSize];
     }
 
     // Upload vertex/index data into a single contiguous GPU buffer
-    ImguiDrawVertex* vtx_dst = (ImguiDrawVertex*)fr->VertexBufferHost;
-    ImDrawIdx* idx_dst = (ImDrawIdx*)fr->IndexBufferHost;
-    for (int n = 0; n < draw_data->CmdListsCount; n++)
+    ImguiDrawVertex* vtx_dst = (ImguiDrawVertex*)fr.VertexBufferHost;
+    ImDrawIdx* idx_dst = (ImDrawIdx*)fr.IndexBufferHost;
+    for (int n = 0; n < draw_data.CmdListsCount; n++)
     {
-        const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        memcpy(vtx_dst, cmd_list->VtxBuffer.Data, cmd_list->VtxBuffer.Size * sizeof(ImguiDrawVertex));
-        memcpy(idx_dst, cmd_list->IdxBuffer.Data, cmd_list->IdxBuffer.Size * sizeof(ImDrawIdx));
-        vtx_dst += cmd_list->VtxBuffer.Size;
-        idx_dst += cmd_list->IdxBuffer.Size;
+        const ImDrawList* cmd_list = draw_data.CmdLists[n];
+        memcpy(vtx_dst, cmd_list.VtxBuffer.Data, cmd_list.VtxBuffer.Size * sizeof(ImguiDrawVertex));
+        memcpy(idx_dst, cmd_list.IdxBuffer.Data, cmd_list.IdxBuffer.Size * sizeof(ImDrawIdx));
+        vtx_dst += cmd_list.VtxBuffer.Size;
+        idx_dst += cmd_list.IdxBuffer.Size;
     }
-    int64_t vb_write_size = ((char*)vtx_dst - (char*)fr->VertexBufferHost + 3) & ~3;
-    int64_t ib_write_size = ((char*)idx_dst - (char*)fr->IndexBufferHost  + 3) & ~3;
-    wgpuQueueWriteBuffer(g_defaultQueue, fr->VertexBuffer, 0, fr->VertexBufferHost, vb_write_size);
-    wgpuQueueWriteBuffer(g_defaultQueue, fr->IndexBuffer,  0, fr->IndexBufferHost,  ib_write_size);
+    int64_t vb_write_size = ((char*)vtx_dst - (char*)fr.VertexBufferHost + 3) & ~3;
+    int64_t ib_write_size = ((char*)idx_dst - (char*)fr.IndexBufferHost  + 3) & ~3;
+    wgpuQueueWriteBuffer(g_defaultQueue, fr.VertexBuffer, 0, fr.VertexBufferHost, vb_write_size);
+    wgpuQueueWriteBuffer(g_defaultQueue, fr.IndexBuffer,  0, fr.IndexBufferHost,  ib_write_size);
 
     // Setup desired render state
     ImGui_ImplWGPU_SetupRenderState(draw_data, pass_encoder, fr);
@@ -449,27 +453,27 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
     // (Because we merged all buffers into a single one, we maintain our own offset into them)
     int global_vtx_offset = 0;
     int global_idx_offset = 0;
-    clip_scale: ImVec2 = draw_data->FramebufferScale;
-    clip_off: ImVec2 = draw_data->DisplayPos;
-    for (int n = 0; n < draw_data->CmdListsCount; n++)
+    clip_scale: ImVec2 = draw_data.FramebufferScale;
+    clip_off: ImVec2 = draw_data.DisplayPos;
+    for (int n = 0; n < draw_data.CmdListsCount; n++)
     {
-        const ImDrawList* cmd_list = draw_data->CmdLists[n];
-        for (int cmd_i = 0; cmd_i < cmd_list->CmdBuffer.Size; cmd_i++)
+        const ImDrawList* cmd_list = draw_data.CmdLists[n];
+        for (int cmd_i = 0; cmd_i < cmd_list.CmdBuffer.Size; cmd_i++)
         {
-            const ImDrawCmd* pcmd = &cmd_list->CmdBuffer[cmd_i];
-            if (pcmd->UserCallback != NULL)
+            const ImDrawCmd* pcmd = &cmd_list.CmdBuffer[cmd_i];
+            if (pcmd.UserCallback != NULL)
             {
                 // User callback, registered via ImDrawList::AddCallback()
                 // (ImDrawCallback_ResetRenderState is a special callback value used by the user to request the renderer to reset render state.)
-                if (pcmd->UserCallback == ImDrawCallback_ResetRenderState)
+                if (pcmd.UserCallback == ImDrawCallback_ResetRenderState)
                     ImGui_ImplWGPU_SetupRenderState(draw_data, pass_encoder, fr);
                 else
-                    pcmd->UserCallback(cmd_list, pcmd);
+                    pcmd.UserCallback(cmd_list, pcmd);
             }
             else
             {
                 // Bind custom texture
-                ImTextureID tex_id = pcmd->GetTexID();
+                ImTextureID tex_id = pcmd.GetTexID();
                 ImGuiID tex_id_hash = ImHashData(&tex_id, sizeof(tex_id));
                 auto bind_group = g_resources.ImageBindGroups.GetVoidPtr(tex_id_hash);
                 if (bind_group)
@@ -484,18 +488,18 @@ void ImGui_ImplWGPU_RenderDrawData(ImDrawData* draw_data, WGPURenderPassEncoder 
                 }
 
                 // Project scissor/clipping rectangles into framebuffer space
-                clip_min: ImVec2((pcmd->ClipRect.x - clip_off.x) * clip_scale.x, (pcmd->ClipRect.y - clip_off.y) * clip_scale.y);
-                clip_max: ImVec2((pcmd->ClipRect.z - clip_off.x) * clip_scale.x, (pcmd->ClipRect.w - clip_off.y) * clip_scale.y);
+                clip_min: ImVec2((pcmd.ClipRect.x - clip_off.x) * clip_scale.x, (pcmd.ClipRect.y - clip_off.y) * clip_scale.y);
+                clip_max: ImVec2((pcmd.ClipRect.z - clip_off.x) * clip_scale.x, (pcmd.ClipRect.w - clip_off.y) * clip_scale.y);
                 if (clip_max.x <= clip_min.x || clip_max.y <= clip_min.y)
                     continue;
 
                 // Apply scissor/clipping rectangle, Draw
                 wgpuRenderPassEncoderSetScissorRect(pass_encoder, clip_min.x, clip_min.y, (clip_max.x - clip_min.x), (clip_max.y - clip_min.y));
-                wgpuRenderPassEncoderDrawIndexed(pass_encoder, pcmd->ElemCount, 1, pcmd->IdxOffset + global_idx_offset, pcmd->VtxOffset + global_vtx_offset, 0);
+                wgpuRenderPassEncoderDrawIndexed(pass_encoder, pcmd.ElemCount, 1, pcmd.IdxOffset + global_idx_offset, pcmd.VtxOffset + global_vtx_offset, 0);
             }
         }
-        global_idx_offset += cmd_list->IdxBuffer.Size;
-        global_vtx_offset += cmd_list->VtxBuffer.Size;
+        global_idx_offset += cmd_list.IdxBuffer.Size;
+        global_vtx_offset += cmd_list.VtxBuffer.Size;
     }
 }
 
@@ -505,7 +509,7 @@ static void ImGui_ImplWGPU_CreateFontsTexture()
     ImGuiIO& io = Imgui::GetIO();
     unsigned char* pixels;
     int width, height, size_pp;
-    io.Fonts->GetTexDataAsRGBA32(&pixels, &width, &height, &size_pp);
+    io.Fonts.GetTexDataAsRGBA32(&pixels, &width, &height, &size_pp);
 
     // Upload texture to graphics system
     {
@@ -548,7 +552,7 @@ static void ImGui_ImplWGPU_CreateFontsTexture()
     }
 
     // Create the associated sampler
-    // (Bilinear sampling is required by default. Set 'io.Fonts->Flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
+    // (Bilinear sampling is required by default. Set 'io.Fonts.Flags |= ImFontAtlasFlags_NoBakedLines' or 'style.AntiAliasedLinesUseTex = false' to allow point/nearest sampling)
     {
         WGPUSamplerDescriptor sampler_desc = {};
         sampler_desc.minFilter = WGPUFilterMode_Linear;
@@ -563,7 +567,7 @@ static void ImGui_ImplWGPU_CreateFontsTexture()
 
     // Store our identifier
     static_assert(sizeof(ImTextureID) >= sizeof(g_resources.FontTexture), "Can't pack descriptor handle into TexID, 32-bit not supported yet.");
-    io.Fonts->SetTexID((ImTextureID)g_resources.FontTextureView);
+    io.Fonts.SetTexID((ImTextureID)g_resources.FontTextureView);
 }
 
 static void ImGui_ImplWGPU_CreateUniformBuffer()
@@ -696,7 +700,7 @@ void ImGui_ImplWGPU_InvalidateDeviceObjects()
     SafeRelease(g_resources);
 
     ImGuiIO& io = Imgui::GetIO();
-    io.Fonts->SetTexID(NULL); // We copied g_pFontTextureView to io.Fonts->TexID so let's clear that as well.
+    io.Fonts.SetTexID(NULL); // We copied g_pFontTextureView to io.Fonts.TexID so let's clear that as well.
 
     for (unsigned int i = 0; i < g_numFramesInFlight; i++)
         SafeRelease(g_pFrameResources[i]);
@@ -729,12 +733,12 @@ bool ImGui_ImplWGPU_Init(WGPUDevice device, int num_frames_in_flight, WGPUTextur
     for (int i = 0; i < num_frames_in_flight; i++)
     {
         FrameResources* fr = &g_pFrameResources[i];
-        fr->IndexBuffer = NULL;
-        fr->VertexBuffer = NULL;
-        fr->IndexBufferHost = NULL;
-        fr->VertexBufferHost = NULL;
-        fr->IndexBufferSize = 10000;
-        fr->VertexBufferSize = 5000;
+        fr.IndexBuffer = NULL;
+        fr.VertexBuffer = NULL;
+        fr.IndexBufferHost = NULL;
+        fr.VertexBufferHost = NULL;
+        fr.IndexBufferSize = 10000;
+        fr.VertexBufferSize = 5000;
     }
 
     return true;
