@@ -354,13 +354,13 @@ pub fn ImGui_ImplWGPU_SetupRenderState(
     }
 
     // Setup viewport
-    wgpuRenderPassEncoderSetViewport(ctx, 0, 0, draw_data.FramebufferScale.x * draw_data.DisplaySize.x, draw_data.FramebufferScale.y * draw_data.DisplaySize.y, 0, 1);
+    wgpu::RenderPassEncoderSetViewport(ctx, 0, 0, draw_data.FramebufferScale.x * draw_data.DisplaySize.x, draw_data.FramebufferScale.y * draw_data.DisplaySize.y, 0, 1);
 
     // Bind shader and vertex buffers
-    wgpuRenderPassEncoderSetVertexBuffer(ctx, 0, fr.VertexBuffer, 0, fr.VertexBufferSize * sizeof(ImguiDrawVertex));
-    wgpuRenderPassEncoderSetIndexBuffer(ctx, fr.IndexBuffer, sizeof(ImDrawIdx) == 2 ? WGPUIndexFormat_Uint16 : WGPUIndexFormat_Uint32, 0, fr.IndexBufferSize * sizeof(ImDrawIdx));
-    wgpuRenderPassEncoderSetPipeline(ctx, g_pipelineState);
-    wgpuRenderPassEncoderSetBindGroup(ctx, 0, g_resources.CommonBindGroup, 0, NULL);
+    wgpu::util::RenderEncoder::set_vertex_buffer(0, fr.VertexBuffer, 0, fr.VertexBufferSize * sizeof(ImguiDrawVertex));
+    wgpu::RenderPassEncoderSetIndexBuffer(ctx, fr.IndexBuffer, sizeof(ImDrawIdx) == 2 ? WGPUIndexFormat_Uint16 : WGPUIndexFormat_Uint32, 0, fr.IndexBufferSize * sizeof(ImDrawIdx));
+    wgpu::RenderPassEncoderSetPipeline(ctx, g_pipelineState);
+    wgpu::RenderPassEncoderSetBindGroup(ctx, 0, g_resources.CommonBindGroup, 0, NULL);
 
     // Setup blend factor
     WGPUColor blend_color = { 0.f, 0.f, 0.f, 0.f };
