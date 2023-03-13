@@ -21,7 +21,7 @@ ash = "0.37.1+1.3.235"
 wgpu = "0.14.2"
 
 [dependencies.windows]
-version = "0.44"
+version = "0.46"
 features = [
     "Win32_Graphics_Direct3D",
     "Win32_Graphics_Direct3D9",
